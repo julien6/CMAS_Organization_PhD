@@ -11,7 +11,7 @@
 
 _Considering an AICA agent is a particular case of a Cybedefense Multi-Agent System (CMAS) that is made up from a set of cyber-defender agents collaborating together to reach their cyber-goal._
 
-    What are the organizations among cyber-defender agents, so the resulting CMAS can be deployed and operate under the networked environment constraints in order to reach its cyber-goal in the most efficient way?
+> **What are the organizations among cyber-defender agents so the resulting CMAS can be deployed and operate under the networked environment constraints in order to reach its cyber-goal in the most efficient way?**
 
 **Related works in literature**:
 - Very few works dealing with the concept of a CMAS (except AICA works)
