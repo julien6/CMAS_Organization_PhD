@@ -34,7 +34,7 @@ _Considering an AICA agent is a particular case of a Cybedefense Multi-Agent Sys
 4) Developped a methodological tool to support the approach relying on simulation and emulation
 5) Use the method with the help of the tool in academic case studies
 
-**General industrial contirbution roadmap**
+**General industrial contribution roadmap**
 1) Adapt the methodological approach to help in designing organization in light of drawn trends between organization, networked environment and cyber-goals
 2) Adapt the methodological tool into an industrial tool providing practical means for designing, implementing, assessing and deploying a CMAS, by relying on the adapted methodological approach
-5) Use the method with the help of the tool in academic case studies
+5) Use the method with the help of the tool in industrial case studies
