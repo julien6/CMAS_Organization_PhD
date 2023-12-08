@@ -1,4 +1,16 @@
 # CybMASFM : Cyberdefense Multi-Agent System Formal Model
 
-## Organization
+## Agent
 
+
+## Behavior
+
+
+## Constraints
+
+
+## Architecture
+
+$z \rightarrow z$
+
+## Organization

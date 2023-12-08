@@ -38,3 +38,23 @@ _Considering an AICA agent is a particular case of a Cybedefense Multi-Agent Sys
 1) Adapt the methodological approach to help in designing organization in light of drawn trends between organization, networked environment and cyber-goals
 2) Adapt the methodological tool into an industrial tool providing practical means for designing, implementing, assessing and deploying a CMAS, by relying on the adapted methodological approach
 5) Use the method with the help of the tool in industrial case studies
+
+----
+
+## Works in progress
+
+- CybMASFM: Cyberdefense Multi-Agent System Formal Model
+    - An extended dec-POMDP formalism as a general basis for any scenario falling into the study framework
+    - Mean for building models of scenarios to be quantitatively assessed with various resolution approaches in simulation and emulation
+    - Integration of existing works in Cyberdefense frameworks simulation/emulation, collective AI, MAS concepts, etc. through the Dec-POMDP formalism
+    - Special focus on MAS organization by integrating and positioning related concepts (re/self-organization, emergence, Agent Centered Point of View / Organization Centered Point of View, etc.)
+
+- CybMASDA: Cyberdefense Multi-Agent System Development Approach
+    - Instrumentation of the CybMASFM towards a method for both academic and industrial needs
+    - General iterative approach to design, implement, assess, analyze CMAS relying on a simulation/emulation coupling
+    - A lifecycle taking a networked environment description and cyber-goals as parameters and expecting some operational CMASs and the learnt trends which indicate what organization to foster according to the networked environment and cyber-goals
+    - Theoritical means to help in designing, assessing, analyzing CMAS providing steps, guidelines, metrics, analysis, forms, tools, algorithms, etc.
+
+- CybMASDE: Cyberdefense Multi-Agent System Development Environment
+    - Support of CybMASDA using suited simulator and emulator
+    - A practical mean to help researcher (and engineer) to apply CybMASDA automating the whole process and easing manual configuration by providing existing elements and restricting to high-level choice of configuration
