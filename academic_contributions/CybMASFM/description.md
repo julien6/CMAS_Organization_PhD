@@ -1,6 +1,7 @@
 # CybMASFM : Cyberdefense Multi-Agent System Formal Model
 
 ## Abstract
+Collaboration among taylored cyber-defender agents in a networked host system is a promising approach to tackle cyber-attacks as close as entry points. Indeed, flexible organizations among agents would allow to handle scalability and adaptivity issues relying on self/re-organization mechanisms. Such agents are making up a cyberdefense multi-agent system to be deployed and operate to reach a cyberdefense goal in any host system. Before empirically trying to implement such a CMAS, we consider addressing deployment environmental constraints
 
 ## Overview
 
