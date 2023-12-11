@@ -1,7 +1,8 @@
 # CybMASFM: Cyberdefense Multi-Agent System Formal Model
 
 ## Abstract
-Collaboration among cyber-defender agents in a networked host system is a promising approach to tackle cyber-attacks as close as entry points. Indeed, wisely designed cyber-defense agents are making up a Cyber-defense Multi-Agent System with a flexible organization that would handle scalability and adaptivity issues relying on self/re-organization mechanisms. Yet, before empirically trying to implement such a CMAS, it is fundamental to frame the operational context to determine the design constraints and the organizational mechanisms we aim to rely on to reach cyber-defense goals. The main contribution is a general formalization of a 
+Collaboration among cyber-defender agents in a networked host system is a promising approach to tackle cyber-attacks as close as entry points. Indeed, cyber-defense agents make up a Cyber-defense Multi-Agent System with a flexible organization that could handle scalability and adaptivity issues relying on self/re-organization mechanisms. Yet, before empirically trying to implement it, we aim to frame the problem of organization as the design of cyberdefense agents that have to reach a cyberdefense goal under the deployment environment constraints; and the means to solve that problem as organizational mechanisms including multi-agent paradigms or collective deepLearning algorithms.
+The paper deals with a formal model that aims to help positioning the design of a cyberdefense multi-agent system especially regarding to  in Cyberdefense, Multi-Agent Systems and AI domains.
 
 ## Overview
 
