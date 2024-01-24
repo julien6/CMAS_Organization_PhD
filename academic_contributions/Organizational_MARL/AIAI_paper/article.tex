@@ -115,54 +115,54 @@
 
 \begin{document}
 %
-\title{A Step Towards Automated Design of Multi-Agent System Organization using Reinfocement Learning}
+\title{An Approach for Multi-Agent System Design with Reinforcement Learning}
 %
 %\titlerunning{Abbreviated paper title}
 % If the paper title is too long for the running head, you can set
 % an abbreviated paper title here
 %
 \author{Julien Soulé\inst{1}\orcidID{0000-1111-2222-3333} \and
-Jean-Paul Jamont\inst{1}\orcidID{1111-2222-3333-4444} \and
-Michel Occelo\inst{1}\orcidID{2222--3333-4444-5555} \and
-Louis-Marie Traonouez\inst{2}\orcidID{2222--3333-4444-5555} \and
-Paul Théron\inst{3}\orcidID{2222--3333-4444-5555}}
+    Jean-Paul Jamont\inst{1}\orcidID{1111-2222-3333-4444} \and
+    Michel Occelo\inst{1}\orcidID{2222--3333-4444-5555} \and
+    Louis-Marie Traonouez\inst{2}\orcidID{2222--3333-4444-5555} \and
+    Paul Théron\inst{3}\orcidID{2222--3333-4444-5555}}
 %
 \authorrunning{J. Soulé et al.}
 % First names are abbreviated in the running head.
 % If there are more than two authors, 'et al.' is used.
 %
 \institute{Univ. Grenoble Alpes, Grenoble INP, LCIS, 26000, Valence, France
-\email{\{julien.soule, jean-paul.jamont, michel.occello\}@lcis.grenoble-inp.fr}
-\and
-Thales Land and Air Systems, BU IAS, Rennes, France
-\email{louis-marie.traonouez@thalesgroup.com}
-\and
-AICA IWG, La Guillermie, France \\
-\email{paul.theron@orange.fr}
+    \email{\{julien.soule, jean-paul.jamont, michel.occello\}@lcis.grenoble-inp.fr}
+    \and
+    Thales Land and Air Systems, BU IAS, Rennes, France
+    \email{louis-marie.traonouez@thalesgroup.com}
+    \and
+    AICA IWG, La Guillermie, France \\
+    \email{paul.theron@orange.fr}
 }
 %
 \maketitle              % typeset the header of the contribution
 %
 \begin{abstract}
 
-     % context
-     Multi-Agent Reinforcement Learning has been successfully applied in various contexts to generate policies allowing agents to collaboratively achieve a goal in a non-fully observable environment. These policies are approximated functions that map observation to action allowing agents are to maximize the cumulative reward over an episode.
-     % problem
-     Yet, from a designer point of view, those trained policies raise explainability and safety issues because they do not give human-understandable or exploitable specifications of their organizational aspects such as individual, social or collective levels.
-     % This particularly concerns black box models in deep-learning or random forest.
-     % hypothesis / contribution
-     This paper aims to define the organizational explainability problem formally. Then, we expose our approach to extract the organization specifications out of trained agents policies.
-     % results
-     We applied our approach in three manageable cooperative Atari games likely to have emergent organization among agents. Resulting organization specifications are indeed consistent with human expectations.
-
-\keywords{Multi-Agent Systems \and Reinforcement Learning \and Organization \and Design}
+    % context
+    Multi-Agent Reinforcement Learning has been successfully applied in various contexts to generate policies allowing agents to collaboratively achieve a goal in a non-fully observable environment. These policies are approximated functions that map observation to action allowing agents are to maximize the cumulative reward over an episode.
+    % problem
+    Yet, from a designer point of view, those trained policies raise explainability and safety issues because they do not give human-understandable or exploitable specifications of their organizational aspects such as individual, social or collective levels.
+    % This particularly concerns black box models in deep-learning or random forest.
+    % hypothesis / contribution
+    This paper aims to define the organizational explainability problem formally. Then, we expose our approach to extract the organization specifications out of trained agents policies.
+    % results
+    We applied our approach in three manageable cooperative Atari games likely to have emergent organization among agents. Resulting organization specifications are indeed consistent with human expectations.
+    
+    \keywords{Multi-Agent Systems \and Reinforcement Learning \and Organization \and Design}
 \end{abstract}
 
 \section{Introduction}
 
 % Context
 In Multi-Agent Systems (MASs), organization is a fundamental concept that impact how agents are coordinating their activities to collaboratively achieve a common goal\cite{Hubner2002}. In essence, we assume the entity of the organization (we simply call \textbf{organization}) always exists through the running agents interactions even though it may be implicit.
-An \textbf{organizational model} specifies (at least partially) the organization whether it is used as medium to describe an explicit known organization in a top-down way, or describing an implicit organization in a bottom-up way. Examples of organizational models are the Agent/Group/Role (AGR) model\cite{Ferber2004} or more complex ones such as $\mathcal{M}oise^{+}$\cite{Hubner2002}. Organizational models can take into account aspects such as structural coordination, dynamic interactions, and the achievement of common objectives\cite{Ferber2004, Abbas2015}. We call the \textbf{specifications} of an organization, the set of components used in an instance of an organizational model to specify the organization.
+An \textbf{organizational model} specifies (at least partially) the organization whether it is used as medium to describe an explicit known organization in a top-down way, or describing an implicit organization in a bottom-up way. Examples of organizational models are the Agent/Group/Role (AGR) model\cite{Ferber2004} or more complex ones such as $\mathcal{M}OISE^{+}$\cite{Hubner2002}. Organizational models can take into account aspects such as structural coordination, dynamic interactions, and the achievement of common objectives\cite{Ferber2004, Abbas2015}. We call the \textbf{specifications} of an organization, the set of components used in an instance of an organizational model to specify the organization.
 
 We assume an organization in a MAS can be understood regarding the Agent Centered Point of View (ACPV) vs. Organization Centered Point of View (OCPV) and agent's organization awareness vs. unawareness\cite{Picard2009}.
 Typical examples are emergent MAS (ACPV and organization unawareness), coalition based MAS (ACPV and organization awareness), organization based MAS (OCPV and organization awareness), and Agent oriented engineering (OCPV and organization unawareness)\cite{Picard2009}.
@@ -170,25 +170,29 @@ We assume an \textbf{architecture} (also called organizational paradigm) is an a
 
 In most \textbf{self/re-organization} mechanisms agents' policies are defined and fixed by the designer from ACPV/OCPV so that an optional emerging/chosen organization allows reaching a global goal\cite{Picard2009}. We can envision Multi-Agent Reinforcement Learning (MARL) as a particular ACPV mechanism that aims to replace the designer by simultaneously making emerge agents' policies (micro-level) and consequently the emerging organization (macro-level) relying on quantitative feedbacks. In literature, that mechanism is mostly considered to satisfy the need that agents reach efficiently a specific goal with few other considerations. Typical examples include agents' policies modeled as neural networks that are updated using various algorithms such as Deep Q-Network or REINFORCE. In such examples, an emerging implicit organization among agents can converge.
 
-In some environments, such as computers network with highly complex and non-visual interactions, the lack of intuitive comprehension of the environment can make MAS methods difficult to apply to develop a MAS whose organization optimally reach a goal. In such cases, the use of MARL could allow to have sufficiently and non over-fitted trained agents optionally respecting additional arbitrary designer's constraints (coming from a architecture for instance). We think an observer/designer could understand, interpret, and produce the specifications of valuable organizations by translating them into organizational models. For instance determining the individual, social, collective levels described in $\mathcal{M}oise^{+}$\cite{Hubner2002}. At least it may give relevant insights for guiding the design process.
+In some environments, such as computers network with highly complex and non-visual interactions, the lack of intuitive comprehension of the environment can make MAS methods difficult to apply to develop a MAS whose organization optimally reach a goal. In such cases, the use of MARL could allow to have sufficiently and non over-fitted trained agents optionally respecting additional arbitrary designer's constraints (coming from a architecture for instance). We think an observer/designer could understand, interpret, and produce the specifications of valuable organizations by translating them into organizational models. For instance determining the individual, social, collective levels described in $\mathcal{M}OISE^{+}$\cite{Hubner2002}. At least it may give relevant insights for guiding the design process.
 
 % Problem
 The idea of benefitting of the particularly adaptive and general MARL mechanism to get an approximated suited MAS organization and producing associated specifications, requires to link the MARL training of a set of policies in a bidirectional way with a MAS organizational model. For instance, a hierarchy described in a MAS model would constrain the possible policies to get ultimately trained in MARL. Reversely, a set of trained policies could be described in an organizational model, thus indicating resemblance with known MAS organization architectures.
 
 % Contribution/Hypothesis
-This paper first aims to formalize the aforementioned idea through a formal model. That formal model aims to unify the concepts and links between agents' policies, their training with MARL, architecture with the $\mathcal{M}oise^{+}$ organizational model. Relying on that formal model, we expose our approach to generate an efficient organization and associated OCPV specifications based on the environment, the initial agents' policies models, the design constraints, and the global goal.
+This paper first aims to formalize the aforementioned idea through a formal model. That formal model aims to unify the concepts and links between agents' policies, their training with MARL, architecture with the $\mathcal{M}OISE^{+}$ organizational model. Relying on that formal model, we expose our approach to generate an efficient organization and associated OCPV specifications based on the environment, the initial agents' policies models, the design constraints, and the global goal.
 
 % Results
 We applied our approach to three simple Atari games involving several agents that must converge to a specific organization to achieve a goal efficiently. Obtained organization specifications are exploitable and coherent with human expectations.
 
 The remainder of the article is built as following.
-In section II, we give an overview of related works to our intended contribution as for MARL/RL, specifications, MAS organizational models and mechanisms. It shows the originality of our idea.
+In section II, after briefly introducing the underlying idea linking $\mathcal{M}OISE^{+}$ with MARL; we show the related works we identified. It shows the originality of our positioning in literature.
 In section III, we introduce a formal model to properly formalize our idea by unifying MAS and MARL related concepts.
 In section IV, we present our approach to help designers in designing a suited organization regarding environment, goal, agents' policy model and design constraints.
 In section V, we discuss results obtained after applying our approach in three simple cooperative Atari games.
 In section VI, we conclude on the viability and relevance of our model and approach and we highlight limitations to overcome and future works as well.
 
-\section{Related works}
+\section{Overview of the underlying idea and related works}
+
+Whether an OCPV or ACPV, when designing a MAS, the human designer has to define the logic in agents themselves intending the MAS can reach some specific goals. It often takes place as an iterative process where designer are proceeding by trial and error. Despite the designer skills, that process may be long to converge towards
+
+The main idea is to consider a joint-policy can be (at least partially) described in terms of organizational specifications.
 
 \begin{itemize}
     \item Rule extraction from trained neural networks: involves obtaining human-interpretable rules that approximate the policy of the neural network. Various algorithms have been developed for this task, including decompositional, pedagogical, and eclectics approaches. These algorithms aim to provide comprehensible descriptions of the network's hypothesis that closely approximate its policy. For example, NN2Rules is a decompositional approach that extracts a set of decision rules from the parameters of the trained neural network model, making the decision rules more interpretable. Rule extraction algorithms enable neural networks to justify their classification responses using explainable classification rules, enhancing the transparency and interpretability of the models\cite{Hailesilassie2016}\cite{Sato2001}\cite{Lal2022}.
@@ -201,7 +205,7 @@ In section VI, we conclude on the viability and relevance of our model and appro
 
 \section{A formal model for unifying MAS and MARL concepts}
 
-The proposed model aims to integrate MAS organization designing process by translating the $\mathcal{M}oise^{+}$ organizational model within the formalism used for MARL. Then, we formally describe how agents' policies and training process can be linked to the $\mathcal{M}oise^{+}$ organizational model.
+The proposed model aims to integrate MAS organization designing process by translating the $\mathcal{M}OISE^{+}$ organizational model within the formalism used for MARL. Then, we formally describe how agents' policies and training process can be linked to the $\mathcal{M}OISE^{+}$ organizational model.
 
 The chosen formalism is based on the Decentralized Partially Observable Markov Decision Process (Dec-POMDP)~\cite{Oliehoek2016} because it considers multiple agents in a similar MAS fashion. It relies on stochastic processes to model uncertainty of the environment for the changes induced by actions, in received observations, in communication\dots Additionally, unlike Partially Observable Stochastic Games (POSG), the reward function can be common to agents which fosters training for collaborative oriented actions~\cite{Beynier2013}.
 A Dec-POMDP is a 7-tuple $(S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$, where:
@@ -216,13 +220,13 @@ A Dec-POMDP is a 7-tuple $(S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$, where:
 \end{itemize}
 Considering $n$ agents, solving the Dec-POMDP consists in finding a joint policy $\pi = \{\pi_1,..,\pi_n\}$ that maximize the cumulative reward over a finite horizon ($\gamma < 1$), where $\pi_i: O_i \times \rightarrow A_i$ (with $\pi_i \in \Pi$, the set policies) is the policy (or policy) of an agent $i$ that deterministically maps an observation to an action\cite{Beynier2013}.
 
-The $\mathcal{M}oise^{+}$ organizational model comprises the structural, functional and deontic specifications.
+The $\mathcal{M}OISE^{+}$ organizational model comprises the structural, functional and deontic specifications.
 
 \begin{itemize}
     \item 
 \end{itemize}
 
-The $\mathcal{M}oise^{+}$ structural specification is built in three levels~\cite{Hubner2007}:
+The $\mathcal{M}OISE^{+}$ structural specification is built in three levels~\cite{Hubner2007}:
 \begin{itemize}
     \item The \textbf{individual level} referring to the policies that an agent may have according to its role
     \item The \textbf{social level} referring to the acquaintance, communication and authority links between roles
@@ -233,12 +237,12 @@ The functional specifications
 
 \ 
 
-We envision to integrate the $\mathcal{M}oise^{+}$ organizational model within the Dec-POMDP model as described below:
+We envision to integrate the $\mathcal{M}OISE^{+}$ organizational model within the Dec-POMDP model as described below:
 
 \begin{itemize}
     \item $Roles = {role_1,..,role_{|Roles|}}$: the set of roles with $role_i = {\pi_1,..,\pi_{|role_i|}}$ (envision organization in ACPV and unawareness)
     \item $SocialLinks$: the set of social links that combine at least two policy into another one (envision organization in OCPV with awareness)
-    \item $CollectiveLinks$: the set of collective 
+    \item $CollectiveLinks$: the set of collective
 \end{itemize}
 
 % TODO
@@ -264,7 +268,7 @@ The engineering of a Multi-Agent System must take into account two levels:
               \item What is the organization within which the agents operate? How is it established?
               \item How do the agents coordinate their actions? How to ensure coherent operation?
           \end{itemize}
-
+          
     \item Agent level questions (agent-centered approach)
           \begin{itemize}
               \item What does an agent represent? What actions should be encapsulated in an agent?
