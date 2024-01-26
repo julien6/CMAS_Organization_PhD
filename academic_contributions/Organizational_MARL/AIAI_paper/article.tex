@@ -190,9 +190,12 @@ In section VI, we conclude on the viability and relevance of our model and appro
 
 \section{Overview of the underlying idea and related works}
 
-Whether an OCPV or ACPV, when designing a MAS, the human designer has to define the logic in agents themselves intending the MAS can reach some specific goals. It often takes place as an iterative process where designer are proceeding by trial and error. Despite the designer skills, that process may be long to converge towards
+Whether adopting OCPV or ACPV, when designing a MAS, the human designer has to define the logic in agents themselves intending the MAS can reach some specific goals via some kind of emergent or expected organization pattern. It often takes place as an iterative process where designer are proceeding by trial and error. Despite the designer skills, that process may be hard and costly to converge towards a sufficiently estimated successful MAS. That process gets more difficult when the target deployment environment is not easily readable or handleable due to the complexity and internal safety policies such as for company infrastructure networks. Additionally, unexpected emergent phenomena may appear without giving guarantees for safety. We refer to that observation as the \textquote{human-based design difficulty}.
 
-The main idea is to consider a joint-policy can be (at least partially) described in terms of organizational specifications.
+Instead of adopting a risky direct empiric approach, analogous to \textquote{digital twins}, a common approach is to rely on a intermediary step by simulating the target deployment system. Indeed, simulation can provide a monitoring framework that leaves room for a safe design process, while having an assessment of the resulting MAS designs. If the simulation is close enough to the target system in terms of fidelity, then we can expect the designed MAS to be transferred to the target system for indeed reaching the goals.
+In that respect, creating a MAS that aims to reach a goal in any given environment, firstly focuses on finding a suited MAS design only in the associated simulation. We also, hypothesized the simulation to allow RL techniques and to give, at least, raw description of the current environment and agents states.
+
+The premise of our idea is to benefit of a MARL process that would automatically converge to an optimal solution as for establishing the rules in agents (called policies) that drives the MAS to the goal. Yet, unlike human-based design where the agent's logic is clearly specified, trained policies with MARL are approximated by black box functions such as Neural Networks. Therefore, we also need to address the explainability issue not only for individual agents' policies but for the joint-policy in its entirety through a collective point-of-view. We think, this problem can be partially addressed by considering that a joint-policy can be (at least partially) described in terms of the organizational specifications. We chose $\mathcal{M}OISE^+$ as our organizational model for it gives an advanced formal description for an organization without incompatibilities with MARL, especially for formal description of agents' policies. Additionally, it provides a sufficiently detailed vision of organization to be understood at different point of views.
 
 \begin{itemize}
     \item Rule extraction from trained neural networks: involves obtaining human-interpretable rules that approximate the policy of the neural network. Various algorithms have been developed for this task, including decompositional, pedagogical, and eclectics approaches. These algorithms aim to provide comprehensible descriptions of the network's hypothesis that closely approximate its policy. For example, NN2Rules is a decompositional approach that extracts a set of decision rules from the parameters of the trained neural network model, making the decision rules more interpretable. Rule extraction algorithms enable neural networks to justify their classification responses using explainable classification rules, enhancing the transparency and interpretability of the models\cite{Hailesilassie2016}\cite{Sato2001}\cite{Lal2022}.
@@ -220,12 +223,9 @@ A Dec-POMDP is a 7-tuple $(S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$, where:
 \end{itemize}
 Considering $n$ agents, solving the Dec-POMDP consists in finding a joint policy $\pi = \{\pi_1,..,\pi_n\}$ that maximize the cumulative reward over a finite horizon ($\gamma < 1$), where $\pi_i: O_i \times \rightarrow A_i$ (with $\pi_i \in \Pi$, the set policies) is the policy (or policy) of an agent $i$ that deterministically maps an observation to an action\cite{Beynier2013}.
 
+\
+
 The $\mathcal{M}OISE^{+}$ organizational model comprises the structural, functional and deontic specifications.
-
-\begin{itemize}
-    \item 
-\end{itemize}
-
 The $\mathcal{M}OISE^{+}$ structural specification is built in three levels~\cite{Hubner2007}:
 \begin{itemize}
     \item The \textbf{individual level} referring to the policies that an agent may have according to its role
@@ -233,11 +233,22 @@ The $\mathcal{M}OISE^{+}$ structural specification is built in three levels~\cit
     \item The \textbf{collective level} referring to the aggregation of roles in groups.
 \end{itemize}
 
-The functional specifications
+The $\mathcal{M}OISE^{+}$ functional specification is based on the notion of \textquote{Social Scheme} that is goal decomposition according to missions participating in reaching an ultimate goal.
+
+The $\mathcal{M}OISE^{+}$ deontic specification is based on obligations and permissions about how agents' roles can be linked to their missions.
 
 \ 
 
 We envision to integrate the $\mathcal{M}OISE^{+}$ organizational model within the Dec-POMDP model as described below:
+
+A single team of $n$ agents having the same reward function $R: S \times A \times S \rightarrow \mathbb{R}$, for a joint-policy $\pi_i \in \Pi$, we first define:
+
+\begin{itemize}
+    \item $U_i(<\pi_i, \pi_{-i}>): \Pi \rightarrow \mathbb{R}$, the expected return for team i (with associated $\pi_i$ joint-policy) over an episode and $\pi_{-i}$ the optional other teams joint-policies;
+    \item $BR_{i}(\pi_i) = argmax_{p_i}(U(<\pi_i,\pi_{-i}>))$, is the best response in the sense that the whole team cannot change any of the policies to get a better result.
+    \item $C: \Omega' \rightarrow A', \Omega' \Subset \Omega, A' \Subset A$, a joint-policy constraint
+    \item $\pi_{i,c}: \Omega \rightarrow A = \{\forall j, 0 \le j \le n, \{\forall \omega \in \Omega, \forall a \in A, \omega \notin \Omega', a \notin A', (\omega, a)\}\}$, the joint-policy satisfying the joint-policy-constraint $C$
+\end{itemize}
 
 \begin{itemize}
     \item $Roles = {role_1,..,role_{|Roles|}}$: the set of roles with $role_i = {\pi_1,..,\pi_{|role_i|}}$ (envision organization in ACPV and unawareness)
