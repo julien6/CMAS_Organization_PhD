@@ -13,6 +13,8 @@
 \captionsetup{font=it}
 \usepackage{ragged2e}
 \usepackage{hyperref}
+\usepackage{amsmath}
+\newcommand{\probP}{\text{I\kern-0.15em P}}
 \usepackage{footmisc}
 \usepackage{booktabs}
 \usepackage{smartdiagram}
@@ -21,6 +23,31 @@
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \usepackage{cite}
+
+% --- Tickz
+\usepackage{physics}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usepackage{mathdots}
+\usepackage{yhmath}
+\usepackage{cancel}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{siunitx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{tabularx}
+\usepackage{extarrows}
+\usepackage{booktabs}
+\usetikzlibrary{fadings}
+\usetikzlibrary{patterns}
+\usetikzlibrary{shadows.blur}
+\usetikzlibrary{shapes}
+
+
+% ---------
 
 \usepackage{etoolbox}
 \patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
@@ -133,22 +160,93 @@ L'agent AICA (Autonomous Intelligent Cyber-defence Agent) théorisé par l'\text
 Une vision de l'AICA comme un Système Multi-Agent de Cyber-défense (SMAC) déléguant les différents aspects de Cyber-défense à des agents autonomes, vise notamment à répondre à l'augmentation de la surface d'attaque des systèmes \textquote{IoT} présentant des failles dans certains nœuds\cite{kott2018autonomous}. De plus, elle prend en compte les problèmes liés à l'ouverture, le passage à l'échelle et l'autonomie du système hôte.
 
 % Problème
-Etant au coeur d'un SMAC, l'organisation impacte la façon dont les agents interagissent entre eux et avec leur environnement pour atteindre un objectif de Cyber-défense. Ainsi, la conception d'un AICA de type SMAC peut être vu comme un problème d'optimisation consistant à trouver l'organisation satisfaisant les contraintes de déploiement de l'environnement et favorisant la meilleure performance dans l'atteinte d'un objectif de Cyber-défense.
+Etant au coeur d'un SMAC, l'organisation impacte la façon dont les agents interagissent entre eux et avec leur environnement pour atteindre un objectif de Cyber-défense. Ainsi, la conception d'un SMAC de type AICA peut être vu comme un problème d'optimisation consistant à trouver l'organisation satisfaisant les contraintes de déploiement de l'environnement et favorisant la meilleure performance dans l'atteinte d'un objectif de Cyber-défense.
 Néanmoins, la complexité et le manque de lisbilité de certains systèmes en réseaux rend difficile et non-sûre une recherche empirique de l'organisation optimale directement sur le système à proteger.
 
 % Contribution
-Dans ce papier, la section II présente une travail en cours utilisant le \textquote{Multi-Agent Reinforcement Learning} (MARL) avec le modèle organisationel $\mathcal{M}OISE^{+}$\cite{Hubner2002} afin de spécifier l'organisation du SMAC entrainé et guider son entrainement.
-La section III discute de son application sur un scénario d'un essaim de drones issu du CAGE Challenge 3\cite{cage_challenge_3_announcement2022}.
+Dans la section II, nous présentons un travail en cours visant à utiliser le \textquote{Multi-Agent Reinforcement Learning} (MARL) avec le modèle organisationel $\mathcal{M}OISE^{+}$\cite{Hubner2002} afin de spécifier l'organisation du SMAC entrainé et guider son entrainement.
+La section III discute de sa possible application sur un scénario d'un essaim de drones issu du CAGE Challenge 3\cite{cage_challenge_3_announcement2022}.
 
-\section{Approche théorique de conception}
+\section{Aperçu de l'approche théorique de conception}
+
+Nous nous positionons dans la phase de conception d'un SMAC via une simulation proche du système cible permettant la recherche sûre d'un ensemble d'agent éventuellement transferables sur le système cible. A l'instar de travaux de simulation s'inscrivant dans l'\textquote{Autonomous Cyber Operation} comme CybORG\cite{Maxwell2021}, CyberBattleSim\cite{cyberbattlesim}, CYST\cite{drasar_session-level_2020} ou CSLE\cite{Hammar2022}, nous avons utilisé le MARL pour génerer les politiques des agents cyber-défenseurs maximisant la récompense cumulée sur un episode dans un scénario d'un réseau d'entreprise\cite{soule2023towards}.
+
+Notre modèle de simulation se base sur un \textquote{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP)~\cite{Oliehoek2016} car il considère plusieurs agents de façon analogue à un Système Multi-Agent (SMA). Il s'appuie sur des processus stochastiques pour modéliser l'incertitude de l'environnement pour les changements induits par les actions, dans les observations reçues, dans les points de communication. De plus, contrairement aux jeux stochastiques partiellement observables (POSG), la fonction de récompense peut être commune aux agents, ce qui favorise la formation d'actions collaboratives~\cite{Beynier2013}.
+
+Cependant, en raison des modèles black box (notamment issus de l'apprentissage profond) approximant les politiques des agents, il est difficile d'obtenir des garanties de sûreté de fonctionnement et d'explicabilité des agents individuels\cite{jyoti2022robustness}. L'originalité de notre approche consiste à adresser ce problème au niveau collectif en ajoutant des spécification de l'organisation au sein du processus d'apprentissage à la fois comme moyen de comprendre le fonctionnement du SMAC entrainé au niveau organisationel et pour guider son apprentissage d'après les spécifications initiales du concepteur.
+
+Le modèle organisationel est le support des spécifications de l'organisation qui visent à décrire systématiquement une organisation observée ou en vu d'une implémentation. Parmi, les modèles organisationels existants \textquote{Agent/Group/Role}\cite{Ferber2004} et $\mathcal{M}OISE^+$\cite{Hubner2002} fournissent une description haut niveau pertinente des structures et des interactions au sein du SMA. Cependant, nous privilegions $\mathcal{M}OISE^+$ car il fournit un cadre formel prenant en compte de manière explicite les aspects sociaux entre agents là ou \textquote{AGR} se concentre sur l'intégration de norme orienté vers la conception.
+
+Comme indiqué à la Figure \ref{fig:design_approach}, le modèle organisationnel $\mathcal{M}OISE^{+}$ est mis en relation avec les politiques apprises dans un process de \textquote{Organization Oriented MARL} (OOMARL). Dans ce processus, nous cherchons à définir les spécifications structurelles, fonctionnelles et déontiques de $\mathcal{M}OISE^{+}$ par rapport aux politiques apprises (1). Par exemple, une analyse du comportement des agents entrainés sur le type d'action et la fréquence peut permettre de determiner leur rôle. Inversement, les specifications de l'organisation contraignent l'espace des politiques possibles des agents (2). Certaines des actions étiquetés pour des rôle particulier peuvent être accessibles ou pas à un agent en fonction du rôle attribué.
+Le coeur de cette approche peut être exprimé comme suit:
+\begin{equation} %\label{eq1}
+    Design: T \cross R \cross Agent \cross S_{init} \rightarrow S \cross \Pi \cross S
+\end{equation}
+
+% La spécification structurelle $\mathcal{M}OISE^{+}$ est construite en trois niveaux~\cite{Hubner2007} :
+% \begin{itemize}
+%     \item Le \textbf{niveau individuel} faisant référence aux politiques qu'un agent peut avoir en fonction de son rôle
+%     \item Le \textbf{niveau social} faisant référence aux liens de connaissance, de communication et d'autorité entre les rôles
+%     \item Le \textbf{niveau collectif} faisant référence à l'agrégation des rôles en groupes.
+% \end{itemize}
+
+% La spécification fonctionnelle $\mathcal{M}OISE^{+}$ est basée sur la notion de \textquote{Social Scheme} qui est une décomposition des objectifs selon les missions participant à l'atteinte d'un objectif ultime.
+
+% La spécification déontique $\mathcal{M}OISE^{+}$ est basée sur des obligations et des autorisations sur la façon dont les rôles des agents peuvent être liés à leurs missions.
+
+% Le coeur de notre modèle Dec-POMDP est un 7-tuple $(S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$, où :
+% \begin{itemize}
+%      \item $S = \{s_1, ..s_{|S|}\}$ : L'ensemble des états possibles.
+%      \item $A_{i} = \{a_{1}^{i},..,a_{|A_{i}|}^{i}\}$ : L'ensemble des actions possibles pour l'agent $i$ .
+%      \item $T$ pour que $T(s,a,s') = \probP{(s'|s,a)}$ : L'ensemble des probabilités de transition conditionnelles entre les états
+%      \item $R : S \times A \times S \rightarrow \mathbb{R}$ : La fonction de récompense
+%      \item $\Omega_{i} = \{o_{1}^{i},..,o_{|\Omega_{i}|}^{i}\}$ : L'ensemble des observations pour l'agent $ag_i$
+%      \item $O$ pour que $O(s',a,o) = \probP{(o|s',a)}$ : L'ensemble des probabilités d'observation conditionnelles.
+%      \item $\gamma \in [0,1]$, le facteur de remise
+% \end{itemize}
+% En considérant $n$ agents, résoudre le Dec-POMDP consiste à trouver une politique commune $\pi = \{\pi_1,..,\pi_n\}$ qui maximise la récompense cumulée sur un horizon fini ($\gamma < 1$ ), où $\pi_i : O_i \times \rightarrow A_i$ (avec $\pi_i \in \Pi$, les politiques définies) est la politique (ou la politique) d'un agent $i$ qui mappe de manière déterministe une observation à une action\cite{Beynier2013}.
+
+% Nous envisageons d'intégrer le modèle organisationnel $\mathcal{M}OISE^{+}$ au sein du modèle Dec-POMDP comme décrit ci-dessous :
+
+% Une seule équipe de $n$ agents ayant la même fonction de récompense $R : S \times A \times S \rightarrow \mathbb{R}$, pour une politique conjointe $\pi_i \in \Pi$, on définit d'abord :
+
+% \begin{itemize}
+%     \item $U_i(<\pi_i, \pi_{-i}>) : \Pi \rightarrow \mathbb{R}$, le retour attendu pour l'équipe i (avec la politique commune $\pi_i$ associée) sur un épisode et $\pi_{-i}$ les politiques communes facultatives des autres équipes ;
+%     \item $BR_{i}(\pi_i) = argmax_{p_i}(U(<\pi_i,\pi_{-i}))$, est la meilleure réponse dans le sens où toute l'équipe ne peut changer aucun des éléments politiques pour obtenir un meilleur résultat.
+%     \item $C : \Omega' \rightarrow A', \Omega' \Subset \Omega, A' \Subset A$, une contrainte de politique commune
+%     \item $\pi_{i,c} : \Omega \rightarrow A = \{\forall j, 0 \le j \le n, \{\forall \omega \in \Omega, \forall a \in A, \ omega \notin \Omega', a \notin A', (\omega, a)\}\}$, la politique commune satisfaisant la contrainte de politique commune $C$
+% \end{itemize}
+
+% \begin{itemize}
+%     \item $Roles = {role_1,..,role_{|Roles|}}$ : l'ensemble des rôles avec $role_i = {\pi_1,..,\pi_{|role_i|}}$ (envisager l'organisation en ACPV et méconnaissance)
+%     \item $SocialLinks$ : l'ensemble des liens sociaux qui combinent au moins deux politiques en une autre (envisager l'organisation en OCPV avec sensibilisation)
+%     \item $CollectiveLinks$ : l'ensemble des collectifs
+% \end{itemize}
 
 
-\section{Application sur un essaim de drones}
+Où l'environment et ses contraintes (représenté par la fonction de transition d'état $T$), les objectifs de cyberdéfense (représenté par la fonction de récompense $R$), un ensemble d'agents ($Agents$) et les spécifications initiales ($S_{init}$) de $\mathcal{M}OISE^{+}$ sont associées aux politiques des agents entrainés $\Pi$ avec les spécifications organisationel associées $S$.
 
+L'interêt est de fournir a minima au concepteur des indications sur les spécifications d'une organisation à même de satisfaire les contraintes de l'environment et de conception initiales. A la lumière de ces premier résultats, le concepteur peut décider de proposer des spécifications dont il peut s'assurer qu'il répond aux exigences de sûreté et d'explicabilité. Ces spécifications servent alors de plan pour implementer un SMAC comme décrit dans la Figure \ref{fig:design_approach}.
+
+\begin{figure}[h]
+    \centering
+    \include{figures/approach}
+    \caption{Une vue synthétique de notre approche pour la conception de SMAC}
+    \label{fig:design_approach}
+\end{figure}
+
+\section{Vers une application sur un essaim de drones}
+
+Le CAGE Challenge 3\cite{cage_challenge_3_announcement2022} décrit un scénario où chacun des drone composant un essaim est susceptible de voir un malware (assimilable à un agent rouge) s'activer et chercher à se déplacer latéralement sur le plus de drones voisin topologiquement. Le challenge consiste alors à fournir des politiques des agents bleus initialement déployés sur chacun des drones qui minimisent le plus possible l'expansion des agents rouges au cours de l'execution du scénario. Le simulateur CybORG est fournit aux compétiteurs pour évaluer leurs contributions.
+
+Les solutions proposées par les finalistes reposent sur des algorithmes d'apprentissage profond notamment \textquote{Proximal Policy Optimization}. Bien qu'efficace, ces modèles entrainés restent des approximations desquelles il est difficile d'obtenir des garanties de sûreté de fonctionnement et d'explicabilité.
+
+Ayant appliqué avec succès notre approche pour des jeux coopératifs Atari simples de type \textquote{Gym environment} analogues à l'environment plus complexe CybORG, nous sommes actuellement en cours d'experimentation de notre approche sur le CAGE Challenge 3. Certains résultats sur l'identification des rôles des agents permettent de comprendre une partie du fonctionnement du SMAC d'après les spécifications de l'organisationel obtenus par analyse comportementale.
 
 \section{Conclusion}
-Un SMA de cyber-défense déployé sur un système hôte en réseau permettrait de relever les défis liés à la complexité et la rapidité de cyber-attaques. Notre étude donne un aperçu d'organisations possibles respectant des objectifs de cyber-défense et des contraintes de l'environnement de déploiement d'un SMA de cyber-défense.
-Elle souligne aussi le besoin de définir un cadre théorique et technique spécifique à l'organisation d'un SMA de cyber-défense dans un environnement réseau. Un tel cadre permettra d'explorer, d'évaluer et de tirer des recommandations sur l'organisation d'un SMA de cyber-défense que nous valoriserons pour le développement d'un agent AICA.
+Un SMAC de type AICA serait à même de relever les défis liés à la cyberdéfense de système distribués et hétérogènes là où des systèmes de cyberdéfense centralisés sont peu adaptés face à la complexité et l'évolutivité des attaques.
+Cependant, les limites d'une implémentation empirique d'un tel SMAC mettent en avant la nécéssité de prendre en compte la conception dans un cadre théorique et technique plus large.
+Notre approche vise à assister le procesus de conception d'un SMAC en fournissant des agents entrainés avec un processus de MARL intégrant les spécifications organisationels. Appliqué à divers systèmes cibles tels que les essaims de drone, notre approche permettrait de fournir un premier plan de conception d'un SMAC réaliste, adapté et appréhendable humainement.
 
 \section*{Références}
 
