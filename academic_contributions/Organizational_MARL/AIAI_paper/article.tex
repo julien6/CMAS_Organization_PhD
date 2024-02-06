@@ -264,7 +264,7 @@ A Dec-POMDP is a 7-tuple $(S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$, where:
     \item $\gamma \in [0,1]$, the discount factor
 \end{itemize}
 
-Considering $m$ \textbf{teams} (also referred as \textbf{groups}) each containing several agents, we also detail the minimal formalism notation we re-used for solving the Dec-POMDP for a given team $i, 0 \leq t \leq m$ containing $n$ agents~\cite{Beynier2013,Albrecht2024}:
+Considering $m$ \textbf{teams} (also referred as \textbf{groups}) each containing several agents among $\mathcal{A}$, we also detail the minimal formalism notation we re-used for solving the Dec-POMDP for a given team $i, 0 \leq t \leq m$ containing $n$ agents~\cite{Beynier2013,Albrecht2024}:
 
 \begin{itemize}
     \item $\Pi$: the set of policies. A \textbf{policy} $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action and is used in an agent;
@@ -331,6 +331,33 @@ Based on $\mathcal{M}OISE^+$~\cite{Hubner2007} formalism, we only give the minim
 \end{itemize}
 
 
+\subsection{Formally linking MARL and Organizational model}
+
+Considering solving sub-optimally the Dec-POMDP for a single team $i$ (comprising $n$ agents in $\mathcal{A}$) at a $s = U_i^* - \delta$ (with $delta \in \mathbb{R}$) expectancy, we may obtain a set of joint-policies $\Pi_{joint,s}{\pi_{joint,i,1}, \pi_{joint,i,2}, \pi_{joint,i,3}...}$. For example, we may have different convergent joint-policies reaching at least a given expected cumulative reward after several training due to non-deterministic parameters in training or simulation. Then, one can envision to link those sub-optimal joint-policies with a organizational model eventually getting the raw specifications of the general implicit organization.
+
+First, noticing some specifications in the $\mathcal{M}OISE^+$ organizational model can be obviously mapped to subsets of actions for a single sub-optimal joint-policy, we propose the following relations:
+
+\begin{itemize}
+    \item $ra: \mathcal{R} \rightarrow \mathcal{P}(A)$: gives the actions associated with a role
+    \item $la: \mathcal{L} \rightarrow \mathcal{P}(A)$: gives actions associated with a link
+    \item $ga: \mathcal{G} \rightarrow \mathcal{P}(A)$:gives the actions associated with a global goal
+    \item $ma: \mathcal{M} \rightarrow \mathcal{P}(A)$: gives the actions associated with a mission label
+    \item $pa: \mathcal{P} \rightarrow \mathcal{P}(A)$: gives the actions associated with a mission plan
+\end{itemize}
+
+Now considering several sub-optimal joint-policies we propose the following relations:
+
+\begin{itemize}
+    \item $ca: $: gives the compatibilities between roles played by agents
+    \item $npa$:
+    \item $npa$:
+    \item $moa: \mathcal{R} \rightarrow \mathcal{P}(A)$: gives the actions
+    \item $nma: \mathcal{R} \rightarrow \mathcal{P}(A)$
+    \item 
+
+    \item $aga: \mathcal{A} \times \mathbb{N} \rightarrow \mathcal{P}(A) = \{a_i \in A | (\omega_i, a_i) \in \pi_k\}$: gives the actions played by agent $k$ in team $i$ over an episode with its policy $\pi_k \in \Pi_{joint, i}$
+\end{itemize}
+
 % \subsection{Two levels of MAS engineering to compute from MARL trained MAS}
 
 % The engineering of a Multi-Agent System must take into account two levels:
@@ -357,22 +384,43 @@ Based on $\mathcal{M}OISE^+$~\cite{Hubner2007} formalism, we only give the minim
 
 \section{Approach for assisted/automated design of MAS organization}
 
-The core of our approach consists in labeling(Observation-Action) couples according to their impact as for the $\mathcal{M}OISE^+$ specifications. It enables constraining agents possible policies during training. Additionally, it allows extracting organization specifications from policies. An advantage of that approach is that only rely on \textquote{observed policies} we call \textquote{behaviors} without considering the approximation function used such as neural networks.
+Previous section formally described links between Dec-POMDP and $\mathcal{M}OISE^+$. Based on that idea, we introduce an approach for MAS design that enables constraining agents possible policies during training. Additionally, it allows extracting organization specifications from policies. An advantage of that approach is that only rely on \textquote{observed policies} we call \textquote{behaviors} without considering the approximation function used such as neural networks.
 
-Given a set of untrained policies within agents that are to be trained in a simulated environment, we can guide their training according to abstract organization specifications and get the non-abstract organization specifications following these steps.
-
+Given a set of untrained policies within agents that are to be trained in a simulated environment, we can guide their training according to abstract organization specifications and get the non-abstract organization specifications following these steps:
 \begin{enumerate}
-    \item Labeling each action with related known specifications.
-    \item Define the training specifications
-    \item Determine the action subspaces associated with each agent according to the training specifications
-    \item Regular training of agents
-    \item Extracting organizational specifications out of the trained agents' policies
-    \item Re
+    \item Labeling each action with related known specifications;
+    \item Defining the training specifications befor launching a simulation of several episodes;
+    \item Determining the action subspaces associated with each agent according to the training specifications
+    \item Training agents with regular algorithms;
+    \item Extracting organizational specifications out of the observed trained agents' policies in a single episode run;
+    \item Curating the raw specifications to get safe and clean specifications for an organization to be implemented
+    \item Implementing the curated organization and checking its validity
 \end{enumerate}
+
+An illustrative representation of our approach is presented in Figure \ref{fig:design_approach}. The organizational model $\mathcal{M}OISE^{+}$ is related to the policies learned in an \textquote{Organization Oriented MARL} (OOMARL) process. In this process, we seek to define the structural, functional and deontic specifications of $\mathcal{M}OISE^{+}$ with respect to the learned policies (1). For example, an analysis of the behavior of trained agents on the type of action and frequency can help determine their role. Conversely, the specifications of the organization constrain the space of possible agent policies (2). Some of the actions labeled for particular roles may or may not be accessible to an agent depending on the assigned role.
+
+\begin{figure}[h]
+    \centering
+    \include{figures/approach}
+    \caption{A summary view of our approach to MAS design}
+    \label{fig:design_approach}
+\end{figure}
+
+The core of this approach can be expressed as follows:\begin{equation} %\label{eq1}
+    Design: T \cross R \cross Agent \cross S_{init} \rightarrow S \cross \Pi \cross S
+\end{equation}
+
+Where the environment and its constraints (represented by the state transition function $T$), the cyber defense objectives (represented by the reward function $R$), a set of agents ($Agents$) and the initial specifications ($S_{init}$) of $\mathcal{M}OISE^{+}$ are associated with the policies of the trained agents $\Pi$ with the associated organizational specifications $S$.
+
+The interest is to provide at least the designer with indications on the specifications of an organization capable of satisfying the constraints of the environment and initial design. In light of these initial results, the designer can decide to propose specifications which he can ensure meet the safety and explainability requirements. These specifications then serve as a blueprint for implementing a MAS as described in Figure \ref{fig:design_approach}.
+
+\paragraph{\textbf{OOMARL Gym Wrapper}} We developed a \textquote{Gym Wrapper} to help in automate the setting up of OOMARL for a given Gym Environment. It enables linking actions with $\mathcal{M}OISE^+$ specifications, define the training specifications and provide functions to extract the resulting sub-optimal raw organizational specifications.
 
 \section{Application and discussion for cooperative Atari games}
 
-We selected 9 environments to assess our approach: \textquote{Predator-prey with comm}, \textquote{simple reference}, \textquote{simple speaker listener}, \textquote{DeepMind MuJoCo Multi-Agent Soccer Environment}, \textquote{Pistonball}, \textquote{Waterworld}, \textquote{Emtombed: Cooperative}, \textquote{Cooperative Pong}, \textquote{Knights Archers Zombies}, \textquote{Moving Company}, \textquote{Captain-sailor}.
+We selected 3 environments to assess our approach: \textquote{Predator-prey with communication}, \textquote{DeepMind MuJoCo Multi-Agent Soccer Environment}, \textquote{Pistonball}, and \textquote{Knights Archers Zombies}.
+
+% We selected 9 environments to assess our approach: \textquote{Predator-prey with comm}, \textquote{simple reference}, \textquote{simple speaker listener}, \textquote{DeepMind MuJoCo Multi-Agent Soccer Environment}, \textquote{Pistonball}, \textquote{Waterworld}, \textquote{Emtombed: Cooperative}, \textquote{Cooperative Pong}, \textquote{Knights Archers Zombies}, \textquote{Moving Company}, \textquote{Captain-sailor}.
 
 We applied our approach in three cases:
 \begin{itemize}
@@ -390,6 +438,8 @@ We also took into account criteria after training: roles, links, compatibilities
 \input{tables/trained_OMARL_results.tex}
 
 \section{Conclusion}
+
+This article intends to address the need for easing the MAS designing when it can not be easily conducted by human designers due to the high complexity, low readability, highly changing and uncertainity of some environments. Our premise is to link good results obtained with MARL with some organizational model in order to get a human-readable idea of some suited organization in MAS to guide a safe monitored MAS design. Literature shows works have been provided focusing on emergent collective strategies using RL techniques or providing algorithms to make them emerge. Yet, we were unable to connect our idea with identified works as for using both MARL and an organizational model towards a MAS design approach. First, we formalized our idea for linking MARL with organizational model through Dec-POMDP and $\mathcal{M}OISE^+$. Relying on that formalism, we exposed the approach for MAS design using the link between MARL and organizational model. It resulted into a "Gym wrapper" for constraining agents' training according to their training organizational specifications and allowing to get the organizational specifications of the general OE in different runs. Finally, we applied our approach in three Gym environments to check the impact on training, explainability and viability for our MAS design approach. Despite, being agnostic of the policy approximation models, we think worth to investigates on linking organizational model with agents those directly for they could be adapted to better match the frame of organizational models. Furthermore, it enables envisioning addressing the design of MAS with organization awareness.
 
 %
 % ---- Bibliography ----
