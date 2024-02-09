@@ -109,6 +109,27 @@
 \newcommand{\todo}[1]{\textcolor{orange}{\newline \textit{\textbf{TODO:} #1}} \newline \newline }
 
 
+
+\newcounter{relation}
+\setcounter{relation}{0}
+\renewcommand{\therelation}{\arabic{relation}}
+\newcommand{\relationautorefname}{Relation}
+
+\newenvironment{relation}[1][]{%
+    \refstepcounter{relation}%
+    
+    \ 
+
+    \noindent \raggedright \textit{\textbf{Relation \therelation}} \hfill$}
+{%
+$ \hfill \phantom{x}
+
+\
+
+}
+
+
+
 % --------------------------------
 %             DOCUMENT
 % --------------------------------
@@ -176,14 +197,14 @@ In some environments, such as computers network with highly complex and non-visu
 The idea of benefitting of the particularly adaptive and general MARL mechanism to get an approximated suited MAS organization and producing associated specifications, requires to link the MARL training of a set of policies in a bidirectional way with a MAS organizational model. For instance, a hierarchy described in a MAS model would constrain the possible policies to get ultimately trained in MARL. Reversely, a set of trained policies could be described in an organizational model, thus indicating resemblance with known MAS organization architectures.
 
 % Contribution/Hypothesis
-This paper first informally introduce the aforementioned broad idea as a new specific research study we refer to as \textquote{Organizational Multi-Agent Reinforcement Learning} (OMARL). We present DMO (Dec-POMDP $\mathcal{M}OISE^+$ OMARL) a possible formal model within OMARL using the Decentralized Partially Observable Markov Decision Process (Dec-POMDP) as model for MARL and $\mathcal{M}OISE^+$ as an organizational model. DMO allows both getting organizational specifications from \textquote{trained} policies and constraining policies training with respect to given specifications. We use DMO within a proposed design approach to generate an efficient organization and associated OCPV specifications based on the environment, the initial agents' policies, the design constraints, and the global goal.
+This paper first informally introduce the aforementioned broad idea as a new specific research study we refer to as \textquote{Organizational Multi-Agent Reinforcement Learning} (OMARL). We present DMO (Dec-POMDP $\mathcal{M}OISE^+$ OMARL) a first attempt formally describing an OMARL process using the Decentralized Partially Observable Markov Decision Process (Dec-POMDP) as model for MARL and $\mathcal{M}OISE^+$ as an organizational model. DMO allows both getting some organizational specifications from \textquote{trained} policies and constraining policies training with respect to given specifications. We use DMO within a proposed design approach to generate an efficient organization and associated OCPV specifications based on the environment, the initial agents' policies, the design constraints, and the global goal.
 
 % Results
 We applied our design approach to three simple Atari games involving several agents that must converge to a specific organization to achieve a goal efficiently optionally respecting initial organizational specifications as extra constraints. Obtained organization specifications are exploitable, coherent with expectations, and initial organizational specifications.
 
 The remainder of the article is built as following.
 In section II, after introducing the OMARL premises linking organizational model and MARL, we aimed to expose related works we identified to those.
-In section III, we introduce the DMO a proposed formal model for OMARL linking Dec-POMDP and $\mathcal{M}OISE^+$.
+In section III, we introduce the DMO a proposed formally described OMARL process linking Dec-POMDP and $\mathcal{M}OISE^+$.
 In section IV, we present a design approach that relies on DMO to help designers in designing a suited organization regarding environment, goal, agents' policy model and design constraints.
 In section V, we discuss results obtained after applying our approach in three simple cooperative Atari games.
 In section VI, we conclude on the viability and relevance of our model and approach and we highlight limitations to overcome and future works as well.
@@ -196,9 +217,6 @@ Instead of adopting a risky direct empiric approach, a common approach is to rel
 In that respect, creating a MAS that aims to reach a goal in any given environment, firstly focuses on finding a suited MAS design only in the associated simulation. We also, hypothesized the simulation to allow RL techniques and to give, at least, raw description of the current environment and agents states.
 
 The premise of our idea is to benefit of a MARL process that would automatically converge to an optimal solution as for establishing the rules in agents (called \textbf{policies}) that drives the MAS to the goal. Yet, unlike human-based design where the agent's logic is explicitly specified, trained policies with MARL are approximated by black box functions such as Neural Networks. Therefore, we also need to address the explainability issue not only for individual agents' policies but for the joint-policy in its entirety through a collective point-of-view. We think, this problem can be partially addressed by considering that a joint-policy can be (at least partially) described in terms of the organizational specifications. We refer to that approach under the term of \textquote{Organization Oriented MARL} (OOMARL).
-
-% TODO: à mettre plus tard comme un choix justifié. Ici il faut surtout parler de tous les travaux liant MARL et organisation/stratégies collectives...
-Among, the existing organizational models \textquote{Agent/Group/Role}~\cite{Ferber2004} and $\mathcal{M}OISE^+$~\cite{Hubner2002} provide a relevant high-level description of the structures and interactions within the MAS. However, we favor $\mathcal{M}OISE^+$ because it provides an advanced formal description for an organization without incompatibilities with MARL, especially for formal description of agents' policies. It takes into account explicitly the social aspects between agents where \textquote{AGR} focuses on the integration of standards oriented towards design. Additionally, it provides a sufficiently detailed vision of organization to be understood at different point of views.
 
 We think OOMARL is positioned at the crossroads of MAS and MARL and can be envisioned as a mixed ACPV/OCPV organization mechanism with no organization awareness. It falls into the broad topic of explainability in AI at an organizational level within MARL. In order to appreciate OOMARL positioning in literature, we chose the following boolean keywords formula we think better describe OOMARL:
 \begin{gather*}
@@ -253,7 +271,7 @@ We propose the DMO process to integrate MAS organization designing process by tr
 \subsection{MARL model}
 
 The chosen MARL model is based on the Decentralized Partially Observable Markov Decision Process (Dec-POMDP)~\cite{Oliehoek2016} because it considers multiple agents in a similar MAS fashion. It relies on stochastic processes to model uncertainty of the environment for the changes induced by actions, in received observations, in communication\dots Additionally, unlike Partially Observable Stochastic Games (POSG), the reward function can be common to agents which fosters training for collaborative oriented actions~\cite{Beynier2013}.
-A Dec-POMDP is a 7-tuple $(S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$, where:
+A Dec-POMDP $d \in D$ (with $D$ the set of Dec-POMDP) is a 7-tuple $d = (S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$ , where:
 \begin{itemize}
     \item $S = \{s_1, ..s_{|S|}\}$: The set of the possible states.
     \item $A_{i} = \{a_{1}^{i},..,a_{|A_{i}|}^{i}\}$: The set of the possible actions for agent $i$.
@@ -279,6 +297,7 @@ We refer to \textbf{sub-optimally solving} the Dec-POMDP at $s$ expectancy as fi
 
 \subsection{Organizational model}
 
+Among, the existing organizational models \textquote{Agent/Group/Role}~\cite{Ferber2004} and $\mathcal{M}OISE^+$~\cite{Hubner2002} provide a relevant high-level description of the structures and interactions within the MAS. However, we favor $\mathcal{M}OISE^+$ because it provides an advanced formal description for an organization without incompatibilities with MARL, especially for formal description of agents' policies. It takes into account explicitly the social aspects between agents where \textquote{AGR} focuses on the integration of standards oriented towards design. Additionally, it provides a sufficiently detailed vision of organization to be understood at different point of views.
 Based on $\mathcal{M}OISE^+$~\cite{Hubner2007} formalism, we only give the minimal elements of the formalism we used for our approach.
 
 \paragraph{\textbf{Organization specifications (OS)}}: $OS = \langle SS, FS, DS \rangle$, the set of all organization specifications, where $SS$ are the \textbf{Structural Specifications}, $FS$ are the \textbf{Functional Specifications}, and $DS$ are the \textbf{Deontic Specifications}
@@ -335,15 +354,26 @@ Based on $\mathcal{M}OISE^+$~\cite{Hubner2007} formalism, we only give the minim
 
 OMARL deals with all the processes linking MARL and Organization model as for being able to get information from joint-policies to build an organizational model, and constraining possible joint-policies subset regarding organizational specifications of an organizational model. DMO is first attempt to propose a formally described OMARL process using the Dec-POMDP for MARL and $\mathcal{M}OISE^+$ for the organizational model.
 
+In a DMO process, we consider solving sub-optimally the Dec-POMDP for a single team $i$ (comprising $n$ agents in $\mathcal{A}$) at a $s = U_i^* - \delta$ (with $delta \in \mathbb{R}$) expectancy, we may obtain a set of $d$ joint-policies $\Pi_{joint,s,i}={\pi_{joint,i,1} \times .. \pi_{joint,i,d}}$. We may have $d$ different convergent joint-policies reaching at least a given expected cumulative reward after several training due to non-deterministic parameters in training. Then, one can envision to use these $d$ sub-optimal joint-policies to infer information to build an organizational model. It eventually allows getting the raw specifications of the general implicit organizations.
+
+We define a DMO to be compliant with OMARL if it can be described as a relation between the sub-optimal joint-policies set and organizational specifications set the following way:
+\begin{relation}\label{rel:def_dmo}
+    dmo: D \times OS_{init} \rightarrow \Pi_{joint} \times OS_{specs}
+\end{relation}
+
+A relation associating some joint-policies set to organizational specifications:
+\begin{relation}
+    pos: \Pi_{joint}^d \rightarrow OS
+\end{relation}
+
+A relation associating organizational specifications to joint-policies:
+\begin{relation}
+    sop: \Pi_{joint}^d \rightarrow OS
+\end{relation}
 
 \paragraph{Infering OS from joint-policies}
 
-In a DMO process, we consider solving sub-optimally the Dec-POMDP for a single team $i$ (comprising $n$ agents in $\mathcal{A}$) at a $s = U_i^* - \delta$ (with $delta \in \mathbb{R}$) expectancy, we may obtain a set of $d$ joint-policies $\Pi_{joint,s,i}={\pi_{joint,i,1} \times .. \pi_{joint,i,d}}$. We may have $d$ different convergent joint-policies reaching at least a given expected cumulative reward after several training due to non-deterministic parameters in training. Then, one can envision to use these $d$ sub-optimal joint-policies to infer information by identification to build an organizational model. It eventually allows getting the raw specifications of the general implicit organizations.
 
-That link can be described formally as a relation between joint-policies set and organizational specifications set:
-\begin{equation}
-    pos: \Pi_{joint}^d \rightarrow OS
-\end{equation}
 It can be understood as for $d$ given joint-policy $\pi_{joint} \in \Pi_{joint}$, there are processes (represented as $pos$) using the agent's policies $\pi_{i} \in \pi_{joint}$ to determine at least a partially defined organizational model $os \in OS$. 
 Willing to establish the $pos$, we may face two main problems:
 \begin{enumerate}
@@ -357,7 +387,7 @@ In our DMO process we took these problems into account the following way:
     \item We associate each action in MARL with some organization specifications as a \textquote{many to many} relation. It sets up a first frame for identifying organizational specifications in played action series.
 \end{enumerate}
 
- with known subsets $\{(\omega_k, a_k) \in \pi_{i}\}$ associated with organizational specifications.
+with known subsets $\{(\omega_k, a_k) \in \pi_{i}\}$ associated with organizational specifications.
 
 First, noticing some specifications in the $\mathcal{M}OISE^+$ organizational model can be obviously mapped to subsets of actions from a single sub-optimal joint-policy, we propose the following relations:
 
