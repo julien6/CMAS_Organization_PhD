@@ -117,18 +117,29 @@
 
 \newenvironment{relation}[1][]{%
     \refstepcounter{relation}%
-    
-    \ 
-
-    \noindent \raggedright \textit{\textbf{Relation \therelation}} \hfill$}
+    \noindent \raggedright \textit{\textbf{Relation. \therelation}} \hfill$}
 {%
 $ \hfill \phantom{x}
 
-\
-
 }
 
+\newcounter{proof}
+\setcounter{proof}{0}
+\renewcommand{\theproof}{\arabic{proof}}
+\newcommand{\proofautorefname}{Proof}
 
+\renewenvironment{proof}[1][]{
+    \refstepcounter{proof}
+    \noindent \raggedright \textit{\textbf{Proof. \theproof}}
+
+    \setlength{\leftskip}{1em}
+
+}
+{
+
+\
+\setlength{\leftskip}{0pt}
+}
 
 % --------------------------------
 %             DOCUMENT
@@ -167,14 +178,14 @@ $ \hfill \phantom{x}
 \begin{abstract}
 
     % context
-    Multi-Agent Reinforcement Learning has been successfully applied in various contexts to generate policies allowing agents to collaboratively achieve a goal in a non-fully observable environment. These policies are approximated functions that map observation to action allowing agents to maximize the cumulative reward over an episode.
+    Multi-Agent Reinforcement Learning has been successfully applied in various contexts to generate policies allowing agents to collaboratively achieve a goal in a non-fully observable environment. Generalizing function approximators such as neural networks are often used to model policies mapping the observations to the actions that maximize the cumulative reward over an episode.
     % problem
-    Yet, from a designer point of view, those trained policies raise explainability and safety issues because they do not give human-understandable or exploitable specifications of their organizational aspects such as individual, social or collective levels.
+    Yet, from a designer point of view, those approximated policies raise explainability and safety issues because they do not give human-understandable or exploitable specifications of their organizational aspects such as individual, social or collective levels.
     % This particularly concerns black box models in deep-learning or random forest.
     % hypothesis / contribution
-    This paper aims to define the organizational explainability problem formally. Then, we expose our approach to extract the organization specifications out of trained agents policies.
+    This paper first highlights the need for AI explainability at the organizational level in the multiagent context. As a first attempt, we present a method to link organizational specifications and agents policies both for understanding them and constraining their training. Then, we integrate that method within a proposed approach to assist the design of a multiagent system aiming to reach a given goal.
     % results
-    We applied our approach in three manageable cooperative Atari games likely to have emergent organization among agents. Resulting organization specifications are indeed consistent with human expectations.
+    We applied our approach in four manageable cooperative Atari games likely to have emergent organization among agents. The impact on multiagent training and obtained specifications are indeed consistent with expectations.
     
     \keywords{Multi-Agent Systems \and Reinforcement Learning \and Organization \and Design}
 \end{abstract}
@@ -197,28 +208,29 @@ In some environments, such as computers network with highly complex and non-visu
 The idea of benefitting of the particularly adaptive and general MARL mechanism to get an approximated suited MAS organization and producing associated specifications, requires to link the MARL training of a set of policies in a bidirectional way with a MAS organizational model. For instance, a hierarchy described in a MAS model would constrain the possible policies to get ultimately trained in MARL. Reversely, a set of trained policies could be described in an organizational model, thus indicating resemblance with known MAS organization architectures.
 
 % Contribution/Hypothesis
-This paper first informally introduce the aforementioned broad idea as a new specific research study we refer to as \textquote{Organizational Multi-Agent Reinforcement Learning} (OMARL). We present DMO (Dec-POMDP $\mathcal{M}OISE^+$ OMARL) a first attempt formally describing an OMARL process using the Decentralized Partially Observable Markov Decision Process (Dec-POMDP) as model for MARL and $\mathcal{M}OISE^+$ as an organizational model. DMO allows both getting some organizational specifications from \textquote{trained} policies and constraining policies training with respect to given specifications. We use DMO within a proposed design approach to generate an efficient organization and associated OCPV specifications based on the environment, the initial agents' policies, the design constraints, and the global goal.
+This paper first informally introduce the aforementioned broad idea as a new specific research study we refer to as \textquote{Organizational Multi-Agent Reinforcement Learning} (OMARL). We present DMO (Dec-POMDP $\mathcal{M}OISE^+$ OMARL) a first attempt to formally describe OMARL processes using the Decentralized Partially Observable Markov Decision Process (Dec-POMDP) as model for MARL and $\mathcal{M}OISE^+$ as an organizational model. Then, we propose PAMID (Partial Action-based $\mathcal{M}OISE^+$ Identification), a DMO process that allows both getting some organizational specifications from \textquote{trained} policies and constraining policies training with respect to given specifications. As PAMID only changes the action set and relies \textquote{observed} actions, it is agnostic of the MARL algorithm used jointly with function approximators as policies. We used PAMID within a proposed design approach to generate an efficient organization and associated OCPV specifications based on the environment, the initial design constraints, and goals.
 
 % Results
-We applied our design approach to three simple Atari games involving several agents that must converge to a specific organization to achieve a goal efficiently optionally respecting initial organizational specifications as extra constraints. Obtained organization specifications are exploitable, coherent with expectations, and initial organizational specifications.
+We applied our design approach to four simple Atari games involving several agents that must converge to a specific organization to achieve a goal efficiently optionally respecting initial organizational specifications as extra constraints. Obtained organization specifications are exploitable, coherent with expectations, and initial organizational specifications.
 
 The remainder of the article is built as following.
-In section II, after introducing the OMARL premises linking organizational model and MARL, we aimed to expose related works we identified to those.
-In section III, we introduce the DMO a proposed formally described OMARL process linking Dec-POMDP and $\mathcal{M}OISE^+$.
-In section IV, we present a design approach that relies on DMO to help designers in designing a suited organization regarding environment, goal, agents' policy model and design constraints.
+In section II, after introducing the OMARL premises linking organizational model and MARL, we expose related works we identified to those.
+In section III, we introduce DMO, a proposed formally described class of OMARL processes linking Dec-POMDP and $\mathcal{M}OISE^+$.
+In section IV, we present a design approach that relies on DMO to help designers in designing a suited organization regarding environment, design constraints, and goals.
 In section V, we discuss results obtained after applying our approach in three simple cooperative Atari games.
-In section VI, we conclude on the viability and relevance of our model and approach and we highlight limitations to overcome and future works as well.
+In section VI, we conclude on the viability and relevance of our approach as we highlight limitations to overcome and future works as well.
 
-\section{Overview of the underlying idea and related works}
+\section{OMARL premises and related works}
 
-Whether adopting OCPV or ACPV, when designing a MAS, the human designer has to define the logic in agents themselves intending the MAS to reach some specific goals via some kind of emergent or expected organization pattern. It often takes place as an iterative process where designer are proceeding by trial and error. Despite the designer skills, that process may be hard and costly to converge towards a sufficiently estimated successful MAS. That process gets more difficult when the target deployment environment is not easily readable or handleable due to the complexity and internal safety policies such as for company infrastructure networks. Additionally, unexpected emergent phenomena may appear without giving guarantees for safety. We refer to that observation as the \textquote{human-based design difficulty}.
+Whether adopting OCPV or ACPV, when designing a MAS, a human designer has to define the logic in agents themselves intending the MAS to reach some specific goals via some kind of emergent or expected organization pattern. It often takes place as an iterative process where designer are proceeding by trial and error. Despite the designer skills, that process may be hard and costly to converge towards a sufficiently estimated successful MAS. That process gets more difficult when the target deployment environment is not easily readable or handleable due to the complexity and internal safety policies such as for company infrastructure networks. Additionally, unexpected emergent phenomena may appear without giving guarantees for safety.
+%We refer to that problem as the \textquote{human-based design difficulty}.
 
 Instead of adopting a risky direct empiric approach, a common approach is to rely on a intermediary step by simulating the target deployment system, analogous to \textquote{digital twins}. Indeed, simulation can provide a monitoring framework that leaves room for a safe design process, while having an assessment of the resulting MAS designs. If the simulation is close enough to the target system in terms of fidelity, then we can expect the designed MAS to be transferred to the target system for indeed reaching the goals.
 In that respect, creating a MAS that aims to reach a goal in any given environment, firstly focuses on finding a suited MAS design only in the associated simulation. We also, hypothesized the simulation to allow RL techniques and to give, at least, raw description of the current environment and agents states.
 
-The premise of our idea is to benefit of a MARL process that would automatically converge to an optimal solution as for establishing the rules in agents (called \textbf{policies}) that drives the MAS to the goal. Yet, unlike human-based design where the agent's logic is explicitly specified, trained policies with MARL are approximated by black box functions such as Neural Networks. Therefore, we also need to address the explainability issue not only for individual agents' policies but for the joint-policy in its entirety through a collective point-of-view. We think, this problem can be partially addressed by considering that a joint-policy can be (at least partially) described in terms of the organizational specifications. We refer to that approach under the term of \textquote{Organization Oriented MARL} (OOMARL).
+One can think of benefitting of a MARL process that would automatically converge to an optimal or sub-optimally sufficient solution as for establishing the rules in agents (called \textbf{policies}) that drive the MAS to the goal. Yet, unlike human-based design where the agent's logic is explicitly specified, trained policies with MARL may be approximated by black box generalizing functions such as Neural Networks. That stresses out the need to address the explainability issue not only for individual agents' policies but for the joint-policy in its entirety through OCPV. We think, this problem can be partially addressed by considering that a joint-policy can be (at least partially) described in terms of the organizational specifications. We refer to research in the processes falling into that broad approach under the term of \textquote{Organization oriented MARL} (OMARL).
 
-We think OOMARL is positioned at the crossroads of MAS and MARL and can be envisioned as a mixed ACPV/OCPV organization mechanism with no organization awareness. It falls into the broad topic of explainability in AI at an organizational level within MARL. In order to appreciate OOMARL positioning in literature, we chose the following boolean keywords formula we think better describe OOMARL:
+We position OMARL at the crossroads of MAS and MARL and can be envisioned as a mixed ACPV/OCPV organization mechanism with no organization awareness. It falls into the broad topic of explainability in AI at an organizational level within MARL. In order to appreciate OMARL positioning in literature, we chose the following boolean keywords formula we think better describe OMARL:
 \begin{gather*}
     ("multi" \land "agent") \land ("reinforcement \ learning")\\ \land ("explainability" \lor ("organization" \lor "collective"))
 \end{gather*}
@@ -264,7 +276,7 @@ Specification-Guided Reinforcement Learning (SGRL): addresses the problem of gen
 Learning from Logical Specifications: covers the broader area of learning from logical specifications, including the development of reinforcement learning algorithms that leverage the compositional structure of the specification to learn control policies for complex tasks~\cite{Jothimurugan2021}.
 
 
-\section{A formal model for linking MAS and MARL concepts}
+\section{An OMARL formal approach}
 
 We propose the DMO process to integrate MAS organization designing process by translating the $\mathcal{M}OISE^{+}$ organizational model within the formalism used for MARL. Then, we formally describe how agents' policies and training process can be linked to the $\mathcal{M}OISE^{+}$ organizational model.
 
@@ -285,15 +297,20 @@ A Dec-POMDP $d \in D$ (with $D$ the set of Dec-POMDP) is a 7-tuple $d = (S,\{A_i
 Considering $m$ \textbf{teams} (also referred as \textbf{groups}) each containing several agents among $\mathcal{A}$, we also detail the minimal formalism notation we re-used for solving the Dec-POMDP for a given team $i, 0 \leq t \leq m$ containing $n$ agents~\cite{Beynier2013,Albrecht2024}:
 
 \begin{itemize}
+
     \item $\Pi$: the set of policies. A \textbf{policy} $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action and is used in an agent;
-    \item $\Pi_{joint}$: the set of joint-policies. A \textbf{joint-policy} $\pi_{joint} \in \Pi_{joint}, \pi_{joint} = \{\pi_1, \pi_2...,\pi_n\}$ is a set of the policies used in agents;
+    \item $\Pi_{joint}$: the set of joint-policies. A \textbf{joint-policy} $\pi_{joint} \in \Pi_{joint}, \pi_{joint} = \{\pi_1, \pi_2...\pi_n\}$ is a set of the policies used in agents;
+    \item $H$: the set of histories. A \textbf{history} over $z \in \mathbb{N}$ steps (where $z$ is generally the maximum number of steps for an episode) is the $z$-tuple $h = ((\omega_{k}, a_{k}) | k \leq z, \omega \in \Omega, a \in A)$
+    \item $H_{joint}$: the set of joint-histories. A \textbf{joint-history} over $z \in \mathbb{N}$ steps $h_{joint} \in H_{joint}, h_{joint} = \{h_1,h_2..h_n\}$ is the set of the agents' histories.
     \item $U_{joint,i}(<\pi_{joint,i}, \pi_{joint,-i}>): \Pi_{joint} \rightarrow \mathbb{R}$: gives the \textbf{expected cumulative reward} over a finite horizon (if $\gamma < 1$ or the number of steps in an episode is finite), with $\pi_{joint,i}$ the joint policy for team $i$ and $\pi_{joint,-i}$ all of the other concatenated joint-policies (considered as fixed);
     \item $BR_{joint,i}(\pi_{joint,i}) = argmax_{p_{joint,i}}(U(<\pi_{joint,i},\pi_{joint,-i}>))$: gives the \textbf{best response} $p_{joint,i}^*$ in the sense that the team cannot change any of the policies in the joint-policy $p_{joint,i}^*$ to get a better expected cumulative reward than $U_i^* = U_{joint,i}(<\pi_{joint,i}^*, \pi_{joint,-i}>)$;
-    \item $SR_{joint,i}(\pi_{joint,i}, s) = \{\pi_{joint,i} | U(<\pi_{joint,i},\pi_{joint,-i}>) = s\}$: gives the \textbf{sufficient response} as the set of joint-policies getting at least $s \in \mathbb{R}, s \leq U_i^*$ as expected cumulative reward.
+    \item $SR_{joint,i}(\pi_{joint,i}, s) = \{\pi_{joint,i} | U(<\pi_{joint,i},\pi_{joint,-i}>) \geq s\}$: gives the \textbf{sufficient response} as the set of joint-policies getting at least $s \in \mathbb{R}, s \leq U_i^*$ as expected cumulative reward.
 \end{itemize}
 
 We refer to \textbf{solving} the Dec-POMDP for the team $t$ as finding a joint policy $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = BR_{joint,i}(\pi_{joint,i})$ that maximize the expected cumulative reward over a finite horizon.
 We refer to \textbf{sub-optimally solving} the Dec-POMDP at $s$ expectancy as finding a the joint policies $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = SR_{joint,i}(\pi_{joint,i}, s)$ that gets the expected cumulative reward over a finite horizon at least at $s \in \mathbb{R}, s \leq U_i^*$.
+
+We refer to \textquote{joint-history} as an approximation by observing received observation and played action. We note $h_{joint} \ in H_{joint}$ a \textbf{joint-history} so that $h_{joint} = {h \in H}$
 
 \subsection{Organizational model}
 
@@ -305,9 +322,9 @@ Based on $\mathcal{M}OISE^+$~\cite{Hubner2007} formalism, we only give the minim
 \paragraph{\textbf{Structural Specifications (SS)}}: $SS = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$, where:
 
 \begin{itemize}
-    \item $\mathcal{R}$: the set of non-abstract roles.
+    \item $\mathcal{R}$: the set of non-abstract roles;
           
-    \item $\mathcal{SG}$: the set of sub-groups
+    \item $\mathcal{SG}$: the set of sub-groups;
           
     \item $\mathcal{L}$: the set of links. A link is a predicate $link(\rho_s,\rho_d,t) \in \mathcal{L}$, where $\rho_{s}$ is the link source, $\rho_{d}$ is the link destination, and $t \in\{acq, com, aut\}$ is the link type;
           \begin{itemize}
@@ -316,14 +333,14 @@ Based on $\mathcal{M}OISE^+$~\cite{Hubner2007} formalism, we only give the minim
               \item If $t = aut$ (authority), the $\rho_{\mathrm{s}}$ agents are allowed to have authority on $\rho_{d}$ agents. It requires an acquaintance and communication link.
           \end{itemize}
     \item $\mathcal{L}^{intra}$: the set of intra-group links;
-    \item $\mathcal{L}^{inter}$: the set of inter-group links.
+    \item $\mathcal{L}^{inter}$: the set of inter-group links;
           
-    \item $\mathcal{C}$: the set of compatibilities. A compatibility $com(a,b) \in C$ (also noted $\rho_a \bowtie \rho_b$), means agents playing role $\rho_a$ can also play role $\rho_b$.
-    \item $\mathcal{C}^{intra}$: the set of intra-group compatibilities
-    \item $\mathcal{C}^{inter}$: the set of inter-group compatibilities
+    \item $\mathcal{C}$: the set of compatibilities. A compatibility $com(a,b) \in C$ (also noted $\rho_a \bowtie \rho_b$), means agents playing role $\rho_a$ can also play role $\rho_b$;
+    \item $\mathcal{C}^{intra}$: the set of intra-group compatibilities;
+    \item $\mathcal{C}^{inter}$: the set of inter-group compatibilities;
           
-    \item $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of each role
-    \item $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of each sub-group
+    \item $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of each role;
+    \item $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of each sub-group.
           
 \end{itemize}
 
@@ -344,147 +361,258 @@ Based on $\mathcal{M}OISE^+$~\cite{Hubner2007} formalism, we only give the minim
 \paragraph{\textbf{Deontic Specifications (DS)}}: $DS = \langle OBL,PER \rangle$, the set of deontic specifications, where:
 
 \begin{itemize}
-    \item $TC$: the set of \textbf{time constraints}. A time constraint $tc \in TC$ specifies a set of periods during which a permission or obligation is valid
-    \item $OBL$: the set of \textbf{obligations}. An obligation $obl(\rho_a,m,tc)$ means a agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in TC$
-    \item $PER$: the set of \textbf{permissions}. A permission $per(\rho_a,m,tc) \in PER$ means a agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in TC$
+    \item $TC$: the set of \textbf{time constraints}. A time constraint $tc \in TC$ specifies a set of periods during which a permission or obligation is valid;
+    \item $OBL$: the set of \textbf{obligations}. An obligation $obl(\rho_a,m,tc)$ means a agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in TC$;
+    \item $PER$: the set of \textbf{permissions}. A permission $per(\rho_a,m,tc) \in PER$ means a agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in TC$.
 \end{itemize}
 
 
-\subsection{DMO for linking MARL and Organizational model}
+\subsection{Towards a DMO process linking MARL and Organizational model}
 
-OMARL deals with all the processes linking MARL and Organization model as for being able to get information from joint-policies to build an organizational model, and constraining possible joint-policies subset regarding organizational specifications of an organizational model. DMO is first attempt to propose a formally described OMARL process using the Dec-POMDP for MARL and $\mathcal{M}OISE^+$ for the organizational model.
+OMARL deals with all the processes linking MARL and Organization model as for being able to get information from joint-policies to build an organizational model, and constraining possible output joint-policies subset regarding organizational specifications. DMO is a first attempt to propose formally described OMARL processes using the Dec-POMDP for MARL and $\mathcal{M}OISE^+$ for the organizational model.
 
-In a DMO process, we consider solving sub-optimally the Dec-POMDP for a single team $i$ (comprising $n$ agents in $\mathcal{A}$) at a $s = U_i^* - \delta$ (with $delta \in \mathbb{R}$) expectancy, we may obtain a set of $d$ joint-policies $\Pi_{joint,s,i}={\pi_{joint,i,1} \times .. \pi_{joint,i,d}}$. We may have $d$ different convergent joint-policies reaching at least a given expected cumulative reward after several training due to non-deterministic parameters in training. Then, one can envision to use these $d$ sub-optimal joint-policies to infer information to build an organizational model. It eventually allows getting the raw specifications of the general implicit organizations.
+In a DMO process, we consider solving sub-optimally the Dec-POMDP $d \in D$ for a single team $i$ (comprising $n$ agents in $\mathcal{A}$) at a $s = U_i^* - \delta$ (with $\delta \in \mathbb{R}$) expectancy, we may obtain a set $S\Pi_{joint,s,i} = SR_{d,joint,i}(\pi_{joint,i},s) = \{\pi_{joint,i,s,1}, \pi_{joint,i,s,2} .. \pi_{joint,i,s,d}\}$ with the $S\Pi_{joint,s,i,k} \in \Pi_{joint}$ ($k \in \mathbb{N}, k \leq d$) and $SR_{d,joint,i}(\pi_{joint,i},s)$ gives the sub-optimal joint-policies at $s$ expectancy for the Dec-POMDP $d$ also noted $SR_{joint,i,s}(d)$. As an example, we may have $d$ different convergent joint-policies reaching a given expected cumulative reward after several training due to non-deterministic parameters in training.
 
-We define a DMO to be compliant with OMARL if it can be described as a relation between the sub-optimal joint-policies set and organizational specifications set the following way:
+Yet as an extra constraint, we only want joint-policies allowed by the initial specifications $OS_{init}$ we note $S\Pi_{joint,OS_{init}} = \{\pi_{joint,i,1}, \pi_{joint,i,2} .. \pi_{joint,i,b}\}$ with $b \in \mathbb{N}$ and the $\pi_{joint,k} \in \Pi_{joint}$ ($k \in \mathbb{N}, k \leq b$). Then, one can envision to use the sub-optimal joint-policies that satisfy the specifications $S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{init}}$ to infer some associated specifications $OS_{s,i}$ of the implicit resulting organization.
+
+As a summary, we define an OMARL compliant DMO process if it can be described as a relation between the sub-optimal joint-policies set and associated organizational specifications set the following way:
+
+\
+
 \begin{relation}\label{rel:def_dmo}
-    dmo: D \times OS_{init} \rightarrow \Pi_{joint} \times OS_{specs}
+    dmo: D \times OS_{init} \rightarrow (S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{init}}) \times OS_{s,i}
+\end{relation}
+Can be understood as for a given problem comprising a environment and a goal to be achieved by agents, and some design constraints; we can minimally get sufficiently successful trained agents that are compliant with given specifications and (at least partial) associated organizational specifications.
+
+\
+
+In \autoref{proof:to_extended_dmo}, we extended the \autoref{rel:def_dmo} DMO definition into another convenient form in \autoref{rel:def_extended_dmo}.
+
+\
+
+\begin{relation}\label{rel:def_extended_dmo}
+    $\phantom{X}$ dmo: D \times OS_{init} \rightarrow (SR_{joint,i,s}[D] \cap sop[OS_{init}]) \times pos[SR[D] \cap sop[OS_{init}]]
 \end{relation}
 
-A relation associating some joint-policies set to organizational specifications:
-\begin{relation}
-    pos: \Pi_{joint}^d \rightarrow OS
+\begin{proof}\label{proof:to_extended_dmo}
+    
+    Let $dmo_{2}: D \times OS_{init} \rightarrow (SR_{joint,i,s}[D] \cap sop[OS_{init}]) \times \allowbreak pos[SR[D] \cap sop[OS_{init}]]$ \\
+    
+    By definition, $SR_{joint,i,s}[D] \cap sop[OS_{init}] = (S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{init}})$ \\
+    
+    By definition, $pos[\Pi_{joint, OS_{init}}] = OS_{s,i}$
+    
+    Hence, $dmo_{2}: D \times OS_{init} \rightarrow (S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{init}}) \times OS_{s,i}$
+    
+    Hence, $dmo_{2} \subseteq dmo$
+\end{proof}
+
+\noindent Where $pos$ and $sop$ are provided respectively in \autoref{rel:pos} and \autoref{rel:sop}.
+
+\
+
+\begin{relation}\label{rel:pos}
+    pos: S\Pi_{joint,s,i} \rightarrow OS_{s,i}
 \end{relation}
+Represents how we can infer organizational specifications out of \textquote{trained} joint-policies.
 
-A relation associating organizational specifications to joint-policies:
-\begin{relation}
-    sop: \Pi_{joint}^d \rightarrow OS
+\
+
+\begin{relation}\label{rel:sop}
+    sop: OS \rightarrow (S\Pi_{joint, OS_{init}})
 \end{relation}
+Represents how we can determine the joint-policies that satisfy some organizational specifications
 
-\paragraph{Infering OS from joint-policies}
+\subsection{Proposed DMO process}
 
+Continuing the previous decomposition in two activities, we detailed our process to get the specifications out of the agents' policies; and the process to get the joint-policies satisfying given specifications.
 
-It can be understood as for $d$ given joint-policy $\pi_{joint} \in \Pi_{joint}$, there are processes (represented as $pos$) using the agent's policies $\pi_{i} \in \pi_{joint}$ to determine at least a partially defined organizational model $os \in OS$. 
-Willing to establish the $pos$, we may face two main problems:
-\begin{enumerate}
-    \item For the agent $i$'s policy $\pi_{i} \in \pi_{joint}$, a minimal step towards analyze of the policy is to know the $\{(\omega_k, a_k) \in \pi_{i}\}$ couples (the rules the agent follow). But it is not obvious to know them because of the explainability issues in blackbox policy approximation models such as NN-based ones;
-    \item Knowing some raw $\{(\omega_k, a_k) \in \pi_{i}\}$ subsets, due to the high number of rules and lack of readability it is not straightforward to infer information related to an organizational model such as roles, groups, goals\dots
-\end{enumerate}
-
-In our DMO process we took these problems into account the following way:
-\begin{enumerate}
-    \item Rather than using directly agents' policy, we use the \textquote{observed policy} (also called \textquote{behavior}) as an approximation. It may be built with observed resulting actions when observations are received during a series of test episodes;
-    \item We associate each action in MARL with some organization specifications as a \textquote{many to many} relation. It sets up a first frame for identifying organizational specifications in played action series.
-\end{enumerate}
-
-with known subsets $\{(\omega_k, a_k) \in \pi_{i}\}$ associated with organizational specifications.
-
-First, noticing some specifications in the $\mathcal{M}OISE^+$ organizational model can be obviously mapped to subsets of actions from a single sub-optimal joint-policy, we propose the following relations:
-
-\begin{itemize}
-    \item $ra: \mathcal{R} \rightarrow \mathcal{P}(A)$: gives the actions associated with a role
-    \item $la: \mathcal{L} \rightarrow \mathcal{P}(A)$: gives actions associated with a link
-    \item $ga: \mathcal{G} \rightarrow \mathcal{P}(A)$: gives the actions associated with a global goal
-    \item $ma: \mathcal{M} \rightarrow \mathcal{P}(A)$: gives the actions associated with a mission label
-    \item $pa: \mathcal{P} \rightarrow \mathcal{P}(A)$: gives the actions associated with a mission plan
-\end{itemize}
-
-From those relation, one can envision
-
-Now considering $d$ sub-optimal joint-policies we propose the following relations:
-
-\begin{itemize}
-    \item $ca: \mathcal{C} \rightarrow \mathcal{P(A)}^d$: gives all the action subsets associated with roles in a compatibility
-    \item $npa$: gives
-    \item $npa$:
-    \item $moa: \mathcal{R} \rightarrow \mathcal{P}(A)$: gives the actions
-    \item $nma: \mathcal{R} \rightarrow \mathcal{P}(A)$
-    \item $aga: \mathcal{A} \times \mathbb{N} \rightarrow \mathcal{P}(A) = \{a_i \in A | (\omega_i, a_i) \in \pi_k\}$: gives the actions played by agent $k$ in team $i$ over an episode with its policy $\pi_k \in \Pi_{joint, i}$
-\end{itemize}
-
+As a synthesis of these two processes, we propose the PAMID as a DMO compliant process presented in \autoref{alg:pamid}.
 
 \RestyleAlgo{ruled}
 \SetKwComment{Comment}{// }{}
 
 \begin{algorithm}[hbt!]
-    \caption{Actions-$\mathcal{M}OISE^+$ Identification (AMI)}\label{alg:ami}
+    \caption{Partial Action-based $\mathcal{M}OISE^+$ Identification DMO (PAMID)}\label{alg:pamid}
+    
+    \KwData{$d \in D$, the Dec-POMDP to solve}  
+    \KwData{$ep_{max} \in \mathbb{N}$, the maximum number of episodes}
+    \KwData{$step_{max} \in \mathbb{N}$, the maximum number of steps per episodes}
+    \KwData{$s \in \mathbb{R}$, the cumulative reward expectancy}
+    \KwData{$\pi_{joint}$, the joint-policies to be trained}
+    \KwData{$os_{init} \in OS_{init}$, the design specifications to respect}
+    \KwData{$Solv: \Pi \times A \times O \times \mathbb{R} \rightarrow \Pi$, the MARL algorithm for updating a single policy in order to solve the Dec-POMDP}
+
+    \KwResult{$(s\pi_{joint,s,i} \in S\Pi_{joint,s,i}, os_{s,i} \in OS_{s,i})$, the sub-optimal policies associated organization specifications}
+    
+    $s\pi_{joint,s,i} = PAMID-sop-training(s,i)$
+
+    $os_{s,i} = PAMID-pos(s\pi_{joint,s,i})$
+    
+\end{algorithm}
+
+\paragraph{\textbf{Infering OS from joint-policies}}
+
+Seeking to implement a process represented by $pos$, we faced two main problems
+
+First, for the agent $i$'s policy $\pi_{i} \in \pi_{joint}$, a minimal step to go further in the analyze of the policy is to know the $\{(\omega_k, a_k) \in \pi_{i}\}$ couples (the rules the agent follow). But it is not obvious to know them because of the explainability issues in black box policy approximation models such as NN-based ones.
+
+To address that problem, rather than using directly agents' policy, we use the history as it may be built with observed resulting actions when observations are received during a series of test episodes. Indeed, for a given policy $\pi \in \Pi$ the associated history is by definition $h \in h_{joint} = ((\omega_k,a_k) | k \in \mathbb{N})$ and the $(\omega_k,a_k) \in \pi$. Taking into account several agents, joint-history can be seen as an approximation of the joint-policy that we refer to as reconstructed joint-policy $R\Pi_{joint} \subset \Pi_{joint}$. A reconstructed policy with a history is $r\pi_i = {(\omega, a) \in h | h \in H}$;
+
+The second problem is linked to the difficulty to to infer information related to organizational specifications $OS$ such as roles, groups, goals\dots out of joint-histories (or reconstructed joint-policy).
+To solve that difficulty we associate each action in MARL with some organization specifications as a \textquote{many to many} relation. It sets up a first frame for identifying organizational specifications in played action series. We address that problem in the remainder of this section.
+
+We propose some relations between $\mathcal{M}OISE^+$ specifications and joint-histories. Their premises comes from noticing some specifications in the $\mathcal{M}OISE^+$ organizational model can be obviously mapped to subsets of actions from a single sub-optimal joint-policy, we propose the following relations:
+
+\begin{itemize}
+    \item $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$: gives the histories associated with a role
+    \item $sgh: \mathcal{SG} \rightarrow \mathcal{P}(H)$: gives the histories associated with a subgroup
+    \item $lh: \mathcal{L} \rightarrow \mathcal{P}(H)$: gives the histories associated with an intra link
+    \item $gh: \mathcal{G} \rightarrow \mathcal{P}(H)$: gives the histories associated with a global goal
+    \item $mh: \mathcal{M} \rightarrow \mathcal{P}(H)$: gives the histories associated with a mission label
+\end{itemize}
+
+From these relation, we propose to rely on the previous relations through \emph{pamid-pos} presented in \autoref{alg:pamid-pos} that is consistent with $pos$.
+
+\RestyleAlgo{ruled}
+\SetKwComment{Comment}{// }{}
+
+\begin{algorithm}[hbt!]
+    \caption{PAMID-pos}\label{alg:pamid-pos}
     \KwData{$\pi_{joint}$, the joint-policies to be analyzed}
     \KwResult{$os \in OS$, the associated organization specifications}
     
-    % Set Function Names
-    \SetKwFunction{FMain}{Main}
-    \SetKwFunction{FDetermineRoles}{DetermineRoles}
-    \SetKwProg{Fn}{Function}{:}{}
+    $h_{joint} = testEpisode(\pi_{joint})$
     
-    % Write Function with word ``Function''
-    % \Fn{\FDetermineRoles{$\mathcal{A}$}}{
-    %     a = first\;
-    %     b = second\;
-    %     sum = first + second\;
-    %     \KwRet sum\;
-    % }
-    
-    % \Fn{\FMain}{
-    
-    \ForEach{$\pi_{joint,i} \in \pi_{joint}$}{
-        \ForEach{$\pi_{i} \in \pi_{joint,i}$}{
+    \ForEach{$h_{joint,i} \in h_{joint}$}{
+        \ForEach{$h_{j} \in h_{joint,i}$}{
         
-            $\mathcal{A}_{i,j} := \{a_k \in A | (\omega_k,a_k) \in \pi_{i}\}$  \Comment*[r]{Played actions}
+            $r_j = \langle r, determineRoles(h_{j}) \rangle$
             
-            $\mathcal{R}_{i,j} := DetermineRoles(\mathcal{A}_{i,j})$
+            $sg_j = determineSubgroups(h_{j})$
             
-            $\mathcal{R}_{i,j} := DetermineSubGroups(\mathcal{A}_{i,j})$
+            $l_j = determineIntraLinks(h_{j})$
             
-            $\mathcal{R}_{i,j} := DetermineIntraLinks(\mathcal{A}_{i,j})$
+            $g_{ind,j} = determineIndGoals(h_{j})$
             
-            $\mathcal{R}_{i,j} := DetermineInterLinks(\mathcal{A}_{i,j})$
+            $m_{ind,j} = determineIndMissions(h_{j})$
             
-            $\mathcal{R}_{i,j} := DetermineIntraCompatibilities(\mathcal{A}_{i,j})$
-            
-            $\mathcal{R}_{i,j} := DetermineInterCompatibilities(\mathcal{A}_{i,j})$
-            
-            $\mathcal{R}_{i,j} := DetermineNp(\mathcal{A}_{i,j})$
-            
-            $\mathcal{R}_{i,j} := DetermineNg(\mathcal{A}_{i,j})$
-            
-            $\mathcal{R}_{i,j} := DetermineGoals(\mathcal{A}_{i,j})$
-            
-            $\mathcal{R}_{i,j} := DetermineMissions(\mathcal{A}_{i,j})$
-            
-            $\mathcal{R}_{i,j} := DeterminePlans(\mathcal{A}_{i,j})$
-            
-            $\mathcal{R}_{i,j} := DetermineNo(\mathcal{A}_{i,j})$
-            
-            $\mathcal{R}_{i,j} := DetermineNm(\mathcal{A}_{i,j})$
-            
-            $\mathcal{R}_{i,j} := DeterminePreferenceOrder(\mathcal{A}_{i,j})$
-            
-            $\mathcal{R}_{i,j} := DetermineObligations(\mathcal{A}_{i,j})$
-            
-            $\mathcal{R}_{i,j} := DeterminePermissions(\mathcal{A}_{i,j})$
+            $p_{ind,j} = determineIndPlans(h_{j}, m_{ind,j}, g_{ind,j})$
             
         }
+        
+        $g = determineGoals(g, h_{joint,i}, {g_{ind,j}})$
+        
+        $m = determineMissions(m, h_{joint,i}, {m_{ind,j}})$
+        
+        $p = determinePlans(p, h_{joint,i}, {p_{ind,j}})$
+        
+        $mo = determineMissionToGoals(mo, g_i, m_i)$
     }
-    % }
+    
+    $ng = determineSgCard(\{r_j\}_i)$
+    
+    $np = determineRoleCard(\{r_j\}_i)$
+    
+    $c = determineIntraCompatibilities(\{r_j\}_i)$
+    
+    $per = determinePermissions(\{r_j\}_i, m)$
+    
+    $obl = determineObligations(\{r_j\}_i, m)$
+    
+    $nm = determineAgentCardPerMission(mo)$
+    
+    $ss = \langle \{r_j\}_i, \{sg_j\}_i, \{l_j\}_i, \emptyset, c, \emptyset, np, ng \rangle$
+    
+    $fs = \langle {g, m, p, mo, nm}, \emptyset \rangle$
+    
+    $ds = \langle per, obl \rangle$
+    
+    $os = \langle ss, fs, ds \rangle$
+    
+\end{algorithm}
+
+As we have only one group, we do not consider the inter-links and inter-compatibilities. Additionally as a simplification, we consider only one social scheme. As a general remark, the \textquote{determine*} relations are not all fully described and rely on custom implementation (cf. \autoref{gym-wrapper} for further information).
+
+PAMID-pos first look at the individual level.
+First, it tries to figure out the roles played by agents ($determineRoles$) by sampling history sub-sequences $h \in H$ and comparing with known history sub-sequences whose we know the associated role via $ra$.
+Then, it tries to get the intra links the agent has with other agents ($determineIntraLinks$ and $determineInterLinks$) via $lh$
+Then, it tries to known the subgroup where the agent is ($determineSubgroup$) via $sgh$
+Then, it tries to know the individual goals the agent aim to ($determineIndGoals$) via $gh$
+Then, it tries to know the mission the agent is committed to ($determineIndMissions$) via $mh$
+Finally, it tries to build a part of the plan the agent is playing at its individual level ($determineIndPlans$) via $ph$ and the inferred individual goal and the inferred individual mission.
+
+Then PAMID-pos look at the social and collective level.
+At the end of each joint-policy we try to reinforce a global view of the goals $g$, missions $m$, plans $p$, and the knowledge of the mission to goal $mo$; with the partially inferred information at the individual level.
+
+At the end of the algorithm, it tries to synthesize the knowledge infered until know to have better view of the number of agent per subgroup $ng$, the agent cardinality per mission $nm$, the role cardinality $np$, the compatibilities between roles $c$, the permissions and obligations $per$ and $obl$.
+
+
+\paragraph{\textbf{Constraining joint-policies satisfying OS}}
+
+\
+
+We consider a given MARL algorithm that iteratively converges towards a joint-policy so that each agent's policy is updated at each step until a finite horizon. In \autoref{proof:jpc_to_ac} we proved that constraining the available action set for each agent to the action sets authorized by the organization specifications at each step of the MARL training; implies constraining the converged joint-policies to the ones that satisfy the given organization specifications. We used that result, to setup our $sop$ used jointly with MARL learning through \emph{PAMID-sop-training} presented in \autoref{alg:pamid-sop-training}.
+
+\RestyleAlgo{ruled}
+\SetKwComment{Comment}{// }{}
+
+\begin{algorithm}[hbt!]
+    \caption{PAMID-sop-training}\label{alg:pamid-sop-training}
+    \KwData{$d \in D$, the Dec-POMDP to solve}
+    \KwData{$ep_{max} \in \mathbb{N}$, the maximum number of episodes}
+    \KwData{$step_{max} \in \mathbb{N}$, the maximum number of steps per episodes}
+    \KwData{$s \in \mathbb{R}$, the cumulative reward expectancy}
+    \KwData{$\pi_{joint}$, the joint-policies to be trained}
+    \KwData{$os_{init} \in OS_{init}$, the design specifications to respect}
+    \KwData{$solv: \Pi \times A \times O \times \mathbb{R} \rightarrow \Pi$, the MARL algorithm for updating a single policy in order to solve the Dec-POMDP}
+    \KwResult{$s\pi_{joint} \in S\Pi_{joint,s,i}$, the sub-optimal joint-policies that satisfy the design specifications}
+
+    $forbidden = \Pi_{joint} \setminus DMO-pos^{-1}(os_{init})$
+
+    $s\pi_{joint} = \{\}$
+
+    \ForEach{$1 \leq ep \leq ep_{max}$}{
+
+        $h_{joint} = \{\emptyset^n\}$
+
+        $\omega_{0} = \emptyset$
+
+        $a_{0} = \emptyset$
+
+        \ForEach{$1 \leq step \leq step_{max}$}{
+
+            \ForEach{$\pi_i \in \pi_{joint}$}{
+                
+                $\omega_{step} = getObservation()$
+
+                $r_{step} = getReward()$
+
+                $\pi_{i,step} = Solv(\pi_{i,step-1}, \omega_{step-1}, a_{step-1}, r_{step})$  \Comment*[r]{Update the individual policy}
+
+                $A_{step} = \{a | (\omega_{step}, a) \in \pi, \pi \in \pi_{joint},\pi_{joint} not \in forbidden, \{(\omega', a') \in h\} \in \pi\}$ \Comment*[r]{Restricted available actions}
+
+                $a_{step} = \pi_{i,step}(\omega_{step})$ \Comment*[r]{Choose next action}
+
+                $h_{joint,i} = \langle h_{joint,i}, (\omega_{step}, a_{step}) \rangle$ \Comment*[r]{Update the history}
+
+            }
+
+        }
+    }
+
+    $s\pi_{joint} = \{\pi_{joint}\}$
     
     
 \end{algorithm}
 
+\emph{PAMID-sop-training} first converts the $os_{init} \in OS_{init}$ design specifications into a $forbidden$ set of the non-authorized joint-policies. It uses a non-described reverse \emph{PAMID-pos} algorithm to achieve it.
 
-In order to solve, that problem we propose the AMI algorithm that identifies actions played by agents to deduce roles, links 
-A first algorithmic solution is provided in Algo \ref{alg:ami}.
+Then, \emph{PAMID-sop-training} uses a given MARL algorithm to update the agents' individual policies with previous action, observation and resulting reward. Then, it first computes the authorized actions set $A_{step}$ according to the current history $h_{joint,i}$. Then, an action is chosen among authorized actions. That action $a_{step}$ is added in history to be used for updating the agent's policy in the next step. Finally, considering only one iteration of episode, it returns a sub-optimal joint-policy $\pi_{joint}$ satisfying $os_{init}$
+We can note the $os_{init}$ could forbid the MARL algorithm to provide a joint-policy that reaches a expected cumulative reward.
 
 
+\section{Approach for assisted/automated design of MAS organization}
 
 % \subsection{Two levels of MAS engineering to compute from MARL trained MAS}
 
@@ -510,11 +638,6 @@ A first algorithmic solution is provided in Algo \ref{alg:ami}.
 %           \end{itemize}
 % \end{itemize}
 
-\paragraph{Constrain joint-policies regarding OS}
-
-
-\section{Approach for assisted/automated design of MAS organization}
-
 \begin{figure}[h!]
     \centering
     \include{figures/approach}
@@ -522,7 +645,7 @@ A first algorithmic solution is provided in Algo \ref{alg:ami}.
     \label{fig:design_approach}
 \end{figure}
 
-Previous section formally described links between Dec-POMDP and $\mathcal{M}OISE^+$. Based on that idea, we introduce an approach for MAS design that enables constraining agents possible policies during training. Additionally, it allows extracting organization specifications from policies. An advantage of that approach is that only rely on \textquote{observed policies} we call \textquote{behaviors} without considering the approximation function used such as neural networks.
+Previous section formally described links between Dec-POMDP and $\mathcal{M}OISE^+$. Based on that idea, we introduce an approach for MAS design that enables constraining agents possible policies during training. Additionally, it allows extracting organization specifications from policies. An advantage of that approach is that only rely on \textquote{observed policies} we call \textquote{history} without considering the approximation function used such as neural networks.
 
 Given a set of untrained policies within agents that are to be trained in a simulated environment, we can guide their training according to abstract organization specifications and get the non-abstract organization specifications following these steps:
 \begin{enumerate}
@@ -545,7 +668,7 @@ Where the environment and its constraints (represented by the state transition f
 
 The interest is to provide at least the designer with indications on the specifications of an organization capable of satisfying the constraints of the environment and initial design. In light of these initial results, the designer can decide to propose specifications which he can ensure meet the safety and explainability requirements. These specifications then serve as a blueprint for implementing a MAS as described in Figure \ref{fig:design_approach}.
 
-\paragraph{\textbf{OOMARL Gym Wrapper}} We developed a \textquote{Gym Wrapper} to help in automate the setting up of OOMARL for a given Gym Environment. It enables linking actions with $\mathcal{M}OISE^+$ specifications, define the training specifications and provide functions to extract the resulting sub-optimal raw organizational specifications.
+\paragraph{\textbf{OOMARL Gym Wrapper}\label{gym-wrapper}} We developed a \textquote{Gym Wrapper} to help in automate the setting up of OOMARL for a given Gym Environment. It enables linking actions with $\mathcal{M}OISE^+$ specifications, define the training specifications and provide functions to extract the resulting sub-optimal raw organizational specifications.
 
 \section{Application and discussion for cooperative Atari games}
 
@@ -589,4 +712,12 @@ This article intends to address the need for easing the MAS designing when it ca
 \bibliographystyle{splncs04}
 
 \bibliography{references}
+
+\newpage
+
+\section*{Annexes}
+
+\subsection*{Action constraining during training implies result joint-policy constraining}
+\input{proofs/jpc_to_ac.tex}
+
 \end{document}
