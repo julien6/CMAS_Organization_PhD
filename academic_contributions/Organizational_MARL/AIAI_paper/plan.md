@@ -2,10 +2,12 @@
 
 ## Introduction
 
-## The organization issue in CMAS designing
+## The organizational issue in CMAS designing
 
 ## Related works and positioning
 
-## Algorithmic approach for organization within MARL
+## An algorithmic approach for addressing organization within MARL
 
 ## Application for malware program in drone swarms
+
+## Conclusion
