@@ -20,7 +20,7 @@ Proposition
    - Cyber-defenders agents are to collaborate to fullfil a common goal. They are thought suited for heterogenous, distributed systems whereas centralized Cyberdefense systems are inefficient
    - Agents need to be adapted and learn from their environment and to use social scheme or collective strategies to gain efficiency.
 
- - The organization among agents is the keystone to a CMAS designing suited both for fullfiling given goals satisfying environmental and design constraints
+ - The organization among agents is the keystone to a CMAS designing suited both for fulfilling given goals satisfying environmental and design constraints
 
  - Difficulty for a direct CMAS designing approach on the target system: safety, time and energy costly, empirical, not ensured to converge
    - Categories of environment where CMAS/AICA are to be deployed and operational: drone swarm, company network, IoT system...
