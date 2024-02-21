@@ -182,14 +182,13 @@ $ \hfill \phantom{x}
 \begin{abstract}
 
   % context
-  Multi-Agent Reinforcement Learning (MARL) has prooved to be successful to generate policies of a Cyberdefense Multi-Agent System (CMAS) allowing agents to collaboratively achieve a Cyberdefense goal in Cyberdefense scenarios such as drone swarms. Generalizing function approximators such as neural networks are often used to model policies mapping the observations to the actions that maximize the cumulative reward over an episode.
+  Multi-Agent Systems (MAS) have proved to be suited in engineering due to their ability to address complex, distributed problems especially in IoT based systems. Their efficiency regarding respective objectives and requirements is strongly dependant on the organization for engineering an application-specific MAS. Futhermore, designing an MAS organization requires to have general knowledge of the deployment environment, the problem to express as goals, and having ideas of organizational mechanisms so that agents can achieve goals and subgoals.
   % problem
-  Yet, from a designer point of view, those approximated joint-policies do not provide safety guarantees regarding requirements nor do they allow explaining aspects such as individual, social or collective levels.
-  % This particularly concerns black box models in deep-learning or random forest.
+  Yet, in some cases, the deployment environment is not easily readable or handleable due to the complexity and may lead to unexpected emergent phenomena raising safety concerns. The design process may be hard and costly to converge towards a sufficiently estimated successful MAS. That stresses out the need for methodological works towards assisted MAS design that could be addressed with collective AI techniques.
   % hypothesis / contribution
-  This paper first stresses out the need to consider organization when designing a CMAS and the interest to link it with joint-policies obtained with MARL to address organizational AI explainability issues. Then, we propose an novel design approach to assist the design of a CMAS by linking organizational specifications and agents policies both for understanding them and constraining their training.
+  This paper introduces an novel design approach to assist the MAS design whose underlying idea is to use Multi-Agent Reinforcement Learning (MARL) with organizational specifications for both understanding and constraining the training process regarding design constraints.
   % results
-  We applied our approach in the drone swarm scenario of the 3rd CAGE Challenge. Obtained specifications are indeed consistent with design constraints and provide insights of relevant collective strategies that led to develop an explainable CMAS with scores close to finalists' ones.
+  We applied our approach in cooperative Atari games and a Cyberdefense drone swarm scenario of the 3rd CAGE Challenge. Obtained specifications are indeed consistent with design constraints and provide insights of relevant collective strategies that led to develop an explainable MAS with scores close to finalists' ones.
 
   \keywords{Multi-Agent Systems \and Reinforcement Learning \and Organization \and Design \and Cyberdefense}
 \end{abstract}
@@ -198,96 +197,39 @@ $ \hfill \phantom{x}
 \section{Introduction}
 
 % Context:
-%  - The traditional designing of MAS in large and complex deployment environments operates by trial and error and it can be costly while it is not guaranteed to converge to a sufficient solution that fulfils a goal
-%  - Agents need to be adapted and learn from their environment and to use social scheme or collective strategies to gain efficiency.
-%  - The organization among agents is the keystone to a MAS designing suited both for fulfilling given goals satisfying environmental and design constraints
-%  - Difficulty for a direct MAS designing approach on the target system: safety, time and energy costly, empirical, not ensured to converge
-%    - Variety of environment where MAS are to be deployed and operational and the required knowledge to apprehend them
-%  - MARL has proved to be successfully applied for various context allowing to generate joint-policies as the set of rules agents are to follow to reach a goal optimally
 
-% =====> CONTEXTE : traditional est le genre de mot qui n'apporte rien. 
-% Le MARL ne me parait pas a sa place dans le contexte. 
-% je dirai un phrase pour motiver l'interet des SMA (c'est pas les JF AAMAS...). 
-% La place de l'organisation dans leur conception et ses enjeux. 
-% Les difficultés de la conception de cette organisation.
+Multi-agent systems (MAS) have gained significant interest in engineering and industry due to their ability to address complex, distributed problems. They provide ways to handle conflicting goals, parallel computation, system robustness, and scalability. The applications of MAS are diverse, including autonomous driving, multi-robot factories, automated trading~\cite{Oliveira1999}.
+In MAS, organization is a fundamental concept that impact how agents are coordinating their activities to collaboratively achieve a common goal~\cite{Hubner2002}. The design and implementation of a MAS are significantly impacted by the organization. Organizational aspects are crucial for addressing the challenge of MAS design in dynamic and uncertain environments, where runtime behavior needs to be flexible~\cite{Kathleen2020}. The impact organization on MAS design is core in methodologies and frameworks that enable the engineering of application-specific MAS~\cite{Noel2010}.
 
-As stated within \textquote{Autonomous Intelligent cyber-defense Agents} works\cite{kott2023autonomous}, the increasing complexity of cyber-threats and the limitations of centralized cyber-defense systems have led to fostering a multi-agent approach of cyber-defense. In this approach, the cyber-defender agents are making up a cyber-defense Multi-Agent System (CMAS). We think this Multi-Agent System (MAS) can only be envisioned in a scenario as blue team that aims to achieve cyber-defense goals to fight against a red team of cyber-attacker agents and tackle their impact on the networked environment and regular users represented as a green team.
+% In essence, we assume the entity of the organization (we simply call \textbf{organization}) always exists through the running agents interactions even though it may be implicit. An \textbf{organizational model} specifies (at least partially) the organization whether it is used as medium to describe an explicit known organization in a top-down way, or describing an implicit organization in a bottom-up way. Examples of organizational models are the Agent/Group/Role (AGR) model~\cite{Ferber2004} or more complex ones such as $\mathcal{M}OISE^{+}$~\cite{Hubner2002}. Organizational models can take into account aspects such as structural coordination, dynamic interactions, and the achievement of common objectives~\cite{Ferber2004, Abbas2015}. We call the \textbf{specifications} of an organization, the set of components used in an instance of an organizational model to specify the organization.
 
-Consequently, the design of a CMAS should be made considering a scenario to be ultimately implemented. Yet, a direct empiric implementation of a scenario to assess various CMAS types, may skip important prior theoretical considerations as for the specific problem to be set up in the scenario and the theoretical means to address and solve it. Indeed, not only do we need to realistically and consistently describe and design the networked host environment, the blue, red and green teams; but we also need to theoretically apprehend the scenario when teams are operating ultimately giving means to apprehend and generalize the role of CMAS organization on various scenarios.
+MAS designing/development methods, have been proposed jointly with organizational models to help designers finding suited specifications of an organization so that a MAS can reach a goal efficiently in a environment. Methods such as GAIA~\cite{Wooldridge2000}, ADELFE~\cite{Bernon2003} or DIAMOND~\cite{Jamont2005} lead to develop \textbf{self/re-organization} mechanisms from agents' rules (we call \textbf{policies}) enabling the MAS to adapt on the deployment environment.
+These agents' policies are defined and fixed by the designer from Agent Centered Point of View (ACPV)/Organization Centered Point of View (OCPV) so that an optional emerging/chosen organization allows reaching a global goal~\cite{Picard2009}. It often takes place as an iterative process where designers are proceeding by trial and error. Despite the designer skills, that process may be hard and costly to converge towards a sufficiently estimated successful MAS. That process gets more difficult when the target deployment environment is not easily readable or handleable due to the complexity and internal safety policies such as for company infrastructure networks. Additionally, unexpected emergent phenomena may appear without giving guarantees for safety. As a notable environment, computers network with highly complex and non-visual interactions and the lack of intuitive comprehension of the environment can make MAS methods difficult to apply to develop a MAS that aims to ensure Cyberdefense by tackling the impact of malware programs.
 
-In a MAS, we refer to organization among agents as the set of their respective individual behavior whose the collective action impacts the distance expressing how far agents are from their common goal for anytime. We assume research in CMAS is mainly focusing on finding an organization that allows agents being the closest as possible to their common cyber-defense goal at given points.
-
-% A theoretical scenario refers to a set of abstract descriptions or models defining at least partially each component of a scenario. Moreover, we assume a theoretical scenario can always be mapped to real scenarios where the components are real software or hardware assets relying on available hardware and software technology. We refer to development as the whole process allowing real scenarios to be obtained from a theoretical scenario. Therefore, research in CMAS requires developing theoretical scenarios to get some feedback of various organizations among cyber-defender agents.
-
-Currently, we did not identify any directly usable work as for comprehensively modeling such a scenario as it requires considering both a Multi-Agent Systems (MAS) designing point-of-view for agents teams and a cyber-defense point-of-view for the networked environment, attacks and countermeasures.
-Gaps between these two point-of-views shows the development of a CMAS lacks of consistent central models to design scenarios, implement and monitor them in simulation or emulation, and analyze results as their organizations.
-
-In Multi-Agent Systems (MASs), organization is a fundamental concept that impact how agents are coordinating their activities to collaboratively achieve a common goal~\cite{Hubner2002}. In essence, we assume the entity of the organization (we simply call \textbf{organization}) always exists through the running agents interactions even though it may be implicit.
-An \textbf{organizational model} specifies (at least partially) the organization whether it is used as medium to describe an explicit known organization in a top-down way, or describing an implicit organization in a bottom-up way. Examples of organizational models are the Agent/Group/Role (AGR) model~\cite{Ferber2004} or more complex ones such as $\mathcal{M}OISE^{+}$~\cite{Hubner2002}. Organizational models can take into account aspects such as structural coordination, dynamic interactions, and the achievement of common objectives~\cite{Ferber2004, Abbas2015}. We call the \textbf{specifications} of an organization, the set of components used in an instance of an organizational model to specify the organization.
-
-We assume an organization in a MAS can be understood regarding the Agent Centered Point of View (ACPV) vs. Organization Centered Point of View (OCPV) and agent's organization awareness vs. unawareness~\cite{Picard2009}.
-Typical examples are emergent MAS (ACPV and organization unawareness), coalition based MAS (ACPV and organization awareness), organization based MAS (OCPV and organization awareness), and Agent oriented engineering (OCPV and organization unawareness)~\cite{Picard2009}.
-We assume an \textbf{architecture} (also called organizational paradigm) is an abstract organization gathering a range of organizations sharing common characteristics~\cite{Horling2004}. Finally, MAS designing/development methods, have been proposed jointly with organizational models to help designers finding suited specifications of an organization so a MAS can reach a goal efficiently in a environment such as GAIA~\cite{Wooldridge2000}, ADELFE~\cite{Bernon2003} or DIAMOND~\cite{Jamont2005}.
-
-In most \textbf{self/re-organization} mechanisms agents' policies are defined and fixed by the designer from ACPV/OCPV so that an optional emerging/chosen organization allows reaching a global goal~\cite{Picard2009}. We can envision Multi-Agent Reinforcement Learning (MARL) as a particular ACPV mechanism that aims to replace the designer by simultaneously making emerge agents' policies (micro-level) and consequently the emerging organization (macro-level) relying on quantitative feedbacks. In literature, that mechanism is mostly considered to satisfy the need that agents reach efficiently a specific goal with few other considerations. Typical examples include agents' policies modeled as neural networks that are updated using various algorithms such as Deep Q-Network or REINFORCE. In such examples, an emerging implicit organization among agents can converge.
-
-In some environments, such as computers network with highly complex and non-visual interactions, the lack of intuitive comprehension of the environment can make MAS methods difficult to apply to develop a MAS whose organization optimally reach a goal. In such cases, the use of MARL could allow to have sufficiently and non over-fitted trained agents optionally respecting additional arbitrary designer's constraints (coming from a architecture for instance). We think an observer/designer could understand, interpret, and produce the specifications of valuable organizations by translating them into organizational models. For instance determining the individual, social, collective levels described in $\mathcal{M}OISE^{+}$~\cite{Hubner2002}. At least it may give relevant insights for guiding the design process.
+% We assume an organization in a MAS can be understood regarding the Agent Centered Point of View (ACPV) vs. Organization Centered Point of View (OCPV) and agent's organization awareness vs. unawareness~\cite{Picard2009}.
+% Typical examples are emergent MAS (ACPV and organization unawareness), coalition based MAS (ACPV and organization awareness), organization based MAS (OCPV and organization awareness), and Agent oriented engineering (OCPV and organization unawareness)~\cite{Picard2009}.
+% We assume an \textbf{architecture} (also called organizational paradigm) is an abstract organization gathering a range of organizations sharing common characteristics~\cite{Horling2004}.
 
 % Problem:
-%  - MARL allows finding the right policies so agents can fullfil a goal BUT they do not describe the emergent collective phenomena, nor organization is considered during training either.
-%    - The issue of their organization is not explicitly addressed as the focus is set on the resulting efficiency.
-%    - We need to make these results understandable not only at individual but also social and collective level.
-% ====> PROBLEME je ne placerai pas le MARL a ce niveau là car c'est une partie de la solution. Je parlerai ici du problème auquel tu réponds avec la démarche et les outils (MARL) que tu proposes.
-
-The idea of benefitting of the particularly adaptive and general MARL mechanism to get an approximated suited MAS organization and producing associated specifications, requires to link the MARL training of a set of policies in a bidirectional way with a MAS organizational model. For instance, a hierarchy described in a MAS model would constrain the possible policies to get ultimately trained in MARL. Reversely, a set of trained policies could be described in an organizational model, thus indicating resemblance with known MAS organization architectures.
-
-% Contribution
-%  - A novel MAS design approach starting from the environment, the goals and design constraints to generate "learned" organizational specifications which can be relevant insights to help designing a suited MAS after those.
-% ====> CONTRIBUTION est la réponse au problème décrit précédement... ici  tu peux effectivement parler apprentissage
-
-This paper first informally introduce the aforementioned broad idea as a new specific research study we refer to as \textquote{Organizational Multi-Agent Reinforcement Learning} (OMARL). We present DMO (Dec-POMDP $\mathcal{M}OISE^+$ OMARL) a first attempt to formally describe OMARL processes using the Decentralized Partially Observable Markov Decision Process (Dec-POMDP) as model for MARL and $\mathcal{M}OISE^+$ as an organizational model. Then, we propose PAMID (Partial Action-based $\mathcal{M}OISE^+$ Identification), a DMO process that allows both getting some organizational specifications from \textquote{trained} policies and constraining policies training with respect to given specifications. As PAMID only changes the action set and relies \textquote{observed} actions, it is agnostic of the MARL algorithm used jointly with function approximators as policies. We used PAMID within a proposed design approach to generate an efficient organization and associated OCPV specifications based on the environment, the initial design constraints, and goals.
-
-% Results
-%  - We applied our approach in four spatial Atari games and the Cyberdefense drone swarm environment of the 3rd CAGE Challenge. Each environment have agents that are likely to organize after learning to achieve the best scores.
-%    - Resulting organizational specifications are indeed consistent with provided design constraints and expected collective strategies.
-%    - These insights led to build MASs with scores comparable to the leading ones.
-% ====> RESULTS : je mettrai dans contribution et en disant en une ou deux phrase qu'on a évaluer l'approche sur un cas de cyberdefense... si deux applications il faut parler de leur complémentarité (qu'on évalue pas les memes choses).
-
-We applied our design approach to four simple Atari games involving several agents that must converge to a specific organization to achieve a goal efficiently optionally respecting initial organizational specifications as extra constraints. Obtained organization specifications are exploitable, coherent with expectations, and initial organizational specifications.
-
-The remainder of the article is built as following.
-In section II, after introducing the OMARL premises linking organizational model and MARL, we expose related works we identified to those.
-In section III, we introduce DMO, a proposed formally described class of OMARL processes linking Dec-POMDP and $\mathcal{M}OISE^+$.
-In section IV, we present a design approach that relies on DMO to help designers in designing a suited organization regarding environment, design constraints, and goals.
-In section V, we discuss results obtained after applying our approach in three simple cooperative Atari games.
-In section VI, we conclude on the viability and relevance of our approach as we highlight limitations to overcome and future works as well.
-
-\section{The organizational issue in CMAS designing}
-
-% - A CMAS is a MAS ensuring the Cyberdefense on the networked environment where it is deployed on
-% - Cyber-defenders agents are to collaborate to fullfil a common goal. They are thought suited for heterogenous, distributed systems whereas centralized Cyberdefense systems are inefficient
-% - Agents need to be adapted and learn from their environment and to use social scheme or collective strategies to gain efficiency.
-
-% - The organization among agents is the keystone to a CMAS designing suited both for fullfiling given goals satisfying environmental and design constraints
-
-% - Difficulty for a direct CMAS designing approach on the target system: safety, time and energy costly, empirical, not ensured to converge
-% - Categories of environment where CMAS/AICA are to be deployed and operational: drone swarm, company network, IoT system...
-% - Raising the diversity of applicative context, the need for a thorough knowledge of each system if we want to design a CMAS
-% - There is no systematic available methodological approach to be used both at research and engineering levels
-
-% - Recent advances the closest to CMAS designing have been pushed forward MARL as an automated way to find the agents' policies that better fullfil the given Cyberdefense goals.
-% - Yet, the issue of their organization is not explicitly addressed as the focus is set on the resulting efficiency.
-
-% We need to make these results understandable not only at individual but also social and collective level.
-
-
-Whether adopting OCPV or ACPV, when designing a MAS, a human designer has to define the logic in agents themselves intending the MAS to reach some specific goals via some kind of emergent or expected organization pattern. It often takes place as an iterative process where designer are proceeding by trial and error. Despite the designer skills, that process may be hard and costly to converge towards a sufficiently estimated successful MAS. That process gets more difficult when the target deployment environment is not easily readable or handleable due to the complexity and internal safety policies such as for company infrastructure networks. Additionally, unexpected emergent phenomena may appear without giving guarantees for safety.
-%We refer to that problem as the \textquote{human-based design difficulty}.
 
 Instead of adopting a risky direct empiric approach, a common approach is to rely on a intermediary step by simulating the target deployment system, analogous to \textquote{digital twins}. Indeed, simulation can provide a monitoring framework that leaves room for a safe design process, while having an assessment of the resulting MAS designs. If the simulation is close enough to the target system in terms of fidelity, then we can expect the designed MAS to be transferred to the target system for indeed reaching the goals.
-In that respect, creating a MAS that aims to reach a goal in any given environment, firstly focuses on finding a suited MAS design only in the associated simulation. We also, hypothesized the simulation to allow RL techniques and to give, at least, raw description of the current environment and agents states.
+In that respect, creating a MAS that aims to reach a goal in any given environment, firstly focuses on finding a suited MAS design only in the associated simulation. We also, hypothesized the simulation to enable various collective AI techniques and to give, at least, raw description of the current environment and agents states.
 
-One can think of benefitting of a MARL process that would automatically converge to an optimal or sub-optimally sufficient solution as for establishing the rules in agents (called \textbf{policies}) that drive the MAS to the goal. Yet, unlike human-based design where the agent's logic is explicitly specified, trained policies with MARL may be approximated by black box generalizing functions such as Neural Networks. That stresses out the need to address the explainability issue not only for individual agents' policies but for the joint-policy in its entirety through OCPV. We think, this problem can be partially addressed by considering that a joint-policy can be (at least partially) described in terms of the organizational specifications. We refer to research in the processes falling into that broad approach under the term of \textquote{Organization oriented MARL} (OMARL).
+Considering that context, there is no systematic available methodological approach to be used both at research and engineering levels that enables benefitting from the observation of emergent collective strategies in simulation for MAS designing. We must particularly address the need for automating the design process as much as possible while keeping the designer in the loop to ensure the resulting MAS is understandable and safe.
+
+% Contribution
+
+We propose a novel MAS design approach whose core uses a combination of Multi-Agent Reinforcement Learning (MARL) through Decentralized Partially Observable Markov Decision Process (Dec-POMDP) and the $\mathcal{M}OISE^+$ organizational model to generate suited agent's policies with respect to given specifications; and automatically generating the associated understandable organizational specifications. After having generated relevant OCPV specifications based on the environment, the initial design constraints, and goals; the approach consists in assisting the development of a safely built MAS in light of these specifications to better matches requirements and goals.
+
+% Results
+
+We applied our design approach to three spatial Atari games with various degree of cooperation among agents to achieve a goal the best while respecting initial organizational specifications as extra constraints. Obtained organization specifications are exploitable, coherent with expectations, and initial organizational specifications. We also applied our approach, in a Cyberdefense drone swarm environment whose resulting organizational specifications led to develop a MAS with scores comparable to the leading ones.
+
+The remainder of the article is built as following.
+In section II, while introducing the premises for the core of our approach, we expose related works we identified to those.
+In section IV, we present our design approach that relies on Dec-POMDP and $\mathcal{M}OISE^+$ to help designers in designing a suited organization in their own MAS regarding environment, design constraints, and goals.
+In section V, we discuss results obtained after applying our approach in the cooperative Atari games and the Cyberdefense environment.
+In section VI, we conclude on the viability and relevance of our approach as we highlight limitations to overcome and future works as well.
 
 
 \section{Related works and positioning}
@@ -303,12 +245,8 @@ One can think of benefitting of a MARL process that would automatically converge
 
 % =====> On ne devrait pas parle d'explicabilité ici. Les travaux liés à ton probleme c'est les basics de l'organization, comment sont construites les actuellement les organisations, et des preconisations (la tu peux parler de tes outils MARL... 
 
-We position OMARL at the crossroads of MAS and MARL and can be envisioned as a mixed ACPV/OCPV organization mechanism with no organization awareness. It falls into the broad topic of explainability in AI at an organizational level within MARL. In order to appreciate OMARL positioning in literature, we chose the following boolean keywords formula we think better describe OMARL:
-\begin{gather*}
-    ("multi" \land "agent") \land ("reinforcement \ learning")\\ \land ("explainability" \lor ("organization" \lor "collective"))
-\end{gather*}
 
-We identified few article dealing with a multi-agent vision of explainability. Most notable ones are:
+We identified few works related to automated approaches that aim to assist the MAS design process to get sufficient efficiency while taking into account organizational aspects in a multiagent context. Therefore, we also extended our review to works dealing with to the links between organizational specifications and the emergence of collective phenomena through MARL or MAS algorithms on various environments.
 
 % Collective explainable AI: Explaining cooperative strategies and agent contribution in multiagent reinforcement learning with shapley values
 \cite{Heuillet2022} proposes a novel approach to explain cooperative strategies in multiagent reinforcement learning (RL) using Shapley values, a game theory concept used in eXplainable AI (XAI). The study aims to make deep RL more comprehensible and address the need for methods that provide better understanding and interpretability. The experimental results on Multiagent Particle and Sequential Social Dilemmas demonstrate the effectiveness of Shapley values in explaining the rationale behind decisions taken by agents. However, the article also highlights that Shapley values can only provide general explanations about a model and cannot explain specific actions taken by agents. The authors suggest that future work should focus on addressing these limitations. The study's implications extend to areas such as non-discriminatory decision making, ethical and responsible AI-derived decisions, and policy making under fairness constraints.
