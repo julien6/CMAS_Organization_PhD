@@ -9,17 +9,48 @@
 \usepackage[inline, shortlabels]{enumitem}
 \usepackage{tabularx}
 \usepackage{caption}
+\usepackage{listings}
 % \usepackage{titlesec}
 \usepackage[english]{babel}
 \captionsetup{font=it}
 \usepackage{ragged2e}
+\usepackage[hyphens]{url}
 \usepackage{hyperref}
+\usepackage{xurl}
 \usepackage{pifont}
 \usepackage{footmisc}
 \usepackage{multirow}
 \usepackage{enumitem}
 \usepackage{algorithm2e}
 \usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
 
 % --- Tickz
 \usepackage{physics}
@@ -231,7 +262,7 @@ In order to address that issue, we introduce AMOEA, a novel general MAS design a
 We applied AOMEA in three spatial Atari games with various required degree of cooperation among agents so they achieve a goal the best; and additionally respecting organizational specifications as design constraints. Obtained organizational specifications are indeed exploitable, coherent with expectations, and respect design constraints.
 %We also applied our approach, in a Cyberdefense drone swarm environment whose resulting organizational specifications led to develop a MAS with scores comparable to the leading ones.
 
-Section II starts introducing the theoretical background of AOMEA as for the key role of organization in the development of a MAS and the motivation for integrating a MAS organizational model into a MARL process in order to enhance the MAS design process. In section III, we globally introduce AOMEA before explaining the theoretical core the approach is built on. Then, we detail how AOMEA can be applied in MAS engineering through a proposed implementation. We assessed AOMEA in 4 simulated environments discussing obtained results in section IV. Finally, section V concludes on the viability and relevance of our approach as we highlight limitations to overcome and future works as well.
+Section II starts introducing the theoretical background of AOMEA as for the key role of organization in the development of a MAS and available methodological works and the motivation for integrating a MAS organizational model into a MARL process in order to enhance the MAS design process. In section III, we globally introduce AOMEA before explaining the theoretical core the approach is built on. Then, we detail how AOMEA can be applied in MAS engineering through a proposed implementation. We assessed AOMEA in 4 simulated environments discussing obtained results in section IV. Finally, section V concludes on the viability and relevance of our approach as we highlight limitations to overcome and future works as well.
 
 % ====================================================================================================
 
@@ -247,8 +278,6 @@ Section II starts introducing the theoretical background of AOMEA as for the key
 % MARL (basiques) // DECPOMDP (basiques)
 
 
-% TODO: "related works" à mettre à la fin 
-
 Developing a Multi-Agent System (MAS) involves various engineering methods and methodologies that are designed to address the complexities inherent in the design, implementation, and deployment of such systems. These methods are essential for ensuring that MAS can effectively coordinate, communicate, and execute tasks in a distributed and often dynamic environment.
 Several comprehensive methodologies have been proposed for MAS development, including:
 
@@ -261,9 +290,15 @@ Several comprehensive methodologies have been proposed for MAS development, incl
 
 Yet, these methodological works significantly rely on human designers while none of them enable automating the assistance of the MAS design process by guaranteeing sufficient efficiency while taking into account organizational aspects in a multiagent context.
 
-It is possible benefitting of a MARL process that would automatically converge to an optimal or sub-optimally sufficient solution as for establishing the rules in agents (called \textbf{policies}) that drive the MAS to the goal. Yet, unlike human-based design where the agent's logic is explicitly specified, trained policies with MARL may be approximated by black box generalizing functions such as Neural Networks. That stresses out the need to address the explainability issue not only for individual agents' policies but for the joint-policy in its entirety through OCPV.
+Beside, these MAS designing methods, recent works in MARL make it possible benefitting of a MARL process that would automatically converge to an optimal or sub-optimally sufficient solution as for establishing the rules in agents (called \textbf{policies}) that drive the MAS to the goal. Yet, unlike human-based design where the agent's logic is explicitly specified, trained policies with MARL may be approximated by black box generalizing functions such as Neural Networks hence not explicitly describing emergent collective strategies among trained agents.
+As a recent issue, we identified few related works partially linked to using MARL for better understanding trained agents collective behavior but none are oriented for a methodological approach for MAS designing.
 
-This problem can be partially addressed by considering that a joint-policy can be (at least partially) described in terms of the organizational specifications.
+Kazhdan et. al.~\cite{Kazhdan2020} proposed a library to enhance the explainability of MARL systems by providing means to extract symbolic models from MARL systems. It focuses on improving the interpretability of MARL systems.
+Wang et. al.~\cite{Wang2020} introduced a role-oriented MARL approach where roles are emergent, and agents with similar roles tend to share their learning and specialize in certain sub-tasks. The approach is designed to learn specialized, dynamic, and identifiable roles without relying on predefined role structures and behaviors.
+Tosic et. al~\cite{Tosic2010} proposed a framework for addressing coordination in collaborative multi-agent systems. It enable agents to learn how to coordinate effectively to enhance the coordination and communication capabilities of multi-agent systems.
+Zheng et. al.~\cite{Zheng2018} presented a platform for MARL that aims to facilitate research on artificial collective intelligence by providing a comprehensive set of baselines and evaluation metrics to benchmark the performance of MARL algorithms.
+
+Our approach to address the explainability in MARL with a methodological purpose for MAS, consists in considering that a joint-policy or joint-history can be described in terms of the organizational specifications at least partially.
 We refer to research in the processes falling into that broad approach under the term of \textquote{Organization oriented MARL} (OMARL).
 In that context, we propose the \emph{Partial Relations with Agent History and Organization Model} (PRAHOM) process to link agents' policies and their training to an organizational model.
 
@@ -285,24 +320,6 @@ Among, the existing organizational models \textquote{Agent/Group/Role}~\cite{Fer
 % Agent technology represents a new software engineering paradigm that offers fresh prospects for analyzing, designing, and building software systems~\cite{Li2016}. This paradigm shift towards agent-oriented software engineering (AOSE) encourages developers to think in terms of autonomous agents and their interactions, leading to more robust and adaptable MAS.
 
 % \paragraph{\textbf{Comprehensive Methodologies}}
-
-
-% Willing to fill that gap with AOMEA, we also included works dealing with to the links between organizational specifications and the emergence of collective phenomena through MARL or MAS algorithms on various environments.
-% Among the works we considered, we present most notable ones below dispatched among those related to the expression of MARL through OCPV and those related to the adaptation of the MARL process itself to meet specific design constraints.
-
-% \paragraph{\textbf{Frameworks for MARL with organizational aspects}}
-
-% % MARLeME: A MARL Model Extraction Library
-% Kazhdan et. al.~\cite{Kazhdan2020} introduces MARLeME, a library designed to enhance the explainability of MARL systems by approximating them with symbolic models. The library aims to improve the interpretability of MARL systems, which is crucial for understanding the behavior of multiple agents interacting in a shared environment. By providing a means to extract symbolic models from MARL systems, MARLeME contributes to the advancement of explainable AI in the context of multi-agent systems.
-% %
-% % ROMA: MARL with Emergent Roles
-% Wang et. al.~\cite{Wang2020} introduces a role-oriented MARL approach where roles are emergent, and agents with similar roles tend to share their learning and specialize in certain sub-tasks. The framework aims to combine the flexibility and adaptability of MARL with the concept of roles, allowing agents with similar roles to exhibit similar behaviors. The approach is designed to learn specialized, dynamic, and identifiable roles without relying on predefined role structures and behaviors. The research provides a novel perspective on the application of role-oriented MARL in complex multi-agent systems, offering potential advancements in the field of reinforcement learning.
-% %
-% % A unified framework for reinforcement learning, co-learning and meta-learning how to coordinate in collaborative multi-agent systems
-% Tosic et. al~\cite{Tosic2010} presents a comprehensive framework for addressing coordination in collaborative multi-agent systems. The framework integrates reinforcement learning, co-learning, and meta-learning to enable agents to learn how to coordinate effectively. By leveraging this unified approach, the paper aims to enhance the coordination and communication capabilities of multi-agent systems, ultimately improving their overall performance.
-% %
-% % Magent: A many-agent reinforcement learning platform for artificial collective intelligence
-% Zheng et. al.~\cite{Zheng2018} presents MAgent, a platform for MARL that aims to facilitate research on artificial collective intelligence. MAgent provides a flexible and efficient environment for training and evaluating MARL algorithms, enabling the study of complex multi-agent behaviors. The platform supports various scenarios, including cooperative, competitive, and mixed environments, and offers a high degree of scalability to accommodate a large number of agents. MAgent also includes a comprehensive set of baselines and evaluation metrics to benchmark the performance of MARL algorithms. The research contributes to the advancement of collective intelligence and the development of robust multi-agent systems.
 
 % \paragraph{\textbf{Characterization of emergent collective strategies}}
 
@@ -349,16 +366,16 @@ Among, the existing organizational models \textquote{Agent/Group/Role}~\cite{Fer
 
 \section{Global overview}
 
-\begin{figure}[h!]
+\begin{figure}[t!]
     \centering
     \include{figures/approach}
     \caption{A summary view of our approach to MAS design}
     \label{fig:design_approach}
 \end{figure}
 
-Relying on PRAHOM, we introduce AOMEA as an approach for MAS design that automates the pre-designing of a MAS that has to respect some design constraints; while the obtained organizational specifications allow developing a curated MAS.
+We introduce AOMEA as an approach for MAS design that automates the pre-designing of a MAS that has to respect some design constraints; while the obtained organizational specifications allow developing a curated MAS.
 
-A major advantage of AOMEA is that it is agnostic of the approximation function used for implementing the agents' policies such as neural networks based ones. Moreover, our approach can be generally applied in any environment able to be simulated.
+Since PRAHOM relies on joint-histories instead joint-policy, AOMEA is agnostic of the approximation function used for implementing the agents' policies such as neural networks based ones. Moreover, it can be generally applied in any environment likely to be simulated.
 
 AOMEA first consider the environment with agents that are to achieve some goals. It automatically enables finding relevant insights under the form of organizational specifications. They are to transparently express how agents could individually act and collaborate to reach the goals. Then, the MAS design process can be assisted in light of these indications. As a high-level description AOMEA consists in:
 \begin{enumerate}
@@ -378,6 +395,7 @@ The interest is to provide at least the designer with indications on the specifi
 \section{Theoretical core}
 
 We proposed PRAHOM (in \autoref{alg:prahom}) as a synthesis of two processes that fall into the OMARL purposes. The first process gets the specifications out of the agents' policies; and the second process to get the joint-policies satisfying given specifications.
+Here we just present the underlying idea at a high-level description for these two processes to avoid unnecessary formalism. More information can be found in \autoref{gym-wrapper} as for the use and implementation of PRAHOM.
 
 \RestyleAlgo{ruled}
 \SetKwComment{Comment}{// }{}
@@ -401,8 +419,6 @@ We proposed PRAHOM (in \autoref{alg:prahom}) as a synthesis of two processes tha
 
 \end{algorithm}
 
-Here we just present the underlying idea at a high-level description for these two processes to avoid unnecessary formalism. A full formal description and implementation can be found in \autoref{gym-wrapper}.
-
 \paragraph{\textbf{Infering OS from joint-policies}}
 
 Rather than using directly agents' policy, we use the history as it may be built with observed resulting actions when observations are received during a series of test episodes. Indeed, for a given policy $\pi \in \Pi$ the associated history is by definition $h \in h_{joint} = ((\omega_k,a_k) | k \in \mathbb{N})$ and the $(\omega_k,a_k) \in \pi$. Taking into account several agents, joint-history can be seen as an approximation of the joint-policy that we refer to as reconstructed joint-policy $R\Pi_{joint} \subset \Pi_{joint}$. A reconstructed policy with a history is $r\pi_i = {(\omega, a) \in h | h \in H}$;
@@ -413,13 +429,11 @@ We propose some relations between $\mathcal{M}OISE^+$ specifications and joint-h
 From these relation, we propose to rely on the previous relations to develop a empirical algorithm we call \emph{PRAHOM-pos} to infer organizational specifications out of joint-policies. Below we informally describe key points for understanding that process (cf. PRAHOM-Wrapper\ref{gym-wrapper} for the implementation).
 
 As we have only one group, we do not consider the inter-links and inter-compatibilities. Additionally as a simplification, we consider only one social scheme. As a general remark, the \textquote{determine*} relations are not all fully described and rely on custom implementation (cf. \autoref{gym-wrapper} for further information).
-
 PRAHOM-pos first look at the individual level.
 First, it tries to figure out the roles, links, subgroups, individual goals, missions and plans played by agents by sampling history sub-sequences $h \in H$ and comparing with known history sub-sequences whose we know the associated role via established relations.
 
 Then PRAHOM-pos look at the social and collective level.
 At the end of each joint-policy we try to reinforce a global view of the goals, missions, plans, and the knowledge of the mission to goal; with the partially inferred information at the individual level.
-
 At the end of the algorithm, it tries to synthesize the knowledge infered until know to have better view of the number of agent per subgroup, the agent cardinality per mission, the role cardinality, the compatibilities between roles, the permissions and obligations.
 
 
@@ -436,7 +450,35 @@ We can note the $os_{init}$ could forbid the MARL algorithm to provide a joint-p
 
 \section{Engineering tool}
 
-We developed \emph{PRAHOM Gym Wrapper}\label{gym-wrapper}, a Gym wrapper to help in automate the setting up of PRAHOM for a given Gym Environment. It is a Proof of Concept that enables linking actions with $\mathcal{M}OISE^+$ specifications, define the training specifications and provide functions to extract the resulting sub-optimal raw organizational specifications. During training, actions are masked to guide an agent to learn to act according to the organizational specifications. The wrapper is available at \url{https://github.com/julien6/omarl_experiments}.
+We developed \emph{PRAHOM Gym Wrapper}\label{gym-wrapper}, a first Gym wrapper to help in automate the setting up of PRAHOM for a given Gym Environment.
+It is a Proof of Concept that enables linking actions with $\mathcal{M}OISE^+$ specifications, define the training specifications and provide functions to extract the resulting sub-optimal raw organizational specifications. During training, actions are masked to guide an agent to learn to act according to the organizational specifications.
+
+\begin{lstlisting}[language=Python, caption=PRAHOM Gy Wrapper basic use, label={lst:wrapper_basic_use}]
+from omarl_experiments import PamidWrapper
+env = gym_env.parallel_env(render_mode="human")
+...
+action_to_specs = {"agent_name": {
+        "14": "role='leader';link='(agent_0,agent_1,auth);..."
+        ...}    
+    ...}
+training_specs = {
+    "leadadversary_0": {
+        "must": ["(23,41)"],
+        "must_not": ["(14,74)"]}...}
+env = PrahomWrapper(env, action_to_specs, training_specs, unknown_specs_inference=True, pca_output=True)
+# ...TRAINING...
+env.prahom_render_pca()
+trained_specs, agent_to_specs = env.prahom_specs()
+\end{lstlisting}
+
+In \autoref{lst:wrapper_basic_use}, we detailed a basic use of the wrapper to augment a Gym environment (l. 12) with known relations between actions and organizational specifications (l. 4) and the design constraints agents are to satisfy (l. 8). After training, we can print a Principal Component Analysis (PCA) of each agent history over an episode (l.14) which is an additional analysis tool to manually detect emerging roles. It also provides the infered $\mathcal{M}OISE^+$ specifications considering the last episodes and how agents are instantiated for the last one.
+
+These results are constructed via an empirical or statistical approaches using provided know relations between observations, actions and organizational specifications. When no relation is available it tries to detect subsequence of joint-histories likely to match an organizational specification (l. 12). Due to these limitations, the results may not fully describe the underlying organization or may contain noisy infered organizational specifications. Since the results are compliant with $\mathcal{M}OISE^+$, it is then possible to use them with available MAS design methods to benefit from recurrent emerging organizational specifications during the design process.
+
+% We start defining actions with known specifications Focusing of the "lead adversary", we have:
+
+% "observations": [self_vel, self_pos, landmark_rel_positions, other_agent_rel_positions, other_agent_velocities, leader_comm]
+% "actions": [say_0, say_1, say_2, say_3] X [no_action, move_left, move_right, move_down, move_up]
 
 % TODO: décrire les fonctionalités et résultats attendues (reprendre github)
 
@@ -512,54 +554,56 @@ We developed \emph{PRAHOM Gym Wrapper}\label{gym-wrapper}, a Gym wrapper to help
 
 
 
-In order to assess AOMEA, we considered using PRAHOM in available simulated environments made up from agents that have to achieve a goal with the best performance through various collective strategies whose some can be expected (presented in \autoref{fig:simulated_environments}). We selected 3 Atari-like environments for their visual rendering is a convenient way to check the PRAHOM results with observations. We also considered a Cyberdefense environment as a first attempt to apply PRAHOM in non-visual environment and checking possibly emerging collective strategies against malware programs:
+In order to assess AOMEA, we considered using PRAHOM in available simulated environments made up from agents that have to achieve a goal with the best performance through various collective strategies whose some can be expected (presented in \autoref{fig:simulated_environments}).
+We selected 3 Atari-like environments for their visual rendering is a convenient way to check the PRAHOM results with manual observations.
+\footnote{Additional explaination and the examples discussed using \emph{PRAHOM Gym wrapper} are available at \url{https://github.com/julien6/omarl_experiments?tab=readme-ov-file\#tutorial-predator-prey-with-communication}}
+We also considered a Cyberdefense environment as a first attempt to apply PRAHOM in non-visual environment and checking possibly emerging collective strategies against malware programs:
 
-\
-
-\noindent
+\phantom{X}
 
 % Left column for text
 \hspace{-0.6cm}
-\begin{minipage}[t]{0.55\textwidth}
+\begin{minipage}[t]{0.65\textwidth}
 
     \begin{itemize}
-        \item \textquote{Predator-prey with communication}~\cite{Lowe2017} (PPY) that consists in predators monitored by a leader to better catch preys;
-        \item \textquote{Pistonball} (PBL)~\cite{Terry2021} that consists in a series of piston to bring a ball from right to left side;
-        \item \textquote{Knights Archers Zombies}~\cite{Terry2021} (KAZ) that consists in a few knights and archers learning how to kill as much zombies a possible;
-        \item \textquote{Drone swarm - 3rd CAGE Challenge}~\cite{cage_challenge_3_announcement} (CYB) that consists in blue agents deployed in drones while trying to tackle embedded malware programs' impact.
+        \item \textquote{Predator-prey with communication}~\cite{Lowe2017} (PPY) that consists in predators monitored by a leader to better catch preys hence requiring collective hunting strategies;
+        \item \textquote{Pistonball} (PBL)~\cite{Terry2021} that consists in a series of piston to bring a ball from right to left side hence requiring neighbourg representation;
+        \item \textquote{Knights Archers Zombies}~\cite{Terry2021} (KAZ) that consists in a few knights and archers learning how to kill as much zombies a possible hence requiring efficient agents positioning;
+        \item \textquote{Drone swarm - 3rd CAGE Challenge}~\cite{cage_challenge_3_announcement} (CYB) that consists in blue agents deployed in drones while trying to tackle embedded malware programs' impact. We may expect agents to \allowbreak collectively isolate compromised drones.
     \end{itemize}
 
 \end{minipage}%
 \hfill % Ajoute une marge horizontale
 % Right column for a figure
-\begin{minipage}[t]{0.4\textwidth}
+\begin{minipage}[t]{0.37\textwidth}
+    \vspace{-1.7cm}
     \begin{figure}[H] % Use the 'H' specifier from the 'float' package to force the figure placement
         \centering
-        \includegraphics[width=\linewidth]{figures/envs.png} % Replace "example-image" with your figure file name
-        \caption{Selected environment: CYB, PBL, PPY, and KAZ}
+        \includegraphics[width=0.6\linewidth]{figures/envs.png} % Replace "example-image" with your figure file name
+        \caption{Overview of the selected environments: CYB, PBL, PPY, and KAZ}
         \label{fig:simulated_environments}
     \end{figure}
 \end{minipage}
 
 \
 
-\noindent We applied our approach in three cases:
+\noindent We applied AOMEA in three cases:
 \begin{itemize}
-    \item No training specifications (NTS)
-    \item Partially constraining training specifications (PTS)
-    \item Fully constraining training specifications (FTS)
+    \item No training specifications (NTS): agents have to learn the most efficient collective strategies without any constraints or indications.
+    \item Partially constraining training specifications (PTS): some constraints or indications are given to help converging faster or meeting requirements.
+    \item Fully constraining training specifications (FTS): manually crafted joint-policies are given for they are a reference regarding learned joint-policies.
 \end{itemize}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=\textwidth]{figures/prahom_learning_curve.png}
+    \includegraphics[width=0.8\textwidth]{figures/prahom_learning_curve.png}
     \caption{Average reward for each iteration in Pistonball environment}
     \label{fig:prahom_learning_curve}
 \end{figure}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=\textwidth]{figures/prahom_pca_analysis.png}
+    \includegraphics[width=0.8\textwidth]{figures/prahom_pca_analysis.png}
     \caption{Principal Component Analysis of the trained agent histories in Pistonball environment}
     \label{fig:prahom_pca_analysis}
 \end{figure}
@@ -593,9 +637,15 @@ For the \textquote{Drone swarm - 3rd CAGE Challenge} we developed our own custom
 % 1er paragraphe: résumé + qu'est-ce qui est changé par rapport à l'edt
 % 2ème paragraphe: perspectives et future works
 
-% TODO: enelver "we think", "as suggested"... (pas d'anglais littéraire)
+% In this article we presented AOMEA, a novel general MAS design approach that aims to ease the MAS designing when it can not be easily conducted by designers in highly complex deployment environments.
+On one side, literature shows some methodological works rely on the designer knowledge to design a suited MAS organisation but do not provide automatic or assisted ways to determine relevant organizational mechanisms solely regarding the design requirements and the global goal. On the other side, MARL techniques have been successfully applied to automatically train agents to reach the given goal but the concerns raised by explicit characterization of emergent collective strategies is still in its early stages.
+In order to address both the lack of automation in MAS methods and the need for explicit organizational in MARL, we showed AOMEA's originality, which is to augment a MARL process with an explicit organizational model, has not been considered in literature yet. We first exposed how AOMEA is intented to be used in MAS engineering as an additional tool to assist the design process.
+Then, we explained the AOMEA's theoretical core with formal links between Dec-POMDP and the $\mathcal{M}OISE^+$ through the PRAHOM algorithm.
+Furthermore, we implemented the \emph{PRAHOM Gym wrapper} as a Proof of Concept for practically applying AOMEA and we showed how it enables getting the organizational specifications satisfying design constraints while allowing to achieve the given goal.
+Finally, we applied our approach in four Gym environments to check the impact on training, explainability and viability for our MAS design approach.
 
-This article intends to address the need for easing the MAS designing when it can not be easily conducted by human designers due to the high complexity, low readability, highly changing and uncertainity of some environments. Our premise is to link good results obtained with MARL with some organizational model in order to get a human-readable idea of some suited organization in MAS to guide a safe monitored MAS design. Literature shows works have been provided focusing on emergent collective strategies using RL techniques or providing algorithms to make them emerge. Yet, we were unable to connect our idea with identified works as for using both MARL and an organizational model towards a MAS design approach. First, we formalized our idea for linking MARL with organizational model through Dec-POMDP and $\mathcal{M}OISE^+$. Relying on that formalism, we exposed the approach for MAS design using the link between MARL and organizational model. It resulted into a "Gym wrapper" for constraining agents' training according to their training organizational specifications and allowing to get the organizational specifications of the general OE in different runs. Finally, we applied our approach in four Gym environments to check the impact on training, explainability and viability for our MAS design approach. Despite, being agnostic of the policy approximation functions, it is worth to investigates on linking organizational model with those directly for they could be adapted to better match the frame of organizational models. Furthermore, it enables envisioning addressing the design of MAS with organization awareness.
+Even though AOMEA is agnostic of the MARL algorithm because it uses agents' histories obtained a posteriori to infer organizational specifications; reconstructing agents' collective behavior show to be costly and difficult in analyse. Indeed, a major perspective for improving PRAHOM is to go further with supervised and non-supervised learning rather than an empirical statistical approach as for identifying valuable organizational specifications out of histories. Moreover, it is worth investigating recent works in MARL techniques such as hierarchical learning because they already seek to characterize emergent strategies throughut learning.
+Eventually, we also aim to improve AOMEA applicability by developping dedicated interfaces built around PRAHOM making it more accessible for industrial and research contexts.
 
 
 % ---- Bibliography ----
