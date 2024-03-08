@@ -306,7 +306,9 @@ It is also important to note all of these works rely on Markovian models to mode
 We refer to \textbf{solving} the Dec-POMDP for the team $t$ as finding a joint policy $\pi_{joint,i} \in \Pi_{joint}$ that maximize the expected cumulative reward over a finite horizon.
 We refer to \textbf{sub-optimally solving} the Dec-POMDP at $s$ expectancy as finding a the joint policies $\pi_{joint,i} \in \Pi_{joint}$ that gets the expected cumulative reward over a finite horizon at least at $s \in \mathbb{R}$.
 
-We refer to \textquote{joint-history} as an approximation by observing received observation and played action. We note $h_{joint} \ in H_{joint}$ a \textbf{joint-history} so that $h_{joint} = {h \in H}$
+We refer to a \textbf{policy} $\pi \in \Pi$ as the relation that associates an observation to an action. We note $\pi_{joint} \in \Pi_{joint}$ a \textbf{joint-policy} that comprises all of the agents' policies with $\pi_{joint} = \{\pi_i, i \in \mathbb{N}, \pi_i \in \Pi\}$
+
+We refer to a \textbf{history} $h \in H$ as the observation-action couples played by an agent obtained during one episode. We note $h_{joint} \in H_{joint}$ a \textbf{joint-policy} that comprises all of the agents' histories with $h_{joint} = \{h_i, i \in \mathbb{N}, h_i \in H\}$
 
 % ====
 % \paragraph{\textbf{Method Fragments and Model Transformations}}
@@ -374,25 +376,22 @@ We refer to \textquote{joint-history} as an approximation by observing received 
 \end{figure}
 
 We introduce AOMEA as an approach for MAS design that automates the pre-designing of a MAS that has to respect some design constraints; while the obtained organizational specifications allow developing a curated MAS.
-
 The underlying idea for our approach consists in considering that a joint-policy or joint-history can be described in terms of the organizational specifications at least partially.
 We refer to research in the processes falling into that broad approach under the term of \textquote{Organization oriented MARL} (OMARL).
+%
+% As a high-level description, AOMEA considers the environment with agents that are to achieve some goals. It automatically enables finding relevant insights under the form of organizational specifications. They are to transparently express how agents could individually act and collaborate to reach the goals. Then, the MAS design process can be assisted in light of these indications. An illustrative representation of our approach is presented in \autoref{fig:design_approach}.
+%
+AOMEA consists of 4 sequential phases: modeling, solving, analyzing, and developing (respectively $1$, $2$, $3$, $4$ in \autoref{fig:design_approach}).
 
-AOMEA first considers the environment with agents that are to achieve some goals. It automatically enables finding relevant insights under the form of organizational specifications. They are to transparently express how agents could individually act and collaborate to reach the goals. Then, the MAS design process can be assisted in light of these indications. As a high-level description AOMEA consists in:
-\begin{enumerate}
-    \item Linking some observation and action with related known specifications such as roles, links between roles, objectives or missions\dots;
-    \item Defining the training specifications as design constraints before launching a simulation of several episodes;
-    \item Training agents with available algorithms such as Proximal Policy Optimization;
-    \item Extracting organizational specifications out of the  trained agents' policies in a single episode run via the OMARL process;
-    \item Understanding and curating the raw specifications to get relevant, safe and clean organizational specifications
-    \item Implementing the MAS in light of the curated organizational specifications and checking its validity.
-\end{enumerate}
+\textbf{Modeling} \quad In that phase, the designer has to manually develop a simulation of the target environment ($1.1$ in \autoref{fig:design_approach}) where agents must be deployed and are intended to cooperate to achieve the designer's goal efficiently ($1.2$ in \autoref{fig:design_approach}) with the help of quantitative feedbacks. During the development of the simulated environment, the designer can link parts of an agent's policy (as observations-actions couples) to known organizational specifications of any chosen organizational model.
+For instance, in \textquote{leader-follower} organizations, the actions sending orders to other follower agents, are characteristics of leader agents only.
+Optionally, the designer may also want to restrict the set of possible policies agents can explore with respect to given organizational specifications as constraints to meet design requirements or to help agents to converge as well ($1.3$ in \autoref{fig:design_approach}).
 
-% TODO: indiquer pour chaque numéro de flèche, l'étape correspondante avec input et output
+\textbf{Solving} \quad In that phase, relying on links between observations-actions and organizational specifications and the simulated environment, a MARL algorithm is used jointly with the chosen MAS organizational model through an OMARL process. It automatically enables finding optimal policies satisfying the given design organizational specifications ($2.1$ in \autoref{fig:design_approach}) that lead to the best expected cumulative reward; and getting the associated organizational specifications ($2.2$ in \autoref{fig:design_approach}). As an example, when training agents with respect to the \textquote{leader-follower} organizations, some agents may be forbidden to apply order actions while other may be forced to. After training, the OMARL process can characterize emergent roles, links between roles or sub-goals organized in plans to reach the global goal.
 
-An illustrative representation of our approach is presented in Figure \ref{fig:design_approach}. The organizational model $\mathcal{M}OISE^{+}$ is related to the policies learned via the OMARL process. In this process, we seek to define the structural, functional and deontic specifications of $\mathcal{M}OISE^{+}$ with respect to the learned policies (1). For example, it is possible to determine the inferred agents' roles, links and compatibilities between roles, how the determined goals are organized in plans and how agents can commit to them. Conversely, the specifications of the organization constrain the space of possible agent policies (2). For example, some of the actions labeled for particular roles may or may not be accessible to an agent depending on the assigned role.
+\textbf{Analyzing} \quad In that phase, the designer can both observe the trained agents policies ($3.2$ in \autoref{fig:design_approach}) and takes into account the inferred associated organizational specifications ($3.1$ in \autoref{fig:design_approach}) to understand how these agents can achieve the gloabl goal. In light of these raw results, the designer is intended to extract valuable design patterns from noisy or useless agents' decisions. The interest is to provide at least some indications on the organizational specifications capable to achieve the goal and to satisfy the design constraints. We refer these valuable indications as curated organizational specifications ($3.3$ in \autoref{fig:design_approach}). For instance, after having trained several agents in a \textquote{predator-prey} environment, we may analyze that a \textquote{leader} predator with \textquote{follower} predators, appears to be more efficient for catching preys.
 
-The interest is to provide at least the designer with indications on the specifications of an organization capable of satisfying the constraints of the environment and initial design. In light of these initial results, the designer can decide to propose specifications which he can ensure they meet the safety and explainability requirements. These specifications then serve as a blueprint for implementing a MAS as described in Figure \ref{fig:design_approach}.
+\textbf{Developing} \quad In that phase, the designer takes into account the curated organizational specifications as a blueprint for implementing a MAS. From that point, a regular MAS development with one of the available method that is used jointly with the chosen organizational model can be applied. Unlike the trained agents which may cause unexpected behavior, manually implemented agents enables giving safety guarantees required for sensitive environments. Finally, implemented agents are launched in simulation to check the MAS its effective ability to achieve the global goal.
 
 
 \subsection{Theoretical core}
@@ -402,7 +401,7 @@ In order to implement an OMARL process, we propose the \emph{Partial Relations w
 It is as a synthesis of two processes that fall into the OMARL purposes. The first process gets the specifications out of the agents' policies; and the second process to get the joint-policies satisfying given specifications (in \autoref{alg:prahom}).
 Here we just present the underlying idea at a high-level description for these two processes to avoid unnecessary formalism. More information for the use and implementation of \emph{PRAHOM} can be found in \autoref{gym-wrapper}.
 
-Since \emph{PRAHOM} relies on joint-histories instead joint-policies, it is agnostic of the approximation function used for implementing the agents' policies such as neural networks based ones. Moreover, it can be generally applied in any environment likely to be simulated.
+Since \emph{PRAHOM} relies on joint-histories instead of joint-policies, it is agnostic of the approximation function used for implementing the agents' policies such as neural networks based ones. Moreover, it can be generally applied in any environment likely to be simulated.
 
 \RestyleAlgo{ruled}
 \SetKwComment{Comment}{// }{}
@@ -428,7 +427,7 @@ Since \emph{PRAHOM} relies on joint-histories instead joint-policies, it is agno
 
 \paragraph{\textbf{Infering OS from joint-policies}}
 
-Rather than using joint-policies directly, we use the joint-histories as it may be built with observed resulting actions when observations are received during a series of test episodes. Indeed, for a given policy $\pi \in \Pi$ the associated history is by definition $h \in h_{joint} = ((\omega_k,a_k) | k \in \mathbb{N})$ and the $(\omega_k,a_k) \in \pi$. Taking into account several agents, joint-history can be seen as an approximation of the joint-policy that we refer to as reconstructed joint-policy $R\Pi_{joint} \subset \Pi_{joint}$. A reconstructed policy with a history is $r\pi_i = {(\omega, a) \in h | h \in H}$;
+Rather than using joint-policies directly, we use the joint-histories as it may be built with observed resulting actions when observations are received during a series of test episodes. Indeed, for a given policy $\pi \in \Pi$ the associated history is by definition $h \in h_{joint} = ((\omega_k,a_k) | k \in \mathbb{N})$ and the $(\omega_k,a_k) \in \pi$. Taking into account several agents, joint-history can be seen as an approximation of the joint-policy that we refer to as reconstructed joint-policy $R\Pi_{joint} \subset \Pi_{joint}$. A reconstructed policy with a history is $r\pi_i = \{(\omega, a) \in h | h \in H\}$;
 
 Then, due to the difficulty to infer information related to organizational specifications, we associate each action in MARL with some organization specifications as a \textquote{many to many} relation. It sets up a first frame for identifying organizational specifications in played action series. We address that problem in the remainder of this section.
 
@@ -457,7 +456,7 @@ Finally, after executing one test episode, it returns a suboptimal joint-policy 
 \subsection{Engineering tool}
 
 We developed \emph{PRAHOM Gym Wrapper}\label{gym-wrapper}, a first Gym wrapper to help in automating the setting up of \emph{PRAHOM} for a given Gym Environment.
-It is a Proof of Concept that enables linking actions with $\mathcal{M}OISE^+$ specifications, define the training specifications and provide functions to extract the resulting suboptimal raw organizational specifications. During training, actions are masked to guide an agent to learn to act according to the organizational specifications.
+It is a Proof of Concept that enables linking actions with $\mathcal{M}OISE^+$ specifications, define the organizational specifications and provide functions to extract the resulting suboptimal raw organizational specifications. During training, actions are masked to guide an agent to learn to act according to the organizational specifications.
 
 \begin{lstlisting}[language=Python, caption=PRAHOM Gym Wrapper basic use, label={lst:wrapper_basic_use}]
 from omarl_experiments import PrahomWrapper
@@ -595,9 +594,9 @@ We also considered a Cyberdefense environment as a first attempt to apply \emph{
 
 \noindent We applied AOMEA in three cases:
 \begin{itemize}
-    \item No training specifications (NTS): agents have to learn the most efficient collective strategies without any constraints or indications.
-    \item Partially constraining training specifications (PTS): some constraints or indications are given to help converge faster or meeting requirements.
-    \item Fully constraining training specifications (FTS): manually crafted joint-policies are given for they are a reference regarding learned joint-policies.
+    \item No organizational specifications (NTS): agents have to learn the most efficient collective strategies without any constraints or indications.
+    \item Partially constraining organizational specifications (PTS): some constraints or indications are given to help converge faster or meeting requirements.
+    \item Fully constraining organizational specifications (FTS): manually crafted joint-policies are given for they are a reference regarding learned joint-policies.
 \end{itemize}
 
 \begin{figure}[h!]
