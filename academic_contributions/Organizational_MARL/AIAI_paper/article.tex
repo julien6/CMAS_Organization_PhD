@@ -257,19 +257,19 @@ The designer defines the agents' policies in various ways ranging from the agent
     \item It may be costly to converge towards a sufficiently estimated successful MAS
     \item It gets difficult to apply for complex and highly dimensional target deployment environments.
 \end{enumerate*}
-For instance, research in Autonomous Intelligent Cyberdefense Agents~\cite{Kott2023} (AICA) aims to develop cooperative cyberdefense agents deployed in highly complex computer networks. Additionally, the lack of visual and intuitive comprehension of the networked environments such as company networks make the aforementioned MAS methods difficult to apply.
+For instance, research in Autonomous Intelligent Cyberdefense Agents~\cite{Kott2023} (AICA) aims to develop cooperative Cyberdefense agents deployed in highly complex computer networks. Additionally, the lack of visual and intuitive comprehension of the networked environments such as company networks make the aforementioned MAS methods difficult to apply.
 
 % Problem:
 
-Even though, some methods may automate some parts of the MAS organization design (such as KB-ORG~\cite{Sims2008}) they still require some knowledge and manual interactions to guide the designing process. Indeed, there is a need for
+Even though, some methods may automate some parts of the MAS organization design such as KB-ORG~\cite{Sims2008}, they still require some knowledge and manual interactions to guide the designing process. Indeed, there is a need for
 \begin{enumerate*}[label=\roman*),itemjoin={; and \ }]
     \item Finding automatically suited agents' policies satisfying design constraints
-    \item Making explicit the organizational mechanisms that emerge from trained agents.
+    \item Making explicit the organizational mechanisms that emerge from trained agents for the design process.
 \end{enumerate*}
 
 % Contribution
 
-To address these issues, we introduce AMOEA, a novel MAS design approach whose underlying idea is to link a given MARL process with an organizational model that links the on-training agents' policies with explicit organizational specifications. It can be viewed as a tool for engineering to automatically generate relevant exploitable organizational specifications only regarding the performance in achieving the given global goal and the satisfaction of the given designer's constraints. For the designer, the obtained organizational specifications can be used as insights into the organizational mechanisms to set up during the development of a MAS that meets performance, explainability, and safety requirements.
+To address these issues, we introduce AMOEA, a MAS design approach whose underlying idea is to link a given MARL process with an organizational model that links the on-training agents' policies with explicit organizational specifications. It can be viewed as a tool for engineering to automatically generate relevant exploitable organizational specifications only regarding the performance in achieving the given goal and the design constraints. For the designer, the obtained organizational specifications can be used as insights into the organizational mechanisms to set up for developing a MAS that meets performance and safety requirements.
 
 % Results
 
@@ -418,7 +418,7 @@ Optionally, the designer may also want to restrict the set of possible policies 
 
 In order to implement an OMARL process, we propose the \emph{Partial Relations with Agent History and Organization Model} algorithm (PRAHOM) to link agents' policies and their training to an organizational model.
 It is a synthesis of two processes that fall into the OMARL purposes. The first process gets the specifications out of the agents' policies, and the second process gets the joint-policies satisfying the given design specifications. An illustrative view of \emph{PRAHOM} is given in \autoref{fig:prahom_process}.
-Here we just present the underlying idea at a high-level description for these two processes to avoid unnecessary formalism. More information on the use and implementation of \emph{PRAHOM} can be found in \autoref{gym-wrapper}.
+Here we just present the underlying idea at a high-level description for these two processes to avoid unnecessary formalism. More information on the use and implementation of \emph{PRAHOM} can be found in \autoref{PettingZoo-wrapper}.
 % Since \emph{PRAHOM} relies on joint-histories instead of joint-policies, it is agnostic of the approximation function used for implementing the agents' policies such as neural networks based ones
 
 \begin{figure}[h!]
@@ -477,12 +477,13 @@ We can note the restriction implied by $os_init$ in the possible joint-policies 
 
 \subsection{Engineering tool}
 
-We developed \emph{PRAHOM Gym Wrapper}\label{gym-wrapper}, a first Gym wrapper to help in automating the setting up of \emph{PRAHOM} for a given Gym Environment.
-It is a Proof of Concept that enables linking actions with $\mathcal{M}OISE^+$ specifications, defines the organizational specifications, and provides functions to extract the resulting suboptimal raw organizational specifications. During training, actions are masked to guide an agent to learn to act according to the organizational specifications.
+PettingZoo is a library that offers a standardized API that simplifies the development of environments with agents and facilitates the application of MARL algorithms.
+We developed \emph{PRAHOM PettingZoo Wrapper}\label{PettingZoo-wrapper}, a tool to help in automating the setting up of \emph{PRAHOM} for a given PettingZoo environment.
+It is a Proof of Concept that enables linking actions with $\mathcal{M}OISE^+$ specifications, defining the organizational specifications, and provides functions to extract the resulting suboptimal raw organizational specifications. During training, actions are masked to guide an agent to learn to act according to the organizational specifications.
 
-\begin{lstlisting}[language=Python, caption=PRAHOM Gym Wrapper basic use, label={lst:wrapper_basic_use}]
+\begin{lstlisting}[language=Python, caption=PRAHOM PettingZoo Wrapper basic use, label={lst:wrapper_basic_use}]
 from omarl_experiments import PrahomWrapper
-env = gym_env.parallel_env(render_mode="human")
+env = PettingZoo_env.parallel_env(render_mode="human")
 ...
 action_to_specs = {"agent_name": {
         "14": "role='leader';link='(agent_0,agent_1,auth);..."
@@ -498,7 +499,7 @@ env.prahom_render_pca()
 trained_specs, agent_to_specs = env.prahom_specs()
 \end{lstlisting}
 
-In \autoref{lst:wrapper_basic_use}, we detailed a basic use of the wrapper to augment a Gym environment (l. 12) with known relations between actions and organizational specifications (l. 4) and the design constraints agents are to satisfy (l. 8). After training, we can print a Principal Component Analysis (PCA) of each agent history over an episode (l.14) which is an additional analysis tool to manually detect emerging roles. It also provides the inferred $\mathcal{M}OISE^+$ specifications considering the last episodes and how agents are instantiated for the last one.
+In \autoref{lst:wrapper_basic_use}, we detailed a basic use of the wrapper to augment a PettingZoo environment (l. 12) with known relations between actions and organizational specifications (l. 4) and the design constraints agents are to satisfy (l. 8). After training, we can print a Principal Component Analysis (PCA) of each agent history over an episode (l.14) which is an additional analysis tool to manually detect emerging roles. It also provides the inferred $\mathcal{M}OISE^+$ specifications considering the last episodes and how agents are instantiated for the last one.
 
 These results are constructed via empirical or statistical approaches using provided known relations between observations, actions, and organizational specifications. When no relation is available, it tries to detect subsequences of joint-histories likely to match an organizational specification (l. 12). Due to these limitations, the results may not fully describe the underlying organization or may contain noisy inferred organizational specifications. Since the results are compliant with $\mathcal{M}OISE^+$, it is then possible to use them with available MAS design methods to benefit from recurrent emerging organizational specifications during the design process.
 
@@ -520,7 +521,7 @@ These results are constructed via empirical or statistical approaches using prov
 % - We proposed PRAHOM (Partial Relations with Agent History and Organization Model): an algorithm that allows both getting the organizational specifications out of trained agents; and driving their training to satisfy extra design organizational specifications as constraints.
 % - [Algo PRAHOM...]
 
-% - We developped PRAHOM as a Gym-wrapper to help in applying the proposed MAS design approach...
+% - We developped PRAHOM as a PettingZoo-wrapper to help in applying the proposed MAS design approach...
 % - [Lien vers dépôt GitHub]
 % - Description des fonctionalités
 
@@ -565,10 +566,10 @@ These results are constructed via empirical or statistical approaches using prov
 
 
 In order to assess AOMEA, we considered using \emph{PRAHOM} in available simulated environments made up of agents that have to achieve a goal with the best performance through various collective strategies whose some can be easily understood (presented in \autoref{fig:simulated_environments}).
-We selected 3 Atari-like environments for their visual rendering is a convenient way to check the \emph{PRAHOM} results with manual observations\footnotemark[1].
+We selected 3 Atari-like environments for their visual rendering is a convenient way to check the results with manual observations\footnotemark[1].
 We also considered a Cyberdefense environment as a first attempt to apply \emph{PRAHOM} in a non-visual Cyberdefense environment:
 
-\footnotetext[1]{Additional explanation and the examples discussed using \emph{PRAHOM Gym wrapper} are available at \url{https://github.com/julien6/omarl_experiments?tab=readme-ov-file\#tutorial-predator-prey-with-communication}}
+\footnotetext[1]{Additional explanation and the examples discussed using \emph{PRAHOM PettingZoo wrapper} are available at \url{https://github.com/julien6/omarl_experiments?tab=readme-ov-file\#tutorial-predator-prey-with-communication}}
 
 \vspace{0.2cm}
 
@@ -609,32 +610,32 @@ Here, we do not present the details of the constraints that were given in NTS an
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.55\textwidth]{figures/prahom_learning_curve.png}
+    \includegraphics[width=0.8\textwidth]{figures/prahom_learning_curve.png}
     \caption{Average reward for each iteration in the Pistonball environment for the PTS case}
     \label{fig:prahom_learning_curve}
 \end{figure}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/prahom_pca_analysis.png}
+    \includegraphics[width=0.8\textwidth]{figures/prahom_pca_analysis.png}
     \caption{PCA of the trained agents' histories in the Pistonball environment}
     \label{fig:prahom_pca_analysis}
 \end{figure}
 
-We evaluate the impact of our approach on the following criteria: convergence time ratios between PTS, NTS, and FTS; and performance stability. Results are presented in Table~\ref{tab:training_AOMEA_results}.
-
+We evaluate the impact of our approach on the following criteria: convergence time ratios between PTS, NTS, and FTS for reaching a threshold cumulative reward; and performance stability. Results are presented in Table~\ref{tab:training_AOMEA_results}.
+%
 \input{tables/training_OMARL_results.tex}
-
-As a general observation, we can notice convergence time is longer for NTS than for PTS which is also bigger than for FTS. As expected, the search space is decreasing, hence a shorter convergence time. For instance, we noticed a faster convergence to a sub-optimal solution in the Pistonball environment by providing extra organizational specifications as presented in \autoref{fig:prahom_learning_curve}. Global performance indicated by cumulative reward shows NTS to outperform PTS and FTS for agents' policies are hand-tailored to solving the problem much more finely than the designer's specifications can do.
-We also took into account criteria after training: roles, links, and compatibilities. Results are presented in Table~\ref{tab:trained_AOMEA_results}
+%
+As a general observation, we can notice convergence time is longer for NTS than for PTS which is also longer than for FTS. As expected, the search space is decreasing, hence a shorter convergence time. For instance, we noticed a faster convergence to a sub-optimal solution in the Pistonball environment by providing organizational specifications as presented in \autoref{fig:prahom_learning_curve}. Although PTS converge faster than NTS to a comparable cumulative reward, NTS may outperform PTS because trained agents' policies are hand-tailored to solving the problem much more finely than the designer's organizational specifications can do.
+We also took into account criteria after training: roles, links, and compatibilities. A qualitative analysis is presented in Table~\ref{tab:trained_AOMEA_results}
 
 \input{tables/trained_OMARL_results.tex}
 
 % //TODO: Moise+ schemes and comparison with expected ones
 
-For \textquote{Pistonball} we can notice roles being equivalent for agents are expected to act the same. Indeed, trained agents' histories are close hence showing a common emerging role. We generate the PCA presented in \autoref{fig:prahom_pca_analysis} by expressing agents' history as vectors containing the observation-action couples. We can notice most agents’ histories are in the left bottom zone (circled in red). It shows most pistons seem to act similarly as expected. We observe no organizational specifications except roles have been generated because agents cannot communicate. For \textquote{Knights, Archers, Zombies} we can notice two distinct roles that are indeed expected due to the agent's different capacities for knights and archers. Yet, we see a collective pattern between archers and knights despite no communication. For \textquote{Predator-prey with communication}, we can observe output specifications indicate authority links among two (predator leader and simple predator) of the emerging roles. That result is also expected for these links to enable collective strategies for circling prey. Finally, the \textquote{Drone swarm - 3rd CAGE Challenge} shows communications between blue agents are indeed understood as communication links that enable isolating infiltrated drones or trying to fix and alert recently suspected drones.
+For \textquote{Pistonball} we can notice roles being equivalent for agents are expected to act the same. Indeed, trained agents' histories are close hence showing a common emerging role. We generate the PCA presented in \autoref{fig:prahom_pca_analysis} by expressing agents' history as vectors containing the observation-action couples. We can notice most agents’ histories are in the left bottom zone (circled in red). It shows most pistons seem to act similarly as expected. We observe no organizational specifications except roles have been generated because agents cannot communicate. For \textquote{Knights, Archers, Zombies} we can notice two distinct roles: archers tend to move away from zombies, while knights tend to approach them. For \textquote{Predator-prey with communication}, we can observe output specifications indicate authority links among two (predator leader and simple predator) of the emerging roles. That result is also expected for these links to enable collective strategies for circling prey. Finally, the \textquote{Drone swarm - 3rd CAGE Challenge} shows communications between blue agents are indeed understood as communication links that enable isolating infiltrated drones or trying to fix and alert recently suspected drones.
 
-For the \textquote{Drone swarm - 3rd CAGE Challenge} we developed our custom MAS via a simple decision tree as preconized in AOMEA in light of the organizational specifications we curated by removing noisy results. Our approach did not suggest general roles but relevant strategy patterns have been identified. For instance, regarding links between agents' roles, we notice that the agents sending messages frequently seem to be spotted as suspected by their neighbors. In addition, a cyber-defender agent in the communication radius of a suspected drone tends to switch off its communication and reactivate afterward. Even though these insights are few, the mean score we got with our curated MAS is about -2000 which is indeed close to the top 5 scores. This shows AOMEA to be indeed applicable to the Cyberdefense context additionally bringing safety guarantees.
+For the \textquote{Drone swarm - 3rd CAGE Challenge} we developed our custom MAS via a simple hand-crafted decision tree as preconized in AOMEA in light of the organizational specifications we curated by removing noisy results. Our approach did not suggest general roles but relevant strategy patterns have been identified. For instance, regarding links between agents' roles, we notice that the agents sending messages frequently seem to be spotted as suspected by their neighbors. In addition, a cyber-defender agent in the communication radius of a suspected drone tends to switch off its communication and reactivate afterward. Even though these insights are few, the mean score we got with our curated MAS is about -2000 which is indeed close to the top 5 scores. This shows AOMEA to be indeed applicable to the Cyberdefense context additionally bringing safety guarantees.
 
 \section{Conclusion}
 
@@ -655,10 +656,10 @@ MAS methodological works rely on the designer's knowledge to design a suited MAS
 MARL techniques have been successfully applied to train agents automatically to reach the given goal without explicit characterization of emergent collective strategies.
 AOMEA's originality is to augment a MARL process with an explicit organizational model towards a methodological purpose to address these issues. We first exposed how AOMEA is intended to be used in MAS engineering as an additional tool to assist in the design process.
 Then, we explained the AOMEA's theoretical core with formal links between Dec-POMDP and the $\mathcal{M}OISE^+$ through the \emph{PRAHOM} algorithm.
-Furthermore, we implemented the \emph{PRAHOM Gym wrapper} as a Proof of Concept for practically applying AOMEA and we showed how it enables getting the organizational specifications satisfying design constraints while allowing achieving the given goal.
-Finally, we applied our approach in four Gym environments to check the impact on and after training. The obtained performance results show to be comparable to known ones showing our approach to be viable.
+Furthermore, we implemented the \emph{PRAHOM PettingZoo wrapper} as a Proof of Concept for practically applying AOMEA and we showed it enables getting some organizational specifications that satisfy the design constraints and allow achieving the given goal.
+Finally, we applied our approach in four PettingZoo environments to check the impact on and after training. The obtained performance results show to be comparable to known ones showing our approach to be viable.
 
-Even though AOMEA is agnostic of the MARL algorithm because it uses agents' histories obtained a posteriori to infer organizational specifications; reconstructing agents' collective behaviors has shown to be difficult to anallyze. Indeed, a major perspective for improving \emph{PRAHOM} is to go further with supervised and non-supervised learning rather than an empirical statistical approach for identifying valuable organizational specifications out of joint-histories. Moreover, it is worth investigating recent works in MARL techniques such as hierarchical learning because they already seek to characterize emergent strategies throughout learning.
+Even though \emph{PRAHOM} is agnostic of the MARL algorithm because it uses agents' histories obtained a posteriori to infer organizational specifications; reconstructing agents' collective behaviors a posteriori may be difficult. Indeed, a major perspective for improving \emph{PRAHOM} is to go further with supervised and non-supervised learning rather than an empirical statistical approach for identifying valuable organizational specifications out of joint-histories. Moreover, it is worth investigating recent works in MARL techniques such as hierarchical learning because they already seek to characterize emergent strategies throughout learning.
 %Eventually, we also aim to improve AOMEA applicability by developing dedicated interfaces built around \emph{PRAHOM} making it more accessible for industrial and research contexts.
 
 
