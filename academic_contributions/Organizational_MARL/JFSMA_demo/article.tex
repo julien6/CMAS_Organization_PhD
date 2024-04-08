@@ -211,17 +211,14 @@ We propose PRAHOM which augments the PettingZoo simulation framework by linking 
 % Un agent AICA peut être vu comme un SMA de Cyberdefense~\cite{Singh2015} où la couverture de Cyberdéfense est distribuée sur un ensemble d'agents de Cyberdéfense collaborant entre eux de façon autonome.
 
 % todo
-Cet article adresse la conception d'un SMA quand il se heurte au manque de connaissance des environnements de déploiement en raison de leur variété et leur complexité; ou en raison de contraintes temporelles, spatiales, légales limitant la compréhension  du fonctionnement de l'environnement par le concepteur.
+Cet article adresse le problème de la conception d'un SMA face au manque de connaissance des environnements de déploiement en raison de leur variété et leur complexité; ou en raison de contraintes temporelles, spatiales, légales limitant la compréhension  du fonctionnement de l'environnement par le concepteur.
 % La flexibilité d'un SMA de Cyberdéfense renforce sa résilience en lui permettant de s'adapter continuellement aux contraintes de l'environment tout en respectant des politiques de sûreté. Les aspects organisationels sont considerés dans l'ingénierie d'un tel SMA au sein des travaux de recherche.
 
 %% Elargir le sujet des SMAC/AICA au contexte des SMA en général
-Ce problème peut être envisagé au travers de l'\textbf{organisation} du SMA que nous voyons comme l'ensemble des \textbf{politiques}\footnote{Dans un contexte d'apprentissage par renforcement, une politique est l'ensemble des relations entre une observation et une action.} des agents considéré tant du point de vue individuel que du point de vue global. Les mécanismes organisationnels induit par ces politiques peuvent être explicités au travers de \textbf{modèles organisationnels}.
+Ce problème peut être envisagé au travers de l'\textbf{organisation} du SMA que nous voyons comme l'ensemble des \textbf{politiques}\footnote{Une politique comme relation entre observations et actions.} des agents considéré tant du point de vue individuel que du point de vue global. Les mécanismes organisationnels induit par ces politiques peuvent être explicités au travers de \textbf{modèles organisationnels}.
 % le \textbf{support organisationel} qui explicite comment les agents coordonnent leurs activités pour atteindre de manière collaborative un objectif commun.
-La conception d'un SMA devient alors la recherche d'une organisation permettant d'atteindre l'objectif donné de façon optimale sous des contraintes environnementales\footnote{To do dire que le papier soumis aux JFSMA est axé sur cette approche}.
-% todo : ne pas lister toutes les méthodes
-Même si les méthodes de conception telles que GAIA~\cite{Wooldridge2000,Cernuzzi2014}, ADELFE~\cite{Mefteh2015},
-% MaSE~\cite{Deloach2001}, DIAMOND~\cite{Jamont2015}
-ou KB-ORG~\cite{Sims2008} facilitent la recherche d'une organisation adéquate pour un environnement et un objectif donné~\cite{Mefteh2013} ; elles ne permettent pas d'automatiser totalement la recherche des logiques politiques des agents satisfaisant les exigences données tout en explicitant les mécanismes organisationnels.
+La conception d'un SMA devient alors la recherche d'une organisation permettant d'atteindre l'objectif donné de façon optimale sous des contraintes environnementales\footnote{L'approche est développée dans un article pour JFSMA 2024}.
+Même si les méthodes de conception telles que GAIA~\cite{Cernuzzi2014} ou KB-ORG~\cite{Sims2008} facilitent la recherche d'une organisation adéquate pour un environnement et un objectif donné~\cite{Mefteh2013} ; elles ne permettent pas d'automatiser totalement la recherche des logiques politiques des agents satisfaisant les exigences données tout en explicitant les mécanismes organisationnels.
 
 Nous introduisons \emph{PRAHOM Wrapper} (Partial Relations with Agent History and Organization Model Wrapper), une couche logicielle pour le framework de simulation Multi-Agent \emph{PettingZoo} qui vise à combiner un processus MARL (Multi-Agent Reinforcement Learning) avec le modèle organisationnel $\mathcal{M}OISE^+$~\cite{Hubner2007}. Il permet de :
 %
@@ -304,25 +301,31 @@ A la différence de ces travaux, notre originalité consiste à utiliser explici
 
 \section{\emph{PRAHOM Wrapper}}
 
+\subsection{Vue d'ensemble}
+
+\begin{figure}[h!]
+  \centering
+  \input{figures/prahom_wrapper.tex}
+  \caption{Vue technique de \emph{PRAHOM Wrapper}}
+  \label{fig:prahom_wrapper_technical_view}
+\end{figure}
+
 % Dans le cadre du développement de l'outil de simulation CybMASDE,
 % \footnote{\emph{Cyberdefense Multi Agent System Developpment Environment} est un simulateur pour SMA de Cyberdéfense disponible à \url{https://github.com/julien6/CybMASDE}}
 \emph{PRAHOM Wrapper}\label{PettingZoo-wrapper}
 \footnote{Des informations complémentaires sur \emph{PRAHOM Wrapper}, les exemples données dans cet article et ses évolutions sont disponibles à : \url{https://github.com/julien6/omarl_experiments}}
-a été développé comme un outil \emph{PoC} d'aide à la conception sur un environnement PettingZoo en liant des historiques d'agents à des spécifications $\mathcal{M}OISE^+$. \emph{PettingZoo} est une bibliothèque qui propose une API standardisée qui simplifie le développement d'environnements avec des agents et facilite l'application des algorithmes MARL.
+a été développé comme un outil \emph{PoC} d'aide à la conception sur un environnement PettingZoo en liant des \textbf{historiques}\footnote{Un historique comme n-tuple de (observation, action)} d'agents à des spécifications $\mathcal{M}OISE^+$. \emph{PettingZoo} est une bibliothèque qui propose une API standard simplifiant le développement d'environnements multi-agents et facilite l'application des algorithmes MARL. Un aperçu du fonctionnement technique est donné en \autoref{fig:prahom_wrapper_technical_view}.
 %Au travers d'un cas d'étude, nous proposons de présenter les fonctions pour extraire les spécifications organisationnelles brutes sous-optimales résultantes. De même lors de l'entrainement, nous présentons l'intégration des contraintes sur les observations reçus et les actions prises.
 
-TODO ici mettre une figure qui positionne PRAHOM Wrapper avec Petting zoo
+Ces environnements \emph{PettingZoo} implémentent le modèle Markovien \emph{Dec-POMDP} (Decentralized-Partially Observable Markov Decision Process)~\cite{Oliehoek2016} et permettent d'appliquer des techniques MARL. 
+Nous appelons \textbf{résoudre}/\textbf{résoudre sous-optimalement} le Dec-POMDP pour une équipe, la recherche d'une politique conjointe ($P_{joint}$) permettant de maximiser/dépasser un seuil de récompense cumulée sur un horizon fini (\textquote{Entrainement} dans \autoref{fig:prahom_wrapper_technical_view}). Pour cela, l'algorithme \emph{Proximal Policy Optimization} (PPO) integré nativement via la bibliothèque \emph{Stable BaseLines3} en prenant en compte d'éventuelles contraintes du concepteur (par correction externe, apprentissage ou modification des politiques).
 
-\subsection{L'aglorithme \emph{PRHAOM}}
+Pour expliciter la politique conjointe, \emph{PRAHOM Wrapper} analyse des historiques conjoints des agents $H_{joint}$ pour générer des spécifications organisationnelles. Pour cela, plusieurs techniques sont disponibles (clustering de séquence, analyse de fréquence, identification de sous-séquence\dots) auquelles des figures et supports sont associées (dendogramme, ACP\dots).
 
-% todo : mettre un extrait de schéma
+% A la base de \emph{PRAHOM Wrapper}, l'algorithme \emph{PRAHOM} permet de :
+% i) \textbf{Déterminer de spécifications organisationelles} de $\mathcal{M}OISE^+$ en analysant les historiques des agents après résolution (sub-optimale) ;
+% ii) \textbf{Contraindre des politiques conjointes} à celles satisfaisant les spécifications organisationelles de $\mathcal{M}OISE^+$.
 
-Ces environnements \emph{PettingZoo} reposent sur le modèle Markovien \emph{Dec-POMDP} (Decentralized-Partially Observable Markov Decision Process)~\cite{Oliehoek2016} et permettent d'appliquer des techniques MARL. 
-Nous appelons \textbf{résoudre}/\textbf{résoudre sous-optimalement} le Dec-POMDP pour une équipe, la recherche d'une politique conjointe permettant de maximiser/dépasser un seuil de récompense cumulée sur un horizon fini.
-
-A la base de \emph{PRAHOM Wrapper}, l'algorithme \emph{PRAHOM} permet de :
-i) \textbf{Déterminer de spécifications organisationelles} de $\mathcal{M}OISE^+$ en analysant les historiques des agents après résolution (sub-optimale) ;
-ii) \textbf{Contraindre des politiques conjointes} à celles satisfaisant les spécifications organisationelles de $\mathcal{M}OISE^+$.
 
 % En effet, un \emph{Dec-POMDP} considère plusieurs agents de façon analogue à un SMA. Il permet de modéliser l'incertitude de l'environnement pour les changements induits par les actions, les observations reçues. Sa fonction de récompense est commune aux agents ce qui favorise la formation d'actions orientées pour la collaboration~\cite{Beynier2013}.
 
@@ -337,8 +340,8 @@ ii) \textbf{Contraindre des politiques conjointes} à celles satisfaisant les sp
 
 \paragraph{Environnement \emph{Moving Company}}
 
-Afin d'illustrer l'utilisation de \emph{PRAHOM Wrapper}, nous avons développé l'environnement de type jeu Atari \emph{Moving Company} dont un aperçu est donné en \autoref{fig:env_moving_company}. Il consiste en des agents déménageurs qui doivent collaborer pour déplacer le plus rapidement possible un paquet d'une case départ à une case finale. Pour cela les agents peuvent se déplacer sur une grille sauf sur les zones de dépôt (en orange sur la \autoref{fig:env_moving_company}), prendre et déposer le paquet quand ils sont à côté d'une zone de dépôt. Toutes les observations et actions sont \emph{one-hot} encodés. Cet environnement est conçu pour être simple tout présentant l'avantage de mettre en jeu des mécanismes organisationnels que l'on peut évaluer manuellement.
-
+Nous avons développé l'environnement de type jeu Atari \emph{Moving Company} dont un aperçu est donné en \autoref{fig:env_moving_company}. Il consiste en des agents déménageurs qui doivent collaborer pour déplacer le plus rapidement possible un paquet d'une case départ à une case finale. Pour cela les agents peuvent se déplacer sur une grille sauf sur les zones de dépôt (en orange sur la \autoref{fig:env_moving_company}), prendre et déposer le paquet quand ils sont à côté d'une zone de dépôt. Toutes les observations et actions sont \emph{one-hot} encodés. Cet environnement est conçu pour être simple tout présentant l'avantage de mettre en jeu des mécanismes organisationnels que l'on peut évaluer manuellement.
+%
 \begin{figure}[h!]
   \centering
   \includegraphics[width=0.154\textwidth]{figures/moving_company_1.png}
@@ -347,19 +350,18 @@ Afin d'illustrer l'utilisation de \emph{PRAHOM Wrapper}, nous avons développé 
   \caption{Rendus visuels de \emph{Moving Company} avec trois agents déménageurs et un paquet.}
   \label{fig:env_moving_company}
 \end{figure}
-
-Au travers de \emph{Moving Company}, nous montrons les fonctionnalités de \emph{PRAHOM Wrapper}. Le code utilisé est résumé dans \autoref{lst:wrapper_mc}.
+%
+Le code de de \emph{PRAHOM Wrapper} utilisé pour \emph{Moving Company} est résumé dans \autoref{lst:wrapper_mc}.
 
 \paragraph{Mise en place et configuration}
 
 Après avoir instancié l'environnement \emph{Moving Company} (ligne 3), nous définissions quelques relations connues entre des sous-historiques et des spécifications organisationnelles connues (ligne 4). De même nous définissons des contraintes d'organisation (ligne 6). Ensuite, \emph{PRAHOM Wrapper} enveloppe l'environnement avec les éventuelles relations et les contraintes pré-établies (ligne 7). Les contraintes et relations peuvent être des mapping ou des fonctions dans la mesure où les deux associent respectivement un agent à ses contraintes et un historique à des spécifications organisationnelles connues.
 
-Le concepteur peut aussi modifier les valeurs par défaut relatives aux: mode de respect des contraintes (correction externe, apprentissage, modification des politiques), les méthodes utilisées pour l'analyse des historiques (clustering de séquence, analyse de fréquence, identification de sous-séquence\dots), les différentes spécifications organisationnelles attendues, les figures et supports associées aux spécifications générées (dendogramme, ACP, plan d'objectifs\dots).
+Le concepteur peut aussi modifier les valeurs par défaut relatives aux: mode de respect des contraintes, les méthodes utilisées pour l'analyse des historiques, les différentes spécifications organisationnelles attendues, les figures et supports associées aux spécifications générées.
 
 \paragraph{Entraînement contrainte des agents}
 
-Le concepteur peut ensuite procéder classiquement à l'apprentissage avec l'environnement enveloppé. Sinon il peut utiliser l'algorithme \emph{Proximal Policy Optimization} (PPO) integré nativement via la bibliothèque \emph{Stable BaseLines3}. Nous utilisons cette fonctionnalité (ligne 8) avec les paramétrage existant \textquote{PPO\_default} : un nombre d'itérations indéfini, un temps d'apprentissage de 2h, le mode apprentissage centralisé et exécution décentralisée, pas d'optimisation des hyper-paramètres, la sauvegarde de la meilleure politique et la restauration à partir du dernier checkpoint s'il existe.
-
+Le concepteur peut ensuite procéder classiquement à l'apprentissage avec l'environnement enveloppé. Sinon il peut utiliser l'algorithme PPO natif. Nous utilisons cette fonctionnalité (ligne 8) avec les paramétrage existant \textquote{PPO\_default} : un nombre d'itérations indéfini, un temps d'apprentissage de 2h, le mode apprentissage centralisé et exécution décentralisée, pas d'optimisation des hyper-paramètres, la sauvegarde de la meilleure politique et la restauration à partir du dernier checkpoint s'il existe.
 \emph{PRAHOM Wrapper} permet alors d'obliger les agents à respecter la contrainte donnée (ligne 6). Ici, si l'\textquote{agent\_0} observe qu'un paquet se trouve dans la case supérieure à la sienne, il doit prendre le paquet (action $5$).
 
 \paragraph{Génération et évaluation des spécifications organisationnelles }
