@@ -173,7 +173,7 @@ $ \hfill \phantom{x}
   
 \end{resume}
 
-\motscles{Organisations, Ingénierie multi-agents, Simulation multi-agents, Apprentissage multi-agents}
+\motscles{Organisations, Ingénierie multi-agents, Simulation multi-agents, Apprentissage multi-agent}
 
 \bigskip
 
@@ -228,7 +228,7 @@ Le concept d'organisation se réfère à la fois aux agents à travers leurs log
 % -> Si on prend des agents qui partageraient une représentation commune de l'organisation et qui pourraient la manipuler, on ne peut pas dire que l'ensemble des agents sont strictement égaux à leur représentation
 %
 %
-Dans ce travail, nous approchons la conception d'un SMA comme un problème d’optimisation consistant à trouver l’organisation qui satisfait les contraintes de déploiement de l’environnement et qui favorise la meilleure performance dans l’atteinte d’un objectif.
+Dans ce travail, nous abordons la conception d'un SMA comme un problème d’optimisation consistant à trouver l’organisation qui satisfait les contraintes de déploiement de l’environnement et qui favorise la meilleure performance dans l’atteinte d’un objectif.
 En utilisant des connaissances prédéfinies, certaines méthodes pourraient automatiser certaines parties de la recherche d'une organisation de SMA appropriée, comme KB-ORG~\cite{Sims2008}.
 
 Cependant, il n'y a aucun moyen agnostique de l'environnement cible permettant d'automatiser totalement la recherche des logiques internes des agents (que nous appelons également \textbf{politiques}) qui satisfait les exigences données tout en explicitant les mécanismes organisationnels. %émergents. -> JS : j'enlève "émergent" car les mecanismes organisationels ne sont pas tous émérgents. Certains sont intentionellement voulus.
@@ -398,9 +398,11 @@ Nous pouvons noter que la restriction impliquée par $os_{init}$ dans les évent
 \subsection{Outil d'ingénierie}
 
 % JS: j'ai du mal à introduire PRAHOM au travers de CybMASDE
-Nous proposons l'outil de simulation CybMASDE \footnote{\emph{Cyberdefense Multi Agent System Developpment Environment} est un simulateur pour SMA de Cyberdéfense, proposé en démo à JFSMA 2024 et disponible à \url{https://github.com/julien6/CybMASDE}} qui repose sur l'utilisation de PettingZoo qui est une bibliothèque qui propose une API standardisée qui simplifie le développement d'environnements avec des agents et facilite l'application des algorithmes MARL.
-Nous avons développé \emph{PRAHOM PettingZoo Wrapper}\label{PettingZoo-wrapper}, un outil pour aider à automatiser la configuration de \emph{PRAHOM} pour un environnement PettingZoo donné.
-Il s'agit d'une Preuve de Concept qui permet de relier les actions aux spécifications $\mathcal{M}OISE^+$ et de définir les spécifications organisationnelles. Il fournit des fonctions pour extraire les spécifications organisationnelles brutes sous-optimales qui en résultent. Lors de l'entrainement, des actions sont masquées pour guider un agent à apprendre à agir selon les spécifications organisationnelles.
+Dans le cadre de l'outil CybMASDE
+\footnote{\emph{Cyberdefense Multi Agent System Developpment Environment} est un simulateur pour SMA de Cyberdéfense et disponible à \url{https://github.com/julien6/CybMASDE}},
+la bibliothèque PettingZoo est centrale car elle propose une API standardisée simplifiant le développement d'environnements avec des agents et facilite l'application des algorithmes MARL.
+Nous proposons \emph{PRAHOM PettingZoo Wrapper}\label{PettingZoo-wrapper}, comme outil pour aider à automatiser la configuration de \emph{PRAHOM} pour un environnement PettingZoo donné.
+Il s'agit d'une Preuve de Concept qui permet de relier les actions aux spécifications $\mathcal{M}OISE^+$ et de définir les spécifications organisationnelles. Il fournit des fonctions pour extraire les spécifications organisationnelles brutes sous-optimales qui en résultent. Lors de l'entraînement, des actions/observations sont masquées ou mis en avant pour contraindre l'apprentissage d'un agent selon les spécifications organisationnelles données.
 
 Dans \autoref{lst:wrapper_basic_use}, nous détaillons une utilisation basique du wrapper pour augmenter un environnement PettingZoo (ligne 12) avec des relations connues entre les actions et les spécifications organisationnelles (ligne 4) et les contraintes de conception que les agents doivent satisfaire (ligne 8). Après l'entrainement, nous pouvons afficher une Analyse en Composantes Principales (ACP) de l'historique de chaque agent sur un épisode (ligne 14) qui est un outil d'analyse supplémentaire pour détecter manuellement les rôles émergents. Il fournit également les spécifications $\mathcal{M}OISE^+$ déduites en tenant compte des derniers épisodes et de la manière dont les agents sont instanciés dans le dernier épisode.
 
@@ -409,19 +411,22 @@ Ces résultats sont construits via des approches empiriques ou statistiques en u
 \begin{lstlisting}[language=Python, caption={Utilisation basique de \emph{PRAHOM PettingZoo Wrapper}}, label={lst:wrapper_basic_use}]
 from omarl_experiments import PrahomWrapper
 env = PettingZoo_env.parallel_env(render_mode="human")
-.
 action_to_specs = {"agent_name": {
         "14": "role='leader';link='(agent_0,agent_1,auth);..."
-        ...}    
+        ...}
     ...}
 training_specs = {
-    "leadadversary_0": {
+    "leader": {
         "must": ["(23,41)"],
         "must_not": ["(14,74)"]}...}
-env = PrahomWrapper(env, action_to_specs, training_specs, unknown_specs_inference=True, pca_output=True)
-# ...TRAINING...
-env.prahom_render_pca()
-trained_specs, agent_to_specs = env.prahom_specs()
+
+
+hist_to_specs = {"": ""}
+agt_to_cons_specs = {"agent_0": {structural_specifications: {role:["leader"]}}}
+env = prahom_wrapper(env, hist_to_specs, agt_to_cons_specs, "CORRECT", [
+                     "sequence_clustering"], ["role", "plan"], ["dendogram", "PCA"])
+env.train("PPO_default")
+raw_specs = env.generate_specs()
 \end{lstlisting}
 
 % =============
