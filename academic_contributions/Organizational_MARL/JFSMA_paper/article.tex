@@ -358,7 +358,7 @@ Facultativement, le concepteur peut restreindre l'ensemble des politiques possib
 \subsection{Cœur de l'approche}
 
 Pour implémenter un processus OMARL, nous proposons l'algorithme \emph{Partial Relations with Agent History and Organization Model} (PRAHOM) pour lier les politiques des agents et leur entrainement à un modèle organisationnel.
-Il s'agit d'une synthèse de deux processus qui entrent dans le cadre des objectifs de l'OMARL. Le premier processus détérmine les spécifications organisationnelles des politiques des agents, le second processus entraine les politiques conjointes en satisfaisant les spécifications organisationnelle données. Une vue illustrative de \emph{PRAHOM} est donnée dans \autoref{fig:prahom_process}.
+Il s'agit d'une synthèse de deux processus qui entrent dans le cadre des objectifs de l'OMARL. Le premier processus détermine les spécifications organisationnelles des politiques des agents, le second processus entraine les politiques conjointes en satisfaisant les spécifications organisationnelles données. Une vue illustrative de \emph{PRAHOM} est donnée dans \autoref{fig:prahom_process}.
 Ici, nous présentons une description de haut niveau de ces deux processus. Plus d'informations sur l'utilisation et l'implémentation de \emph{PRAHOM} peuvent être trouvées dans \autoref{PettingZoo-wrapper}.
 % Puisque \emph{PRAHOM} s'appuie sur des historiques conjointes plutôt que sur des politiques conjointes, il est indépendant de la fonction d'approximation utilisée pour mettre en œuvre les politiques des agents telles que celles basées sur les réseaux de neurones
 
@@ -372,7 +372,7 @@ Ici, nous présentons une description de haut niveau de ces deux processus. Plus
 \subsubsection{Processus 1 : Déduire des spécifications organisationnelles}
 
 Plutôt que d'utiliser directement les politiques conjointes, nous utilisons les historiques conjoints, car ils peuvent être construits avec les actions résultantes observées lorsque les observations sont reçues au cours d'une série d'épisodes de test. En effet, pour une politique donnée $\pi \in \Pi$, l'historique associé est par définition $h \in h_{joint} = \langle(\omega_k,a_k) | k \in \mathbb{N}\rangle$ et le $(\omega_k,a_k) \in \pi$.
-Ensuite, en raison de la difficulté de déduire des informations liées aux spécifications organisationnelles, il est possible d'associer des séquence de couples observation-action aux spécifications de l'organisation sous la forme d'une relation \textquote{plusieurs à plusieurs}. Cela met en place un premier cadre d’identification des spécifications organisationnelles dans les historiques. Le reste de cette section aborde cette difficulté.
+Ensuite, en raison de la difficulté de déduire des informations liées aux spécifications organisationnelles, il est possible d'associer des séquences de couples observation-action aux spécifications de l'organisation sous la forme d'une relation \textquote{plusieurs à plusieurs}. Cela met en place un premier cadre d’identification des spécifications organisationnelles dans les historiques. Le reste de cette section aborde cette difficulté.
 
 Le concepteur peut définir certaines relations entre les spécifications $\mathcal{M}OISE^+$ et les historiques conjoints. Leurs prémisses viennent du fait que certaines spécifications du modèle organisationnel $\mathcal{M}OISE^+$ peuvent être mappées à des sous-ensembles d'actions d'une seule politique commune sous-optimale.
 À partir de ces relations, il est possible d’utiliser des approches empiriques ou statistiques pour déduire des spécifications organisationnelles à partir d’historiques communes.
@@ -397,36 +397,39 @@ Nous pouvons noter que la restriction impliquée par $os_{init}$ dans les évent
 
 \subsection{Outil d'ingénierie}
 
+%%%%%%%% DEBUT DES MODIFICATIONS %%%%%%%%%%%%%%
 Dans le cadre de CybMASDE
 %
 \footnote{\emph{Cyberdefense Multi Agent System Developpment Environment} est un simulateur pour SMA de Cyberdéfense et disponible à \url{https://github.com/julien6/CybMASDE}}
 %
 , nous proposons \emph{PRAHOM Wrapper}\label{PettingZoo-wrapper} comme outil augmentant la bibliothèque \emph{PettingZoo} qui fournit une API standardisée pour le développement d'environnements et l'application d'algorithmes MARL.
 %
-\emph{PRAHOM Wrapper} fournit des moyens d'inferrer des spécifications organisationnelles à partir d'agents entrainés ou contraindre leur entrainement.
+\emph{PRAHOM Wrapper} fournit des moyens d'inférer des spécifications organisationnelles à partir d'agents entraînés ou contraindre leur entraînement.
 % Lors de l'entraînement, des actions/observations sont masquées ou mis en avant pour contraindre l'apprentissage d'un agent selon les spécifications organisationnelles données.
 %
-Dans \autoref{lst:wrapper_basic_use}, nous détaillons une utilisation basique du wrapper pour augmenter un environnement \emph{PettingZoo} (ligne 5) avec des relations connues entre les spécifications organisationnelles et les historiques attendus (ligne 3) ainsi que les spécifications organisationelles qui contraignent les politiques possibles des agents (ligne 4).
+\autoref{lst:wrapper_basic_use} présente une utilisation simple du wrapper pour augmenter un environnement \emph{PettingZoo} (ligne 5) avec des relations connues entre les spécifications organisationnelles et les historiques attendus (ligne 3) ainsi que les spécifications organisationnelles qui contraignent les politiques possibles des agents (ligne 4).
 
-\emph{PRAHOM Wrapper} est utilisé avec une fonctionalité supplémentaire qui permet l'entrainement avec PPO et la configuration par défaut (ligne 6).
-Pendant l'entrainement, \textquote{agent\_0} est contraint au rôle \textquote{follower} de sorte que ses actions doivent être choisies d'après les historiques attendus (exprimables de diverses manières en plus de liste). Le respect de ces contraintes est faisable selon trois modes: i) \textquote{CORRECT} : masque/corrige de façon externe aux politique les observations reçues et actions choisies  ; ii) \textquote{CORRET\_AND\_PENALIZE} : similaire à \textquote{CORRECT} mais les agents apprennent également à respecter les contraintes ; iii) \textquote{CORRECT\_AT\_POLICY} : change en interne les politiques pour integrer les contraintes (par défaut en masquant/corrigeant les observations/actions).
+Ici, l'entrainement est effectué avec une fonctionnalité de \emph{PRAHOM Wrapper} qui utilise PPO et la configuration par défaut (ligne 6).
+Pendant l'entrainement, \textquote{agent\_0} est contraint au rôle \textquote{follower}. Ainsi ses actions doivent être choisies d'après les historiques attendus (exprimables de diverses façons en plus de listes). Ces contraintes peuvent être satisfaites selon trois modes disponibles : i) masquer/corriger de façon externe aux politiques les observations reçues et actions choisies  ; ii) enseigner les contraintes aux politiques courantes ; iii) modifier en interne les politiques pour respecter les contraintes.
 
-Après entrainement, \emph{PRAHOM Wrapper} infère les spécifications organisationnelles de l'organisation généralisée à partir de cinq historiques conjoints (obtenus en faisant jouer les agents entrainés sur cinq épisodes) ; ainsi que l'instanciation de cette organisation pour chaque historique conjoint (ligne 7).
-Ce processus d'inférence utilise d'abord les relations connues entre les historiques et les spécifications organisationnelles (ligne 3) : l'historique d'un agent qui contient l'observation $14$ (\textquote{commande reçue}) et l'action $74$ (\textquote{appliquer ordre}), est un \textquote{follower}. De même, pour les liens entre roles en utilisant des expressions régulières pour les historiques (ligne 3).
-
-Ensuite, en s'appuyant sur la définition donnée de chaque spécification organisationnelle vis-à-vis des historiques, \emph{PRAHOM Wrapper} généralise plusieurs historiques conjoints pour obtenir de nouvelles spécifications organisationnelles.
+Après entrainement, \emph{PRAHOM Wrapper} infère les spécifications organisationnelles à partir de plusieurs historiques conjoints (lié chacun à un épisode) ; ainsi que l'instanciation de l'organisation généralisée pour chaque historique conjoint (ligne 7).
+Ce processus d'inférence utilise d'abord les relations connues entre les historiques et les spécifications organisationnelles (ligne 3) : l'historique d'un agent qui contient l'observation $14$ (\textquote{commande reçue}) et l'action $74$ (\textquote{appliquer l’ordre}), est un \textquote{follower}. De même, pour les liens entre les rôles en utilisant des expressions régulières pour les historiques (ligne 3).
 %
-Par exemple, un rôle est obtenu en mesurant la similarité entre des historiques. Cela peut être fait de plusieurs manières : clustering de séquences (avec un dendrogramme) ; K-voisins les plus proches (avec ACP des historiques) ; analyse statistique (en particulier fréquence d'action dans diverses visualisations) ; etc.
+Ensuite, en s'appuyant sur la définition donnée de chaque spécification organisationnelle vis-à-vis des historiques, \emph{PRAHOM Wrapper} généralise plusieurs historiques conjoints.
+% pour obtenir de nouvelles spécifications organisationnelles.
+%
+Par exemple, un rôle est obtenu en mesurant la similarité entre des historiques. Cela peut être fait de plusieurs manières : clustering de séquences (avec un dendrogramme) ; K-voisins les plus proches (avec ACP des historiques) ; analyse statistique (en particulier, fréquence d'action dans diverses visualisations) ; etc.
 
-À partir des premières spécifications organisationelles obtenues, un algorithme proposée déduit empiriquement d'autres spécifications organisationnelles telles que les compatibilités, les autorisations et les obligations.
-Ces résultats peuvent être incomplets ou bruités en raison des limites des techniques et de l'algorithme d'inférence des spécifications organisationelles. Cependant, les résultats étant conformes à $\mathcal{M}OISE^+$, il est possible de les utiliser dans les méthodes de conception MAS à la lumière des spécifications organisationnelles identifiées.
+À partir des premières spécifications organisationnelles obtenues, un algorithme proposé déduit empiriquement d'autres spécifications organisationnelles telles que les compatibilités.
+Ces résultats peuvent être incomplets ou bruités en raison des limites des techniques et de l'algorithme d'inférence des spécifications organisationnelles. Cependant, les résultats étant conformes à $\mathcal{M}OISE^+$, ils peuvent aider à la conception SMA à la lumière des spécifications organisationnelles proposées.
+%%%%%%%% FIN DES MODIFICATIONS %%%%%%%%%%%%%%
 
 \begin{lstlisting}[language=Python, caption={Utilisation basique de \emph{PRAHOM Wrapper}}, label={lst:wrapper_basic_use}]
 from omarl_experiments import prahom_wrapper
 env=PettingZoo_env.parallel_env(render_mode="human")
 specs_to_hist={"structural_specifications":{"roles":{"follower":{"23":41,"14":[74,0]}}...},"functional_specifications":{"links":{"(leader,follower,aut)":".*14.*?89"}...}...}
 policy_specs_constr={"agent_0":{"structural_specifications":"roles":["follower"]}}
-env=prahom_wrapper(env,action_to_specs,training_specs, "CORRECT", ["sequence_clustering"], ["role"], ["dendogram", "PCA"])
+env=prahom_wrapper(env,action_to_specs,training_specs)
 env.train("default_PPO")
 trained_specs,agent_to_specs=env.prahom_specs()
 \end{lstlisting}
@@ -507,7 +510,7 @@ Nous évaluons dans le tableau~\ref{tab:training_AOMEA_results}, l'impact de \em
 
 \subsection{Analyse}
 
-La \autoref{fig:prahom_learning_curve} montre l'évolution de la récompense dans les cas NTS, FTS et PTS pour l'environnement PBL. De manière générale, on peut remarquer que le temps de convergence est plus long pour NTS que pour PTS qui est également plus long que pour FTS. On constate, comme attendu, que l’espace de recherche diminuant, le temps de convergence est raccourci. Par exemple, nous remarquons une convergence plus rapide vers une solution sous-optimale dans l’environnement PBL en fournissant des spécifications organisationnelles. Bien que le PTS converge plus rapidement que le NTS vers une récompense cumulée comparable, le NTS peut surpasser le PTS parce que les politiques des agents entrainés sont conçues sur mesure pour résoudre le problème de manière beaucoup plus fine que ne peuvent les spécifications organisationnelles du concepteur. Une faible stabilité des performances dans l'environnement CYB indique que les agents entrainés ont des difficultés à trouver des stratégies générales par rapport aux agents des autres environnements.
+La \autoref{fig:prahom_learning_curve} montre l'évolution de la récompense dans les cas NTS, FTS et PTS pour l'environnement PBL. De manière générale, on peut remarquer que le temps de convergence est plus long pour NTS que pour PTS qui est également plus long que pour FTS. On constate, comme attendu, que l’espace de recherche diminuant, le temps de convergence est raccourci. Par exemple, nous remarquons une convergence plus rapide vers une solution sous-optimale dans l’environnement PBL en fournissant des spécifications organisationnelles. Bien que le PTS converge plus rapidement que le NTS vers une récompense cumulée comparable, le NTS peut surpasser le PTS parce que les politiques des agents entrainés sont conçues sur mesure pour résoudre le problème de manière beaucoup plus fine que ne peuvent les spécifications organisationnelles du concepteur. La faible stabilité des performances de l'environnement CYB indique que les agents ont des difficultés à trouver des stratégies générales à la différence des agents des autres environnements.
 
 Nous prenons également en compte les critères suivants après l'entrainement : rôles, liens et performance globale. Une analyse qualitative est présentée dans le tableau~\ref{tab:trained_AOMEA_results}
 %
@@ -515,7 +518,7 @@ Nous prenons également en compte les critères suivants après l'entrainement :
 %
 % //TODO : schémas Moise+ et comparaison avec ceux attendus
 %
-Pour l'environnement PBL, les historiques des agents entrainés sont proches. Cela est visible dans l'ACP présentée à la \autoref{fig:prahom_pca_analysis} que nous générons en exprimant les historiques des agents sous forme de vecteurs contenant les couples observation-action. Nous pouvons remarquer que l'historique de la plupart des agents se trouve dans la zone inférieure gauche (encerclée en rouge). Cela montre que la plupart des pistons semblent agir d'une façon similaire qu'on peut associer à un rôle. Pour le reste, nous ne pouvons déterminer aucune autre spécification organisationnelle en raison de l'absence de communication entre agents dans PBL. Pour l'environnement KAZ, on peut remarquer deux rôles distincts : les archers ont tendance à s'éloigner des zombies, tandis que les chevaliers ont tendance à s'en approcher. Pour l'environnement PPY, nous pouvons observer que les spécifications de sortie indiquent des liens d'autorité entre le prédateur leader et les prédateurs simples pour permettre des stratégies collectives pour encercler les proies. Enfin, l’environnement CYB montre que les communications entre agents bleus sont bien comprises comme des liens de communication permettant essentiellement d’isoler les drones suspectés ou de tenter de les réparer.
+Pour l'environnement PBL, les historiques des agents entrainés sont proches. Cela est visible dans l'ACP présentée à la \autoref{fig:prahom_pca_analysis} généré en exprimant les historiques des agents sous forme de vecteurs contenant les couples observation-action. Nous pouvons remarquer que l'historique de la plupart des agents se trouve dans la zone inférieure gauche (encerclée en rouge). Cela montre que la plupart des pistons semblent agir d'une façon similaire qu'on peut associer à un rôle. Nous ne pouvons déterminer aucune autre spécification organisationnelle en raison de l'absence de communication entre agents. Pour l'environnement KAZ, on peut remarquer deux rôles distincts : les archers ont tendance à s'éloigner des zombies, tandis que les chevaliers ont tendance à s'en approcher. Pour l'environnement PPY, nous pouvons observer que les spécifications de sortie indiquent des liens d'autorité entre le prédateur leader et les prédateurs simples pour permettre des stratégies collectives pour encercler les proies. Enfin, l’environnement CYB montre que les communications entre agents bleus permettent essentiellement d’isoler les drones suspectés ou de tenter de les réparer.
 
 Pour l'environnement CYB, nous avons développé notre SMA raffiné via un simple arbre de décision élaboré à la main tel que préconisé dans AOMEA à la lumière des spécifications organisationnelles que nous obtenons en supprimant le bruit. Notre approche ne suggère pas de rôles généraux, mais des modèles stratégiques pertinents ont été identifiés. Par exemple, concernant les liens entre les rôles des agents, nous remarquons que les agents qui envoient des messages semblent fréquemment repérés comme suspects par leurs voisins. De plus, un agent cyber-défenseur se trouvant dans le rayon de communication d’un drone suspecté a tendance à couper sa communication et à la réactiver par la suite. Même si ces informations sont peu nombreuses, le score moyen que nous obtenons avec notre SMA affiné est d'environ -2000, ce qui est en effet proche des 5 meilleurs scores sur les 20 participants. Cela montre l'applicabilité d'AOMEA au contexte de la Cyberdéfense.
 
