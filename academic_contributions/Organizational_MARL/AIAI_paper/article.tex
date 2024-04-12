@@ -324,7 +324,7 @@ The \textbf{deontic specifications} enable linking functional and structural spe
 \subsection{MARL basics}
 
 Reinforcement learning is a machine learning paradigm where agents learn to make decisions by interacting with an environment. The goal is for the agent to maximize a cumulative reward signal over time through a trial-and-error process.
-MARL extends this concept to multiple agents that simultaneously learn to adapt their strategies while considering the actions and influences of other agents. That pushes agents to rely on cooperation, competition, and coordination mechanisms.
+MARL extends this concept to multiple agents that learn while considering the actions of other agents pushing agents to rely on cooperation mechanisms.
 
 MARL enables automatically converging towards agents’ policies that enable reaching the given goal. Yet, unlike human-based design, the trained agents' logic is explicitly specified from a collective point of view. Few works attempt to address that issue and few are oriented for methodological purposes.
 Kazhdan et. al.~\cite{Kazhdan2020} proposed means to extract symbolic models from MARL systems that improve the interpretability of MARL systems.
@@ -467,9 +467,9 @@ In the end, our process tries to synthesize the knowledge inferred until having 
 
 We consider a given MARL algorithm that iteratively converges towards a joint-policy so that each agent's policy is updated at each step until a finite horizon.
 We favored the Proximal Policy Optimization for its proven effectiveness in cooperative multi-agent environments without the need for domain-specific algorithmic modifications or architectures~\cite{Yu2022}.
-To constrain the possible joint-policies to the ones satisfying the design organizational specifications $os_{init}$, we propose to constrain the action and observation sets for each agent according to $os_{init}$  at each step. For instance, we may constrain an agent to converge to a given role by forbidding actions related to other roles. We used that idea, to set up our process to guide the training according to some design organizational constraints.
+To constrain the possible joint-policies to the ones satisfying the design organizational specifications $os_{init}$, we propose to constrain the action and observation sets for each agent according to $os_{init}$ at each step. Ultimately, it constrains an agent to a role by forbidding actions related to other roles.
 
-First, we use the previously established relations between organizational specifications and action-observation couples, to determine the authorized or forbidden actions playable by agents at each step.
+First, we use the established relations between organizational specifications and action-observation couples, to determine the authorized or forbidden actions playable by agents at each step.
 Then, it first computes the authorized actions set $A_{step}$ according to the current history $h_{joint,i}$. Then, an action is chosen among authorized actions. That action $a_{step} \in A_{step}$ is added in history to be used for updating the agent's policy in the next step. Then, the MARL algorithm updates the joint-policy hence the agents' policies with the current action and observation.
 Finally, an analysis of the current suboptimal joint-policy $\pi_{joint}$ satisfying $os_{init}$ is triggered periodically. It enables iteratively improving the efficiency of joint-policies and the accuracy of the inferred organizational specifications.
 We can note the restriction implied by $os_{init}$ in the possible joint-policies might prevent the MARL algorithm from finding a joint-policy that satisfies the minimal expected cumulative reward defined by the designer.
@@ -478,29 +478,31 @@ We can note the restriction implied by $os_{init}$ in the possible joint-policie
 
 PettingZoo is a library that offers a standardized API that simplifies the development of environments with agents and facilitates the application of MARL algorithms.
 We developed \emph{PRAHOM PettingZoo Wrapper}\label{PettingZoo-wrapper}, a tool to help automate the setting up of \emph{PRAHOM} for a given PettingZoo environment.
-It is a Proof of Concept that enables linking actions with $\mathcal{M}OISE^+$ specifications and defining the organizational specifications. It provides functions to extract the resulting suboptimal raw organizational specifications. During training, actions are masked to guide an agent to learn to act according to the organizational specifications.
-
+It is a \emph{PoC} linking joint-histories with $\mathcal{M}OISE^+$ specifications to provide functions to infer raw organizational specifications or constrain the training. %During training, actions are masked/fostered to agents regarding the given organizational specifications as constraints.
+%
 \begin{lstlisting}[language=Python, caption=PRAHOM PettingZoo Wrapper basic use, label={lst:wrapper_basic_use}]
-from omarl_experiments import PrahomWrapper
-env = PettingZoo_env.parallel_env(render_mode="human")
-...
-action_to_specs = {"agent_name": {
-        "14": "role='leader';link='(agent_0,agent_1,auth);..."
-        ...}    
-    ...}
-training_specs = {
-    "leadadversary_0": {
-        "must": ["(23,41)"],
-        "must_not": ["(14,74)"]}...}
-env = PrahomWrapper(env, action_to_specs, training_specs, unknown_specs_inference=True, pca_output=True)
-# ...TRAINING...
-env.prahom_render_pca()
-trained_specs, agent_to_specs = env.prahom_specs()
+from omarl_experiments import prahom_wrapper
+env=PettingZoo_env.parallel_env(render_mode="human")
+specs_to_hist={"structural_specifications":{"roles":{"follower":{"23":41,"14":[74,0]}}...},"functional_specifications":{"links":{"(leader,follower,aut)":".*14.?*89"}...}...}
+policy_specs_constr={"agent_0":{"structural_specifications":"roles":["follower"]}}
+env=prahom_wrapper(env,action_to_specs,training_specs)
+env.train("default_PPO")
+trained_specs,agent_to_specs=env.prahom_specs()
 \end{lstlisting}
+%
+In \autoref{lst:wrapper_basic_use}, we detailed a basic use of the wrapper to augment a PettingZoo environment (l. 5) with known relations between actions and organizational specifications (l. 3) and the design constraints agents are to satisfy (l. 4).
+During training, \textquote{"agent\_0"} is constrained to role \textquote{follower} so all of its actions must be chosen regarding the relations between organizational specifications and expected histories (or shortened histories expressions).
+After training, \emph{PRAHOM PettingZoo Wrapper} infers organizational specifications from joint-histories in 5 episodes, and the agents' instantiation for each one (l. 7).
 
-In \autoref{lst:wrapper_basic_use}, we detailed a basic use of the wrapper to augment a PettingZoo environment (l. 12) with known relations between actions and organizational specifications (l. 4) and the design constraints agents are to satisfy (l. 8). After training, we can print a Principal Component Analysis (PCA) of each agent history over an episode (l.14) which is an additional analysis tool to manually detect emerging roles. It also provides the inferred $\mathcal{M}OISE^+$ specifications considering the last episodes and how agents are instantiated in the last episode.
+This process first uses known relations between histories and organizational specifications (l. 3): an agent's history that contains the observation $14$ (\textquote{order received}) and the action $74$ (\textquote{apply order}) or $0$ (\textquote{do nothing}), is a \textquote{follower}. Similarly, history can be linked to organizational specifications with regular expressions such as for \emph{links} (l.3).
+Then, it generalizes several joint-histories as new organizational specifications relying on their respective general definition.
+%
+For instance, a role is thought to be inferred by measuring similarity between histories in several ways: sequence clustering (with a dendrogram); K-nearest neighbors (with PCA of histories); statistical analysis (specially action frequency in various visualizations); etc.
+%
+Techniques are also used to infer goals: frequency analysis of common observations of agents with the same role; analysis of threshold states triggering an improvement of the reward (with a state transition graph).
 
-These results are constructed via empirical or statistical approaches using provided known relations between observations, actions, and organizational specifications. When no relation is available, it tries to detect subsequences of joint-histories likely to match an organizational specification (l. 12). Due to these limitations, the results may not fully describe the underlying organization or may contain noisy inferred organizational specifications. Since the results are compliant with $\mathcal{M}OISE^+$, it is then possible to use them with available MAS design methods to benefit from the identified emerging organizational specifications during the design process.
+From the roles and goals obtained, an empiric approach allows inferring the other organizational specifications such as compatibilities, permissions and obligations.
+Due to that empiric approach and the specific scope of the techniques, results may be incomplete or noisy. Yet, since results are compliant with $\mathcal{M}OISE^+$, it is possible to use them in MAS design methods in light of the identified organizational specifications.
 
 % We start defining actions with known specifications Focusing of the "lead adversary", we have:
 
@@ -570,34 +572,21 @@ We also considered a Cyberdefense environment as a first attempt to apply \emph{
 
 \footnotetext[1]{Additional explanation and the examples discussed using \emph{PRAHOM PettingZoo wrapper} are available at \url{https://github.com/julien6/omarl_experiments?tab=readme-ov-file\#tutorial-predator-prey-with-communication}}
 
-\vspace{0.2cm}
 
-% Left column for text
-\hspace{-0.6cm}
-\begin{minipage}[t]{0.61\textwidth}
-
-    \begin{itemize}
-        \item \textquote{Drone swarm - 3rd CAGE Challenge}~\cite{cage_challenge_3_announcement} (CYB) consists of cyberdender agents deployed on networked drones trying to fight against maliciously deployed malware programs. We may expect agents to \allowbreak collectively isolate compromised drones;
-        \item \textquote{Pistonball} (PBL)~\cite{Terry2021} consists of a series of pistons to bring a ball from right to left side hence requiring neighbors' representation;
-        \item \textquote{Predator-prey with communication}~\cite{Lowe2017} (PPY) consists of predators monitored by a leader to better catch faster prey hence requiring collective hunting strategies;
-        \item \textquote{Knights Archers Zombies}~\cite{Terry2021} (KAZ) consists in a few knights and archers learning how to kill as many zombies hence requiring efficient agent spatial positioning.
-    \end{itemize}
-
-\end{minipage}%
-\hfill % Ajoute une marge horizontale
-% Right column for a figure
-\begin{minipage}[t]{0.35\textwidth}
-    \vspace{-1cm}
-    \begin{figure}[H] % Use the 'H' specifier from the 'float' package to force the figure placement
-        \centering
-        \includegraphics[width=0.6\linewidth]{figures/envs.png} % Replace "example-image" with your figure file name
-        \caption{Overview of the selected environments: CYB, PBL, PPY, and KAZ}
-        \label{fig:simulated_environments}
-    \end{figure}
-\end{minipage}
-
-\
-
+\begin{itemize}
+    \item \textquote{Drone swarm - 3rd CAGE Challenge}~\cite{cage_challenge_3_announcement} (CYB) consists of cyberdender agents deployed on networked drones fighting against maliciously deployed malware programs. We may expect agents to \allowbreak isolate compromised drones;
+    \item \textquote{Pistonball} (PBL)~\cite{Terry2021} consists of a series of pistons to bring a ball from right to left side hence requiring neighbors' representation;
+    \item \textquote{Predator-prey with communication}~\cite{Lowe2017} (PPY) consists of predators monitored by a leader to catch faster prey hence requiring hunting strategies;
+    \item \textquote{Knights Archers Zombies}~\cite{Terry2021} (KAZ) consists in knights and archers learning how to kill zombies hence requiring efficient agent spatial positioning.
+\end{itemize}
+%
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/envs_4x1.png}
+    \caption{Overview of the selected environments: CYB, PBL, PPY, and KAZ}
+    \label{fig:simulated_environments}
+\end{figure}
+%
 \noindent We applied AOMEA in three cases:
 \begin{itemize}
     \item No organizational specifications (NTS): agents have to learn the most efficient collective strategies without any constraints or indications.
@@ -605,22 +594,22 @@ We also considered a Cyberdefense environment as a first attempt to apply \emph{
     \item Fully constraining organizational specifications (FTS): manually crafted joint-policies are given for they are a reference regarding learned joint-policies.
 \end{itemize}
 
-Here, we do not present the details of the constraints that were given in NTS and FTS (available in Git repository\footnotemark[1]).
-
+\noindent Here, we do not present the details of the constraints that were given in NTS and FTS (available in Git repository\footnotemark[1]).
+%
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\textwidth]{figures/prahom_learning_curve.png}
     \caption{Average reward for each iteration in the PBL environment for the NTS, PTS, and FTS cases}
     \label{fig:prahom_learning_curve}
 \end{figure}
-
+%
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\textwidth]{figures/prahom_pca_analysis.png}
     \caption{PCA of the trained agents' histories in the PBL environment}
     \label{fig:prahom_pca_analysis}
 \end{figure}
-
+%
 We evaluate the impact of \emph{PRAHOM} on the following criteria: convergence time ratios between PTS, NTS, and FTS for reaching a threshold cumulative reward. Performance stability shows how the trained agents can achieve the goal generally by assessing several environments generated with different parameters. Results are presented in Table~\ref{tab:training_AOMEA_results}.
 %
 \input{tables/training_OMARL_results.tex}
