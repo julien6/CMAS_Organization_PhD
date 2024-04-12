@@ -358,8 +358,8 @@ Facultativement, le concepteur peut restreindre l'ensemble des politiques possib
 \subsection{Cœur de l'approche}
 
 Pour implémenter un processus OMARL, nous proposons l'algorithme \emph{Partial Relations with Agent History and Organization Model} (PRAHOM) pour lier les politiques des agents et leur entrainement à un modèle organisationnel.
-Il s'agit d'une synthèse de deux processus qui entrent dans le cadre des objectifs de l'OMARL. Le premier processus propose les spécifications des politiques des agents, et le second processus récupère les politiques conjointes satisfaisant les spécifications de conception données. Une vue illustrative de \emph{PRAHOM} est donnée dans \autoref{fig:prahom_process}.
-Ici, nous présentons simplement l'idée sous-jacente à une description de haut niveau de ces deux processus afin d'éviter un formalisme volumineux. Plus d'informations sur l'utilisation et l'implémentation de \emph{PRAHOM} peuvent être trouvées dans \autoref{PettingZoo-wrapper}.
+Il s'agit d'une synthèse de deux processus qui entrent dans le cadre des objectifs de l'OMARL. Le premier processus détérmine les spécifications organisationnelles des politiques des agents, le second processus entraine les politiques conjointes en satisfaisant les spécifications organisationnelle données. Une vue illustrative de \emph{PRAHOM} est donnée dans \autoref{fig:prahom_process}.
+Ici, nous présentons une description de haut niveau de ces deux processus. Plus d'informations sur l'utilisation et l'implémentation de \emph{PRAHOM} peuvent être trouvées dans \autoref{PettingZoo-wrapper}.
 % Puisque \emph{PRAHOM} s'appuie sur des historiques conjointes plutôt que sur des politiques conjointes, il est indépendant de la fonction d'approximation utilisée pour mettre en œuvre les politiques des agents telles que celles basées sur les réseaux de neurones
 
 \begin{figure}[h!]
@@ -372,7 +372,7 @@ Ici, nous présentons simplement l'idée sous-jacente à une description de haut
 \subsubsection{Processus 1 : Déduire des spécifications organisationnelles}
 
 Plutôt que d'utiliser directement les politiques conjointes, nous utilisons les historiques conjoints, car ils peuvent être construits avec les actions résultantes observées lorsque les observations sont reçues au cours d'une série d'épisodes de test. En effet, pour une politique donnée $\pi \in \Pi$, l'historique associé est par définition $h \in h_{joint} = \langle(\omega_k,a_k) | k \in \mathbb{N}\rangle$ et le $(\omega_k,a_k) \in \pi$.
-Ensuite, en raison de la difficulté de déduire des informations liées aux spécifications organisationnelles, il est possible d'associer chaque observation ou action aux spécifications de l'organisation sous la forme d'une relation \textquote{plusieurs à plusieurs}. Cela met en place un premier cadre d’identification des spécifications organisationnelles dans les historiques. Le reste de cette section aborde cette difficulté.
+Ensuite, en raison de la difficulté de déduire des informations liées aux spécifications organisationnelles, il est possible d'associer des séquence de couples observation-action aux spécifications de l'organisation sous la forme d'une relation \textquote{plusieurs à plusieurs}. Cela met en place un premier cadre d’identification des spécifications organisationnelles dans les historiques. Le reste de cette section aborde cette difficulté.
 
 Le concepteur peut définir certaines relations entre les spécifications $\mathcal{M}OISE^+$ et les historiques conjoints. Leurs prémisses viennent du fait que certaines spécifications du modèle organisationnel $\mathcal{M}OISE^+$ peuvent être mappées à des sous-ensembles d'actions d'une seule politique commune sous-optimale.
 À partir de ces relations, il est possible d’utiliser des approches empiriques ou statistiques pour déduire des spécifications organisationnelles à partir d’historiques communes.
@@ -387,7 +387,7 @@ Au final, notre processus tente de synthétiser les connaissances inférées jus
 \subsubsection{Processus 2 : Contraindre l'espace des politiques}
 
 Nous considérons un algorithme MARL donné qui converge itérativement vers une politique commune de sorte que la politique de chaque agent soit mise à jour à chaque étape jusqu'à un horizon fini.
-Nous privilégions l'algorithme \emph{Proximal Policy Optimization} pour son efficacité prouvée dans des environnements multi-agents coopératifs sans nécessiter de modifications algorithmiques ou d'architectures spécifiques au domaine~\cite{Yu2022}.
+Nous privilégions l'algorithme \emph{Proximal Policy Optimization} (PPO) pour son efficacité prouvée dans des environnements multi-agents coopératifs sans nécessiter de modifications algorithmiques ou d'architectures spécifiques au domaine~\cite{Yu2022}.
 Pour contraindre les politiques conjointes possibles à celles satisfaisant les spécifications organisationnelles de conception $os_{init}$, nous proposons de contraindre les ensembles d'actions et d'observations pour chaque agent en fonction de $os_{init}$ à chaque étape. Par exemple, nous pouvons contraindre un agent à converger vers un rôle donné en interdisant les actions liées à d’autres rôles. Nous utilisons cette idée pour mettre en place notre processus visant à guider l'entrainement en fonction des contraintes organisationnelles de conception.
 
 Dans un premier temps, nous utilisons les relations précédemment établies entre spécifications organisationnelles et couples action-observation, pour déterminer les actions autorisées ou interdites jouables par les agents à chaque étape.
@@ -397,36 +397,38 @@ Nous pouvons noter que la restriction impliquée par $os_{init}$ dans les évent
 
 \subsection{Outil d'ingénierie}
 
-% JS: j'ai du mal à introduire PRAHOM au travers de CybMASDE
-Dans le cadre de l'outil CybMASDE
-\footnote{\emph{Cyberdefense Multi Agent System Developpment Environment} est un simulateur pour SMA de Cyberdéfense et disponible à \url{https://github.com/julien6/CybMASDE}},
-la bibliothèque PettingZoo est centrale car elle propose une API standardisée simplifiant le développement d'environnements avec des agents et facilite l'application des algorithmes MARL.
-Nous proposons \emph{PRAHOM PettingZoo Wrapper}\label{PettingZoo-wrapper}, comme outil pour aider à automatiser la configuration de \emph{PRAHOM} pour un environnement PettingZoo donné.
-Il s'agit d'une Preuve de Concept qui permet de relier les actions aux spécifications $\mathcal{M}OISE^+$ et de définir les spécifications organisationnelles. Il fournit des fonctions pour extraire les spécifications organisationnelles brutes sous-optimales qui en résultent. Lors de l'entraînement, des actions/observations sont masquées ou mis en avant pour contraindre l'apprentissage d'un agent selon les spécifications organisationnelles données.
+Dans le cadre de CybMASDE
+%
+\footnote{\emph{Cyberdefense Multi Agent System Developpment Environment} est un simulateur pour SMA de Cyberdéfense et disponible à \url{https://github.com/julien6/CybMASDE}}
+%
+, nous proposons \emph{PRAHOM Wrapper}\label{PettingZoo-wrapper} comme outil augmentant la bibliothèque \emph{PettingZoo} qui fournit une API standardisée pour le développement d'environnements et l'application d'algorithmes MARL.
+%
+\emph{PRAHOM Wrapper} fournit des moyens d'inferrer des spécifications organisationnelles à partir d'agents entrainés ou contraindre leur entrainement.
+% Lors de l'entraînement, des actions/observations sont masquées ou mis en avant pour contraindre l'apprentissage d'un agent selon les spécifications organisationnelles données.
+%
+Dans \autoref{lst:wrapper_basic_use}, nous détaillons une utilisation basique du wrapper pour augmenter un environnement \emph{PettingZoo} (ligne 5) avec des relations connues entre les spécifications organisationnelles et les historiques attendus (ligne 3) ainsi que les spécifications organisationelles qui contraignent les politiques possibles des agents (ligne 4).
 
-Dans \autoref{lst:wrapper_basic_use}, nous détaillons une utilisation basique du wrapper pour augmenter un environnement PettingZoo (ligne 12) avec des relations connues entre les actions et les spécifications organisationnelles (ligne 4) et les contraintes de conception que les agents doivent satisfaire (ligne 8). Après l'entrainement, nous pouvons afficher une Analyse en Composantes Principales (ACP) de l'historique de chaque agent sur un épisode (ligne 14) qui est un outil d'analyse supplémentaire pour détecter manuellement les rôles émergents. Il fournit également les spécifications $\mathcal{M}OISE^+$ déduites en tenant compte des derniers épisodes et de la manière dont les agents sont instanciés dans le dernier épisode.
+\emph{PRAHOM Wrapper} est utilisé avec une fonctionalité supplémentaire qui permet l'entrainement avec PPO et la configuration par défaut (ligne 6).
+Pendant l'entrainement, \textquote{agent\_0} est contraint au rôle \textquote{follower} de sorte que ses actions doivent être choisies d'après les historiques attendus (exprimables de diverses manières en plus de liste). Le respect de ces contraintes est faisable selon trois modes: i) \textquote{CORRECT} : masque/corrige de façon externe aux politique les observations reçues et actions choisies  ; ii) \textquote{CORRET\_AND\_PENALIZE} : similaire à \textquote{CORRECT} mais les agents apprennent également à respecter les contraintes ; iii) \textquote{CORRECT\_AT\_POLICY} : change en interne les politiques pour integrer les contraintes (par défaut en masquant/corrigeant les observations/actions).
 
-Ces résultats sont construits via des approches empiriques ou statistiques en utilisant les relations connues entre les observations, les actions et les spécifications organisationnelles. Lorsqu'aucune relation n'est disponible, il tente de détecter des sous-séquences d'historiques communes susceptibles de correspondre à une spécification organisationnelle (ligne 12). En raison de ces limitations, les résultats peuvent ne pas décrire entièrement l’organisation sous-jacente ou contenir des spécifications organisationnelles déduites bruyantes. Puisque les résultats sont conformes à $\mathcal{M}OISE^+$, il est alors possible de les utiliser avec les méthodes de conception SMA disponibles pour bénéficier des spécifications organisationnelles émergentes identifiées au cours du processus de conception.
+Après entrainement, \emph{PRAHOM Wrapper} infère les spécifications organisationnelles de l'organisation généralisée à partir de cinq historiques conjoints (obtenus en faisant jouer les agents entrainés sur cinq épisodes) ; ainsi que l'instanciation de cette organisation pour chaque historique conjoint (ligne 7).
+Ce processus d'inférence utilise d'abord les relations connues entre les historiques et les spécifications organisationnelles (ligne 3) : l'historique d'un agent qui contient l'observation $14$ (\textquote{commande reçue}) et l'action $74$ (\textquote{appliquer ordre}), est un \textquote{follower}. De même, pour les liens entre roles en utilisant des expressions régulières pour les historiques (ligne 3).
 
-\begin{lstlisting}[language=Python, caption={Utilisation basique de \emph{PRAHOM PettingZoo Wrapper}}, label={lst:wrapper_basic_use}]
-from omarl_experiments import PrahomWrapper
-env = PettingZoo_env.parallel_env(render_mode="human")
-action_to_specs = {"agent_name": {
-        "14": "role='leader';link='(agent_0,agent_1,auth);..."
-        ...}
-    ...}
-training_specs = {
-    "leader": {
-        "must": ["(23,41)"],
-        "must_not": ["(14,74)"]}...}
+Ensuite, en s'appuyant sur la définition donnée de chaque spécification organisationnelle vis-à-vis des historiques, \emph{PRAHOM Wrapper} généralise plusieurs historiques conjoints pour obtenir de nouvelles spécifications organisationnelles.
+%
+Par exemple, un rôle est obtenu en mesurant la similarité entre des historiques. Cela peut être fait de plusieurs manières : clustering de séquences (avec un dendrogramme) ; K-voisins les plus proches (avec ACP des historiques) ; analyse statistique (en particulier fréquence d'action dans diverses visualisations) ; etc.
 
+À partir des premières spécifications organisationelles obtenues, un algorithme proposée déduit empiriquement d'autres spécifications organisationnelles telles que les compatibilités, les autorisations et les obligations.
+Ces résultats peuvent être incomplets ou bruités en raison des limites des techniques et de l'algorithme d'inférence des spécifications organisationelles. Cependant, les résultats étant conformes à $\mathcal{M}OISE^+$, il est possible de les utiliser dans les méthodes de conception MAS à la lumière des spécifications organisationnelles identifiées.
 
-hist_to_specs = {"": ""}
-agt_to_cons_specs = {"agent_0": {structural_specifications: {role:["leader"]}}}
-env = prahom_wrapper(env, hist_to_specs, agt_to_cons_specs, "CORRECT", [
-                     "sequence_clustering"], ["role", "plan"], ["dendogram", "PCA"])
-env.train("PPO_default")
-raw_specs = env.generate_specs()
+\begin{lstlisting}[language=Python, caption={Utilisation basique de \emph{PRAHOM Wrapper}}, label={lst:wrapper_basic_use}]
+from omarl_experiments import prahom_wrapper
+env=PettingZoo_env.parallel_env(render_mode="human")
+specs_to_hist={"structural_specifications":{"roles":{"follower":{"23":41,"14":[74,0]}}...},"functional_specifications":{"links":{"(leader,follower,aut)":".*14.*?89"}...}...}
+policy_specs_constr={"agent_0":{"structural_specifications":"roles":["follower"]}}
+env=prahom_wrapper(env,action_to_specs,training_specs, "CORRECT", ["sequence_clustering"], ["role"], ["dendogram", "PCA"])
+env.train("default_PPO")
+trained_specs,agent_to_specs=env.prahom_specs()
 \end{lstlisting}
 
 % =============
@@ -465,7 +467,7 @@ Afin d'évaluer AOMEA, nous utilisons \emph{PRAHOM} dans des environnements simu
 Nous avons sélectionné trois environnements de type Atari pour leur rendu visuel qui constitue un moyen pratique d'évaluer les résultats avec des observations manuelles\footnotemark[1].
 Considérant la recherche sur les AICA, nous avons également considéré un environnement de Cyberdéfense comme une première tentative d'application de \emph{PRAHOM} dans un environnement de Cyberdéfense non "visuel" :
 
-\footnotetext[1]{Des explications supplémentaires et les exemples discutés utilisant le \emph{PRAHOM PettingZoo wrapper} sont disponibles sur \url{https://github.com/julien6/omarl_experiments?tab=readme-ov-file\#predator-prey-with-communication}}
+\footnotetext[1]{Des explications supplémentaires et les exemples discutés utilisant le \emph{PRAHOM Wrapper} sont disponibles sur \url{https://github.com/julien6/omarl_experiments?tab=readme-ov-file\#predator-prey-with-communication}}
 
 \begin{itemize}
   \item \textquote{Drone swarm - 3rd CAGE Challenge}~\cite{cage_challenge_3_announcement} (CYB) se compose d'agents cyber-défenseurs déployés sur des drones en réseau essayant de lutter contre les programmes malware déployés de manière malveillante. Nous pouvons nous attendre à ce que les agents \allowbreak isolent collectivement les drones compromis ;
@@ -520,15 +522,15 @@ Pour l'environnement CYB, nous avons développé notre SMA raffiné via un simpl
 \section{Conclusion}
 
 % Dans cet article, nous avons présenté AOMEA, une nouvelle approche générale de conception SMA qui vise à faciliter la conception SMA lorsqu'elle ne peut pas être facilement réalisée par les concepteurs dans des environnements de déploiement très complexes.
-Les méthodes multi-agents s'appuient sur les connaissances du concepteur pour concevoir une organisation SMA adaptée, mais ne fournissent pas de moyens automatiques ou assistés pour déterminer les mécanismes organisationnels pertinents.
+Les méthodes multi-agents s'appuient sur les connaissances du concepteur pour concevoir une organisation SMA adaptée, mais ne fournissent pas de moyens automatiques pour déterminer les mécanismes organisationnels pertinents.
 % uniquement à partir des exigences de conception et de l'objectif global.
 Les techniques MARL ont été appliquées avec succès pour entrainer automatiquement des agents à atteindre un objectif donné sans caractérisation explicite des stratégies collectives émergentes.
 L'originalité d'AOMEA est d'enrichir un processus MARL d'un modèle organisationnel explicite vers un objectif méthodologique pour aborder ces problématiques. Nous avons d'abord exposé comment AOMEA est destiné à être utilisé dans l'ingénierie SMA en tant qu'outil supplémentaire pour aider au processus de conception.
 Ensuite, nous avons proposé de lier les politiques des agents (modélisées dans un Dec-POMDP) avec $\mathcal{M}OISE^+$ à travers le processus \emph{PRAHOM} qui est au cœur d'AOMEA. Sous les conditions simplificatrices d'un groupe et d'un schéma social unique, \emph{PRAHOM} permet de déterminer partiellement les spécifications organisationnelles à partir des historiques conjoints et de contraindre l'entrainement des politiques par rapport à des spécifications organisationnelles.
-De plus, nous avons implémenté le wrapper \emph{PRAHOM PettingZoo} comme preuve de concept pour appliquer pratiquement AOMEA et nous avons montré qu'il permet d'obtenir des spécifications organisationnelles qui satisfont aux contraintes de conception et permettent d'atteindre l'objectif donné.
-Enfin, nous avons appliqué notre approche dans quatre environnements PettingZoo pour évaluer l'impact pendant et après l'entrainement. Les performances obtenues se révèlent comparables à ceux connus.
+De plus, nous avons implémenté le wrapper \emph{PRAHOM PettingZoo} comme preuve de concept pour appliquer AOMEA.
+Enfin, nous avons appliqué notre approche dans quatre environnements \emph{PettingZoo} pour évaluer l'impact pendant et après l'entrainement. Les performances obtenues se révèlent comparables à ceux connus.
 
-Même si \emph{PRAHOM} est agnostique à l'égard de l'algorithme MARL, car il utilise l'historique des agents pour déduire des spécifications organisationnelles, reconstruire a posteriori les comportements collectifs des agents peut s'avérer difficile. En effet, une perspective majeure pour améliorer \emph{PRAHOM} est d'aller plus loin avec les techniques d'apprentissage supervisé et non supervisé en plus des approches statistiques empiriques pour identifier des spécifications organisationnelles pertinentes à partir d'historiques conjoints. De plus, il vaut la peine d’étudier les travaux récents sur les techniques MARL telles que l’apprentissage hiérarchique, car ils cherchent  à caractériser les stratégies émergentes tout au long de l’apprentissage.
+Même si \emph{PRAHOM} est agnostique à l'égard de l'algorithme MARL, car il utilise l'historique des agents pour déduire des spécifications organisationnelles, reconstruire a posteriori les comportements collectifs des agents peut s'avérer difficile. En effet, une perspective majeure pour améliorer \emph{PRAHOM} est d'aller plus loin avec les techniques d'apprentissage non supervisé en plus des approches statistiques empiriques pour identifier des spécifications organisationnelles pertinentes à partir d'historiques conjoints. De plus, les travaux issus de l’apprentissage hiérarchique peuvent contribuer à mieux caractériser les stratégies émergentes durant l’apprentissage.
 %À terme, nous visons également à améliorer l'applicabilité d'AOMEA en développant des interfaces dédiées construites autour de \emph{PRAHOM} le rendant plus accessible aux contextes industriels et de recherche.
 
 
