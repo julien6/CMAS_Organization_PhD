@@ -456,36 +456,38 @@ OMARL deals with all the processes linking MARL and Organization model as for be
 
 In a DMO process, we consider solving sub-optimally the Dec-POMDP $d \in D$ for a single team $i$ (comprising $n$ agents in $\mathcal{A}$) at a $s = U_i^* - \delta$ (with $\delta \in \mathbb{R}$) expectancy, we may obtain a set $S\Pi_{joint,s,i} = SR_{d,joint,i}(\pi_{joint,i},s) = \{\pi_{joint,i,s,1}, \pi_{joint,i,s,2} .. \pi_{joint,i,s,d}\}$ with the $S\Pi_{joint,s,i,k} \in \Pi_{joint}$ ($k \in \mathbb{N}, k \leq d$) and $SR_{d,joint,i}(\pi_{joint,i},s)$ gives the sub-optimal joint-policies at $s$ expectancy for the Dec-POMDP $d$ also denoted $SR_{joint,i,s}(d)$. As an example, we may have $d$ different convergent joint-policies reaching a given expected cumulative reward after several training due to non-deterministic parameters in training.
 
-Yet as an extra constraint, we only want joint-policies allowed by the initial specifications $OS_{init}$ we note $S\Pi_{joint,OS_{init}} = \{\pi_{joint,i,1}, \pi_{joint,i,2} .. \pi_{joint,i,b}\}$ with $b \in \mathbb{N}$ and the $\pi_{joint,k} \in \Pi_{joint}$ ($k \in \mathbb{N}, k \leq b$). Then, one can envision to use the sub-optimal joint-policies that satisfy the specifications $S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{init}}$ to infer some associated specifications $OS_{s,i}$ of the implicit resulting organization.
+Yet as an extra constraint, we only want joint-policies allowed by the constraining organizational specifications $OS_{cons}$ we note $S\Pi_{joint,OS_{cons}} = \{\pi_{joint,i,1}, \pi_{joint,i,2} .. \pi_{joint,i,b}\}$ with $b \in \mathbb{N}$ and the $\pi_{joint,k} \in \Pi_{joint}$ ($k \in \mathbb{N}, k \leq b$). Then, one can envision to use the sub-optimal joint-policies that satisfy the specifications $S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{cons}}$ to infer some associated specifications $OS_{s,i}$ of the implicit resulting organization.
 
 As a summary, we define an OMARL compliant DMO process if it can be described as a relation between the sub-optimal joint-policies set and associated organizational specifications set the following way:
 
 \
 
 \begin{relation}\label{rel:def_dmo}
-    dmo: D \times OS_{init} \rightarrow (S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{init}}) \times OS_{s,i}
+    dmo: D \times OS_{cons} \rightarrow (S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{cons}}) \times OS_{s,i}
 \end{relation}
 Can be understood as for a given problem comprising a environment and a goal to be achieved by agents, and some design constraints; we can minimally get sufficiently successful trained agents that are compliant with given specifications and (at least partial) associated organizational specifications.
 
 \
+
+Defining a DMO process is challenging due to the lack of common ground to describe the links between organizational specifications and policies.
 
 In \autoref{proof:to_extended_dmo}, we extended the \autoref{rel:def_dmo} DMO definition into another convenient form in \autoref{rel:def_extended_dmo}.
 
 \
 
 \begin{relation}\label{rel:def_extended_dmo}
-    $\phantom{X}$ dmo: D \times OS_{init} \rightarrow (SR_{joint,i,s}[D] \cap sop[OS_{init}]) \times pos[SR[D] \cap sop[OS_{init}]]
+    $\phantom{X}$ dmo: D \times OS_{cons} \rightarrow (SR_{joint,i,s}[D] \cap sop[OS_{cons}]) \times pos[SR[D] \cap sop[OS_{cons}]]
 \end{relation}
 
 \begin{proof}\label{proof:to_extended_dmo}
 
-    Let $dmo_{2}: D \times OS_{init} \rightarrow (SR_{joint,i,s}[D] \cap sop[OS_{init}]) \times \allowbreak pos[SR[D] \cap sop[OS_{init}]]$ \\
+    Let $dmo_{2}: D \times OS_{cons} \rightarrow (SR_{joint,i,s}[D] \cap sop[OS_{cons}]) \times \allowbreak pos[SR[D] \cap sop[OS_{cons}]]$ \\
 
-    By definition, $SR_{joint,i,s}[D] \cap sop[OS_{init}] = (S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{init}})$ \\
+    By definition, $SR_{joint,i,s}[D] \cap sop[OS_{cons}] = (S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{cons}})$ \\
 
-    By definition, $pos[\Pi_{joint, OS_{init}}] = OS_{s,i}$
+    By definition, $pos[\Pi_{joint, OS_{cons}}] = OS_{s,i}$
 
-    Hence, $dmo_{2}: D \times OS_{init} \rightarrow (S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{init}}) \times OS_{s,i}$
+    Hence, $dmo_{2}: D \times OS_{cons} \rightarrow (S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{cons}}) \times OS_{s,i}$
 
     Hence, $dmo_{2} \subseteq dmo$
 \end{proof}
@@ -502,7 +504,7 @@ Represents how we can infer organizational specifications out of \textquote{trai
 \
 
 \begin{relation}\label{rel:sop}
-    sop: OS \rightarrow (S\Pi_{joint, OS_{init}})
+    sop: OS \rightarrow (S\Pi_{joint, OS_{cons}})
 \end{relation}
 Represents how we can determine the joint-policies that satisfy some organizational specifications
 
@@ -523,7 +525,7 @@ As a synthesis of these two processes, we propose the PRAHOM as a DMO compliant 
     \KwData{$step_{max} \in \mathbb{N}$, the maximum number of steps per episodes}
     \KwData{$s \in \mathbb{R}$, the cumulative reward expectancy}
     \KwData{$\pi_{joint}$, the joint-policies to be trained}
-    \KwData{$os_{init} \in OS_{init}$, the design specifications to respect}
+    \KwData{$OS_{cons} \in OS_{cons}$, the design specifications to respect}
     \KwData{$Solv: \Pi \times A \times O \times \mathbb{R} \rightarrow \Pi$, the MARL algorithm for updating a single policy in order to solve the Dec-POMDP}
 
     \KwResult{$(s\pi_{joint,s,i} \in S\Pi_{joint,s,i}, os_{s,i} \in OS_{s,i})$, the sub-optimal policies associated organization specifications}
@@ -647,11 +649,11 @@ We consider a given MARL algorithm that iteratively converges towards a joint-po
     \KwData{$step_{max} \in \mathbb{N}$, the maximum number of steps per episodes}
     \KwData{$s \in \mathbb{R}$, the cumulative reward expectancy}
     \KwData{$\pi_{joint}$, the joint-policies to be trained}
-    \KwData{$os_{init} \in OS_{init}$, the design specifications to respect}
+    \KwData{$OS_{cons} \in OS_{cons}$, the design specifications to respect}
     \KwData{$solv: \Pi \times A \times O \times \mathbb{R} \rightarrow \Pi$, the MARL algorithm for updating a single policy in order to solve the Dec-POMDP}
     \KwResult{$s\pi_{joint} \in S\Pi_{joint,s,i}$, the sub-optimal joint-policies that satisfy the design specifications}
 
-    $forbidden = \Pi_{joint} \setminus (DMO-pos^{-1}(os_{init}))$
+    $forbidden = \Pi_{joint} \setminus (DMO-pos^{-1}(OS_{cons}))$
 
     $s\pi_{joint} = \{\}$
 
@@ -689,11 +691,11 @@ We consider a given MARL algorithm that iteratively converges towards a joint-po
 
 \end{algorithm}
 
-\emph{PRAHOM-sop-training} first converts the $os_{init} \in OS_{init}$ design specifications into a $forbidden$ set of the non-authorized joint-policies. It uses a non-described reverse \emph{PRAHOM-pos} algorithm to achieve it.
+\emph{PRAHOM-sop-training} first converts the $OS_{cons} \in OS_{cons}$ design specifications into a $forbidden$ set of the non-authorized joint-policies. It uses a non-described reverse \emph{PRAHOM-pos} algorithm to achieve it.
 
 Then, \emph{PRAHOM-sop-training} uses a given MARL algorithm to update the agents' individual policies with previous action, observation and resulting reward. Then, it first computes the authorized actions set $A_{step}$ according to the current history $h_{joint,i}$. Then, an action is chosen among authorized actions. That action $a_{step}$ is added in history to be used for updating the agent's policy in the next step.
-Finally, considering only one iteration of episode, it returns a sub-optimal joint-policy $\pi_{joint}$ satisfying $os_{init}$
-We can note the $os_{init}$ could forbid the MARL algorithm to provide a joint-policy that reaches a expected cumulative reward.
+Finally, considering only one iteration of episode, it returns a sub-optimal joint-policy $\pi_{joint}$ satisfying $OS_{cons}$
+We can note the $OS_{cons}$ could forbid the MARL algorithm to provide a joint-policy that reaches a expected cumulative reward.
 
 
 \section{Methodology}
