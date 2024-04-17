@@ -358,83 +358,103 @@ A Dec-POMDP $d \in D$ (with $D$ the set of Dec-POMDP) is a 7-tuple $d = (S,\{A_i
     \item $\gamma \in [0,1]$, the discount factor
 \end{itemize}
 
-Considering $m$ \textbf{teams} (also referred as \textbf{groups}) each containing several agents among $\mathcal{A}$, we also detail the minimal formalism notation we re-used for solving the Dec-POMDP for a given team $i, 0 \leq t \leq m$ containing $n$ agents~\citep{Beynier2013,Albrecht2024}:
+Considering $m$ \textbf{teams} (also referred as \textbf{groups}) each containing several agents among $\mathcal{A}$, we also detail the minimal formalism notation we re-used for solving the Dec-POMDP for a given team $i, 0 \leq i \leq m$ containing $n$ agents~\citep{Beynier2013,Albrecht2024}:
 
 \begin{itemize}
 
-    \item $\Pi$: the set of policies. A \textbf{policy} $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action and is used in an agent;
-    \item $\Pi_{joint}$: the set of joint-policies. A \textbf{joint-policy} $\pi_{joint} \in \Pi_{joint}, \pi_{joint} = \{\pi_1, \pi_2...\pi_n\}$ is a set of the policies used in agents;
+    \item $\Pi$: the set of policies. A \textbf{policy} $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action. It represents the agent's internal logic;
+    \item $\Pi_{joint}$: the set of joint-policies. A \textbf{joint-policy} $\pi_{joint} \in \Pi_{joint}, \pi_{joint}: \Omega^n \rightarrow A^n = \Pi^n$ chooses an action for each agent regarding their respective observation. It can be viewed as a set of the policies used in agents;
     \item $H$: the set of histories. A \textbf{history} over $z \in \mathbb{N}$ steps (where $z$ is generally the maximum number of steps for an episode) is the $z$-tuple $h = ((\omega_{k}, a_{k}) | k \leq z, \omega \in \Omega, a \in A)$
     \item $H_{joint}$: the set of joint-histories. A \textbf{joint-history} over $z \in \mathbb{N}$ steps $h_{joint} \in H_{joint}, h_{joint} = \{h_1,h_2..h_n\}$ is the set of the agents' histories.
     \item $U_{joint,i}(<\pi_{joint,i}, \pi_{joint,-i}>): \Pi_{joint} \rightarrow \mathbb{R}$: gives the \textbf{expected cumulative reward} over a finite horizon (if $\gamma < 1$ or the number of steps in an episode is finite), with $\pi_{joint,i}$ the joint policy for team $i$ and $\pi_{joint,-i}$ all of the other concatenated joint-policies (considered as fixed);
-    \item $BR_{joint,i}(\pi_{joint,i}) = argmax_{p_{joint,i}}(U(<\pi_{joint,i},\pi_{joint,-i}>))$: gives the \textbf{best response} $p_{joint,i}^*$ in the sense that the team cannot change any of the policies in the joint-policy $p_{joint,i}^*$ to get a better expected cumulative reward than $U_i^* = U_{joint,i}(<\pi_{joint,i}^*, \pi_{joint,-i}>)$;
+    \item $BR_{joint,i}(\pi_{joint,i}) = argmax_{\pi_{joint,i}}(U(<\pi_{joint,i},\pi_{joint,-i}>))$: gives the \textbf{best response} $\pi_{joint,i}^*$ in the sense that the team cannot change any of the policies in the joint-policy $\pi_{joint,i}^*$ to get a better expected cumulative reward than $U_i^* = U_{joint,i}(<\pi_{joint,i}^*, \pi_{joint,-i}>)$;
     \item $SR_{joint,i}(\pi_{joint,i}, s) = \{\pi_{joint,i} | U(<\pi_{joint,i},\pi_{joint,-i}>) \geq s\}$: gives the \textbf{sufficient response} as the set of joint-policies getting at least $s \in \mathbb{R}, s \leq U_i^*$ as expected cumulative reward.
 \end{itemize}
 
-We refer to \textbf{solving} the Dec-POMDP for the team $t$ as finding a joint policy $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = BR_{joint,i}(\pi_{joint,i})$ that maximize the expected cumulative reward over a finite horizon.
+We refer to \textbf{solving} the Dec-POMDP for the team $i$ as finding a joint policy $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = BR_{joint,i}(\pi_{joint,i})$ that maximize the expected cumulative reward over a finite horizon.
 We refer to \textbf{sub-optimally solving} the Dec-POMDP at $s$ expectancy as finding a the joint policies $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = SR_{joint,i}(\pi_{joint,i}, s)$ that gets the expected cumulative reward over a finite horizon at least at $s \in \mathbb{R}, s \leq U_i^*$.
 
-We refer to \textquote{joint-history} as an approximation by observing received observation and played action. We note $h_{joint} \ in H_{joint}$ a \textbf{joint-history} so that $h_{joint} = {h \in H}$
 
 \subsection{Organizational model}
 
 Among, the existing organizational models \textquote{Agent/Group/Role}~\citep{Ferber2004} and $\mathcal{M}OISE^+$~\citep{Hubner2002} provide a relevant high-level description of the structures and interactions within the MAS. However, we favor $\mathcal{M}OISE^+$ because it provides an advanced formal description for an organization without incompatibilities with MARL, especially for formal description of agents' policies. It takes into account explicitly the social aspects between agents where \textquote{AGR} focuses on the integration of standards oriented towards design. Additionally, it provides a sufficiently detailed vision of organization to be understood at different point of views.
 Based on $\mathcal{M}OISE^+$~\citep{Hubner2007} formalism, we only give the minimal elements of the formalism we used for our approach.
 
-\paragraph{\textbf{Organization specifications (OS)}}: $OS = \langle SS, FS, DS \rangle$, the set of all organization specifications, where $SS$ are the \textbf{Structural Specifications}, $FS$ are the \textbf{Functional Specifications}, and $DS$ are the \textbf{Deontic Specifications}
+\paragraph{\textbf{Organization specifications (OS)}}: $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, the set of all organization specifications, where $\mathcal{SS}$ are the \textbf{Structural Specifications}, $\mathcal{FS}$ are the \textbf{Functional Specifications}, and $\mathcal{DS}$ are the \textbf{Deontic Specifications}
 
-\paragraph{\textbf{Structural Specifications (SS)}}: $SS = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$, where:
+\paragraph{\textbf{Structural Specifications (SS)}}: $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$, where:
 
 \begin{itemize}
-    \item $\mathcal{R}$: the set of non-abstract roles;
 
-    \item $\mathcal{SG}$: the set of sub-groups;
+    \item $\mathcal{R}_{ss}$: the set of all roles (denoted $\rho \in \mathcal{R}$);
 
-    \item $\mathcal{L}$: the set of links. A link is a predicate $link(\rho_s,\rho_d,t) \in \mathcal{L}$, where $\rho_{s}$ is the link source, $\rho_{d}$ is the link destination, and $t \in\{acq, com, aut\}$ is the link type;
+    \item $\mathcal{IR}: \mathcal{R} \rightarrow \mathcal{R}$: the inheritance relation between roles ($\mathcal{IR}(\rho_1) = \rho_2$ means $\rho_1$ inherits from $\rho_2$ also denoted $\rho_1 \sqsubset \rho_2$);
+
+    \item $RG \subseteq GR$ the set of root groups, $GR = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$, the set of all groups, where
+
           \begin{itemize}
-              \item If $t = acq$ (acquaintance), the agents playing the source role $\rho_{\mathrm{s}}$ are allowed to have a representation of the agents playing the destination role $\rho_{d}$;
-              \item If $t = com$ (communication), the $\rho_{\mathrm{s}}$ agents are allowed to communicate with $\rho_{d}$ agents;
-              \item If $t = aut$ (authority), the $\rho_{\mathrm{s}}$ agents are allowed to have authority on $\rho_{d}$ agents. It requires an acquaintance and communication link.
+
+              \item $\mathcal{R} \subseteq \mathcal{R}_{ss}$: the set of non-abstract roles;
+
+              \item $\mathcal{SG} \subseteq \mathcal{GR}$: the set of sub-groups;
+
+              \item $\mathcal{L} = \mathcal{R} \cross \mathcal{R} \cross \mathcal{TL}$: the set of links. A link is a 3-tuple $(\rho_s,\rho_d,t) \in \mathcal{L}$ (also denoted as a predicate $link(\rho_s,\rho_d,t))$, where $\rho_{s}$ is the source role, $\rho_{d}$ is the destination role, and $t \in \mathcal{TL}, \mathcal{TL} = \{acq, com, aut\}$ is the link type;
+                    \begin{itemize}
+                        \item If $t = acq$ (acquaintance), the agents playing the source role $\rho_{\mathrm{s}}$ are allowed to have a representation of the agents playing the destination role $\rho_{d}$;
+                        \item If $t = com$ (communication), the $\rho_{\mathrm{s}}$ agents are allowed to communicate with $\rho_{d}$ agents;
+                        \item If $t = aut$ (authority), the $\rho_{\mathrm{s}}$ agents are allowed to have authority on $\rho_{d}$ agents. It requires an acquaintance and communication link.
+                    \end{itemize}
+              \item $\mathcal{L}^{intra} \subseteq \mathcal{L}$: the set of intra-group links;
+              \item $\mathcal{L}^{inter} \subseteq \mathcal{L}$: the set of inter-group links;
+
+              \item $\mathcal{C} = \mathcal{R} \cross \mathcal{R}$: the set of compatibilities. A compatibility is a couple $(a,b) \in \mathcal{C}$ (also denoted $\rho_a \bowtie \rho_b$), means agents playing role $\rho_a \in \mathcal{R}$ can also play role $\rho_b \in \mathcal{R}$;
+              \item $\mathcal{C}^{intra} \subseteq \mathcal{C}$: the set of intra-group compatibilities;
+              \item $\mathcal{C}^{inter} \subseteq \mathcal{C}$: the set of inter-group compatibilities;
+
+              \item $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of agents adopting a role;
+              \item $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of each sub-group.
+
           \end{itemize}
-    \item $\mathcal{L}^{intra}$: the set of intra-group links;
-    \item $\mathcal{L}^{inter}$: the set of inter-group links;
-
-    \item $\mathcal{C}$: the set of compatibilities. A compatibility $com(a,b) \in C$ (also noted $\rho_a \bowtie \rho_b$), means agents playing role $\rho_a$ can also play role $\rho_b$;
-    \item $\mathcal{C}^{intra}$: the set of intra-group compatibilities;
-    \item $\mathcal{C}^{inter}$: the set of inter-group compatibilities;
-
-    \item $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of each role;
-    \item $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of each sub-group.
 
 \end{itemize}
 
-\paragraph{\textbf{Functional Specifications (FS)}}: $FS = \langle SCH, PO \rangle$, where:
+\paragraph{\textbf{Functional Specifications (FS)}}: $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$, where:
 
 \begin{itemize}
-    \item $SCH = \langle\mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$: the set of \textbf{social scheme}, where:
+    \item $\mathcal{SCH} = \langle\mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$: the set of \textbf{social scheme}, where:
           \begin{itemize}
               \item $\mathcal{G}$ is the set of global goal;
+
               \item $\mathcal{M}$ is the set of mission labels;
-              \item $\mathcal{P}$ is the set of plans that builds the tree structure;
-              \item $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$: a function that specifies the mission set of goals;
+              \item $\mathcal{P} = \langle \mathcal{G}, \{\mathcal{G}\}^s, OP, [0,1] \rangle, s \in \mathbb{N}^*$ is the set of plans that builds the tree structure of the goals.
+              %
+              A plan $p \in \mathcal{P}$ is 4-tuple $p=(g_f,\{g_i\}_{0 \leq i \leq s}, op, p), g_f \in \mathcal{G}, g_i \in \mathcal{G}, op \in OP, OP = \{sequence, choice, parallel\}, p \in [0,1]$, meaning that the goal $g_f$ is achieved if some of the sub-goals $g_i$ are achieved with a success probability $p$ and according to the operator $op$:
+              %
+              \begin{itemize}
+                \item if $op = sequence$, the $g_i$ can only be achieved in the same order sequentially;
+                \item if $op = choice$, only one of the $g_i$ has to be achieved;
+                \item if $op = parallel$, the $g_i$ can only be achieved sequentially or simultaneously.
+              \end{itemize}
+
+              \item $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$: specifies the set of goals a mission is associated to;
               \item $nm: \mathcal{M} \rightarrow \mathbb{N} \times \mathbb{N}$ the cardinality of agents committed for each mission.
           \end{itemize}
-    \item $PO$: the set of \textbf{preference order}. A preference order $pref(m_1, m_2)$ (also noted $m_{1} \prec m_{2}$) means if there is a moment when an agent is permitted to commit to $m_{1}$ and also $m_{2}$, it has a social preference for committing to $m_{1}$.
+    \item $\mathcal{PO}: \mathcal{M} \cross \mathcal{M}$: the set of \textbf{preference order}. A preference order is couple $(m_1, m_2), m_1 \in \mathcal{M}, m_2 \in \mathcal{M}$ (also denoted $m_{1} \prec m_{2}$) meaning that if there is a moment when an agent is permitted to commit to $m_{1}$ and also $m_{2}$, it has a social preference for committing to $m_{1}$.
 \end{itemize}
 
-\paragraph{\textbf{Deontic Specifications (DS)}}: $DS = \langle OBL,PER \rangle$, the set of deontic specifications, where:
+\paragraph{\textbf{Deontic Specifications (DS)}}: $\mathcal{DS} = \langle \mathcal{OBL},\mathcal{PER} \rangle$, the set of deontic specifications, where:
 
 \begin{itemize}
-    \item $TC$: the set of \textbf{time constraints}. A time constraint $tc \in TC$ specifies a set of periods during which a permission or obligation is valid;
-    \item $OBL$: the set of \textbf{obligations}. An obligation $obl(\rho_a,m,tc)$ means a agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in TC$;
-    \item $PER$: the set of \textbf{permissions}. A permission $per(\rho_a,m,tc) \in PER$ means a agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in TC$.
+    \item $\mathcal{TC}$: the set of \textbf{time constraints}. A time constraint $tc \in \mathcal{TC}$ specifies a set of periods during which a permission or obligation is valid ($Any \in \mathcal{TC}$ means everytime);
+    \item $\mathcal{OBL}: \mathcal{R} \cross \mathcal{M} \cross \mathcal{TC}$: the set of \textbf{obligations}. An obligation is a 3-tuple $(\rho_a,m,tc)$ (aslo denoted $obl(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+    \item $\mathcal{PER}$: the set of \textbf{permissions}. A permission is a 3-tuple $(\rho_a,m,tc)$ (aslo denoted $per(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
 \end{itemize}
 
 \subsection{Towards a DMO process linking MARL and Organizational model}
 
 OMARL deals with all the processes linking MARL and Organization model as for being able to get information from joint-policies to build an organizational model, and constraining possible output joint-policies subset regarding organizational specifications. DMO is a first attempt to propose formally described OMARL processes using the Dec-POMDP for MARL and $\mathcal{M}OISE^+$ for the organizational model.
 
-In a DMO process, we consider solving sub-optimally the Dec-POMDP $d \in D$ for a single team $i$ (comprising $n$ agents in $\mathcal{A}$) at a $s = U_i^* - \delta$ (with $\delta \in \mathbb{R}$) expectancy, we may obtain a set $S\Pi_{joint,s,i} = SR_{d,joint,i}(\pi_{joint,i},s) = \{\pi_{joint,i,s,1}, \pi_{joint,i,s,2} .. \pi_{joint,i,s,d}\}$ with the $S\Pi_{joint,s,i,k} \in \Pi_{joint}$ ($k \in \mathbb{N}, k \leq d$) and $SR_{d,joint,i}(\pi_{joint,i},s)$ gives the sub-optimal joint-policies at $s$ expectancy for the Dec-POMDP $d$ also noted $SR_{joint,i,s}(d)$. As an example, we may have $d$ different convergent joint-policies reaching a given expected cumulative reward after several training due to non-deterministic parameters in training.
+In a DMO process, we consider solving sub-optimally the Dec-POMDP $d \in D$ for a single team $i$ (comprising $n$ agents in $\mathcal{A}$) at a $s = U_i^* - \delta$ (with $\delta \in \mathbb{R}$) expectancy, we may obtain a set $S\Pi_{joint,s,i} = SR_{d,joint,i}(\pi_{joint,i},s) = \{\pi_{joint,i,s,1}, \pi_{joint,i,s,2} .. \pi_{joint,i,s,d}\}$ with the $S\Pi_{joint,s,i,k} \in \Pi_{joint}$ ($k \in \mathbb{N}, k \leq d$) and $SR_{d,joint,i}(\pi_{joint,i},s)$ gives the sub-optimal joint-policies at $s$ expectancy for the Dec-POMDP $d$ also denoted $SR_{joint,i,s}(d)$. As an example, we may have $d$ different convergent joint-policies reaching a given expected cumulative reward after several training due to non-deterministic parameters in training.
 
 Yet as an extra constraint, we only want joint-policies allowed by the initial specifications $OS_{init}$ we note $S\Pi_{joint,OS_{init}} = \{\pi_{joint,i,1}, \pi_{joint,i,2} .. \pi_{joint,i,b}\}$ with $b \in \mathbb{N}$ and the $\pi_{joint,k} \in \Pi_{joint}$ ($k \in \mathbb{N}, k \leq b$). Then, one can envision to use the sub-optimal joint-policies that satisfy the specifications $S\Pi_{joint,s,i} \cap S\Pi_{joint,OS_{init}}$ to infer some associated specifications $OS_{s,i}$ of the implicit resulting organization.
 
