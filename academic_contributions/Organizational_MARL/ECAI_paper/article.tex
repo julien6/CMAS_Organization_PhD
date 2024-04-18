@@ -218,7 +218,7 @@ Addressing these concerns would improve the trust and adoption of MARL systems i
 % Contribution
 To address this problem, we propose a novel algorithm called \emph{Partial Relation between Agents' History and Organizational Model} (PRAHOM). PRAHOM leverages the $\mathcal{M}OISE^+$ organizational model~\citep{hubner2007moise} as a common ground to provide explicating the cooperative aspects in the observed agents' behaviors, or making these agents' policies constrained regarding expected cooperative schemes. The underlying idea is to establish a relationship between the agents' histories and the organizational specifications, such as roles, goals, or social links.
 
-The characterization of organizational aspects uses predefined relations to identify matching histories as organizational specifications. Otherwise it proposes a first approach relying on a series of statistical and non-supervised learning techniques to automatically infer new unnamed organizational specifications, hence enriching known organizational specifications and their relations with agents' histories.
+The characterization of organizational aspects uses predefined relations to identify matching histories as organizational specifications. Otherwise it proposes a first approach relying on a series of statistical and unsupervised learning techniques to automatically infer new unnamed organizational specifications, hence enriching known organizational specifications and their relations with agents' histories.
 The constraining of policies regarding organizational constraints associated to agents, leverages on relations to know expected histories in order to constrain agents to choose foreseen actions when required so they stick to the expected behaviors.
 
 % This paper first informally introduce the aforementioned broad idea as a new specific research study we refer to as \textquote{Organizational Multi-Agent Reinforcement Learning} (OMARL). We present DMO (Dec-POMDP $\mathcal{M}OISE^+$ OMARL) a first attempt to formally describe OMARL processes using the Decentralized Partially Observable Markov Decision Process (Dec-POMDP) as model for MARL and $\mathcal{M}OISE^+$ as an organizational model. Then, we propose PRAHOM (Partial Relations between Agents' Histories and Organizational Model), a DMO process that allows both getting some organizational specifications from \textquote{trained} policies and constraining policies training with respect to given specifications. As PRAHOM only changes the action set and relies \textquote{observed} actions, it is agnostic of the MARL algorithm used jointly with function approximators as policies. We used PRAHOM within a proposed design approach to generate an efficient organization and associated OCPV specifications based on the environment, the initial design constraints, and goals.
@@ -391,20 +391,36 @@ Based on $\mathcal{M}OISE^+$~\citep{Hubner2007} formalism, we only give the mini
 
 \subsection{Linking MARL and Organizational model}
 
-Organizational oriented MARL (OMARL) deals with all the processes linking MARL and Organization model as for being able to get information from joint-policies to build an organizational model, and constraining possible output joint-policies subset regarding organizational specifications. PRAHOM is a first attempt to propose a formally described OMARL process using the Dec-POMDP for MARL and $\mathcal{M}OISE^+$ for the organizational model.
+We refer to Organizational oriented MARL (OMARL) as all the processes linking MARL and Organization model as for being able to get information from joint-policies to build an organizational model, and constraining possible output joint-policies subset regarding organizational specifications. We refer to \emph{Dec-POMDP $\mathcal{M}OISE^+$ OMARL} (DMO) as all the formally described OMARL process using the Dec-POMDP for MARL and $\mathcal{M}OISE^+$ for the organizational model.
 
-In PRAHOM, we consider solving sub-optimally the Dec-POMDP $d \in D$ for a single team $i$ (comprising $n$ agents in $\mathcal{A}$) at a $s = U_i^* - \delta$ (with $\delta \in \mathbb{R}$) expectancy, we may obtain a set $S\Pi_{joint,s,i} = SR_{d,joint,i}(\pi_{joint,i},s) = \{\pi_{joint,i,s,1}, \pi_{joint,i,s,2} .. \pi_{joint,i,s,d}\}$ with the $S\Pi_{joint,s,i,k} \in \Pi_{joint}$ ($k \in \mathbb{N}, k \leq d$) and $SR_{d,joint,i}(\pi_{joint,i},s)$ gives the sub-optimal joint-policies at $s$ expectancy for the Dec-POMDP $d$ also denoted $SR_{joint,i,s}(d)$. As an example, we may have $d$ different convergent joint-policies reaching a given expected cumulative reward after several training due to non-deterministic parameters in training.
+In a DMO process, we consider solving sub-optimally the Dec-POMDP $d \in D$ for a single team $i$ (comprising $n$ agents in $\mathcal{A}$) at a $s = U_i^* - \delta$ (with $\delta \in \mathbb{R}$) expectancy, we may obtain a set $S\Pi_{joint,i,s} = SR_{d,joint,i}(\pi_{joint,i},s) = \{\pi_{joint,i,s,1}, \pi_{joint,i,s,2} .. \pi_{joint,i,s,m}\}$ with the $\pi_{joint,i,s,k} \in \Pi_{joint}$ ($k \in \mathbb{N}, k \leq m$) and $SR_{d,joint,i}(\pi_{joint,i},s)$ gives the sub-optimal joint-policies at $s$ expectancy for the Dec-POMDP $d$ also denoted $SR_{joint,i,s}(d)$. For instance, we may have $m$ different convergent joint-policies reaching a given expected cumulative reward after several training due to non-deterministic parameters in training.
 
-Yet as an extra constraint, we only want joint-policies allowed by the constraining organizational specifications $\mathcal{OS}_{cons}$ we denote $S\Pi_{joint,\mathcal{OS}_{cons}} = \{\pi_{joint,i,1}, \pi_{joint,i,2} .. \pi_{joint,i,b}\}$ with $b \in \mathbb{N}$ and the $\pi_{joint,k} \in \Pi_{joint}$ ($k \in \mathbb{N}, k \leq b$). Then, one can envision to use the sub-optimal joint-policies that satisfy the specifications $S\Pi_{joint,s,i} \cap S\Pi_{joint,\mathcal{OS}_{cons}}$ to infer some associated specifications $\mathcal{OS}_{s,i}$ of the implicit resulting organization.
+Yet as an extra constraint, we only want joint-policies allowed by the constraining organizational specifications $\mathcal{OS}_{cons}$ we denote $S\Pi_{joint,i,\mathcal{OS}_{cons}} = \{\pi_{joint,i,\mathcal{OS}_{cons},1}, \pi_{joint,i,\mathcal{OS}_{cons},2} .. \pi_{joint,i,\mathcal{OS}_{cons},b}\}$ with $b \in \mathbb{N}$ and the $\pi_{joint,i,\mathcal{OS}_{cons},k} \in \Pi_{joint}$ ($k \in \mathbb{N}, k \leq b$). Then, one can envision to use the sub-optimal joint-policies that satisfy the specifications $S\Pi_{joint,i,s} \cap S\Pi_{joint,i,\mathcal{OS}_{cons}}$, on which we can infer further associated specifications $\mathcal{OS}_{s,i}$ of the implicit resulting organization.
 
-As a summary, a first definition of PRAHOM is through a general Dec-POMDP $\mathcal{M}OISE^+$ OMARL (DMO) process as a relation between the sub-optimal joint-policies set and associated organizational specifications set the following way:
+As a summary, a first general definition for a DMO process is a relation between the sub-optimal joint-policies set and associated organizational specifications set the following way:
 
 \
 
 \begin{relation}\label{rel:def_dmo}
     dmo: D \times \mathcal{OS}_{cons} \rightarrow (S\Pi_{joint,s,i} \cap S\Pi_{joint,\mathcal{OS}_{cons}}) \times \mathcal{OS}_{s,i}
 \end{relation}
-Can be understood as for a given problem comprising a environment and a goal to be achieved by agents, and some design constraints; we can possibly get sufficiently successful trained agents that are compliant with given specifications, and (at least partial) associated organizational specifications.
+Can be understood as for a given problem comprising a environment and a goal to be achieved by agents, and some design constraints; we can possibly get sufficiently successful trained agents that are compliant with given specifications, and some associated organizational specifications.
+
+In practice, implementing a DMO process faces two main issues:
+%
+\begin{enumerate}
+    \item The lack of common ground between policies and organizational specifications enabling to know how agents are expected to behave when they are constrained to stick to organizational specifications. Reversly, there is no way to ;
+    \item The intractability in analyzing policies directly because policy function approximations (such as neural networks) are generally difficult to explain hence hindering the extraction of organizational specifications.
+\end{enumerate}
+
+To address these issues, PRAHOM leverages a relation \autoref{rel:def_extended_dmo} linking organizational specifications to expected agent's histories. 
+%
+\begin{enumerate}
+    \item 
+\end{enumerate}
+
+Due to the lack of common ground between policies and organizational specifications, we propose to introduce  to extend the DMO definition into another convenient form in \autoref{rel:def_extended_dmo}.
+The underlying idea behind PRAHOM is to 
 
 \
 
