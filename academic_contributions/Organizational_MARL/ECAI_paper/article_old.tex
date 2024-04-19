@@ -530,9 +530,9 @@ As a synthesis of these two processes, we propose the PRAHOM as a DMO compliant 
 
     \KwResult{$(s\pi_{joint,s,i} \in S\Pi_{joint,s,i}, os_{s,i} \in OS_{s,i})$, the sub-optimal policies associated organization specifications}
 
-    $s\pi_{joint,s,i} = PRAHOM-sop-training(s,i)$
+    $s\pi_{joint,s,i} = PRAHOM-osh-training(s,i)$
 
-    $os_{s,i} = PRAHOM-pos(s\pi_{joint,s,i})$
+    $os_{s,i} = PRAHOM-hos(s\pi_{joint,s,i})$
 
 \end{algorithm}
 
@@ -557,13 +557,13 @@ We propose some relations between $\mathcal{M}OISE^+$ specifications and joint-h
     \item $mh: \mathcal{M} \rightarrow \mathcal{P}(H)$: gives the histories associated with a mission label
 \end{itemize}
 
-From these relation, we propose to rely on the previous relations through \emph{PRAHOM-pos} presented in \autoref{alg:PRAHOM-pos} that is consistent with $pos$.
+From these relation, we propose to rely on the previous relations through \emph{PRAHOM-hos} presented in \autoref{alg:PRAHOM-hos} that is consistent with $pos$.
 
 \RestyleAlgo{ruled}
 \SetKwComment{Comment}{// }{}
 
 \begin{algorithm}[hbt!]
-    \caption{PRAHOM-pos}\label{alg:PRAHOM-pos}
+    \caption{PRAHOM-hos}\label{alg:PRAHOM-hos}
     \KwData{$\pi_{joint}$, the joint-policies to be analyzed}
     \KwResult{$os \in OS$, the associated organization specifications}
 
@@ -619,7 +619,7 @@ From these relation, we propose to rely on the previous relations through \emph{
 
 As we have only one group, we do not consider the inter-links and inter-compatibilities. Additionally as a simplification, we consider only one social scheme. As a general remark, the \textquote{determine*} relations are not all fully described and rely on custom implementation (cf. \autoref{gym-wrapper} for further information).
 
-PRAHOM-pos first look at the individual level.
+PRAHOM-hos first look at the individual level.
 First, it tries to figure out the roles played by agents ($determineRoles$) by sampling history sub-sequences $h \in H$ and comparing with known history sub-sequences whose we know the associated role via $ra$.
 Then, it tries to get the intra links the agent has with other agents. ($determineIntraLinks$ and $determineInterLinks$) via $lh$.
 Then, it tries to known the subgroup where the agent is ($determineSubgroup$) via $sgh$.
@@ -627,7 +627,7 @@ Then, it tries to know the individual goals the agent aim to ($determineIndGoals
 Then, it tries to know the mission the agent is committed to ($determineIndMissions$) via $mh$.
 Finally, it tries to build a part of the plan the agent is playing at its individual level ($determineIndPlans$) via $ph$ and the inferred individual goal and the inferred individual mission.
 
-Then PRAHOM-pos look at the social and collective level.
+Then PRAHOM-hos look at the social and collective level.
 At the end of each joint-policy we try to reinforce a global view of the goals $g$, missions $m$, plans $p$, and the knowledge of the mission to goal $mo$; with the partially inferred information at the individual level.
 
 At the end of the algorithm, it tries to synthesize the knowledge infered until know to have better view of the number of agent per subgroup $ng$, the agent cardinality per mission $nm$, the role cardinality $np$, the compatibilities between roles $c$, the permissions and obligations $per$ and $obl$.
@@ -637,13 +637,13 @@ At the end of the algorithm, it tries to synthesize the knowledge infered until 
 
 \
 
-We consider a given MARL algorithm that iteratively converges towards a joint-policy so that each agent's policy is updated at each step until a finite horizon. In \autoref{proof:jpc_to_ac} we proved that constraining the available action set for each agent to the action sets authorized by the organization specifications at each step of the MARL training; implies constraining the converged joint-policies to the ones that satisfy the given organization specifications. We used that result, to setup our $sop$ used jointly with MARL learning through \emph{PRAHOM-sop-training} presented in \autoref{alg:PRAHOM-sop-training}.
+We consider a given MARL algorithm that iteratively converges towards a joint-policy so that each agent's policy is updated at each step until a finite horizon. In \autoref{proof:jpc_to_ac} we proved that constraining the available action set for each agent to the action sets authorized by the organization specifications at each step of the MARL training; implies constraining the converged joint-policies to the ones that satisfy the given organization specifications. We used that result, to setup our $sop$ used jointly with MARL learning through \emph{PRAHOM-osh-training} presented in \autoref{alg:PRAHOM-osh-training}.
 
 \RestyleAlgo{ruled}
 \SetKwComment{Comment}{// }{}
 
 \begin{algorithm}[hbt!]
-    \caption{PRAHOM-sop-training}\label{alg:PRAHOM-sop-training}
+    \caption{PRAHOM-osh-training}\label{alg:PRAHOM-osh-training}
     \KwData{$d \in D$, the Dec-POMDP to solve}
     \KwData{$ep_{max} \in \mathbb{N}$, the maximum number of episodes}
     \KwData{$step_{max} \in \mathbb{N}$, the maximum number of steps per episodes}
@@ -691,9 +691,9 @@ We consider a given MARL algorithm that iteratively converges towards a joint-po
 
 \end{algorithm}
 
-\emph{PRAHOM-sop-training} first converts the $OS_{cons} \in OS_{cons}$ design specifications into a $forbidden$ set of the non-authorized joint-policies. It uses a non-described reverse \emph{PRAHOM-pos} algorithm to achieve it.
+\emph{PRAHOM-osh-training} first converts the $OS_{cons} \in OS_{cons}$ design specifications into a $forbidden$ set of the non-authorized joint-policies. It uses a non-described reverse \emph{PRAHOM-hos} algorithm to achieve it.
 
-Then, \emph{PRAHOM-sop-training} uses a given MARL algorithm to update the agents' individual policies with previous action, observation and resulting reward. Then, it first computes the authorized actions set $A_{step}$ according to the current history $h_{joint,i}$. Then, an action is chosen among authorized actions. That action $a_{step}$ is added in history to be used for updating the agent's policy in the next step.
+Then, \emph{PRAHOM-osh-training} uses a given MARL algorithm to update the agents' individual policies with previous action, observation and resulting reward. Then, it first computes the authorized actions set $A_{step}$ according to the current history $h_{joint,i}$. Then, an action is chosen among authorized actions. That action $a_{step}$ is added in history to be used for updating the agent's policy in the next step.
 Finally, considering only one iteration of episode, it returns a sub-optimal joint-policy $\pi_{joint}$ satisfying $OS_{cons}$
 We can note the $OS_{cons}$ could forbid the MARL algorithm to provide a joint-policy that reaches a expected cumulative reward.
 
