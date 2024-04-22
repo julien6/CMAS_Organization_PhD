@@ -166,7 +166,7 @@ $ \hfill \phantom{x}
 
     %%% Use this command to specify the title of your paper.
 
-    \title{Unveiling Cooperative Intelligence: Towards Explainable Multi-Agent Reinforcement Learning with Organizational Models}
+    \title{Explicitizing Cooperative Intelligence: Towards Explainable Multi-Agent Reinforcement Learning with Organizational Models}
 
     % JS: keywords:
     %     Multi-Agent Reinforcement Learning
@@ -533,39 +533,88 @@ Using that relation, we proposed the \autoref{rel:def_extended_dmo} that we show
 
 From \autoref{rel:def_extended_dmo}, except from regular MARL training we notice a DMO process intended contribution to be represented by:
 \begin{enumerate}
-    \item $rct[osh[\mathcal{OS}_{cons}]]$: highlighting the need to know the expected joint-histories for a given organizational specifications and how to use these joint-histories to constrain the joint-policies during training.
-    \item $osh^{-1}[obs[SR_{joint,i,s}[D]] \cap osh[\mathcal{OS}_{cons}]]$: highlighting the need to sample (optionally constrained) joint-histories and to infer organizational specifications from them.
+    \item $rct[osh[\mathcal{OS}_{cons}]]$: highlighting the need to know the expected joint-histories for given organizational specifications and how to use these joint-histories to constrain the joint-policies during training. We define this process according to the relation $osh-training: \mathcal{OS}_{cons} \rightarrow \Pi_{joint}$.
+    \item $osh^{-1}[obs[SR_{joint,i,s}[D]] \cap osh[\mathcal{OS}_{cons}]]$: highlighting the need to sample (optionally constrained) joint-histories and to infer organizational specifications from them. We define this process according to the relation $hos: SH_{joint} \rightarrow \mathcal{OS}$
 \end{enumerate}
 
 Addressing the implementation of these intended contributions led to the development of the PRAHOM algorithm as a first attempt to implement a DMO process.
 
-\subsection{Details of the PRAHOM algorithm}
+\section{PRAHOM algorithm}
 
-Continuing the previous decomposition in two activities, we detailed our process to get the specifications out of the agents' policies; and the process to get the joint-policies satisfying given specifications. PRAHOM is then a synthesis of these two processes presented in \autoref{alg:PRAHOM}.
+Continuing the previous decomposition in two activities, we detailed our process to get the specifications out of the agents' policies as \emph{PRAHOM-hos} presented in \autoref{alg:PRAHOM-hos}; and the process to get the joint-policies satisfying given specifications as \emph{PRAHOM-osh-training} presented in \autoref{alg:PRAHOM-osh-training}. PRAHOM is then a synthesis of these two processes presented in \autoref{alg:PRAHOM}.
 
 \RestyleAlgo{ruled}
 \SetKwComment{Comment}{// }{}
 
 \begin{algorithm}[hbt!]
-    \caption{Partial Action-based $\mathcal{M}OISE^+$ Identification DMO (PRAHOM)}\label{alg:PRAHOM}
+    \caption{\emph{Partial Relation between Agents' History and Organizational Model}}\label{alg:PRAHOM}
 
     \KwData{$d \in D$, the Dec-POMDP to solve}
     \KwData{$ep_{max} \in \mathbb{N}$, the maximum number of episodes}
-    \KwData{$step_{max} \in \mathbb{N}$, the maximum number of steps per episodes}
     \KwData{$s \in \mathbb{R}$, the cumulative reward expectancy}
-    \KwData{$\pi_{joint}$, the joint-policies to be trained}
-    \KwData{$\mathcal{OS}_{cons} \in \mathcal{OS}_{cons}$, the design specifications to respect}
-    \KwData{$Solv: \Pi \times A \times O \times \mathbb{R} \rightarrow \Pi$, the MARL algorithm for updating a single policy in order to solve the Dec-POMDP}
+    \KwData{$os_{cons} \in \mathcal{OS}_{cons}$, the constraining org. specs.}
+    \KwData{$marl-alg: \Pi_{joint} \times H_{joint} \times \mathbb{R} \rightarrow \Pi_{joint}$, the MARL algorithm for training a joint policy from explored histories and associated rewards}
 
-    \KwResult{$(s\pi_{joint,s,i} \in S\Pi_{joint,s,i}, os_{s,i} \in \mathcal{OS}_{s,i})$, the sub-optimal policies associated organization specifications}
+    \KwResult{$(s\pi_{joint,s,i} \in S\Pi_{joint,s,i}, os_{s,i} \in \mathcal{OS}_{s,i})$, the sub-optimal policies and associated org. specs.}
 
-    $s\pi_{joint,s,i} = PRAHOM-osh-training(s,i)$
+    \Comment{Training under org. specs. constraints}
 
-    $os_{s,i} = PRAHOM-hos(s\pi_{joint,s,i})$
+    $\pi_{joint} = marl-alg.init()$, the initialized joint-policies
+
+    $s\pi_{joint,i,s} = PRAHOM-osh-training(os_{cons})$
+
+    \Comment{Org. specs. inference}
+
+    $sh_{joint,i,s} \in SH_{joint,i,s} = gen-jthist(ep_{max})$
+
+    $os_{i,s} = PRAHOM-hos(s\pi_{joint,s,i})$
 
 \end{algorithm}
 
-\paragraph{\textbf{Infering OS from joint-policies}}
+\subsection{\textbf{Infering OS from joint-histories}}
+
+\begin{figure*}
+    \centering
+    \input{academic_contributions/Organizational_MARL/ECAI_paper/figures/gosi_illustrative_view}
+    \caption{GOSI illustrative view}
+    \label{fig:gosi_illustrative_view}
+\end{figure*}
+
+The proposed approach to implement \emph{PRAHOM-hos} first relies on \emph{Knowledge-based Organizational Specification Inference} (KOSI) approach to infer some organizational specifications thanks to the current $hos$ relation. KOSI is aimed to be relevant when knowledge of the relations between histories and organizational specifications is significant enough to be used generally.
+Otherwise, if it is not possible getting all known associated organizational specifications, the General Organizational Specification Inference (GOSI) suggests an empirical approach to infer them. GOSI is based on some proposed definitions for each $\mathcal{M}OISE^+$ organizational specification regarding joint-histories, to use suggested specific statistical, unsupervised learning techniques to infer them incrementally.
+
+We propose a role $\rho$ is defined as a policy whose the associated histories of agents having adopted it all contain a common discontinuous sequence. We proposed a role $\rho_2$ inherits $\rho_2$ if the common discontinuous sequence of the histories associated with $\rho_2$ are also contained in the $\rho_1$'s ones.
+From these definitions, we leverage hierarchical sequence clustering to find longest common discontinuous sequences among agent's histories. Results can represented as a dendogram. It enables inferring roles and inheritance relations, their respective relation with histories and the current agents as well.
+
+We propose two agents have a social impact link $(ag_1,ag_2, \kappa, \delta, f)$ with $h_1$ associated to $ag_1$ and $h_2$ associated to $ag_2$ if a sequence $h_{1,s}$ in $h_1$ is correlated at a $\kappa \in [0,1]$ index to another sequence $h_{2,s}$ in $h_2$ positioned at a relative delay $\delta \in [0,1]$ after the beginning of $h_{1,s}$, and these two correlated sequences are $f$ frequently present among all joint-policies.
+We propose two agents are in the same group if there is a social impact link such as $f \geq 0.9$.
+We propose a link $(ag_1,ag_2,acq)$ is defined if is there is a social impact link with $\kappa \geq 0.1$, $\kappa \geq 0$, $f \geq 0$.
+We propose a link $(ag_1,ag_2,com)$ is defined if is there is a social impact link with $\kappa \geq 0.3$, $\kappa \geq 0$, $f \geq 0$.
+We propose a link $(ag_1,ag_2,aut)$ is defined if is there is a social impact link with $\kappa \geq 0.9$, $\kappa \geq 0.5$, $f \geq 0$.
+% TODO: Generaliser à plusieurs agents ou le dire en tant que limitation
+We used empirical techniques and the cross-correlation techniques to compute a graph of the social impact links between agents. Frequency enables determining clusters as groups agents and their associated roles. We can also infer acquaintance, communication, and authority links between roles. From the information concerning roles associated to groups, we can infer whether links are intra-group or inter-groups.
+
+We propose a compatibility $(\rho_1,\rho_2)$ is defined if a agent playing a history associated to $\rho_1$ in a joint-history with a given groups and roles' configuration also plays a history associated to $\rho_2$ in the same configuration. If this change operates only in a same group, then it is intra-group. Else it is inter-group.
+
+We propose a sub-goal/goal is a set of common states reached following histories' balanced samples of the successful agents.
+We compute the state transition diagram to determine as a graph to determine the common states crossed by successful agents, then we sample them in a balanced way. It enables getting the goals and plans, their respective, their respective relation with histories and the current agents as well.
+
+We propose a mission as the set of sub-goals an or several agents are achieving.
+We can determine what sub-goals agents are achieving in the state transition diagram.
+
+We propose an obligation is when an agent playing role $\rho$ is achieving a mission's goals and no other one at some time constraints.
+We propose an obligation is when an agent playing role $\rho$ is achieving a mission's goals and some other ones at some time constraints.
+We can determine what agents' are associated to what mission and if they are restricted to some hence these are obligations or just permission
+
+\paragraph{Complementary help of Large Language Models (LLM)}
+We set up a \emph{GPT-3} pre-trained transformer using \emph{Transformers}' \emph{Huggingface} library. Before all, it is prompt-engineered used with self-generated specific contextual description of the environment, its functioning, the $\mathcal{M}OISE^+$ organizational specifications. This prompt-engineering is to better guide the answers towards three main purposes:
+\begin{enumerate}
+    \item Labeling, tagging the infered organizational specification from related joint-histories in a human-like manner;
+    \item Giving specific human-like textual description about each organizational specification
+    \item Giving general human-like textual description about the whole organization
+\end{enumerate}
+
+\
 
 % Schéma général de PRAHOM-HOS (PRAHOM-History to Organizational Specification) :
 
@@ -592,24 +641,25 @@ Continuing the previous decomposition in two activities, we detailed our process
 %    3) DS
 %       1) infer permissions & obligations (via generalization over analyzed joint-histories)
 
-We propose some relations between $\mathcal{M}OISE^+$ specifications and joint-histories. Their premises comes from noticing some specifications in the $\mathcal{M}OISE^+$ organizational model can be obviously mapped to subsets of actions from a single sub-optimal joint-policy, we propose the following relations:
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+% We propose some relations between $\mathcal{M}OISE^+$ specifications and joint-histories. Their premises comes from noticing some specifications in the $\mathcal{M}OISE^+$ organizational model can be obviously mapped to subsets of actions from a single sub-optimal joint-policy, we propose the following relations:
 
-\begin{itemize}
-    \item $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$: gives the histories associated with a role
-    \item $sgh: \mathcal{SG} \rightarrow \mathcal{P}(H)$: gives the histories associated with a subgroup
-    \item $lh: \mathcal{L} \rightarrow \mathcal{P}(H)$: gives the histories associated with an intra link
-    \item $gh: \mathcal{G} \rightarrow \mathcal{P}(H)$: gives the histories associated with a global goal
-    \item $mh: \mathcal{M} \rightarrow \mathcal{P}(H)$: gives the histories associated with a mission label
-\end{itemize}
+% \begin{itemize}
+%     \item $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$: gives the histories associated with a role
+%     \item $sgh: \mathcal{SG} \rightarrow \mathcal{P}(H)$: gives the histories associated with a subgroup
+%     \item $lh: \mathcal{L} \rightarrow \mathcal{P}(H)$: gives the histories associated with an intra link
+%     \item $gh: \mathcal{G} \rightarrow \mathcal{P}(H)$: gives the histories associated with a global goal
+%     \item $mh: \mathcal{M} \rightarrow \mathcal{P}(H)$: gives the histories associated with a mission label
+% \end{itemize}
 
-From these relation, we propose to rely on the previous relations through \emph{PRAHOM-hos} presented in \autoref{alg:PRAHOM-hos} that is consistent with $pos$.
+% From these relation, we propose to rely on the previous relations through \emph{PRAHOM-hos} presented in \autoref{alg:PRAHOM-hos} that is consistent with $pos$.
 
 \RestyleAlgo{ruled}
 \SetKwComment{Comment}{// }{}
 
 \begin{algorithm}[hbt!]
     \caption{PRAHOM-hos}\label{alg:PRAHOM-hos}
-    \KwData{$\pi_{joint}$, the joint-policies to be analyzed}
+    \KwData{$h_{joint}$, the joint-policies to be analyzed}
     \KwResult{$os \in OS$, the associated organization specifications}
 
     $h_{joint} = testEpisode(\pi_{joint})$
@@ -662,27 +712,29 @@ From these relation, we propose to rely on the previous relations through \emph{
 
 \end{algorithm}
 
-As we have only one group, we do not consider the inter-links and inter-compatibilities. Additionally as a simplification, we consider only one social scheme. As a general remark, the \textquote{determine*} relations are not all fully described and rely on custom implementation.
+% As we have only one group, we do not consider the inter-links and inter-compatibilities. Additionally as a simplification, we consider only one social scheme. As a general remark, the \textquote{determine*} relations are not all fully described and rely on custom implementation.
 
-PRAHOM-hos first look at the individual level.
-First, it tries to figure out the roles played by agents ($determineRoles$) by sampling history sub-sequences $h \in H$ and comparing with known history sub-sequences whose we know the associated role via $ra$.
-Then, it tries to get the intra links the agent has with other agents. ($determineIntraLinks$ and $determineInterLinks$) via $lh$.
-Then, it tries to known the subgroup where the agent is ($determineSubgroup$) via $sgh$.
-Then, it tries to know the individual goals the agent aim to ($determineIndGoals$) via $gh$.
-Then, it tries to know the mission the agent is committed to ($determineIndMissions$) via $mh$.
-Finally, it tries to build a part of the plan the agent is playing at its individual level ($determineIndPlans$) via $ph$ and the inferred individual goal and the inferred individual mission.
+% PRAHOM-hos first look at the individual level.
+% First, it tries to figure out the roles played by agents ($determineRoles$) by sampling history sub-sequences $h \in H$ and comparing with known history sub-sequences whose we know the associated role via $ra$.
+% Then, it tries to get the intra links the agent has with other agents. ($determineIntraLinks$ and $determineInterLinks$) via $lh$.
+% Then, it tries to known the subgroup where the agent is ($determineSubgroup$) via $sgh$.
+% Then, it tries to know the individual goals the agent aim to ($determineIndGoals$) via $gh$.
+% Then, it tries to know the mission the agent is committed to ($determineIndMissions$) via $mh$.
+% Finally, it tries to build a part of the plan the agent is playing at its individual level ($determineIndPlans$) via $ph$ and the inferred individual goal and the inferred individual mission.
 
-Then PRAHOM-hos look at the social and collective level.
-At the end of each joint-policy we try to reinforce a global view of the goals $g$, missions $m$, plans $p$, and the knowledge of the mission to goal $mo$; with the partially inferred information at the individual level.
+% Then PRAHOM-hos look at the social and collective level.
+% At the end of each joint-policy we try to reinforce a global view of the goals $g$, missions $m$, plans $p$, and the knowledge of the mission to goal $mo$; with the partially inferred information at the individual level.
 
-At the end of the algorithm, it tries to synthesize the knowledge infered until know to have better view of the number of agent per subgroup $ng$, the agent cardinality per mission $nm$, the role cardinality $np$, the compatibilities between roles $c$, the permissions and obligations $per$ and $obl$.
+% At the end of the algorithm, it tries to synthesize the knowledge infered until know to have better view of the number of agent per subgroup $ng$, the agent cardinality per mission $nm$, the role cardinality $np$, the compatibilities between roles $c$, the permissions and obligations $per$ and $obl$.
 
 
-\paragraph{\textbf{Constraining joint-policies satisfying OS}}
+\subsection{\textbf{Constraining joint-policies satisfying OS}}
 
 \
 
-We consider a given MARL algorithm that iteratively converges towards a joint-policy so that each agent's policy is updated at each step until a finite horizon. In \autoref{proof:jpc_to_ac} we proved that constraining the available action set for each agent to the action sets authorized by the organization specifications at each step of the MARL training; implies constraining the converged joint-policies to the ones that satisfy the given organization specifications. We used that result, to setup our $sop$ used jointly with MARL learning through \emph{PRAHOM-osh-training} presented in \autoref{alg:PRAHOM-osh-training}.
+We consider a given MARL algorithm that iteratively converges towards a joint-policy so that each agent's policy is updated at each step until a finite horizon.
+%In \autoref{proof:jpc_to_ac}
+We proved that constraining the available action set for each agent to the action sets authorized by the organization specifications at each step of the MARL training; implies constraining the converged joint-policies to the ones that satisfy the given organization specifications. We used that result, to setup our $sop$ used jointly with MARL learning through \emph{PRAHOM-osh-training} presented in \autoref{alg:PRAHOM-osh-training}.
 
 \RestyleAlgo{ruled}
 \SetKwComment{Comment}{// }{}
@@ -849,10 +901,10 @@ Ultimately, we also aim to improve the applicability of PRAHOM by developing ded
 
 % \newpage
 
-\section*{Annexes}
+% \section*{Annexes}
 
-\subsection*{Action constraining during training implies result joint-policy constraining}
-\input{proofs/jpc_to_ac.tex}
+% \subsection*{Action constraining during training implies result joint-policy constraining}
+% \input{proofs/jpc_to_ac.tex}
 
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
