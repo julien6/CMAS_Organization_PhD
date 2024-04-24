@@ -1,0 +1,79 @@
+\RestyleAlgo{ruled}
+\SetKwComment{Comment}{// }{}
+
+\begin{algorithm}[hbt!]
+
+    \caption{PRAHOM-osh-training}\label{alg:PRAHOM-osh-training}
+
+    \KwData{$cons: \mathcal{A} \rightarrow \mathcal{P}(\mathcal{OS})$, agents' org. specs. constraints}
+    
+    \Comment{PRAHOM context}
+
+    \KwData{...}
+
+    \KwResult{$s\pi_{joint,i,s} \in S\Pi_{joint,i,s}$, the sub-optimal joint-policies that satisfy the design specifications}
+
+    $\pi_{joint,init}$ = $\pi_{joint}$
+
+    \ForEach{$1 \leq it \leq it_{max}$}{
+
+        $\pi_{joint}$ = $\pi_{joint,init}$
+
+        \ForEach{$1 \leq ep \leq ep_{max}$}{
+
+            \Comment{Reinit the env., obs., act. hist.}
+            $h_{joint,ep} = ()$ ;
+            $rh_{joint,ep} = ()$ ;
+            $\omega_{joint,ep,t=0} = (0)^{|\mathcal{A}|}$ ;
+            $a_{joint,ep,t=0} = (0)^{|\mathcal{A}|}$ ;
+            $r_{joint,ep,t=0} = (0)^{|\mathcal{A}|}$ ;
+            $d_{ep} = d$ ;
+            $r_{joint,penalty} = (0)^{|\mathcal{A}|}$
+
+            \ForEach{$1 \leq step \leq step_{max}$}{
+
+                \Comment{Update jt-policy from hist., rew.}
+
+                $\pi_{joint} = marl\_alg(\pi_{joint},h_{joint,ep}, rh)$
+
+
+                \Comment{Choose next act. from obs.}
+                $a_{joint,t=step} = \pi_{joint}(\omega_{joint,t=step})$
+
+                \Comment{Get expct. act. from OS and rels.}
+                $a_{joint,exp} = cons\_act(osh,h_{joint,ep},cons[\mathcal{A}])$
+
+                \uIf{$a_{joint,t=step} \notin a_{joint,exp}$}{
+                    \uIf{correct-mode}{
+                        $a_{joint,t=step} = sample(a_{joint,exp})$
+                    }
+                    \uElseIf{penalize-mode}{
+                        $r_{joint,penalty} += penalty()$
+                    }
+                }
+
+                \Comment{Record obs. and chosen act.}
+
+                $h_{joint,ep} = h_{joint,ep} \cup (\omega_{joint,t=step}, a_{joint,t=step})$
+
+                \Comment{Apply action}
+
+                $\omega_{joint,t=step+1}, r_{joint,ep,t=step+1} = d_{ep}.step(a_{joint,t=step})$
+
+                $rh_{joint,ep} = rh_{joint,ep} \cup r_{joint,ep,t=step+1}$
+
+                \Comment{Record resulting reward}
+
+                $rh_{joint,ep} = rh_{joint,ep} \cup (r_{joint,ep,t=step+1} + r_{joint, penalty})$
+
+            }
+
+            \uIf{sufficient($rh_{joint,ep}$, $s$)}{
+                $s\pi_{joint} = s\pi_{joint} \cup \{\pi_{joint,ep}\}$
+            }
+
+        }
+
+    }
+
+\end{algorithm}
