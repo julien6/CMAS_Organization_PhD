@@ -299,8 +299,8 @@ Explainable Artificial Intelligence (XAI) has emerged as a critical requirement 
 For systems using MARL, a set of agents learn to achieve goals that may imply implicit cooperation and coordination. Very few works have attempted to analyze the trained agents' policies to make this cooperation explicit and attempted to handle it directly~\cite{albrecht2018survey,perolat2017pool}. This lack of explainability is core to two main gaps we intend to cover:
 %
 \begin{itemize}[wide, labelsep = 1em]
-    \item[$(E)$] Understanding the organizational schemes such as social or collective links that emerge between the trained agents in a bottom-up manner;
-    \item[$(A)$] Applying hand-crafted organizational specifications to agents to guide their training in a top-down manner, hence providing safety guarantees.
+    \item[$(G_E)$] Understanding the organizational schemes such as social or collective links that emerge between the trained agents in a bottom-up manner;
+    \item[$(G_A)$] Applying hand-crafted organizational specifications to agents to guide their training in a top-down manner, hence providing safety guarantees.
 \end{itemize}
 %
 Addressing these concerns would improve the trust and adoption of MARL systems in real-world applications~\cite{kok2006collaborative,omidshafiei2019learning}.
@@ -531,40 +531,50 @@ Based on $\mathcal{M}OISE^+$~\cite{Hubner2007} formalism, we only give the eleme
 
 \subsection{Linking MARL and organizational model}
 
-Addressing gaps $(E)$ and $(A)$ requires linking joint-policies and a set of organizational specifications whose triplet (role,permission/obligation, mission) is core. We defined addressing the issue $(E)$ as estabishing the following features for explicating policies through organizational specifications:
+Addressing gaps $(G_E)$ and $(G_A)$ requires linking joint-policies and a set of organizational specifications whose triplet (role,permission/obligation, mission) is core. We defined addressing the issue $(G_E)$ as estabishing the following features for explicating policies through organizational specifications:
 %
 \begin{itemize}[wide, labelsep = 1em]
-    \item[$(E.D)$] For any given joint-policy obtained after training, it should be possible to satisfy $(E.S)$ and $(E.F)$ to determine deontic specifications containing at least a set of permissions/obligations for each agent even if no agents have been explicitely constrained to a role and permitted/obligated to missions;
-    \item[$(E.S)$] For any given joint-policy obtained after training, it should be possible to determine structural specifications containing at least a set of  roles for each agent even if no agents have been explicitely constrained to roles;
-    \item[$(E.F)$] For any given joint-policy obtained after training, it should be possible to determine functional specifications containing at least a set of  missions for each agent even if no agents have been explicitely constrained to missions.
+    \item[$(G_E.F_D)$] For any given joint-policy obtained after training, it should be possible to satisfy $(G_E.F_S)$ and $(G_E.F_F)$ to determine deontic specifications containing at least a set of permissions/obligations for each agent even if no agents have been explicitely constrained to a role and permitted/obligated to missions;
+    \item[$(G_E.F_S)$] For any given joint-policy obtained after training, it should be possible to determine structural specifications containing at least a set of  roles for each agent even if no agents have been explicitely constrained to roles;
+    \item[$(G_E.F_F)$] For any given joint-policy obtained after training, it should be possible to determine functional specifications containing at least a set of  missions for each agent even if no agents have been explicitely constrained to missions.
 \end{itemize}
 
-\noindent We defined addressing $(A)$ as estabishing the following features for applying organizational specifications onto policies:
+\noindent We defined addressing $(G_A)$ as estabishing the following features for applying organizational specifications onto policies:
 %
 \begin{itemize}[wide, labelsep = 1em]
-    \item[$(A.D)$] If an agent is constrained to a role and permitted/obligated to a mission, then $(A.S)$ should be satisfed and $(A.F)$ should be satisfied depending on the time constraint considering an agent is constrained to a mission;
-    \item[$(A.S)$] If an agent is constrained to a role, then its policy should necessarly belong to a policy subset associated with the given role throughout the training;
-    \item[$(A.F)$] If an agent is constrained to a mission, then it should be enticed to achieve the mission's goals according to the associated plan throughout training.
+    \item[$(G_A.F_D)$] If an agent is constrained to a role and permitted/obligated to a mission, then $(G_A.F_S)$ should be satisfed and $(G_A.F_F)$ should be satisfied depending on the time constraint considering an agent is constrained to a mission;
+    \item[$(G_A.F_S)$] If an agent is constrained to a role, then its policy should necessarly belong to a policy subset associated with the given role throughout the training;
+    \item[$(G_A.F_F)$] If an agent is constrained to a mission, then it should be enticed to achieve the mission's goals according to the associated plan throughout training.
 \end{itemize}
 
-\noindent We identified two main issues for implementing these features in both $(A)$ and $(E)$ gaps:
+\noindent We identified two main issues for implementing these features in both $(G_A)$ and $(G_E)$ gaps:
 
 \begin{itemize}[wide, labelsep = 1em]
-    \item[$(I1)$] The intractability in analyzing or modyfing policies directly because policy function approximations (such as neural networks) are generally difficult to explain hence hindering the extraction of organizational specifications and any update;
-    \item[$(I2)$] The lack of common ground between policies and organizational specifications enabling to know how agents are expected to behave when they are constrained to stick to organizational specifications. Reversely, there is no way to characterize any organizational specifications regarding behavior induced by agents' policies.
+    \item[$(I_L)$] The lack of common ground between policies and organizational specifications enabling to know how agents are expected to behave when they are constrained to stick to organizational specifications $(G_A)$. Reversely, there is no way to characterize any organizational specifications $(G_E)$ regarding known behavior induced by agents' policies;
+    \item[$(I_P)$] A significant challenge is the intractability of directly analyzing or modifying policies. This difficulty arises because policy function approximations, such as neural networks, are generally opaque, making it hard to extract organizational specifications $(G_E)$; and update policies to meet the desired behaviors of roles or missions $(G_A)$.
 \end{itemize}
 
-To work around issue $(I1)$, we propose to approximate the behavior of an agent's policy $\pi \in \Pi$ as a history subset $H$ so that all histories generated by the given policy $h = \langle (\omega,\pi(\omega)), \omega \in \Omega \rangle$ belong to that history subset as $h \in H$.
+Our contribution leverages history as a core concept in MARL to represent organizational specifications hence addressing the aforementioned issues. It requires some additional theoretical tools we propose.
 
-Indeed, we hypothesize we can approximate the apparent behavior of a deterministic policy by saving enough representative observation-action couples we can observe. Thus, instead of analyzing policies directly, we only take agents' histories (obtained by letting play policies) into account to analyze their behaviors.
+As a prior requirement for addressing $I_L$, we introduce $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$ and $mh: \mathcal{M} \rightarrow \mathcal{P}(H)$ the bijections that respectively show how an agent playing a role or committed to a mission should have its policy constrained or enticed to generate histories that belong to an expected history subset during/after learning.
 
-Continuing the previous approach, we address issue (2) by introducing a relation $osh: \mathcal{OS} \rightarrow \mathcal{P}(H_{joint})$ theoretically linking any organizational specification to a subset of expected joint-histories (practically expressed in a short way as patterns).
-Using that relation, we proposed \autoref{rel:def_extended_dmo}, which is indeed shown compliant with initial $dmo$ definition in \autoref{rel:def_dmo}\footnotemark[1].% definition \autoref{rel:def_dmo}.
-% TODO: En annexes -> in \autoref{proof:to_extended_dmo}.
+As prior requirement for addressing $I_P$, we propose to represent a role $\rho \in \mathcal{R}$ in MARL formalism by introducing an \textbf{observable policy} $\pi_{\rho} \in \Pi, \pi_{\rho} = rcnt \circ play$ so that generated histories by a policy $h \in H$ belong to the agent observable/expected history subset $H_{\rho}$. The relation $rcnt: \mathcal{P}(H) \rightarrow \Pi_{\mathcal{R}}$ enables reconstructing an observable policy based upon collected histories. The relation $play: \Pi \rightarrow \mathcal{P}(H)$ enables generating histories according to a policy. For a representative amount of histories in $H = play(\pi)$, $\pi_{\mathcal{R}} = rcnt(H)$ is considered to be an approximation of $\pi$.
+Unlike black-box policies, the mapping of an observable policy associating couples (history, observation) to action is explicit.
+
+As prior requirement for addressing $I_P$, we propose to represent a goal $g \in \mathcal{G}$ in MARL formalism by introducing an \textbf{observable reward function} $R_{g}: H \rightarrow \mathbb{R} = \{(h, dist(H_g,h)), h \in H\}$ so that a history generated by an agent $h \in H$ be associated with a positive reward if it belongs to the observable/expected $H_g$ or negative otherwise. The relation $dist: H \times H \rightarrow \mathbb{R}$ associate a real number indicating how close a generated history belong to a given history subset.
+A mission $m \in \mathcal{M}$ containing goals $\mathcal{G} = \{g_i \in \mathcal{G}\}$ is represented as $R_{\mathcal{m}}: H \rightarrow \mathbb{R} = comb(G)$. The relation $comb: \mathcal{M} \times \mathcal{P}(\mathcal{G}) \rightarrow R_{\mathcal{M}}$ combines all observable reward function of each goal into a single observable reward function.
+
+To work around the issue $(P_I.A)$, we propose to constrain an agent' policy to  by compelling it to choose among expected actions each time it receives an observation so that generated histories .
+
+We rely on observable policy and histories to explicit determine at least roles, missions, permissions/obligations, and additional organizational specifications.
+Addressing the implementation of these intended contributions led to the development of the PRAHOM algorithmic approach as a first attempt to implement a DMO process.
+
+
+
 
 \footnotetext[1]{Additional information for proof outlines and the case studies are provided in addition to some developed code in the attached zip file of this paper.}
 
-Addressing the implementation of these intended contributions led to the development of the PRAHOM algorithmic approach as a first attempt to implement a DMO process.
+
 
 \subsection{PRAHOM algorithmic approach}
 
