@@ -299,14 +299,14 @@ Explainable Artificial Intelligence (XAI) has emerged as a critical requirement 
 For systems using MARL, a set of agents learn to achieve goals that may imply implicit cooperation and coordination. Very few works have attempted to analyze the trained agents' policies to make this cooperation explicit and attempted to handle it directly~\cite{albrecht2018survey,perolat2017pool}. This lack of explainability is core to two main gaps we intend to cover:
 %
 \begin{itemize}[wide, labelsep = 1em]
-    \item[$(G_E)$] Understanding the organizational schemes such as social or collective links that emerge between the trained agents in a bottom-up manner;
-    \item[$(G_A)$] Applying hand-crafted organizational specifications to agents to guide their training in a top-down manner, hence providing safety guarantees.
+    \item[$(\mathbf{G_E})$] Understanding the organizational schemes such as social or collective links that emerge between the trained agents in a bottom-up manner;
+    \item[$(\mathbf{G_A})$] Applying hand-crafted organizational specifications to agents to guide their training in a top-down manner, hence providing safety guarantees.
 \end{itemize}
 %
 Addressing these concerns would improve the trust and adoption of MARL systems in real-world applications~\cite{kok2006collaborative,omidshafiei2019learning}.
 
 % Contribution
-To address these gaps, we propose an algorithmic approach called PRAHOM that leverages the $\mathcal{M}OISE^+$ organizational model~\cite{Hubner2007}. Our premise was to use an organizational model as a medium to explicate the cooperative aspects in the observed agents' behaviors into concepts such as roles, social links, goals, missions to address $(G1)$. Reversely, one can also use $\mathcal{M}OISE^+$ to constrain agents' policies regarding organizational specifications hence addressing $(A)$. To link $\mathcal{M}OISE^+$ and MARL, we one-to-one map an organizational specification, mostly a role or a mission, to an agent's history subset that characterize an expected behavior in MARL. PRAHOM relies on this mapping to automatically describe a trained joint-policy into a $\mathcal{M}OISE^+$ organizational description if the generated histories are already in the mapping. Otherwise, we propose a first incremental approach relying on a series of statistical, unsupervised learning techniques, and a complimentary Large Language Model (LLM) to automatically infer new organizational specifications from histories. Finally, PRAHOM enables constraining the joint-policy training to satisfy some organizational specifications using the mapped expected histories by dynamically modifying MARL elements such as the action space or the reward function accordingly.
+To address these gaps, we propose an algorithmic approach called PRAHOM that leverages the $\mathcal{M}OISE^+$ organizational model~\cite{Hubner2007}. Our premise was to use an organizational model as a medium to explicate the cooperative aspects in the observed agents' behaviors into concepts such as roles, social links, goals, missions to address $(\mathbf{G1})$. Reversely, one can also use $\mathcal{M}OISE^+$ to constrain agents' policies regarding organizational specifications hence addressing $(\mathbf{A})$. To link $\mathcal{M}OISE^+$ and MARL, we one-to-one map an organizational specification, mostly a role or a mission, to an agent's history subset that characterize an expected behavior in MARL. PRAHOM relies on this mapping to automatically describe a trained joint-policy into a $\mathcal{M}OISE^+$ organizational description if the generated histories are already in the mapping. Otherwise, we propose a first incremental approach relying on a series of statistical, unsupervised learning techniques, and a complimentary Large Language Model (LLM) to automatically infer new organizational specifications from histories. Finally, PRAHOM enables constraining the joint-policy training to satisfy some organizational specifications using the mapped expected histories by dynamically modifying MARL elements such as the action space or the reward function accordingly.
 
 % Outline
 The remainder is organized as follows: Section 2 gives an overview of the available works dealing with XAI or design in MARL. This work leads to present the theoretical foundations we retained for building our contribution in section 3. Section 4 introduces the PRAHOM algorithmic approach. Section 5 first presents our first PRAHOM implementation as a library we used in our experimental setup. Then we discuss the results of our empirical evaluation. Section 6 concludes the paper and outlines future research directions.
@@ -531,105 +531,101 @@ Based on $\mathcal{M}OISE^+$~\cite{Hubner2007} formalism, we only give the eleme
 
 \subsection{Linking MARL and organizational model}
 
-Addressing gaps $(G_E)$ and $(G_A)$ requires linking joint-policies and a set of organizational specifications whose triplet (role,permission/obligation, mission) is core. We defined addressing the issue $(G_E)$ as estabishing the following features for explicating policies through organizational specifications:
+Addressing gaps $(\mathbf{G_E})$ and $(\mathbf{G_A})$ requires linking joint-policies and a set of organizational specifications whose triplet (role,permission/obligation, mission) is core. We defined addressing the issue $(\mathbf{G_E})$ as estabishing the following features for explicating policies through organizational specifications:
 %
 \begin{itemize}[wide, labelsep = 1em]
-    \item[$(G_E.F_D)$] For any given joint-policy obtained after training, it should be possible to satisfy $(G_E.F_S)$ and $(G_E.F_F)$ to determine deontic specifications containing at least a set of permissions/obligations for each agent even if no agents have been explicitely constrained to a role and permitted/obligated to missions;
-    \item[$(G_E.F_S)$] For any given joint-policy obtained after training, it should be possible to determine structural specifications containing at least a set of  roles for each agent even if no agents have been explicitely constrained to roles;
-    \item[$(G_E.F_F)$] For any given joint-policy obtained after training, it should be possible to determine functional specifications containing at least a set of  missions for each agent even if no agents have been explicitely constrained to missions.
+    \item[$(\mathbf{G_E.F_D})$] For any given joint-policy obtained after training, it should be possible to satisfy $(\mathbf{G_E.F_S})$ and $(\mathbf{G_E.F_F})$ to determine deontic specifications containing at least a set of permissions/obligations for each agent even if no agents have been explicitely constrained to a role and permitted/obligated to missions;
+    \item[$(\mathbf{G_E.F_S})$] For any given joint-policy obtained after training, it should be possible to determine structural specifications containing at least a set of  roles for each agent even if no agents have been explicitely constrained to roles;
+    \item[$(\mathbf{G_E.F_F})$] For any given joint-policy obtained after training, it should be possible to determine functional specifications containing at least a set of  missions for each agent even if no agents have been explicitely constrained to missions.
 \end{itemize}
 
-\noindent We defined addressing $(G_A)$ as estabishing the following features for applying organizational specifications onto policies:
+\noindent We defined addressing $(\mathbf{G_A})$ as estabishing the following features for applying organizational specifications onto policies:
 %
 \begin{itemize}[wide, labelsep = 1em]
-    \item[$(G_A.F_D)$] If an agent is constrained to a role and permitted/obligated to a mission, then $(G_A.F_S)$ should be satisfed and $(G_A.F_F)$ should be satisfied depending on the time constraint considering an agent is constrained to a mission;
-    \item[$(G_A.F_S)$] If an agent is constrained to a role, then its policy should necessarly belong to a policy subset associated with the given role throughout the training;
-    \item[$(G_A.F_F)$] If an agent is constrained to a mission, then it should be enticed to achieve the mission's goals according to the associated plan throughout training.
+    \item[$(\mathbf{G_A.F_D})$] If an agent is constrained to a role and permitted/obligated to a mission, then $(\mathbf{G_A.F_S})$ should be satisfed and $(\mathbf{G_A.F_F})$ should be satisfied depending on the time constraint considering an agent is constrained to a mission;
+    \item[$(\mathbf{G_A.F_S})$] If an agent is constrained to a role, then its policy should necessarly belong to a policy subset associated with the given role throughout the training;
+    \item[$(\mathbf{G_A.F_F})$] If an agent is constrained to a mission, then it should be enticed to achieve the mission's goals according to the associated plan throughout training.
 \end{itemize}
 
-\noindent We identified two main issues for implementing these features in both $(G_A)$ and $(G_E)$ gaps:
+\noindent We identified two main issues preventing any implementation of these features in both $(\mathbf{G_A})$ and $(\mathbf{G_E})$ gaps:
 
 \begin{itemize}[wide, labelsep = 1em]
-    \item[$(I_L)$] The lack of common ground between policies and organizational specifications enabling to know how agents are expected to behave when they are constrained to stick to organizational specifications $(G_A)$. Reversely, there is no way to characterize any organizational specifications $(G_E)$ regarding known behavior induced by agents' policies;
-    \item[$(I_P)$] A significant challenge is the intractability of directly analyzing or modifying policies. This difficulty arises because policy function approximations, such as neural networks, are generally opaque, making it hard to extract organizational specifications $(G_E)$; and update policies to meet the desired behaviors of roles or missions $(G_A)$.
+    \item The lack of common ground between policies and organizational specifications enabling to know how agents are expected to behave when they are constrained to stick to organizational specifications $(\mathbf{G_A})$. Reversely, there is no way to characterize any organizational specifications $(\mathbf{G_E})$ regarding known behavior induced by agents' policies;
+    \item A significant challenge is the intractability of directly analyzing or modifying policies. This difficulty arises because policy function approximations, such as neural networks, are generally opaque, making it hard to extract organizational specifications $(\mathbf{G_E})$; and update policies to meet the desired behaviors of roles or missions $(\mathbf{G_A})$.
 \end{itemize}
 
-Our contribution leverages history as a core concept in MARL to represent organizational specifications hence addressing the aforementioned issues. It requires some additional theoretical tools we propose.
+To address these issues, the premise of our contribution is to leverage history as a core concept in MARL as an explicit way to represent organizational specifications in MARL. It requires the following additional theoretical tools we propose as prior requirements.
 
-As a prior requirement for addressing $I_L$, we introduce $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$ and $mh: \mathcal{M} \rightarrow \mathcal{P}(H)$ the bijections that respectively show how an agent playing a role or committed to a mission should have its policy constrained or enticed to generate histories that belong to an expected history subset during/after learning.
+We introduce $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$ and $mh: \mathcal{M} \rightarrow \mathcal{P}(H)$ the bijections that respectively show how an agent playing a role or committed to a mission should have its policy constrained or enticed to generate histories that belong to an expected history subset during/after learning.
 
-As prior requirement for addressing $I_P$, we propose to represent a role $\rho \in \mathcal{R}$ in MARL formalism by introducing an \textbf{observable policy} $\pi_{\rho} \in \Pi, \pi_{\rho} = rcnt \circ play$ so that generated histories by a policy $h \in H$ belong to the agent observable/expected history subset $H_{\rho}$. The relation $rcnt: \mathcal{P}(H) \rightarrow \Pi_{\mathcal{R}}$ enables reconstructing an observable policy based upon collected histories. The relation $play: \Pi \rightarrow \mathcal{P}(H)$ enables generating histories according to a policy. For a representative amount of histories in $H = play(\pi)$, $\pi_{\mathcal{R}} = rcnt(H)$ is considered to be an approximation of $\pi$.
+We propose to represent a role $\rho \in \mathcal{R}$ in MARL formalism by introducing an \textbf{observable policy} $\pi_{\rho} \in \Pi, \pi_{\rho} = rcnt \circ play$ so that generated histories by a policy $h \in H$ belong to the agent observable/expected history subset $H_{\rho}$. The relation $rcnt: \mathcal{P}(H) \rightarrow \Pi_{\mathcal{R}}$ enables reconstructing an observable policy based upon collected histories. The relation $play: \Pi \rightarrow \mathcal{P}(H)$ enables generating histories according to a policy. For a representative amount of histories in $H = play(\pi)$, $\pi_{\mathcal{R}} = rcnt(H)$ is considered to be an approximation of $\pi$.
 Unlike black-box policies, the mapping of an observable policy associating couples (history, observation) to action is explicit.
 
-As prior requirement for addressing $I_P$, we propose to represent a goal $g \in \mathcal{G}$ in MARL formalism by introducing an \textbf{observable reward function} $R_{g}: H \rightarrow \mathbb{R} = \{(h, dist(H_g,h)), h \in H\}$ so that a history generated by an agent $h \in H$ be associated with a positive reward if it belongs to the observable/expected $H_g$ or negative otherwise. The relation $dist: H \times H \rightarrow \mathbb{R}$ associate a real number indicating how close a generated history belong to a given history subset.
+We propose to represent a goal $g \in \mathcal{G}$ in MARL formalism by introducing an \textbf{observable reward function} $R_{g}: H \rightarrow \mathbb{R} = \{(h, dist(H_g,h)), h \in H\}$ so that a history generated by an agent $h \in H$ be associated with a positive reward if it belongs to the observable/expected $H_g$ or negative otherwise. The relation $dist: H \times H \rightarrow \mathbb{R}$ associate a real number indicating how close a generated history belong to a given history subset.
 A mission $m \in \mathcal{M}$ containing goals $\mathcal{G} = \{g_i \in \mathcal{G}\}$ is represented as $R_{\mathcal{m}}: H \rightarrow \mathbb{R} = comb(G)$. The relation $comb: \mathcal{M} \times \mathcal{P}(\mathcal{G}) \rightarrow R_{\mathcal{M}}$ combines all observable reward function of each goal into a single observable reward function.
 
-To work around the issue $(P_I.A)$, we propose to constrain an agent' policy to  by compelling it to choose among expected actions each time it receives an observation so that generated histories .
-
-We rely on observable policy and histories to explicit determine at least roles, missions, permissions/obligations, and additional organizational specifications.
-Addressing the implementation of these intended contributions led to the development of the PRAHOM algorithmic approach as a first attempt to implement a DMO process.
+Using proposed observable policy and reward function, we implemented the previously mentioned features to develop the PRAHOM algorithmic approach as a first attempt to address $(\mathbf{G_E})$ and $(\mathbf{G_A})$.
 
 
+\subsection{PRAHOM Algorithmic Approach}
 
+Continuing the previous decomposition in two activities, we detailed our process to get the specifications out of the agents' policies as \emph{PRAHOM\_hos} presented in \autoref{alg:PRAHOM-hos} for addressing $(\mathbf{G_E})$; and the process to get the joint-policies satisfying given specifications as \emph{PRAHOM\_osh\_training} presented in \autoref{alg:PRAHOM-osh-training} for addressing $(\mathbf{G_A})$. PRAHOM is then a synthesis of these two processes
+%presented in \autoref{alg:PRAHOM}
+\footnotemark[1].
 
-\footnotetext[1]{Additional information for proof outlines and the case studies are provided in addition to some developed code in the attached zip file of this paper.}
-
-
-
-\subsection{PRAHOM algorithmic approach}
-
-Continuing the previous decomposition in two activities, we detailed our process to get the specifications out of the agents' policies as \emph{PRAHOM\_hos} presented in \autoref{alg:PRAHOM-hos}; and the process to get the joint-policies satisfying given specifications as \emph{PRAHOM\_osh\_training} presented in \autoref{alg:PRAHOM-osh-training}. PRAHOM is then a synthesis of these two processes presented in \autoref{alg:PRAHOM}.
+\footnotetext[1]{Additional information are provided in addition to developed code in \url{https://github.com/julien6/omarl_experiments}.}
 
 PRAHOM first launches the training of a joint-policy model on the given environment under organizational constraints relying on given relations. It enables getting the joint-policies that reach the given expectancy. Then, each of these joint-policies is played within differently generated environments to get all the joint-histories. Finally, these joint-histories are analyzed to infer the associated organizational specifications enriching known relations.
 
-\RestyleAlgo{ruled}
-\SetKwComment{Comment}{// }{}
+% \RestyleAlgo{ruled}
+% \SetKwComment{Comment}{// }{}
 
-\begin{algorithm}[hbt!]
-    \caption{\emph{PRAHOM}}\label{alg:PRAHOM}
+% \begin{algorithm}[hbt!]
+%     \caption{\emph{PRAHOM}}\label{alg:PRAHOM}
 
-    \KwData{$d \in D$, Dec-POMDP to solve}
-    \KwData{$ep_{max} \in \mathbb{N}$, maximum number of episodes}
-    \KwData{$it_{max} \in \mathbb{N}$, maximum number of iteration}
-    \KwData{$step_{max} \in \mathbb{N}$, maximum number of step per episode}
-    \KwData{$s \in \mathbb{R}$, cumulative reward expectancy}
-    \KwData{$cons: \mathcal{A} \rightarrow \mathcal{P}(\mathcal{OS})$, agents' org. specs. constraints}
-    \KwData{$marl\_alg: \Pi_{joint} \times H_{joint} \times \mathbb{R}^{step_{max}} \rightarrow \Pi_{joint}$, algorithm to train from histories and rewards}
-    \KwData{$osh: \mathcal{OS} \rightarrow \mathcal{P}(H_{joint})$, relations OS to histories}
+%     \KwData{$d \in D$, Dec-POMDP to solve}
+%     \KwData{$ep_{max} \in \mathbb{N}$, maximum number of episodes}
+%     \KwData{$it_{max} \in \mathbb{N}$, maximum number of iteration}
+%     \KwData{$step_{max} \in \mathbb{N}$, maximum number of step per episode}
+%     \KwData{$s \in \mathbb{R}$, cumulative reward expectancy}
+%     \KwData{$cons: \mathcal{A} \rightarrow \mathcal{P}(\mathcal{OS})$, agents' org. specs. constraints}
+%     \KwData{$marl\_alg: \Pi_{joint} \times H_{joint} \times \mathbb{R}^{step_{max}} \rightarrow \Pi_{joint}$, algorithm to train from histories and rewards}
+%     \KwData{$osh: \mathcal{OS} \rightarrow \mathcal{P}(H_{joint})$, relations OS to histories}
 
-    \KwResult{$(s\pi_{joint,i,s} \in S\Pi_{joint,i,s}, os_{i,s} \in \mathcal{OS}_{i,s})$, sub-optimal policies and associated org. specs.}
+%     \KwResult{$(s\pi_{joint,i,s} \in S\Pi_{joint,i,s}, os_{i,s} \in \mathcal{OS}_{i,s})$, sub-optimal policies and associated org. specs.}
 
-    \Comment{Init policy models}
+%     \Comment{Init policy models}
 
-    $\pi_{joint} = marl\_alg.init()$
+%     $\pi_{joint} = marl\_alg.init()$
 
-    \Comment{Training under org. specs. constraints}
+%     \Comment{Training under org. specs. constraints}
 
-    $s\pi_{joint,i,s} = \mathbf{PRAHOM\_osh\_training}(cons,\dots)$
+%     $s\pi_{joint,i,s} = \mathbf{PRAHOM\_osh\_training}(cons,\dots)$
 
-    % \phantom{X}
+%     % \phantom{X}
 
-    \Comment{Get the $|s\pi_{joint,i,s}| \times ep_{max}$ joint-histories}
-    $sh_{joint,i,s} \in SH_{joint,i,s} = gen\_jth(ep_{max}, s\pi_{joint,i,s})$
+%     \Comment{Get the $|s\pi_{joint,i,s}| \times ep_{max}$ joint-histories}
+%     $sh_{joint,i,s} \in SH_{joint,i,s} = gen\_jth(ep_{max}, s\pi_{joint,i,s})$
 
-    \Comment{Get org. specs. from joint-histories}
-    $os_{i,s} = \mathbf{PRAHOM\_hos}(sh_{joint,i,s},\dots)$
+%     \Comment{Get org. specs. from joint-histories}
+%     $os_{i,s} = \mathbf{PRAHOM\_hos}(sh_{joint,i,s},\dots)$
 
-\end{algorithm}
+% \end{algorithm}
 
 
-\subsubsection{\textbf{Inferring OS from joint-histories}}
+\subsubsection{\textbf{$(\mathbf{G_E})$: Inferring OS from histories}}
 
-\input{algos/PRAHOM_hos.tex}\label{alg:PRAHOM_hos}
+% \paragraph{\textbf{$(\mathbf{G_E.F_S})$: Inferring SS}}
 
-\begin{figure*}[h!]
-    \centering
-    \input{figures/gosia_illustrative_view.tex}
-    \caption{GOSIA illustrative view}
-    \label{fig:gosia_illustrative_view}
-\end{figure*}
+% \paragraph{\textbf{$(\mathbf{G_E.F_F})$: Inferring FS}}
 
-The proposed \autoref{alg:PRAHOM_hos} implements \emph{PRAHOM\_hos}. Its underlying principle is first to rely on the proposed \emph{Knowledge-based Organizational Specification Identification Approach} (KOSIA) to identify some organizational specifications thanks to the current $osh$ relations. % KOSIA is aimed to be relevant when knowledge of the relations between histories and organizational specifications is significant enough to be used generally.
+% \paragraph{\textbf{$(\mathbf{G_E.F_D})$: Inferring DS}}
+
+\input{algos/PRAHOM_hos.tex}
+
+\
+
+\noindent The proposed \autoref{alg:PRAHOM-hos} implements \emph{PRAHOM\_hos}. Its underlying principle is first to rely on the proposed \emph{Knowledge-based Organizational Specification Identification Approach} (KOSIA) to identify some organizational specifications thanks to the current $osh$ relations. % KOSIA is aimed to be relevant when knowledge of the relations between histories and organizational specifications is significant enough to be used generally.
 For instance, we implemented KOSIA as a pattern-matching engine finding similar joint-histories $Im(osh)$ to a given one hence finding the associated organizational specifications.
 
 Otherwise, if it is not possible to get all known associated organizational specifications, the proposed \emph{General Organizational Specification Inference Approach} (GOSIA) suggests an empirical approach to infer the rest of them.
@@ -677,49 +673,38 @@ We propose a compatibility $(\rho_1,\rho_2)$ is defined if an agent playing a hi
 
 Finally, by counting the number of agents playing a role in each joint-history, each role's cardinality is computed. Similarly, GOSIA computes each sub-group's cardinality counting the inferred ones.
 
-\paragraph{Perspective of complementary help from LLMs}
 
-We started experimenting \emph{EleutherAI} \emph{gpt-neo-2.7B} pre-trained transformer using \emph{Transformers}' \emph{Huggingface} library. Within \emph{PRAHOM\_hos} it is intended to be automatically prompt-engineered with generated specific contextual descriptions of the environment, its functioning, and the $\mathcal{M}OISE^+$ organizational specifications. This prompt-engineering is to guide the answers towards three main purposes:
+% \begin{figure*}[h!]
+%     \centering
+%     \input{figures/gosia_illustrative_view.tex}
+%     \caption{GOSIA illustrative view}
+%     \label{fig:gosia_illustrative_view}
+% \end{figure*}
+
+
+\paragraph{Complementary help from LLMs}
+
+We use \emph{tiiuae/falcon-7b} pre-trained transformer using \emph{Transformers}\emph{Huggingface} library. Within \emph{PRAHOM\_hos} it is automatically prompt-engineered with generated specific contextual descriptions of the environment, its functioning, and the $\mathcal{M}OISE^+$ organizational specifications. This prompt-engineering is to guide the answers towards three main purposes:
 \begin{enumerate*}[label=\roman*),itemjoin={;\quad}]
     \item Labeling, tagging the inferred organizational specification from related joint-histories in a human-like manner;
     \item Giving specific human-like textual description about each organizational specification;
     \item Giving general human-like textual description of the whole organization.
 \end{enumerate*}
-Despite, being at an early stage of use in our contribution, the first results obtained with LLMs show to be a promising research focus to assist the human understanding.
-
-% Schéma général de PRAHOM\_hos (PRAHOM-History to Organizational Specification) :
-
-% PRAHOM\_hos:
-%
-%  if h_i is (at least partially) known
-%     apply KOSI (Knowledge-based Organizational Identification) approach
-%
-%  else apply GOSI (General Organizational Specification Infering) approach
-%    1) SS:
-%       1) infer roles & roles inheritance relations (via sequence clustering)
-%       2) groups, (via analysis of agents social impact)
-%       3) infer compatibilities (via comparison between analyzed joint histories)
-%       4) infer intra & extra links (via analysis of roles social impact in a given group / all groups)
-%       5) infer roles agents cardinality (via comparison between analyzed joint histories)
-%       6) infer sub-groups cardinality (via comparison betwee analyzed joint-histories)
-%
-%    2) FS:
-%       1) infer goals, plans (via threshold states analysis, generalized role behavior analysis...)
-%       2) infer missions (unifying goals and associated agents and analysis of goal tree structure to determine goals shared by several agents)
-%       3) infer mission to goals (via generalization over analyzed joint-histories)
-%       4) infer agents' cardinality for each mission (via generalization over analyzed joint-histories)
-%
-%    3) DS
-%       1) infer permissions & obligations (via generalization over analyzed joint-histories)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\subsubsection{\textbf{Constraining joint-policies satisfying OS}}
+\subsubsection{\textbf{$(\mathbf{G_A})$: Constraining joint-policies}}
+
+% \paragraph{\textbf{$(\mathbf{G_A.F_S})$: Constraining joint-policies according to SS}}
+
+% \paragraph{\textbf{$(\mathbf{G_A.F_F})$: Constraining joint-policies according to FS}}
+
+% \paragraph{\textbf{$(\mathbf{G_A.F_D})$: Constraining joint-policies according to DS}}
 
 \input{algos/PRAHOM_osh_training.tex}
 
-We consider a given MARL algorithm that iteratively converges towards a joint-policy so that the joint-policy is updated at each step until a finite horizon.
+\noindent We consider a given MARL algorithm that iteratively converges towards a joint-policy so that the joint-policy is updated at each step until a finite horizon.
 %In \autoref{proof:jpc_to_ac}
 We consider that restricting the actions according to the organizational specifications at each step allows constraining the converged joint-policies to the ones that satisfy the organizational specifications\footnotemark[1]. Relying on that principle we propose \emph{PRAHOM\_osh\_training} presented in \autoref{alg:PRAHOM-osh-training}.
 
@@ -734,6 +719,13 @@ Two modes are available to integrate these constraints:
     \item \textquote{penalize-mode}: Add a penalty to the reward if any wrong action has been made among agents. This mode aims to make agents \textquote{learn} to respect their constraints. Yet, no safety guarantee is ensured since agents only approximate their expected behavior.
 \end{enumerate*}
 
+\paragraph{Complementary help from LLMs}
+
+Aiming to ease the handling of observation and action from a user perspective, we use the previously mentioned \emph{tiiuae/falcon-7b} within \emph{PRAHOM\_osh\_training} for:
+\begin{enumerate*}[label=\roman*),itemjoin={;\quad}]
+    \item Helping mapping a observation label and text description to expected real observation in MARL;
+    \item Helping mapping a action label and text description to an expected real action in MARL;
+\end{enumerate*}
 
 
 \section{Case study: Predator-prey environment}
