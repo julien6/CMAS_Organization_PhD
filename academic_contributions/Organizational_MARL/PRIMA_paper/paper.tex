@@ -293,7 +293,7 @@ $ \hfill \phantom{x}
 \section{Introduction}
 
 % Context
-Explainable Artificial Intelligence (XAI) has emerged as a critical requirement for the widespread adoption of AI systems, particularly in multi-agent settings where multiple agents interact and cooperate to achieve complex goals~\cite{doshivelez2017rigorous,gunning2019xai}. While significant progress has been made in explaining the behavior of single agents~\cite{ribeiro2016classifier,lundberg2017unified}, the challenge of explicating the cooperative strategies and emergent organizational structures in MARL~\cite{busoniu2008survey} is not largely addressed~\cite{kok2006collaborative,omidshafiei2019learning}.
+Explainable Artificial Intelligence (XAI) has emerged as a critical requirement for the widespread adoption of AI systems, particularly in multi-agent settings where multiple agents interact and cooperate to achieve complex goals~\cite{doshivelez2017rigorous,gunning2019xai}. While significant progress has been made in explaining the behavior of single agents~\cite{ribeiro2016classifier,lundberg2017unified}, the challenge of capturing and explicating the aspects of cooperative strategies in MARL~\cite{busoniu2008survey} is not largely addressed~\cite{kok2006collaborative,omidshafiei2019learning}.
 
 % Problem
 For systems using MARL, a set of agents learn to achieve goals that may imply implicit cooperation and coordination. Very few works have attempted to analyze the trained agents' policies to make this cooperation explicit and attempted to handle it directly~\cite{albrecht2018survey,perolat2017pool}. This lack of explainability is core to two main gaps we intend to cover:
@@ -549,38 +549,43 @@ We also defined addressing $(\mathbf{G_A})$ as estabishing the following feature
 
 \
 
-\noindent Then, we identified two main issues preventing any implementation of these features in both $(\mathbf{G_A})$ and $(\mathbf{G_E})$ gaps:
+\noindent We identified two main issues preventing any implementation of these features in both $(\mathbf{G_A})$ and $(\mathbf{G_E})$ gaps:
 %
 \begin{itemize}[wide, labelsep = 1em]
     \item The lack of common ground between policies and organizational specifications enabling to know how agents are expected to behave when they are constrained to stick to organizational specifications $(\mathbf{G_A})$. Reversely, there is no way to characterize any organizational specifications $(\mathbf{G_E})$ regarding known behavior induced by agents' policies;
     \item A significant challenge is the intractability of directly analyzing or modifying policies. This difficulty arises because policy function approximations, such as neural networks, are generally opaque, making it hard to extract organizational specifications $(\mathbf{G_E})$; and update policies to meet the desired behaviors of roles or missions $(\mathbf{G_A})$.
 \end{itemize}
 
-To address these issues, the premise of our contribution is to leverage history as an explicit core concept in MARL to represent organizational specifications in MARL. This idea led to the following additional theoretical tools we propose as prior requirements.
+To address both issues, the premise of our contribution is to leverage history as an explicit core concept in MARL to represent organizational specifications in MARL. As illustrated in \autoref{fig:PRAHOM_osm_rels}, we proposed to map a role or a mission to a history subset introducig the $sfh$ bijection that maps a role or goal (thus a mission) to a history subset. $rh$ and $gh$ are the bijections that show how an agent playing a role and committed to a mission should have its policy constrained or enticed to generate histories belonging to an expected history subset. Thus, $mh: \mathcal{M} \rightarrow \mathcal{P}(H) = \{(m,\bigcup gh[mo(m)]), m \in \mathcal{M}\}$ gives histories from missions. The $sfh$ inverse is denoted $hsf = sfh^{-1}$.
 
-\
-
-\noindent \textbf{Mapping from role/mission to histories} \quad We introduce the $sfh$ bijection that maps a role or goal (thus a mission) to a history subset.
-
+We also introduced the $da$ bijection that maps a permission/obligation to an agent subset.
+$da: \mathcal{DS} \rightarrow \mathcal{P}(\mathcal{A})$
+It enables instantiating the organization by constraining agents to roles and assigning them missions.
+%
 $sfh: \mathcal{OS} \rightarrow \mathcal{P}(H) = \{
     rh: \mathcal{R} \rightarrow \mathcal{P}(H),
     gh: \mathcal{G} \rightarrow \mathcal{P}(H),
     mh: \mathcal{M} \rightarrow \mathcal{P}(H)\}$
 
-\noindent $rh$ and $gh$ the bijections that show how an agent playing a role and committed to a mission should have its policy constrained or enticed to generate histories belonging to an expected history subset. Thus, $mh: \mathcal{M} \rightarrow \mathcal{P}(H) = \{(m,\bigcup gh[mo(m)]), m \in \mathcal{M}\}$ gives histories from missions. The $sfh$ inverse is denoted $hsf = sfh^{-1}$.
+\begin{figure}
+    \centering
+    \input{figures/PRAHOM_osm_rels.tex}
+    \caption{An view of relations between organizational specification to history subsets}
+    \label{fig:PRAHOM_osm_rels}
+\end{figure}
 
 \
 
-\noindent \textbf{Mapping from permission/obligation to agents} \quad We introduce the $da$ bijection that maps a permission/obligation to an agent subset.
-$da: \mathcal{DS} \rightarrow \mathcal{P}(\mathcal{A})$
-It enables instantiating the organization by constraining agents to roles and assigning them missions.
+
+
+This idea led to the following additional theoretical tools we propose as prior requirements.
 
 \
 
-\noindent \textbf{Observable policy} \quad We propose to represent a role $\rho \in \mathcal{R}$ in MARL formalism by introducing an \textbf{observable policy} $\pi_{\rho} \in \Pi, \pi_{\rho} = rcnt \circ play_l$ so that a policy generates histories (of $l \in \mathbb{N}$ length) $h \in H$ that belong to the agent observable/expected history subset $H_{\rho}$. The relation $rcnt: \mathcal{P}(H) \rightarrow \Pi_{\mathcal{R}}$ enables reconstructing an observable policy based upon collected histories. The relation $play_l = play: \Pi \times \mathbb{N} \rightarrow \mathcal{P}(H)$ enables generating histories (of $l \in \mathbb{N}$ length) according to a policy. For a representative amount of histories in $H = play_l(\pi)$, $\pi_{\mathcal{R}} = rcnt(H)$ is considered to be an approximation of $\pi$.
-Unlike black-box policies, the mapping of an observable policy associating couples (history, observation) to action is explicit.
+% \noindent \textbf{Observable policy} \quad We propose to represent a role $\rho \in \mathcal{R}$ in MARL formalism by introducing an \textbf{observable policy} $\pi_{\rho} \in \Pi, \pi_{\rho} = rcnt \circ play_l$ so that a policy generates histories (of $l \in \mathbb{N}$ length) $h \in H$ that belong to the agent observable/expected history subset $H_{\rho}$. The relation $rcnt: \mathcal{P}(H) \rightarrow \Pi_{\mathcal{R}}$ enables reconstructing an observable policy based upon collected histories. The relation $play_l = play: \Pi \times \mathbb{N} \rightarrow \mathcal{P}(H)$ enables generating histories (of $l \in \mathbb{N}$ length) according to a policy. For a representative amount of histories in $H = play_l(\pi)$, $\pi_{\mathcal{R}} = rcnt(H)$ is considered to be an approximation of $\pi$.
+% Unlike black-box policies, the mapping of an observable policy associating couples (history, observation) to action is explicit.
 
-\
+% \
 
 \noindent \textbf{Observable policy constraint} \quad We propose to represent the constraints of policy $\pi \in \Pi$ by introducing an \textbf{observable policy constraint} $\pi_c: H times \Omega \rightarrow \mathcal{P}(A)$. $\pi_c$ indicates the actions an agent's policy should be allowed to choose among when it receives an observation at each step. We denote, $bld_{opc}: \mathcal{P}(H) \rightarrow \Pi_c$ the relation that enables creating an observable policy constraint from a given history subset.
 
@@ -757,16 +762,24 @@ We developed \emph{PRAHOM PettingZoo Wrapper}\footnotemark[2] as a \emph{PoC} to
 
 \subsection{Experimental setup}
 
-We selected the \textquote{Predator-prey with communication}~\cite{Lowe2017} Atari-like environment that consists of predators monitored by a leader to catch faster prey hence requiring communication for hunting strategies
-%
+We selected the \textquote{Predator-prey with communication}~\cite{Lowe2017} Atari-like environment that consists of predators monitored by a leader to catch faster prey. This environment is likely to make emerge some organizational hence requiring communication for hunting strategies.
+This environment is likely to show 
+
+We evaluated $PRAHOM_A$ according to the following criteria likely to show 
+
+An overview of given organizational specifications are given hereafter:
+\begin{itemize}
+    \item s
+\end{itemize}
+
 We applied PRAHOM in three cases:
 \begin{enumerate*}[label=\roman*),itemjoin={;\quad}]
     \item No organizational specifications (NTS): agents have to learn efficient collective strategies without any constraints or indications
     \item Partially constraining organizational specifications (PTS): some constraints are given to help converge faster
     \item Fully constraining organizational specifications (FTS): manually crafted joint-policies are given for they are a reference regarding learned ones.
 \end{enumerate*}
-%
-Details of the constraints for NTS and FTS are not presented here (available in code\footnotemark[1]).
+
+We evaluated $PRAHOM_E$ according to the following criteria
 
 \
 
