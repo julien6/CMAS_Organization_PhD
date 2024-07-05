@@ -550,7 +550,7 @@ We also defined addressing $(\mathbf{G_A})$ as estabishing the following feature
 \
 
 In the remainder of this section, we give an overview of the theoretical and technical sub-issues we face with proposed workarounds to implement the features $(G_E.F_S)$, $(G_E.F_F)$, $(G_E.F_D)$ into the proposed $PRAHOM_E$ algorithm presented in \autoref{alg:PRAHOM-E}
-to get OS from histories. We also briefly depict the proposed theory and technical sub-issues with proposed workaround for implementing the features $(G_A.F_S)$, $(G_A.F_F)$, $(G_A.F_D)$ into the proposed $PRAHOM_A$ algorithm presented in \autoref{alg:PRAHOM-A} to constrain policies according to OS. In both cases, PRAHOM implement the features leveraging history as an explicit core concept in MARL to represent organizational specifications in MARL. 
+to get OS from histories. We also briefly depict the proposed theory and technical sub-issues with proposed workaround for implementing the features $(G_A.F_S)$, $(G_A.F_F)$, $(G_A.F_D)$ into the proposed $PRAHOM_A$ algorithm presented in \autoref{alg:PRAHOM-A} to constrain policies according to OS. In both cases, PRAHOM implement the features leveraging history as an explicit core concept in MARL to represent organizational specifications in MARL.
 
 PRAHOM is a synthesis of these two algorithms presented in \autoref{alg:PRAHOM}. It first consists in training a joint-policy $\pi_{joint}$ in the given environment under organizational constraints. It enables getting the joint-policies that reach the given expectancy. Then, each of these joint-policies is played within differently generated environments to get all the joint-histories $sh{joint,i,s}$. Finally, these joint-histories are analyzed to infer the associated organizational specifications enriching known relations\footnotemark[1].
 
@@ -601,17 +601,24 @@ PRAHOM is a synthesis of these two algorithms presented in \autoref{alg:PRAHOM}.
 
 \
 
-\textbf{Sub-gap $G_A.F_S.G_2$} \quad We need to consider that defining exhaustively a large history subset to represent complex behavior may be impracticable for its exponential complexity (Sub-gap $G_A.F_S.G_{2.1}$); and handling non-convenient large representations of observation or action (Sub-gap $G_A.F_S.G_{2.2}$).
+\textbf{Sub-gap $G_A.F_S.G_2$} \quad We need to consider that defining exhaustively a large history subset to represent complex behavior may be impracticable for its exponential complexity (Sub-gap $G_A.F_S.G_{2.1}$); and handling non-convenient large observations or actions (Sub-gap $G_A.F_S.G_{2.2}$).
 
-\textbf{Workaround $G_A.F_S.G_{2.1}$} \quad Considering a history subset is aimed to constrain a policy, we propose to simplify it as a constraint on policy $c\pi \in c\Pi$ by introducing an \textbf{observable policy constraint} $c\pi: H times \Omega \rightarrow \mathcal{P}(A)$. $c\pi$ indicates the actions an agent's policy should be allowed to choose among when it receives an observation at each step. We denote, $bld_{opc}: \mathcal{P}(H) \rightarrow c\Pi_c$ the relation that enables creating an observable policy constraint from a given history subset. As illustrated in \autoref{fig:opc_graph}, we implemented an $c\pi$ as an oriented graph where nodes are observations/actions and edges represent expected transitions relying on priorities and cardinalities. We implmented $bld_{opc}$ as 
+\textbf{Workaround $G_A.F_S.G_{2.1}$} \quad Considering observation are not convenient to be handled directly, we propose using short-way strings such as labels. we introduce the \textbf{labels-observations mapping} $ol: \mathcal{P}(L) \rightarrow \mathcal{P}(\Omega)$. $ol$ associates some simple strings to real observations. The relation $bld_{ol}$ enables creating a labels-observations mapping. As illustrated in \autoref{fig:bld_ol}, we implemented an $ol$ via a simple mapping or using a Large Language Model (LLM) both established or trained by labeling observations in a rendered environment at each step for implementing $bld_{ol}$ (frame by frame in visual environments).
 
-\textbf{Workaround $G_A.F_S.G_{2.2}$} \quad Considering an observation representation are non-convenient to be handled directly, we introduce the \textbf{label to observation mapping} $ol: L \rightarrow \Omega$. $ol$ associates a simple string label to a real observation representation.
+\textbf{Workaround $G_A.F_S.G_{2.2}$} \quad Considering a history subset is aimed to constrain a policy, we propose to simplify it as a constraint on policy $c\pi \in c\Pi$ by introducing an \textbf{observable policy constraint} $c\pi: H \times \Omega \rightarrow \mathcal{P}(A)$. $c\pi$ indicates the actions an agent's policy should be allowed to choose among when it receives an observation at each step. We denote, $bld_{opc}: \mathcal{P}(H) \rightarrow c\Pi$ the relation that enables creating an observable policy constraint from a given history subset.
+As illustrated in \autoref{fig:opc_graph}, we implemented a $c\pi$ as an oriented graph denoted \textbf{history graph} where nodes are observations/actions and edges represent expected transitions relying on priorities and cardinalities. A history graph enables implmenting $bld_{opc}$ by merging each history.
+
 
 \
 
 \textbf{Sub-gap $G_A.F_S.G_3$} \quad We need to consider how an agent's policy could be constrained to generate histories that belong to a given history subset of a role.
 
-\textbf{Workaround $G_A.F_S.G_3$} \quad As illustrated in \autoref{fig:PRAHOM_osm_rels}, we propose to map a
+\textbf{Workaround $G_A.F_S.G_3$} \quad As illustrated in \autoref{fig:PRAHOM_osm_rels}, when an agent receives an observation $\omega \in \Omega$ we propose to integrate constraints into an agent policy $\pi \in \Pi$ via three modes:
+\begin{itemize}
+    \item \textbf{CORRECT}: Correct any chosen action $\pi(\omega)$ by an expected one in $c\pi(\omega)$. It aims to converge faster by reducing the search space with safety guarantees. Yet, it is external to the agent's policy;
+    \item \textbf{PENALIZE}: Add a penalty to the reward if any wrong action ($\pi(\omega) \notin c\pi(\omega)$) has been made among agents. This mode aims to make agents \textquote{learn} to respect their constraints. Yet, no safety guarantee is ensured since agents only approximate their expected behavior;
+    \item \textbf{CORRECT\_POLICY}: Create and use a \textbf{constrained policy} $\pi_c \in \Pi, \pi_c = {sample(c\pi(\omega)) if \omega \in Dom(c\pi) and \omega \notin Dom(\pi), else \pi(\omega)}$, where an observable policy constraint $c\pi$ corrects the current policy $\pi$. This mode enables to respect safety guarantees internally.
+\end{itemize}
 
 \
 
@@ -776,9 +783,9 @@ We developed \emph{PRAHOM PettingZoo Wrapper}\footnotemark[2] as a \emph{PoC} to
 \subsection{Experimental setup}
 
 We selected the \textquote{Predator-prey with communication}~\cite{Lowe2017} Atari-like environment that consists of predators monitored by a leader to catch faster prey. This environment is likely to make emerge some organizational hence requiring communication for hunting strategies.
-This environment is likely to show 
+This environment is likely to show
 
-We evaluated $PRAHOM_A$ according to the following criteria likely to show 
+We evaluated $PRAHOM_A$ according to the following criteria likely to show
 
 An overview of given organizational specifications are given hereafter:
 \begin{itemize}
