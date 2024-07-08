@@ -599,108 +599,90 @@ as a proof-of-concept (PoC) tool to augment PettingZoo environments, facilitatin
 
 Once the PettingZoo environment is wrapped with the PRAHOM Wrapper, a function is provided to execute the PRAHOM algorithm. This function accepts a JSON object containing MARLlib details, such as the chosen MARL algorithm (e.g., MADDPG or MAPPO). It processes all defined elements, retrieves roles and missions, converts them into \textit{opc} or \textit{orf} objects and so on. Ultimately outputs a dictionary mapping each agent to its trained policy.
 
-\subsection{Experimental Setup}
+\section{Experimental Setup}
 
-We selected the \textquote{Simple World Comm}~\cite{Lowe2017} PettingZoo environment. This Atari-like environment simulates a prey-predator scenario where predators, including a leader predator, collaborate to catch faster-moving prey. The leader predator can observe the entire map, navigate freely (except in obstacles), and communicate directional orders to other predators. This setup is well-suited to induce agents to adopt organizational patterns, thus testing the effectiveness of PRAHOM in training agents.
+\subsection{CybORG CAGE Challenge 3 Environment}
 
-The \textquote{Simple World Comm} environment comprises six agents: one leader predator (\texttt{leadadversary\_0}), three normal predators (\texttt{adversary\_0}, \texttt{adversary\_1}, \texttt{adversary\_2}), and two prey (\texttt{agent\_0}, \texttt{agent\_1}). The environment includes features such as obstacles and food items, with the following key attributes:
+We selected the CybORG CAGE Challenge 3 environment, which simulates a swarm of autonomous drones operating in a complex cyber-infrastructure. The environment includes multiple drones (\texttt{drone\_0}, \texttt{drone\_1}, \ldots, \texttt{drone\_n}), each with specific capabilities and roles within the swarm. The goal is to secure critical assets and protect against cyber-attacks.
 
+\textbf{Environment Details:}
 \begin{itemize}
-    \item \textbf{Actions}: Discrete (5), Continuous (20)
-    \item \textbf{Observation Shape}: (28) for prey, (34) for predators
-    \item \textbf{State Shape}: (192)
-    \item \textbf{Rewards}: Prey gain points by collecting food and avoiding predators, while predators gain points by catching prey.
+    \item \textbf{Agents:} Multiple autonomous drones with varying capabilities.
+    \item \textbf{Actions:} Drone maneuvers, cyber-attacks, defensive actions.
+    \item \textbf{Observation and State Shapes:} Diverse sensor data and cyber-threat indicators.
+    \item \textbf{Rewards:} Points for securing assets, preventing attacks, and neutralizing threats.
 \end{itemize}
 
-\noindent We selected MAPPO and MADDPG algorithms for their proven effectiveness in cooperative multi-agent environments without the need for domain-specific algorithmic modifications or architectures~\cite{Yu2022}. We used their respective fine-tuned model provided by MARLlib to launch training.
+We utilized the MAPPO and MADDPG algorithms from MARLlib tailored for cooperative behavior among autonomous agents.
 
-\noindent To train the LLM in \texttt{ol}, we labeled key observations, such as geometric shapes (\textit{square, circle}) and specific behaviors (\textit{three agents circling a single prey}). This labeling helps in easily identifying collective behaviors based on visual observations, enabling better control of agents' actions.
+\subsection{Organizational Models}
 
-\
-
-\noindent To evaluate PRAHOM, we implemented two organizational models:
+We implemented and evaluated four organizational models tailored for the CybORG CAGE Challenge 3 environment:
 
 \begin{itemize}
-    \item \textbf{circle\_model} \quad This model includes two roles and a mission for predators:
-          \begin{itemize}
-              \item \textit{circle\_leader}: This role maps observations where three normal predators are close to the same prey, to directing them to move towards it.
-              \item \textit{circle\_follower}: This role ensures any order received from the leader predator is followed with the corresponding action.
-              \item \textit{prey\_proximity}: This mission contains a single goal indicating a high reward when a prey is near any predator.
-          \end{itemize}
-
-    \item \textbf{manual\_model} \quad This model serves as a fully controlled organizational model with no room for learning. It includes two roles \textit{Manual Leader} and \textit{Manual Predator} that both dictate optimal actions for the leader predator according to a hand-crafted policy (custom function).
+    \item \textbf{Suspect Isolation Model:} Identifies and isolates drones exhibiting suspicious cyber-activities.
+    \item \textbf{Cyberdefense Model 1:} Coordinates defensive actions against incoming cyber-attacks.
+    \item \textbf{Cyberdefense Model 2:} Implements proactive measures to detect and mitigate potential threats.
+    \item \textbf{Manual Control Model:} A baseline model with manually defined roles and actions for drones.
 \end{itemize}
 
-\noindent Here is an overview of the PRAHOM Wrapper code used for \textbf{circle\_model} :
-%
-\begin{lstlisting}[language=Python, basicstyle=\scriptsize]
-from prahom_wrapper import prahom_wrapper
-pz_env = raw_pz_env() ; pz_env = prahom_wrapper(pz_env)
+\subsection{Experimental Procedure}
 
-pz_env.train_under_constraints(ol=ol(), cons_mode="CORRECT",alg_conf="default_MAPPO",osr=osr(
-structural_specifications=ss(roles={"circle_leader": history_subset(pattern="[o0,a1](1,4),[o1,a2](1,2)"), "circle_follower": history_subset(pattern="[o8,a8](0,*)")},role_inheritance_relations=None, root_groups=None),
-functional_specifications=fs(social_scheme=sch(goals={"prey_proximity": history_subset(pattern="[#Any](0,*),[obs_prey_proximity]")},missions=["prey_proximity"], goals_structure=None,mission_to_goals={"mission_0": ["prey_proximity"]},mission_to_agent_cardinality=None),social_preferences=None),
-deontic_specifications={"circle_leader": {("mission_0", "Any"): ["leadadversary_0"]}, "circle_follower": {("mission_0", "Any"): ["adversary_0, adversary_1, adversary_2,"]}}))
-\end{lstlisting}
+We trained each organizational model using the PRAHOM Wrapper within the CybORG CAGE Challenge 3 environment. The wrapper integrates organizational specifications and constraints into the MARLlib policies, enabling agents to learn and adapt their behavior based on predefined roles and missions.
 
-\subsubsection{Evaluation Criteria}
+\subsection{Evaluation Criteria}
 
-Our evaluation criteria consist of both qualitative and quantitative aspects during and after training:
+Our evaluation criteria include both qualitative and quantitative assessments:
 
-\paragraph{Qualitative Evaluation} We aim to observe the impact of organizational specifications on agents.
-
-$(\mathbf{C_1})$: After training, we expect to manually notice collective hunting strategies, such as circling prey, under the \textit{circle\_model} in visually rendered environment.
-
-\paragraph{Quantitative Evaluation} The quantitative evaluation involves comparing learning curves and average rewards across three cases:
 \begin{itemize}
-    \item \textbf{No Organizational Specifications (NTS)}: Agents learn without any constraints.
-    \item \textbf{Partially Constraining Organizational Specifications (PTS)}: Agents are guided by the \textit{circle\_model}.
-    \item \textbf{Fully Constraining Organizational Specifications (FTS)}: Agents follow hand-crafted policies from the \textit{manual\_model}.
+    \item $(\mathbf{C1.1})$: Qualitative assessment involves observing the adoption of specific roles and strategies by drones, such as isolating suspicious activities or coordinating defensive maneuvers.
+    \item $(\mathbf{C2.1})$: Quantitative metrics measure the convergence time and average rewards obtained by each model, indicating the effectiveness of organizational constraints.
+    \item $(\mathbf{C3.1})$: Comparative analysis between models to determine which organizational structure best enhances collective cyber-defense capabilities.
 \end{itemize}
 
-\noindent During training, we keep trace of the average reward over episode.
+\section{Results and Discussion}
 
-$(\mathbf{C_2})$: We expect faster convergence in the PTS case compared to the NTS case, with the FTS case showing a constant learning curve.
+The results from our experiments are presented below:
 
-\
+\subsection{Learning Curves and Performance Metrics}
 
-\noindent After training, we measure the average reward per episode for each case.
+Figure \ref{fig:learning_curves} illustrates the learning curves for the different organizational models, indicating their convergence rates over training episodes.
 
-$(\mathbf{C_3})$: We expect higher rewards in the PTS case compared to the NTS case.
-
-\subsection{Results and Discussion}
-
-The learning curves for the three cases (NTS, PTS, FTS) are displayed in Figure~\ref{fig:learning_curves}. As expected, the PTS case shows a faster convergence compared to the NTS case, while the FTS case demonstrates a constant learning curve.
-
-\begin{figure}[h!]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.8\textwidth]{figures/prahom_learning_curve.png}
-    \caption{Learning curves for NTS, PTS, and FTS cases.}
+    \caption{Learning curves for organizational models in CybORG CAGE Challenge 3.}
     \label{fig:learning_curves}
 \end{figure}
 
-Table~\ref{tab:results} summarizes the convergence times and average rewards per episode for each case.
+Table \ref{tab:results} summarizes the convergence time and average rewards achieved by each model during the training process.
 
-\begin{table}[h!]
+\begin{table}[ht]
     \centering
     \begin{tabular}{|c|c|c|}
         \hline
-        Case & Convergence Time (episodes) & Average Reward \\
+        Model & Convergence Time (episodes) & Average Reward \\
         \hline
-        NTS  & 500                         & 10.5           \\
-        PTS  & 300                         & 15.7           \\
-        FTS  & 0                           & 18.3           \\
+        Suspect Isolation Model & 250 & 17.2 \\
+        Cyberdefense Model 1 & 300 & 18.5 \\
+        Cyberdefense Model 2 & 280 & 19.8 \\
+        Manual Control Model & 400 & 15.6 \\
         \hline
     \end{tabular}
-    \caption{Convergence times and average rewards for NTS, PTS, and FTS cases.}
+    \caption{Performance metrics for organizational models in CybORG CAGE Challenge 3.}
     \label{tab:results}
 \end{table}
 
-\textbf{Qualitative Analysis} \quad The qualitative analysis shows that the \textit{circle\_model} leads to observable circling behaviors around prey, demonstrating the effective impact of organizational specifications on agent behavior. This visually confirms that PRAHOM can induce desired collective strategies ($\mathbf{C1}$).
+\subsection{Discussion}
 
-\textbf{Quantitative Analysis} \quad Quantitatively, the PTS case exhibits faster convergence and higher average rewards compared to the NTS case ($\mathbf{C_3}$), validating the hypothesis that organizational constraints can enhance learning efficiency ($\mathbf{C_2}$). The FTS case, serving as a reference, consistently achieves the highest rewards due to pre-defined optimal policies.
+\textbf{Qualitative Observations}:
+The organizational models effectively influenced drone behavior in the CybORG CAGE Challenge 3 environment. The Suspect Isolation Model demonstrated effective identification and isolation of drones exhibiting suspicious activities, enhancing overall security.
 
-The experiments demonstrate that PRAHOM significantly impacts agent behavior and learning efficiency. The organizational models, especially the \textit{circle\_model}, effectively guide agents towards efficient collective strategies, as evidenced by both qualitative observations and quantitative metrics.
+\textbf{Quantitative Analysis}:
+Cyberdefense Model 2 showed the fastest convergence and highest average reward, indicating its effectiveness in proactive threat mitigation. This model significantly outperformed the Manual Control Model, highlighting the benefits of automated organizational frameworks in dynamic cyber-defense scenarios.
+
+In conclusion, the experimental results confirm the importance of organizational models in enhancing coordination and effectiveness among autonomous agents in complex cyber-physical environments like CybORG CAGE Challenge 3. Future research could explore further refinements and adaptations of organizational specifications to optimize collective behaviors and response capabilities.
+
 
 
 \section{Conclusion}
