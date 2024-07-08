@@ -1,17 +1,17 @@
 \RestyleAlgo{ruled}
-\SetKwComment{Comment}{// }{}
+\SetKwComment{Comment}{\hfill // }{}
 
-\begin{algorithm}[hbt!]
+\begin{algorithm}[h!]
 
-    \caption{PRAHOM-A}\label{alg:PRAHOM-A}
+    \caption{PRAHOM}\label{alg:PRAHOM-A}
 
-    \KwData{$d \in D$, Dec-POMDP to solve}
-    \KwData{$ep_{max} \in \mathbb{N}$, maximum number of episodes}
-    \KwData{$step_{max} \in \mathbb{N}$, maximum number of step per episode}
-    \KwData{$s \in \mathbb{R}$, cumulative reward expectancy}
-    \KwData{$sfh: \mathcal{R} \cup \mathcal{G} \rightarrow \mathcal{P}(H)$, the bijection from role/goals to history subsets}
-    \KwData{$da: \mathcal{D} \rightarrow \mathcal{P}(A)$, the bijection from permission/obligation to agents}
-    \KwData{$marl\_alg: \Pi_{joint} \times H_{joint} \times \mathbb{R}^{step_{max}} \rightarrow \Pi_{joint}$, algorithm to train from histories and rewards}
+    \KwData{$d \in D$, the Dec-POMDP to solve}
+    \KwData{$ep_{max} \in \mathbb{N}$, the maximum number of episodes}
+    \KwData{$step_{max} \in \mathbb{N}$, the maximum number of step per episode}
+    \KwData{$s \in \mathbb{R}$, the cumulative reward expectancy}
+    \KwData{$mode \in \{correct, penalize, correct\_policy\}$, the cons. integration mode}
+    \KwData{$\{rh,mh,da\}$: the roles, mission and permission/obligation relations}
+    \KwData{$u_{marl}: \Pi_{joint} \times H_{joint} \times \mathbb{R}_{joint} \rightarrow \Pi_{joint}$, the MARL algorithm}
     \KwData{$\pi_{joint,i,init} \in \Pi_{joint}$, the initial joint-policy to be trained}
 
     % \Comment{Other $PRAHOM$ arguments\dots}
@@ -20,73 +20,63 @@
 
     \KwResult{$\pi_{joint,i,s} \in \Pi_{joint}$, a sub-optimal joint-policy that satisfy given OS}
 
-    \phantom{X}
-
-    $\pi_{joint,it}$ = $\pi_{joint,i,init}$ ;
+    $\pi_{joint}$ = $\pi_{joint,i,init}$ ;
     $ep = 0$ ;
-    $sufficient_{it} = False$ ;
+    $sufficient = False$ ; \Comment{Initialization}
 
-    \Comment{Determine observable policy constraints from OS using relations}
-    $\pi_{c,joint} = \langle bld_{opc}(fsh(\rho)), per(\rho,m,t_c) \in da^{-1}(ag) \ or \ obl(\rho,m,t_c) \in da^{-1}(ag), ag \in \mathcal{A}\rangle$
+    \Comment{Determine joint observable policy constraints from OS}
+    $c\pi_{joint} = \langle bld_{opc}(rh(\rho)), per(\rho,m,t_c) \ or \ obl(\rho,m,t_c) \in da^{-1}(ag), ag \in \mathcal{A}\rangle$
 
-    \Comment{Determine observable reward functions from OS using relations}
-    $R_{m,joint} = \langle comb(\{bld_{rwf}(H_g), g \in mo(m), H_g = gh(g) \subset H\}), per(\rho,m,t_c) \in da^{-1}(ag) \ or \ obl(\rho,m,t_c) \in da^{-1}(ag), ag \in \mathcal{A}\rangle$
+    \uIf{mode = correct\_policy}
+    {
+        $\pi_{joint} = bld_{joint, \pi_c}(c \pi_{joint}, \pi_{joint})$ \Comment{Create \& use joint cons. policy}
+    }
 
-    \phantom{X}
+    \Comment{Determine observable reward functions from OS}
+    $R_{m,joint} = \langle bld_{mrf}(m), per(\rho,m,t_c) \ or \ obl(\rho,m,t_c) \in da^{-1}(ag), ag \in \mathcal{A} \rangle$;
+    $R = comb_{mrf}(R_{m,joint})$
 
-    \While{$\neg sufficient_{it} \land ep \leq ep_{max}$}{
+    \While{$\neg sufficient \land ep \leq ep_{max}$}{
 
-        \Comment{Reinit the env., obs., act. hist.}
-        $d_{ep} = d$ ;
-        $h_{joint,ep} = ()$ ;
-        $rh_{joint,ep} = ()$ ;
-        $\omega_{joint,ep,t=0}, a_{joint,ep,t=0} = d_{ep}.init()$ ;
-        $r_{ep,t=0} = 0$ ;
-        $r_{penalty} = 0$
+    \Comment{Reinit the env., obs., act. hist.}
+    $d_{ep} = d$ ;
+    $h_{joint,ep} = ()$ ;
+    $rh_{joint,ep} = ()$ ;
+    $r_{ep,t=0} = 0$ ;
+    $r_{penalty} = 0$ ;
+    $dttl = bld_{dttl}(da)$ ;
+    $\omega_{joint,ep,t=0}, a_{joint,ep,t=0} = d_{ep}.init()$
 
-        \ForEach{$0 < step < step_{max}$}{
+    \ForEach{$0 < step < step_{max}$}{
 
-            \Comment{Update policy from hist., rew.}
+    $\pi_{joint} = u_{marl}(\pi_{joint},h_{joint,ep}, rh)$ \Comment{Update policy from (hist., rew.)}
 
-            $\pi_{joint,it} = marl\_alg(\pi_{joint,it},h_{joint,ep}, rh)$
+    $a_{joint,t=step} = \pi_{joint}(\omega_{joint,t=step})$ \Comment{Get next act. from obs.}
 
+    $A_{joint,exp} = c\pi_{joint}(rh_{joint,ep}, \omega_{joint,t=step})$ \Comment{Get expct. act.}
 
-            \Comment{Choose next act. from obs.}
-            $a_{joint,t=step} = \pi_{joint,it}(\omega_{joint,t=step})$
-
-            \Comment{Get expct. act. from OS, rels.}
-            $A_{joint,exp} = \pi_{c,joint}(rh_{joint,ep}, \omega_{joint,t=step})$
-
-            \uIf{$a_{joint,t=step} \notin A_{joint,exp}$}{
-                \uIf{correct-mode}{
-                    $a_{joint,t=step} = sample(A_{joint,exp})$
-                }
-                \uElseIf{penalize-mode}{
-                    $r_{penalty} += penalty()$
-                }
-            }
-
-            \Comment{Record obs. and chosen act.}
-
-            $h_{joint,ep} = h_{joint,ep} \frown (\omega_{joint,t=step}, a_{joint,t=step})$
-
-            \Comment{Evaluate proxmity with committed missions}
-
-            $r_{penalty} = R_{m,joint}(h_{joint,ep})$
-
-            \Comment{Apply action}
-
-            $\omega_{joint,t=step+1}, r_{ep,t=step+1} = d_{ep}.step(a_{joint,t=step})$
-
-            \Comment{Record resulting reward}
-
-            $rh_{joint,ep} = rh_{joint,ep} \frown (r_{ep,t=step+1} + r_{ penalty})$
-
+    \uIf{$a_{joint,t=step} \notin A_{joint,exp}$}{
+        \uIf{mode = correct}{
+            $a_{joint,t=step} = sample(A_{joint,exp})$
         }
+        \uElseIf{mode = penalize}{
+            $r_{penalty} += penalty()$
+        }
+    }
 
-        $sufficient = is\_sufficient(rh_{joint,ep}, s)$
+    $h_{joint,ep} = h_{joint,ep} \frown (\omega_{joint,t=step}, a_{joint,t=step})$ \Comment{Save obs.\& act.}
 
-        $ep += 1$
+    $\omega_{joint,t=step+1}, r_{ep,t=step+1} = d_{ep}.step(a_{joint,t=step})$ \Comment{Apply action}
+
+    $rh_{joint,ep} = rh_{joint,ep} \frown (r_{ep,t=step+1} + r_{ penalty})$ \Comment{Save reward}
+
+    \Comment{Decrease TC TTL \& update rew. func., cons. policies}
+    $R, \pi_{joint}, c\pi_{joint} = update_{R,\Pi}(dec(dttl\dots))$
+
+    }
+
+    $sufficient = is\_sufficient(rh_{joint,ep}, s)$ ; 
+    $ep += 1$
     }
 
 \end{algorithm}
