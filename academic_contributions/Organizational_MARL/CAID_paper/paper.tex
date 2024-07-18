@@ -3,12 +3,27 @@
 \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 
+\usepackage{xcolor}
+\usepackage[hang, flushmargin]{footmisc}
+\usepackage[
+colorlinks=false, % don't highlight links in color
+linkbordercolor=green, % set border color for internal links
+citebordercolor=green, % set border color for citations
+filebordercolor=magenta, % set border color for file links
+urlbordercolor=cyan, % set border color for URLs
+pdfborder={0 0 1}, % determine border around links
+linkcolor=black,
+citecolor=black,
+filecolor=black,
+urlcolor=black,
+]{hyperref}
+\usepackage{footnotebackref}
+
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
-\usepackage{xcolor}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -64,11 +79,10 @@
 \usepackage{listings}
 % \usepackage{titlesec}
 \usepackage{ragged2e}
-\usepackage{hyperref}
+
 \usepackage{xurl}
 % \usepackage[hyphens]{url}
 \usepackage{pifont}
-\usepackage{footmisc}
 \usepackage{multirow}
 \usepackage[linesnumbered,ruled,vlined]{algorithm2e}
 \usepackage{float}
@@ -177,7 +191,7 @@ $ \hfill \phantom{x}
 
 \begin{document}
 
-\title{An Organization-oriented MARL Approach for Cyberdefense: Application for a Drone Scenario}
+\title{An Organization-oriented MARL Approach for a Cyberdefense Scenario in Drone Swarm}
 
 \author{
 
@@ -239,7 +253,7 @@ $ \hfill \phantom{x}
 \maketitle
 
 \begin{abstract}
-    Autonomous Cyber Defense is increasingly critical in protecting decentralized environments where centralized approaches are impractical. Multi-Agent Reinforcement Learning (MARL) has shown promise in training agents to achieve collective objectives without explicit organizational designs. However, enhancing the explainability and robustness of MARL in complex environments, such as cyberdefense scenarios, remains challenging. This paper introduces PRAHOM, an algorithmic approach that integrates the $\mathcal{M}OISE^+$ organizational model into the MARL process. PRAHOM constrains agents' policies according to organizational specifications derived from joint histories, ensuring alignment with predefined roles and missions. We apply PRAHOM to a cyberdefense scenario from the CAGE Challenge 3, involving a drone swarm facing malware attacks. The results demonstrate that PRAHOM can effectively guide the training of agents to detect, mitigate, and eliminate malware while adhering to organizational constraints, enhancing the swarm's resilience and operational effectiveness.
+    Autonomous Cyberdefense is increasingly critical for protecting decentralized environments where centralized approaches are impractical. Multi-Agent Reinforcement Learning (MARL) has shown promise in training agents to achieve collective objectives. However, enhancing the monitoring and robustness of MARL in complex environments, such as Cyberdefense scenarios, remains challenging. This paper leverages an algorithmic approach that integrates the $\mathcal{M}OISE^+$ organizational model into the MARL process. Our approach constrains agents' policies according to organizational specifications derived from joint histories, ensuring alignment with predefined roles and missions. We apply our approach to a Cyberdefense scenario involving a drone swarm facing malware attacks. The results demonstrate that our approach effectively guides the training of agents to detect, mitigate, and eliminate malware while adhering to organizational constraints, thereby enhancing the swarm's resilience and operational effectiveness.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -251,36 +265,25 @@ $ \hfill \phantom{x}
 \section{Introduction}
 \label{sec:introduction}
 
-\textit{Autonomous Intelligent Cyberdefense Agents}~\cite{Kott2023} are agents to be deployed in a networked environment to detect, identify and characterize anomalies/attacks, develop and manage the execution of countermeasures and communicate with the outside world
-%
+\textit{Autonomous Intelligent Cyberdefense Agents}~\cite{Kott2023} (AICA) are agents designed for deployment in networked environments, with primary capabilities including the detection, identification, and characterization of anomalies/attacks, as well as the development and management of countermeasures%
 \footnote{
-    Theorized by the \textit{AICA International Work Group}.(cf. \url{https://www.aica-iwg.org/}) and built on the results of NATO's \textit{Research Task Group IST-152}
-    % which worked on the concept \textquote{Intelligent, Autonomous and Trusted Agents for Cyber Defense and Resilience}.
+    Theorized by the \textit{AICA International Work Group} (cf. \url{https://www.aica-iwg.org/}) and based on the results of NATO's \textit{Research Task Group IST-152}.
 }.
-%
-Research for the AICA development highlights the increasingly need of \textit{Autonomous Cyber Defense} for protecting decentralized environments where traditional centralized approaches are ineffective, such as in IoT-based systems. A Multi-Agent System (MAS) offers robust and adaptive defense mechanisms by decomposing the cyberdefense complexity into sub-task delegated to collaborative agents deployed all over a system to defend.
+Research into AICA development highlights the increasing need for \textit{Autonomous Cyberdefense} to protect decentralized environments where traditional centralized approaches are ineffective, such as in IoT-based systems. A Multi-Agent System (MAS) offers robust and adaptive defense mechanisms by decomposing the complexity of Cyberdefense into sub-tasks delegated to collaborative agents deployed throughout the system.
 
-One approach focuses on designing a MAS for cyberdefense in a top-down manner, starting from predefined architectures and functionalities. Indeed, the \textit{MAS Centric AICA Reference Architecture} (MASCARA)~\cite{Kott2023} describes AICA-like MAS with components enabling collaborative mechanisms based on explicitly defined plans or processes. Yet, this approach proves to be costly for it requires some knowledge of the deployment environment in addition to take into account frequent changes such as changes in topology or new vulnerabilities.
+The top-down approach involves designing Cyberdefense MAS from predefined architectures and functionalities. The \textit{MAS Centric AICA Reference Architecture} (MASCARA)~\cite{Kott2023} describes AICA-like MAS with components that enable collaborative mechanisms based on explicitly defined plans or processes. However, this approach can be costly as it requires a comprehensive knowledge of the deployment environment, which must be regularly updated due to frequent changes, such as topology modifications or new vulnerabilities.
 
-Alternatively, other works have shown Multi-Agent Reinforcement Learning (MARL)~\cite{Albrecht2024} as an effective way for agents learn to achieve cyberdefense goals by themselves, enhancing the MAS autonomy. Despite promising results in simulations, this approach still lacks safety guarantees necessary for real systems applications nor does it provide explicit means to justify the MAS success or failure.
-%Indeed, trained agents may have organizational aspects such as roles, plans or hierarchical links, which are not inherently explicit.
-%
-These concerns hinder any further development of a fully/semi-autonomous cyberdefense MAS, such as for an AICA agent, in highly critical and dynamic environments since actions made must be justified regarding their potential irreversible consequences.
+The bottom-up approach may include Multi-Agent Reinforcement Learning (MARL)~\cite{Albrecht2024}, where agents learn to achieve Cyberdefense goals autonomously, enhancing MAS autonomy~\cite{hammar_stadle4_noms_23}. Despite promising simulation results, this approach lacks the safety guarantees necessary for real-world applications and does not provide explicit means to justify the MAS's success or failure~\cite{dulacarnold2019}. These issues hinder the development of fully or semi-autonomous Cyberdefense MAS, such as AICA, in critical environments, where actions must be justified given their potentially irreversible consequences.
 
-We propose an algorithmic approach to integrate the $\mathcal{M}OISE^+$ organizational model into the MARL framework through trajectories/histories, called \textit{Partial Relation between Agents' History and Organizational Model} (PRAHOM). PRAHOM is primarily to guide the training of agents to adhere to specific roles and missions, possibly enhancing the MAS performance. It enables adding a kind of embedded monitoring framework by incorporating domain-specific knowledge, such as rules or protocols, into the training process.
+To address these concerns, we propose combining these two point of views by extending \textit{Partial Relation between Agents' History and Organizational Model}~\cite{soule2024} (PRAHOM). PRAHOM is a general approach that leverages histories to integrate $\mathcal{M}OISE^+$ organizational model into the MARL framework. By integrating $\mathcal{M}OISE^+$ organizational specifications into the MARL framework, it has been shown to be possible to constrain learning effectively. However, the current empirical development in this area remains limited and does not scale with the increasing number of organizational specifications. This limitation makes it unsuitable for cyber defense scenarios involving highly complex networked environments.
 
-We demonstrate the effectiveness of PRAHOM through a case study based on the 3rd CAGE Challenge~\cite{cage_challenge_3_announcement}, which involves creating a cyberdefense MAS for detecting, mitigating, and eliminating malware programs in a drone swarm. We applied PRAHOM adapting MASCARA into  $\mathcal{M}OISE^+$ organizational specifications for this scenario. We verified trained agents exhibit expected collective strategies while being also fine-tuned throughout the training making the overall score to be comparable to leading ones of the leaderboard.
+Partially relying on PRAHOM, we propose a novel algorithm called \textit{PRAHOM Training} (PRAHOMT), which only requires the concepts of role and mission, thus addressing scalability issues. PRAHOMT provides simple means to enhance Cyberdefense MAS performance and ensures safety guarantees by embedding domain-specific knowledge, such as rules, into the training process.
 
-The remainder is organized as follows. \Autoref{sec:related_works} reviews works related to MARL taking into account organizational considerations. \Autoref{sec:marl_moise_linking} recaps the $\mathcal{M}OISE^+$ organizational model and presents the underlying principles for linking it to MARL. \Autoref{sec:prahom_theory} introduces the PRAHOM algorithm. \Autoref{sec:experimental_setup} presents an overview of our \textit{Proof of Concept} PRAHOM implementation and its use for the experimental setup involving MASCARA-based organizational specifications for the 3rd CAGE Challenge. \Autoref{sec:results_and_discussion} discusses the results. Finally, \Autoref{sec:conclusion} concludes the paper and outlines future research directions.
+We demonstrate the effectiveness of PRAHOMT through a case study based on the 3rd CAGE Challenge~\cite{cage_challenge_3_announcement}, which involves creating a Cyberdefense MAS for detecting, mitigating, and eliminating malware programs in a drone swarm. We addressed this challenge by creating Cyberdefense MAS models compliant with $\mathcal{M}OISE^+$ formalism, notably inspired by the MASCARA architecture. These models are sets of organizational specifications used by PRAHOMT to guide and constrain agents' training to better achieve the scenario's goals and ensure safety requirements. We verify that the trained agents exhibit expected collective strategies while being fine-tuned throughout the training, making the overall score comparable to leading entries on the leaderboard.
 
+The remainder of this paper is organized as follows. \Autoref{sec:marl_background} presents the basics of MARL relevant to our contribution. \Autoref{sec:related_works} reviews related works considering organizational aspects in MARL. \Autoref{sec:marl_moise_linking} recaps the $\mathcal{M}OISE^+$ organizational model and presents the principles for linking it to MARL. \Autoref{sec:prahom_theory} introduces the PRAHOMT algorithm. \Autoref{sec:experimental_setup} provides an overview of our \textit{Proof of Concept} (PoC) implementation of PRAHOMT and its use for the experimental setup involving MASCARA-based organizational specifications for the 3rd CAGE Challenge. \Autoref{sec:results_and_discussion} discusses the results. Finally, \Autoref{sec:conclusion} concludes the paper and outlines future research directions.
 
-
-\section{Related works}
-\label{sec:related_works}
-
-We begin by introducing the fundamentals of MARL, which form the core of our contribution. Next, we provide an overview of existing works that incorporate constraints into the learning process to fulfill specific requirements, highlighting our contribution's originality.
-
-\subsection{Multi-Agent Reinforcement Learning (MARL)}
+\section{MARL Background}\label{sec:marl_background}
 
 Multi-Agent Reinforcement Learning (MARL) extends the principles of Reinforcement Learning (RL) to scenarios involving multiple interacting agents. Agents aim to maximize the overall cumulative reward through learning, but the presence of other agents introduces additional complexity due to the dynamic nature of the environment.
 
@@ -296,52 +299,160 @@ MARL is often modeled using the Decentralized Partially Observable Markov Decisi
     \item $\gamma \in [0,1]$: The discount factor for future rewards.
 \end{itemize}
 
-In MARL, each agent $i$ maintains a policy $\pi_i: H \times \Omega \rightarrow A$, mapping an action $a \in A$ from an observation $\omega \in \Omega$ and optionally the agent's history $h \in H, h=\langle(\omega_0,a_0),(\omega_1,a_1)\dots(\omega_{n_e},a_{n_e})\rangle$ (with $n_e \in \mathbb{N}$, the number of steps per episode). A joint policy $\pi_{joint} = (\pi_1, \pi_2, \ldots, \pi_n)$ describe the behavior of all agents collectively.
+In MARL, each agent $i$ maintains a policy $\pi_i: H \times \Omega \rightarrow A$, mapping an action $a \in A$ from an observation $\omega \in \Omega$ and optionally the agent's history $h \in H, h=\langle(\omega_0,a_0),(\omega_1,a_1)\dots(\omega_{n_e},a_{n_e})\rangle$ (with $n_e \in \mathbb{N}$, the number of steps per episode). A joint policy $\pi_{\text{joint}} = (\pi_1, \pi_2, \ldots, \pi_n)$ describes the behavior of all agents collectively.
 
-The ultimate goal is to find a joint-policy $\pi_{joint}$ that maximize the expected cumulative reward $U(\pi^*_{joint}) = \mathbb{E}\left[\sum_{t=0}^{\infty} \gamma^t R(s_t, \vec{a}_t)\right]$. Instead of solely aiming for a global optimum, our approach emphasizes getting approximate solutions with sufficient reward.
+The ultimate goal is to find a joint policy $\pi_{\text{joint}}$ that maximizes the expected cumulative reward $U(\pi^*_{\text{joint}}) = \mathbb{E}\left[\sum_{t=0}^{\infty} \gamma^t R(s_t, \vec{a}_t)\right]$. Instead of solely aiming for a global optimum, our approach emphasizes obtaining approximate solutions with sufficient reward.
 
-
-Various approaches enable solving Multi-Agent Reinforcement Learning (MARL) problems. \textbf{Value-based} methods, such as QMIX~\cite{rashid2018}, estimate the value function $Q(s,\vec{a})$ that indicates the expected cumulative reward for a given state $s$ and joint action $\vec{a}$. \textbf{Policy-based} methods, including MAPPO~\cite{yu2022surprising} and MADDPG~\cite{lowe2017multi} (Multi-Agent Deep Deterministic Policy Gradient), directly parameterize the policy as $\pi_\theta$ to optimize it possibly using centralized training and decentralized execution. \textbf{Actor-Critic} methods combine value-based and policy-based approaches, such as in COMA (Counterfactual Multi-Agent Policy Gradients) where the actor updates the policy parameters in the direction indicated by the critic, which evaluates the current policy.
-
+Various approaches enable solving Multi-Agent Reinforcement Learning (MARL) problems. \textbf{Value-based} methods, such as QMIX~\cite{rashid2018}, estimate the value function $Q(s,\vec{a})$ that indicates the expected cumulative reward for a given state $s$ and joint action $\vec{a}$. \textbf{Policy-based} methods, including Multi-Agent Proximal Policy Optimization~\cite{yu2022surprising} (MAPPO) and Multi-Agent Deep Deterministic Policy Gradient~\cite{lowe2017multi} (MADDPG), directly parameterize the policy as $\pi_\theta$ to optimize it possibly using centralized training and decentralized execution. \textbf{Actor-Critic} methods combine value-based and policy-based approaches, such as in COMA (Counterfactual Multi-Agent Policy Gradients) where the actor updates the policy parameters in the direction indicated by the critic, which evaluates the current policy.
 
 
-\subsection{Related works to organizational-oriented MARL}
-
-% Although MARL has shown effective applications, ensuring that the training process adheres to specific requirements remains a challenge that has not been explicitly addressed.
+\section{Related Works in Organizational-Oriented MARL}
+\label{sec:related_works}
 
 We define organizational-oriented MARL as the broad field of research encompassing studies that introduce explicit specifications (such as rules, roles, or protocols) to guide or restrict the MARL training process to meet requirements. While the explicit integration of organizational specifications in MARL is not extensively covered in the literature, several approaches have been proposed to embed some constraints within MAS to ensure that agents conform to specific requirements.
 
-\
-
 \textbf{Learning with Organizational Constraints} \quad
-%
 In \cite{cruz2020norms}, the authors present a method for incorporating norms into the learning algorithms of agents, ensuring that their behavior remains within acceptable bounds. Additionally, \cite{villatoro2011social} proposes a mechanism for agents to learn and adapt to social norms in dynamic environments, highlighting the importance of norm adaptation in MAS.
 
-A relevant work set belong to the \emph{Specification-Guided Reinforcement Learning} that aims to generate policies that accomplish a specific task using external specifications to guide learning in achieving an objective under given constraints~\cite{Bansal2022}. Jothimurugan et al.~\cite{Jothimurugan2021} propose logical specification learning as exploiting the compositional structure of specifications to generate policies for complex tasks.
+A relevant subset of work belongs to \emph{Specification-Guided Reinforcement Learning}, which aims to generate policies that accomplish specific tasks using external specifications to guide learning in achieving objectives under given constraints~\cite{Bansal2022}. Jothimurugan et al.~\cite{Jothimurugan2021} propose logical specification learning, exploiting the compositional structure of specifications to generate policies for complex tasks.
 
 \textbf{Policy-Based Approaches} \quad
-%
 Policy-based approaches provide a way to enforce organizational constraints by defining explicit policies that govern agent behavior. In \cite{krupanski2015norm}, the use of normative policies is investigated to guide agent interactions and decision-making processes. Moreover, \cite{vos2020governing} explores the use of governance mechanisms to enforce compliance with organizational policies in decentralized systems.
 
 \textbf{Frameworks Integrating Organizational Aspects} \quad
-%
-Wang et al.~\cite{Wang2020} introduce an approach in which similar emerging roles are pushed to jointly specialize in specific tasks. Tosic et al.~\cite{Tosic2010} propose a framework for coordination based on the communication capabilities of multi-agent systems. Zheng et al.~\cite{Zheng2018} present a platform for MARL that aims to facilitate research on artificial collective intelligence by providing a comprehensive set of evaluation metrics to compare the performance of MARL algorithms.
+Wang et al.~\cite{Wang2020} introduce an approach in which similar emerging roles are encouraged to jointly specialize in specific tasks. Tosic et al.~\cite{Tosic2010} propose a framework for coordination based on the communication capabilities of multi-agent systems. Zheng et al.~\cite{Zheng2018} present a platform for MARL that aims to facilitate research on artificial collective intelligence by providing a comprehensive set of evaluation metrics to compare the performance of MARL algorithms.
 
 \textbf{Evaluation and Applications} \quad
-%
 Several studies have evaluated the effectiveness of organizational models and policies in various applications. For example, \cite{dignum2004agent} evaluates the application of organizational models in e-commerce systems, demonstrating their utility in ensuring reliable and predictable agent behavior. Similarly, \cite{andrighetto2013normative} investigates the role of normative systems in regulating agent behavior in collaborative environments.
 
-\
+Despite these advancements, there is still a scarcity of research explicitly utilizing organizational specifications to constrain agent learning in accordance with requirements. To our knowledge, no existing work facilitates the generation of a MAS that explicitly satisfies additional organizational constraints. PRAHOMT's originality lies in using an organizational model explicitly as a general method for constraining learning based on these requirements.
 
-Despite these advancements, there is still a scarcity of research explicitly utilizing organizational specifications to constrain agent learning in accordance with requirements. To our knowledge, no existing work facilitates the generation of a MAS that explicitly satisfies additional organizational constraints. PRAHOM's originality is to use an organizational model explicitly as a general way for constraining learning based on these requirements.
 
-\section{Linking MARL and the $\mathcal{M}OISE^+$ organizational model}\label{sec:marl_moise_linking}
+% \section{Linking MARL and the $\mathcal{M}OISE^+$ organizational model}\label{sec:marl_moise_linking}
 
-The $\mathcal{M}OISE^+$ model~\cite{Hubner2007} provides a comprehensive framework for specifying the structure and interactions within a Multi-Agent System (MAS). We utilize $\mathcal{M}OISE^+$ due to its compatibility with MARL and its formal description capabilities for agents' policies. The PRAHOM approach bridges the gap between MARL and organizational modeling by embedding $\mathcal{M}OISE^+$ specifications into the MARL training process. This integration allows for the training of agents that adhere to predefined organizational roles and missions.
+% The $\mathcal{M}OISE^+$ model~\cite{Hubner2007} provides a comprehensive framework for specifying the structure and interactions within a Multi-Agent System (MAS). We utilize $\mathcal{M}OISE^+$ due to its compatibility with MARL and its formal description capabilities for agents' policies. The PRAHOMT's underlying approach bridges the gap between MARL and organizational modeling by embedding $\mathcal{M}OISE^+$ specifications into the MARL training process. This integration allows for the training of agents that adhere to predefined organizational roles and missions.
+
+% In $\mathcal{M}OISE^+$, \textbf{Organizational Specifications (OS)} are defined as $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, where $\mathcal{SS}$ are the \textbf{Structural Specifications}, $\mathcal{FS}$ are the \textbf{Functional Specifications}, and $\mathcal{DS}$ are the \textbf{Deontic Specifications}.
+
+% \subsection{Structural specifications and constraining joint-policies according to roles}
+
+% \textbf{Structural Specifications} describe the organizational structure and are denoted as $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$:
+
+% \begin{itemize}
+%     \item $\mathcal{R}_{ss}$: The set of all roles ($\rho \in \mathcal{R}$).
+%     \item $\mathcal{IR}: \mathcal{R} \rightarrow \mathcal{R}$: The inheritance relation between roles ($\rho_1 \sqsubset \rho_2$).
+%     \item $\mathcal{RG} \subseteq \mathcal{GR}$: The set of root groups, $\mathcal{GR} = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$, where:
+%           \begin{itemize}
+%               \item $\mathcal{R} \subseteq \mathcal{R}_{ss}$: The set of non-abstract roles.
+%               \item $\mathcal{SG} \subseteq \mathcal{GR}$: The set of sub-groups.
+%               \item $\mathcal{L} = \mathcal{R} \times \mathcal{R} \times \mathcal{TL}$: The set of links $(\rho_s, \rho_d, t)$, where $t \in \{acq, com, aut\}$ indicates the type of link (acquaintance, communication, authority).
+%               \item $\mathcal{L}^{intra} \subseteq \mathcal{L}$: The set of intra-group links.
+%               \item $\mathcal{L}^{inter} \subseteq \mathcal{L}$: The set of inter-group links.
+%               \item $\mathcal{C} = \mathcal{R} \times \mathcal{R}$: The set of compatibilities $(\rho_a \bowtie \rho_b)$.
+%               \item $\mathcal{C}^{intra} \subseteq \mathcal{C}$: The set of intra-group compatibilities.
+%               \item $\mathcal{C}^{inter} \subseteq \mathcal{C}$: The set of inter-group compatibilities.
+%               \item $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of agents adopting a role.
+%               \item $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of each sub-group.
+%           \end{itemize}
+% \end{itemize}
+
+% Constraining policies directly is not feasible because most policy implementation rely on intractable black-box models such as neural network. We propose to formally represent a role as a history subset $\mathcal{P}(H)$ containing histories an agent playing a role should generate hence characterizing the role expected behavior. As illustrated in \Autoref{fig:PRAHOM_osm_rels}, we propose each role to be mapped to a history subset through the $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$ bijection.
+
+% \begin{figure}[h!]
+%     \centering
+%     \input{figures/PRAHOM_osm_rels.tex}
+%     \caption{Relations between organizational specifications and history subsets}
+%     \label{fig:PRAHOMT_osm_rels}
+% \end{figure}
+
+% \
+
+% Since defining roles into a history subset faces issues for handling possibly large observation, we propose to use labels to represent observations. We introduce $ol: \mathcal{P}(\Omega) \rightarrow \mathcal{P}(L)$ to map simple strings to real observations. We considered using a Large Language Model (LLM) for that purpose as illustrated in \Autoref{fig:PRAHOMT_ol}.
+
+% \begin{figure}[h!]
+%     \centering
+%     \input{figures/ol_scheme.tex}
+%     \caption{Observations-labels mapping and its creation}
+%     \label{fig:PRAHOMT_ol}
+% \end{figure}
+
+% \
+
+% Considering that roles also requires exponentially growing histories with the environment complexity, we simplify history subsets as constraints on policy. We introduce an \textbf{observable policy constraint} $c\pi: H \times \Omega \rightarrow \mathcal{P}(A)$ which gives the actions among which an agent has to choose after playing history and receiving an observation. To simplify its creation, we propose a pattern format enabling to define rules that associate an action set depending on history and a received observation.
+% % It follows the following rules: a sequence is denoted \textquote{[$label_{obs_1},label_{act_1}\dots$] \allowbreak ($card_{min},card_{max}$)}; the \textquote{Any} label refer to any observation/action.
+% Furthermore, an observable policy constraint can be considered in a compact way as an oriented graph denoted \textbf{history graph} where nodes are observations/actions and edges represent expected transitions relying on ordinal number and cardinalities.
+
+% % \begin{figure}[h!]
+% %     \centering
+% %     \input{figures/opc_scheme.tex}
+% %     \caption{Observable policy constraint and its creation}
+% %     \label{fig:PRAHOMT_opc}
+% % \end{figure}
+
+% \
+
+% We propose to integrate constraints into an agent's policy via three modes:
+
+% \begin{itemize}
+%     \item \textbf{Correct}: Correct any chosen action $\pi(\omega)$ by an expected one in $c\pi(\omega)$. It ensures safety but is external to the agent's policy.
+%     \item \textbf{Penalize}: Add a penalty to the reward if a wrong action ($\pi(\omega) \notin c\pi(\omega)$) is made, encouraging agents to learn their constraints but without safety guarantees.
+%     \item \textbf{Correct\_Policy}: Create a \textbf{constrained policy} $\pi_c \in \Pi, \pi_c = \{smpl(c\pi_{joint}(\omega_{joint})) \ if \ \omega_{joint} \in Dom(c\pi_{joint}) \ \allowbreak, \ \allowbreak else \ \allowbreak \pi_{joint}(\omega_{joint})\}$ where $smpl$ gets an element from a set randomly. An observable policy constraint $c\pi$ corrects the current policy $\pi$ hence respecting safety guarantees internally.
+% \end{itemize}
+
+
+% \subsection{Functional specifications and constraining joint-policies according to missions}
+
+% \textbf{Functional Specifications} describe the tasks and goals and are denoted as $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$:
+
+% \begin{itemize}
+%     \item $\mathcal{SCH} = \langle \mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$: The set of social schemes, where:
+%           \begin{itemize}
+%               \item $\mathcal{G}$: The set of global goals.
+%               \item $\mathcal{M}$: The set of mission labels.
+%               \item $\mathcal{P} = \langle \mathcal{G}, \{\mathcal{G}\}^s, OP, [0,1] \rangle$: The set of plans $(g_f, \{g_i\}_{0 \leq i \leq s}, op, ps)$.
+%               \item $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$: The goals associated with each mission.
+%               \item $nm: \mathcal{M} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of agents committed to each mission.
+%           \end{itemize}
+%     \item $\mathcal{PO}: \mathcal{M} \times \mathcal{M}$: The set of preference orders $(m_1 \prec m_2)$.
+% \end{itemize}
+
+% We consider a goal to be theoretically represented by a history subset. Ultimately, a goal should impact reward function in MARL by updating the joint reward function when an agent is committed to a mission. We introduce an \textbf{observable reward function} $R_{g}: H \rightarrow \mathbb{R}$, the relation indicating how close a generated history is to a given history subset.
+
+% A mission $m \in \mathcal{M}$ containing goals $\mathcal{G}_{m} = mo(m)$ is computed as a weighted addition of all observable reward functions of each goal into a single reward function for a mission.
+
+% % \begin{figure}[h!]
+% %     \centering
+% %     \input{figures/goal_mission_scheme.tex}
+% %     \caption{Observable reward function and its creation}
+% %     \label{fig:goal_mission_scheme}
+% % \end{figure}
+
+
+
+% \subsection{Deontic specification and constraining joint-policies according to permissions/obligations}
+
+% \textbf{Deontic Specifications} define the permissions and obligations and are denoted as $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$:
+
+% \begin{itemize}
+%     \item $\mathcal{TC}$: The set of time constraints.
+%     \item $\mathcal{OBL}: \mathcal{R} \times \mathcal{M} \times \mathcal{TC}$: The set of obligations $(obl(\rho_a, m, tc))$.
+%     \item $\mathcal{PER}$: The set of permissions $(per(\rho_a, m, tc))$.
+% \end{itemize}
+
+% Based on previous propositions, we introduce the relation $da: \mathcal{PER} \cup \mathcal{OBL} \rightarrow \mathcal{P}(\mathcal{A})$ indicating how agents are constrained to roles and committed to missions for a given time constraint.
+% To take into account time constraints, we introduce a time-to-live for each permission/obligation through $dttl: \mathcal{PER} \cup \mathcal{OBL} \times \mathcal{A} \rightarrow \mathbb{N}$. Since, roles and missions may change over time, it is required to update the reward function and policies as well.
+
+% When combining observable reward function of some goals into a mission one with weighted addition, we propose high weight for obligated missions and low weight for permitted ones. This enables differentiating between obligations and permissions, ensuring agents prioritize obligated missions over permitted ones.
+
+
+\section{Linking MARL and the $\mathcal{M}OISE^+$ Organizational Model}
+\label{sec:marl_moise_linking}
+
+The $\mathcal{M}OISE^+$ model~\cite{Hubner2007} provides a comprehensive framework for specifying the structure and interactions within a Multi-Agent System (MAS). We utilize $\mathcal{M}OISE^+$ due to its compatibility with MARL and its formal description capabilities for agents' policies. The PRAHOMT's underlying approach bridges the gap between MARL and organizational modeling by embedding $\mathcal{M}OISE^+$ specifications into the MARL training process. This integration allows for the training of agents that adhere to predefined organizational roles and missions.
 
 In $\mathcal{M}OISE^+$, \textbf{Organizational Specifications (OS)} are defined as $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, where $\mathcal{SS}$ are the \textbf{Structural Specifications}, $\mathcal{FS}$ are the \textbf{Functional Specifications}, and $\mathcal{DS}$ are the \textbf{Deontic Specifications}.
 
-\subsection{Structural specifications and constraining joint-policies according to roles}
+\subsection{Structural Specifications and Constraining Joint-Policies According to Roles}
 
 \textbf{Structural Specifications} describe the organizational structure and are denoted as $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$:
 
@@ -363,51 +474,36 @@ In $\mathcal{M}OISE^+$, \textbf{Organizational Specifications (OS)} are defined 
           \end{itemize}
 \end{itemize}
 
-Constraining policies directly to meet the role expected behavior is not feasible for most policy implementation rely on intractable black-box models such as neural network. We propose to formally represent a role as a history subset $\mathcal{P}(H)$ containing histories an agent playing a role should generate hence characterizing the role expected behavior. As illustrated in \Autoref{fig:PRAHOM_osm_rels}, we propose each role to be mapped to a history subset through the $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$ bijection.
+Constraining policies directly is not feasible because most policy implementations rely on intractable black-box models such as neural networks. We propose to formally represent a role as a history subset $\mathcal{P}(H)$ containing histories an agent playing a role should generate, hence characterizing the role's expected behavior. As illustrated in \Autoref{fig:PRAHOM_osm_rels}, we propose each role to be mapped to a history subset through the $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$ bijection.
 
 \begin{figure}[h!]
     \centering
     \input{figures/PRAHOM_osm_rels.tex}
     \caption{Relations between organizational specifications and history subsets}
-    \label{fig:PRAHOM_osm_rels}
+    \label{fig:PRAHOMT_osm_rels}
 \end{figure}
 
-\
-
-Since defining roles into a history subset faces issues for handling possibly large observation, we propose to use labels to represent observations. We introduce $ol: \mathcal{P}(\Omega) \rightarrow \mathcal{P}(L)$ to map simple strings to real observations. We considered using a Large Language Model (LLM) for that purpose as illustrated in \Autoref{fig:PRAHOM_ol}.
+Since defining roles into a history subset faces issues for handling possibly large observations, we propose to use labels to represent observations. We introduce $ol: \mathcal{P}(\Omega) \rightarrow \mathcal{P}(L)$ to map simple strings to real observations. We considered using a Large Language Model (LLM) for that purpose as illustrated in \Autoref{fig:PRAHOMT_ol}.
 
 \begin{figure}[h!]
     \centering
     \input{figures/ol_scheme.tex}
     \caption{Observations-labels mapping and its creation}
-    \label{fig:PRAHOM_ol}
+    \label{fig:PRAHOMT_ol}
 \end{figure}
 
-\
-
-Considering that roles also requires exponentially growing histories with the environment complexity, we simplify history subsets as constraints on policy. We introduce an \textbf{observable policy constraint} $c\pi: H \times \Omega \rightarrow \mathcal{P}(A)$ which gives the actions among which an agent has to choose after playing history and receiving an observation. To simplify its creation, we propose a pattern format enabling to define rules that associate an action set depending on history and a received observation.
-% It follows the following rules: a sequence is denoted \textquote{[$label_{obs_1},label_{act_1}\dots$] \allowbreak ($card_{min},card_{max}$)}; the \textquote{Any} label refer to any observation/action.
-Furthermore, an observable policy constraint can be considered in a compact way as an oriented graph denoted \textbf{history graph} where nodes are observations/actions and edges represent expected transitions relying on ordinal number and cardinalities.
-
-% \begin{figure}[h!]
-%     \centering
-%     \input{figures/opc_scheme.tex}
-%     \caption{Observable policy constraint and its creation}
-%     \label{fig:PRAHOM_opc}
-% \end{figure}
-
-\
+Considering that roles also require exponentially growing histories with the environment's complexity, we simplify history subsets as constraints on policy. We introduce an \textbf{observable policy constraint} $c\pi: H \times \Omega \rightarrow \mathcal{P}(A)$, which gives the actions among which an agent has to choose after playing history and receiving an observation. To simplify its creation, we propose a pattern format enabling the definition of rules that associate an action set depending on history and a received observation.
+Furthermore, an observable policy constraint can be considered in a compact way as an oriented graph denoted a \textbf{history graph} where nodes are observations/actions and edges represent expected transitions relying on ordinal numbers and cardinalities.
 
 We propose to integrate constraints into an agent's policy via three modes:
 
 \begin{itemize}
-    \item \textbf{Correct}: Correct any chosen action $\pi(\omega)$ by an expected one in $c\pi(\omega)$. It ensures safety but is external to the agent's policy.
+    \item \textbf{Correct}: Correct any chosen action $\pi(\omega)$ to an expected one in $c\pi(\omega)$. It ensures safety but is external to the agent's policy.
     \item \textbf{Penalize}: Add a penalty to the reward if a wrong action ($\pi(\omega) \notin c\pi(\omega)$) is made, encouraging agents to learn their constraints but without safety guarantees.
-    \item \textbf{Correct\_Policy}: Create a \textbf{constrained policy} $\pi_c \in \Pi, \pi_c = \{smpl(c\pi_{joint}(\omega_{joint})) \ if \ \omega_{joint} \in Dom(c\pi_{joint}) \ \allowbreak, \ \allowbreak else \ \allowbreak \pi_{joint}(\omega_{joint})\}$ where $smpl$ gets an element from a set randomly. An observable policy constraint $c\pi$ corrects the current policy $\pi$ hence respecting safety guarantees internally.
+    \item \textbf{Correct\_Policy}: Create a \textbf{constrained policy} $\pi_c \in \Pi, \pi_c = \{smpl(c\pi_{joint}(\omega_{joint})) \ if \ \omega_{joint} \in Dom(c\pi_{joint}) \ \allowbreak, \ \allowbreak else \ \allowbreak \pi_{joint}(\omega_{joint})\}$ where $smpl$ gets an element from a set randomly. An observable policy constraint $c\pi$ corrects the current policy $\pi$, hence respecting safety guarantees internally.
 \end{itemize}
 
-
-\subsection{Functional specifications and constraining joint-policies according to missions}
+\subsection{Functional Specifications and Constraining Joint-Policies According to Missions}
 
 \textbf{Functional Specifications} describe the tasks and goals and are denoted as $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$:
 
@@ -423,20 +519,11 @@ We propose to integrate constraints into an agent's policy via three modes:
     \item $\mathcal{PO}: \mathcal{M} \times \mathcal{M}$: The set of preference orders $(m_1 \prec m_2)$.
 \end{itemize}
 
-We consider a goal to be theoretically represented by a history subset. Ultimately, a goal should impact reward function in MARL by updating the joint reward function when an agent is committed to a mission. We introduce an \textbf{observable reward function} $R_{g}: H \rightarrow \mathbb{R}$, the relation indicating how close a generated history is to a given history subset.
+We consider a goal to be theoretically represented by a history subset. Ultimately, a goal should impact MARL by updating the joint reward function when an agent is committed to a mission. We introduce an \textbf{observable reward function} $R_{g}: H \rightarrow \mathbb{R}$, the relation indicating how close a generated history is to a given history subset.
 
-A mission $m \in \mathcal{M}$ containing goals $\mathcal{G}_{m} = mo(m)$ is computed as a weighted addition of all observable reward functions of each goal into a single reward function for a mission.
+A reward function for a mission $m \in \mathcal{M}$ containing goals $\mathcal{G}_{m} = mo(m)$ is computed as a weighted addition of all observable reward functions of each goal.
 
-% \begin{figure}[h!]
-%     \centering
-%     \input{figures/goal_mission_scheme.tex}
-%     \caption{Observable reward function and its creation}
-%     \label{fig:goal_mission_scheme}
-% \end{figure}
-
-
-
-\subsection{Deontic specification and constraining joint-policies according to permissions/obligations}
+\subsection{Deontic Specifications and Constraining Joint-Policies According to Permissions/Obligations}
 
 \textbf{Deontic Specifications} define the permissions and obligations and are denoted as $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$:
 
@@ -446,30 +533,30 @@ A mission $m \in \mathcal{M}$ containing goals $\mathcal{G}_{m} = mo(m)$ is comp
     \item $\mathcal{PER}$: The set of permissions $(per(\rho_a, m, tc))$.
 \end{itemize}
 
-Based on previous propositions, we introduce the relation $da: \mathcal{PER} \cup \mathcal{OBL} \rightarrow \mathcal{P}(\mathcal{A})$ indicating how agents are constrained to roles and committed to missions for a given time constraint.
-To take into account time constraints, we introduce a time-to-live for each permission/obligation through $dttl: \mathcal{PER} \cup \mathcal{OBL} \times \mathcal{A} \rightarrow \mathbb{N}$. Since, roles and missions may change over time, it is required to update the reward function and policies as well.
+Based on previous propositions, we introduce the relation $da: \mathcal{PER} \cup \mathcal{OBL} \rightarrow \mathcal{P}(\mathcal{A})$ indicating how agents are constrained to roles and committed to missions for a given time constraint. To take into account time constraints, we introduce a time-to-live for each permission/obligation through $dttl: \mathcal{PER} \cup \mathcal{OBL} \times \mathcal{A} \rightarrow \mathbb{N}$. Since roles and missions may change over time, it is required to update the reward function and policies as well.
 
-When combining observable reward function of some goals into a mission one with weighted addition, we propose high weight for obligated missions and low weight for permitted ones. This enables differentiating between obligations and permissions, ensuring agents prioritize obligated missions over permitted ones.
+When combining the observable reward function of some goals into a mission with weighted addition, we propose a high weight for obligated missions and a low weight for permitted ones. This enables differentiating between obligations and permissions, ensuring agents prioritize obligated missions over permitted ones.
 
-\section{PRAHOM algorithm overview}\label{sec:prahom_theory}
 
-% $PRAHOM$ algorithm is presented in \autoref{alg:PRAHOM-A}. It fits within a regular MARL context: a joint-policy $\pi_{joint,ep}$ is updated after several steps allowing to have enough joint-histories $h_{joint,ep}$ and joint-rewards as feedback $r_{joint,ep}$. The training goes on over several episodes for better training until converging to a sufficient cumulative reward regarding $s$.
+\section{PRAHOMT algorithm overview}\label{sec:prahom_theory}
 
-% $PRAHOM$ underlying idea is to represent roles and missions through permissions/obligations as history subset that agents are expected to generate while interacting.
+% $PRAHOMT$ algorithm is presented in \autoref{alg:PRAHOMT-A}. It fits within a regular MARL context: a joint-policy $\pi_{joint,ep}$ is updated after several steps allowing to have enough joint-histories $h_{joint,ep}$ and joint-rewards as feedback $r_{joint,ep}$. The training goes on over several episodes for better training until converging to a sufficient cumulative reward regarding $s$.
 
-The PRAHOM algorithm integrates organizational specifications into the learning process of multi-agent reinforcement learning (MARL) by constraining joint-policies according to predefined roles, missions, and permission/obligation relations. This method ensures that the agents' behaviors align with organizational requirements while optimizing joint-policy ($\pi_{joint,i,s}$) as output.
+% $PRAHOMT$ underlying idea is to represent roles and missions through permissions/obligations as history subset that agents are expected to generate while interacting.
+
+The PRAHOMT algorithm integrates organizational specifications into the learning process of multi-agent reinforcement learning (MARL) by constraining joint-policies according to predefined roles, missions, and permission/obligation relations. This method ensures that the agents' behaviors align with organizational requirements while optimizing joint-policy ($\pi_{joint,i,s}$) as output.
 
 \textbf{Initialization and Input Parameters}: \quad
-The algorithm starts by initializing the joint-policy ($\pi_{joint}$) with the initial joint-policy ($\pi_{joint,i,init}$) and setting the episode counter ($ep$) to zero (lines 1).
+The algorithm starts by initializing the joint-policy ($\pi_{joint}$) with the initial joint-policy ($\pi_{joint,i,init}$) and setting the episode counter ($ep$) to zero.
 
 \textbf{Step 1: Determine Joint Observable Policy Constraints}: \quad
-PRAHOM determines the joint observable policy constraints ($c\pi_{joint}$) from the organizational specifications. This step involves mapping roles and permissions/obligations to constraints on the joint-policy, ensuring that the agents' actions are in line with the organizational rules.
+PRAHOMT determines the joint observable policy constraints ($c\pi_{joint}$) from the organizational specifications. This step involves mapping roles and permissions/obligations to constraints on the joint-policy, ensuring that the agents' actions are in line with the organizational rules.
 
 \textbf{Step 2: Initialize Constrained Policy}: \quad
 If the mode of constraint integration is set to \textit{correct\_policy}, the algorithm creates and uses a joint constrained policy based on the initial policy and the observable policy constraints ($c\pi_{joint}$). This ensures that the initial policy is inherently aligned with the specified constraints from the beginning.
 
 \textbf{Step 3: Determine Observable Reward Functions}: \quad
-Next, PRAHOM determines the observable reward functions $R_{m,joint}$ from the organizational specifications (line 5). This involves mapping missions and goals to reward functions, which will guide the agents towards achieving organizational sub-goals.
+Next, PRAHOMT determines the observable reward functions $R_{m,joint}$ from the organizational specifications (line 5). This involves mapping missions and goals to reward functions, which will guide the agents towards achieving organizational sub-goals.
 
 \textbf{Step 4: Main Training Loop}: \quad
 The main training loop runs for a maximum number of episodes ($ep_{max}$) or until the cumulative reward expectancy is met.
@@ -502,9 +589,9 @@ The main training loop runs for a maximum number of episodes ($ep_{max}$) or unt
           After each episode, the algorithm checks whether the cumulative reward meets the expectancy ($is\_sufficient$) and increments the episode counter ($ep$).
 \end{itemize}
 
-\textbf{Complexity}: \quad The computational complexity of PRAHOM primarily depends on the number of episodes ($ep_{max}$), the number of steps per episode ($step_{max}$), and the complexity of the MARL algorithm ($u_{marl}$). Each step involves updating the policy, selecting \& validating actions, and updating histories and rewards, which can be computationally intensive. The memory complexity depends on the need to store rewards, policies, and histories. The history graphs we introduced allow histories to be merged compactly, reducing redundancy with limited impact on read cost.
+\textbf{Complexity}: \quad The computational complexity of PRAHOMT primarily depends on the number of episodes ($ep_{max}$), the number of steps per episode ($step_{max}$), and the complexity of the MARL algorithm ($u_{marl}$). Each step involves updating the policy, selecting \& validating actions, and updating histories and rewards, which can be computationally intensive. The memory complexity depends on the need to store rewards, policies, and histories. The history graphs we introduced allow histories to be merged compactly, reducing redundancy with limited impact on read cost.
 
-% Scalability can be challenging as the number of agents, roles, missions increases. Evaluating PRAHOM scalability requires to consider an implemented version through these salient features:
+% Scalability can be challenging as the number of agents, roles, missions increases. Evaluating PRAHOMT scalability requires to consider an implemented version through these salient features:
 % \begin{itemize}
 %     \item \textbf{Parallelization:} Performance for updating/validating policies strongly depends on chosen MARL algorithms capabilities such as parallelization significantly improves it (especially in Policy Optimization algorithms);
 %     \item \textbf{Efficient Data Structures:} The choice of data structures for storing and accessing histories or policies is crucial for reducing overhead.;
@@ -515,36 +602,25 @@ The main training loop runs for a maximum number of episodes ($ep_{max}$) or unt
 
 \section{Experimental Setup}\label{sec:experimental_setup}
 
-\subsection{Algorithm implementation: PRAHOM Wrapper}
+In order to meet the 3rd CAGE Challenge, our experimental setup first consist creating Cyberdefense MAS models using $\mathcal{M}OISE^+$ organizational specifications. We established models ranging with different level of constraints including different roles and missions. For that purpose, we considered taking inspiration from MASCARA to develop some of these models. Then, after explaining the implementation of PRAHOMT, we exposed its usage to integrate the defined models to constrain the agents' learning. Finally, we evaluated the impact of these models both for training and afterwards.
 
-We developed the \textit{PRAHOM Wrapper}
-%
-\footnote{Additional information are provided in addition to the code in \url{https://github.com/julien6/omarl_experiments}.}
-%
-as a proof-of-concept (PoC) tool to augment PettingZoo environments, facilitating the application of the PRAHOM algorithm. This wrapper includes additional class methods to implement PRAHOM's functionalities, streamlining the training process. The wrapper leverages the MARLlib~\cite{hu2022marllib} library, which offers a comprehensive range of state-of-the-art MARL algorithms and finely-tuned models.
 
-\textbf{History Subsets} \quad We implemented a \textit{history\_subset} class to handle history subsets based on predefined patterns or rules via an implemented history graph when dealing with patterns. Alternatively, custom functions can be employed to instantiate a history\_subset, allowing more flexibility.
+\subsection{CybORG CAGE Challenge 3 Environment}
 
-\textbf{Organizational Specifications to Relations} \quad The \textit{osr} class models a complete $\mathcal{M}OISE^+$ organizational model that includes roles, goals, and missions, which are directly mapped to \textit{history\_subset} objects initialized with expected patterns. This mapping implements \textit{rh}, \textit{gh}, and \textit{mh}. Permissions/obligations are also defined in the \textit{osr}, mapping the agents constrained to roles and committed to missions with time constraints, thus implementing the \textit{da} relation.
+We selected the CybORG CAGE Challenge 3 environment, which simulates a swarm of autonomous drones operating in a complex cyber-infrastructure. The environment includes multiple drones (\texttt{drone\_0}, \texttt{drone\_1}, \ldots, \texttt{drone\_n}), each with specific capabilities and roles within the swarm. The goal is to secure critical assets and protect against cyber-attacks.
 
-\textbf{Observation Labeling (ol)} \quad The observation labeling is managed by the singleton \textit{ol\_mngr} class, which uses a regular dictionary to map observations to labels. It leverages the HuggingFace transformer model \textit{tiiuae/falcon-7b} to learn the mappings alongside the dictionary. The \textit{ol\_mngr} class includes an interactive process for users to label each displayed observation during the labeling process. %Post-training, the LLM can be employed to identify desired observations based on keywords, enhancing usability.
-
-\textbf{History Graph} \quad We constructed the \textit{history graph} class from scratch following the theoretical foundation of ordinal numbers and cardinalities. The class provides functions to add histories or history patterns and to check whether a given history matches the stored patterns.
-
-\textbf{Observable Policy Constraint (opc)} \quad The \textit{opc} class links pairs of (history\_pattern, observation) to lists of actions. Each association is integrated into a unified history graph object, ensuring consistency in policy constraints.
-
-\textbf{Constrained Policy (cons\_policy)} \quad The \textit{cons\_policy} class combines a regular MARLlib policy with an \textit{opc} object. The integration involves embedding policy constraints within the MARLlib policy framework, allowing the constrained policy to respect predefined action constraints.
-
-\textbf{Observable Reward Function (orf)} \quad The \textit{orf} class constructs an observable reward functions based on history patterns. It includes a function that evaluates whether a given history matches the initial pattern: high rewards for matching patterns, low rewards otherwise.
-
-\textbf{Time-to-Live (dttl)} \quad The \textit{dttl} class is built using a Python dictionary that replicates data from the \textit{osr} object. This class manages the time constraints to update the observable reward function and policy constraints.
-
-Once the PettingZoo environment is wrapped with the PRAHOM Wrapper, a function is provided to execute the PRAHOM algorithm. This function accepts a JSON object containing MARLlib details, such as the chosen MARL algorithm (e.g., MADDPG or MAPPO). It processes all defined elements, retrieves roles and missions, converts them into \textit{opc} or \textit{orf} objects and so on. Ultimately outputs a dictionary mapping each agent to its trained policy.
+\textbf{Environment Details:}
+\begin{itemize}
+    \item \textbf{Agents:} Multiple autonomous drones with varying capabilities.
+    \item \textbf{Actions:} Drone maneuvers, cyber-attacks, defensive actions.
+    \item \textbf{Observation and State Shapes:} Diverse sensor data and cyber-threat indicators.
+    \item \textbf{Rewards:} Points for securing assets, preventing attacks, and neutralizing threats.
+\end{itemize}
 
 
 \subsection{MASCARA through $\mathcal{M}OISE^+$}
 
-The \textbf{MASCARA} (MAS-Centric AICA Reference Architecture) is a conceptual framework developed to enhance the capabilities of AICAs by leveraging the principles of Multi-Agent Systems (MAS). In a MASCARA-based system, multiple intelligent agents work collaboratively to provide a robust and adaptive cyber defense.
+The is a conceptual framework developed to enhance the capabilities of AICAs by leveraging the principles of Multi-Agent Systems (MAS). In a MASCARA-based system, multiple intelligent agents work collaboratively to provide a robust and adaptive Cyberdefense.
 
 The MASCARA architecture can be understood through the lens of the $\mathcal{M}OISE^+$ framework, which provides a structured approach to organizing multi-agent systems.
 
@@ -591,20 +667,6 @@ The deontic specifications of the MASCARA architecture define only obligations f
 \end{itemize}
 
 
-\subsection{CybORG CAGE Challenge 3 Environment}
-
-We selected the CybORG CAGE Challenge 3 environment, which simulates a swarm of autonomous drones operating in a complex cyber-infrastructure. The environment includes multiple drones (\texttt{drone\_0}, \texttt{drone\_1}, \ldots, \texttt{drone\_n}), each with specific capabilities and roles within the swarm. The goal is to secure critical assets and protect against cyber-attacks.
-
-\textbf{Environment Details:}
-\begin{itemize}
-    \item \textbf{Agents:} Multiple autonomous drones with varying capabilities.
-    \item \textbf{Actions:} Drone maneuvers, cyber-attacks, defensive actions.
-    \item \textbf{Observation and State Shapes:} Diverse sensor data and cyber-threat indicators.
-    \item \textbf{Rewards:} Points for securing assets, preventing attacks, and neutralizing threats.
-\end{itemize}
-
-We utilized the MAPPO and MADDPG algorithms from MARLlib tailored for cooperative behavior among autonomous agents.
-
 \subsection{Organizational Models}
 
 We implemented and evaluated three MASCARA-based organizational models tailored for the CybORG 3rd CAGE Challenge environment:
@@ -617,11 +679,52 @@ We implemented and evaluated three MASCARA-based organizational models tailored 
 
 We also established a non MASCARA-based model based on our empirical understanding of the environment called \textbf{Manual Control Model} to be used as a baseline mode.
 
+
+\subsection{Algorithm implementation: PRAHOM Wrapper}
+
+We developed the \textit{PRAHOM Wrapper}
+%
+\footnote{Additional information are provided in addition to the code in \url{https://github.com/julien6/omarl_experiments}.}
+%
+as a PoC tool to augment PettingZoo environments, facilitating the application of the PRAHOMT algorithm. This wrapper includes additional class methods to implement PRAHOMT's functionalities, streamlining the training process. The wrapper leverages the MARLlib~\cite{hu2022marllib} library, which offers a comprehensive range of state-of-the-art MARL algorithms and finely-tuned models.
+
+\textbf{History Subsets} \quad We implemented a \textit{history\_subset} class to handle history subsets based on predefined patterns or rules via an implemented history graph when dealing with patterns. Alternatively, custom functions can be employed to instantiate a history\_subset, allowing more flexibility.
+
+\textbf{Organizational Specifications to Relations} \quad The \textit{osr} class models a complete $\mathcal{M}OISE^+$ organizational model that includes roles, goals, and missions, which are directly mapped to \textit{history\_subset} objects initialized with expected patterns. This mapping implements \textit{rh}, \textit{gh}, and \textit{mh}. Permissions/obligations are also defined in the \textit{osr}, mapping the agents constrained to roles and committed to missions with time constraints, thus implementing the \textit{da} relation.
+
+\textbf{Observation Labeling (ol)} \quad The observation labeling is managed by the singleton \textit{ol\_mngr} class, which uses a regular dictionary to map observations to labels. It leverages the HuggingFace transformer model to learn the mappings alongside the dictionary.
+
+We chose the \textit{tiiuae/falcon-7b-instruct} instruct version because it went on further fine-tuning of the pre-trained base versions on instructions and conversational data. This additional fine-tuning makes it a better choice for many Natural Language Processing tasks including mapping labels to real observations such as numerical vectors.
+
+Despite its successful in simple examples, more complex observation were not successfully labels. We provide a mean for complimentary training using the \textit{ol\_mngr} class that includes an interactive process for users to label each displayed observation during the labeling process as illustrated in \Autoref{fig:PRAHOMT_ol}.
+
+Then, these manually labeled observations can be used to fine-tune the model to learn how to label observations on the considered environment as illustrated in \Autoref{fig:ol_llm}.
+
+%Post-training, the LLM can be employed to identify desired observations based on keywords, enhancing usability.
+
+\begin{figure}[ht]
+    \centering
+    \input{figures/ol_llm.tex}
+    \caption{View of our use of the \textit{tiiuae/falcon-7b-instruct} LLM to map observations to labels}
+    \label{fig:ol_llm}
+\end{figure}
+
+\textbf{History Graph} \quad We constructed the \textit{history graph} class from scratch following the theoretical foundation of ordinal numbers and cardinalities. The class provides functions to add histories or history patterns and to check whether a given history matches the stored patterns.
+
+\textbf{Observable Policy Constraint (opc)} \quad The \textit{opc} class links pairs of (history\_pattern, observation) to lists of actions. Each association is integrated into a unified history graph object, ensuring consistency in policy constraints.
+
+\textbf{Constrained Policy (cons\_policy)} \quad The \textit{cons\_policy} class combines a regular MARLlib policy with an \textit{opc} object. The integration involves embedding policy constraints within the MARLlib policy framework, allowing the constrained policy to respect predefined action constraints.
+
+\textbf{Observable Reward Function (orf)} \quad The \textit{orf} class constructs an observable reward functions based on history patterns. It includes a function that evaluates whether a given history matches the initial pattern: high rewards for matching patterns, low rewards otherwise.
+
+\textbf{Time-to-Live (dttl)} \quad The \textit{dttl} class is built using a Python dictionary that replicates data from the \textit{osr} object. This class manages the time constraints to update the observable reward function and policy constraints.
+
+Once the PettingZoo environment is wrapped with the PRAHOM Wrapper, a function is provided to execute the PRAHOMT algorithm. This function accepts a JSON object containing MARLlib details, such as the chosen MARL algorithm (e.g., MAPPO). It processes all defined elements, retrieves roles and missions, converts them into \textit{opc} or \textit{orf} objects and so on. Ultimately outputs a dictionary mapping each agent to its trained policy.
+
+
 \subsection{Experimental Procedure}
 
-We trained each organizational model using the PRAHOM Wrapper within the CybORG CAGE Challenge 3 environment. The wrapper integrates organizational specifications and constraints into the MARLlib policies, enabling agents to learn and adapt their behavior based on predefined roles and missions.
-
-\subsection{Evaluation Criteria}
+We trained each organizational model using the PRAHOM Wrapper within the CybORG CAGE Challenge 3 environment. The wrapper integrates organizational specifications and constraints into the MARLlib policies, enabling agents to learn and adapt their behavior based on predefined roles and missions. We utilized the MAPPO algorithm from MARLlib library with available fine-tuning for cooperative behavior among autonomous agents.
 
 Our evaluation criteria include both qualitative and quantitative assessments:
 
@@ -635,7 +738,7 @@ $(\mathbf{C1.1})$: \quad Qualitative assessment involves observing the adoption 
 
 \
 
-$(\mathbf{C2.1})$: \quad Quantitative analysis of a single model performance by measuring the convergence time and average rewards obtained.\
+$(\mathbf{C2.1})$: \quad Quantitative analysis of a single model performance by measuring the convergence time, the average rewards and standard deviations obtained.\
 
 $(\mathbf{C3.1})$: \quad Quantitative analysis between  models to determine which organizational structure regarding results obtained after $(\mathbf{C2.1})$.
 
@@ -652,24 +755,27 @@ Figure \ref{fig:learning_curves} illustrates the learning curves for the Suspect
     \label{fig:learning_curves}
 \end{figure*}
 
-Table \ref{tab:results} summarizes the convergence time and average rewards achieved by each model during the training process.
+Table \ref{tab:results} summarizes the convergence time, average rewards, and standard deviation achieved by each model during the training process.
 
 \begin{table}[ht]
     \centering
-    \begin{tabular}{|c|c|c|}
+    \scriptsize
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabular}{|c|c|c|c|}
         \hline
-        Model & Convergence Time (iteration) & Average Reward \\
+        Model                   & Convergence Time & Average Reward & Standard Deviation \\
         \hline
-        No Model & 115 & 1.76           \\
-        Suspect Isolation Model & 54 & 1.43           \\
-        Greedy Defensive Model  & ? & ?       \\
-        Active Defensive Model  & 80 & 1.82           \\
-        Manual Control Model    & None & 1.8 \\
+        No Model                & 115                          & 1.76           & 0.12               \\
+        Suspect Isolation Model & 54                           & 1.43           & 0.15               \\
+        Greedy Defensive Model  & ?                            & ?              & ?                  \\
+        Active Defensive Model  & 80                           & 1.82           & 0.10               \\
+        Manual Control Model    & None                         & 1.80           & 0.11               \\
         \hline
     \end{tabular}
     \caption{Performance metrics for organizational models in CybORG CAGE Challenge 3.}
     \label{tab:results}
 \end{table}
+
 
 \subsection{Discussion}
 
@@ -689,13 +795,13 @@ The experimental results confirm the importance of organizational models in enha
 
 \section{Conclusion}\label{sec:conclusion}
 
-Our main contribution is the PRAHOM algorithmic approach that aims to link MARL and agents' policies with the $\mathcal{M}OISE^+$ model leveraging on relations between joint-histories and organizational specifications. It seeks to constrain the agents' training according to expected behaviors expressed as organizational specifications.
+Our contribution is motivated by addressing the design of a Cyberdefense MAS as an optimization problem under constraints, where the variables to optimize are the agents' policies and the constraints are organizational specifications. This perspective offers two main benefits for tackling the constantly evolving challenges in Cyberdefense: i) It enables the automation/assistance of the design process through MARL techniques, which can be time-consuming and prone to oversight when done manually; ii) It ensures that certain constraints, such as safety guarantees, are satisfied in the agents' behavior, thus aiding in the monitoring and understanding of trained agents.
 
-As a first implementation, \emph{PRAHOM Wrapper} is assessed in a cooperative Cyberdefense Drone swarm scenario, where the chosen organizational specifications generally match the expected observations. Despite the implementation's limited functionalities, the initial results showed that the PRAHOM approach can constrain the resulting agents' policy space according to the specified organizational constraints.
+Building on this idea, we proposed the PRAHOMT algorithm to augment the MARL framework with the $\mathcal{M}OISE^+$ model. PRAHOMT constrains the agents' training according to expected behaviors expressed as organizational specifications. PRAHOMT was evaluated using our proposed PoC implementation for the 3rd CAGE Challenge, a cooperative Cyberdefense drone swarm scenario designed to limit/eliminate malware programs and their impact. We established various organizational models, ranging from minimally constrained to fully constrained ones. We conducted an evaluation of the emergent, fine-tuned, or predefined collective strategies based on performance criteria during and after the training.
 
-Even though PRAHOM is agnostic of any MARL algorithm, directing the collective behaviors of agents a priori can prove difficult. Major perspectives to improve PRAHOM are inspired by hierarchical learning, which contributes to better emergence of strategies during learning.
+The results show that the \textquote{Active Defensive Model} shows a relevant tradeoff between constraints and free learning. It comprises simple predefined rules to detect and mitigate threats when observations clearly indicate them, while allowing the agent to learn how to respond in other situations.
 
-Furthermore, while the initial results obtained with \emph{LLM} show it as a promising complementary tool for PRAHOM, it may also illuminate new avenues for explaining collective behavior beyond its intended use.
+In addition to constraining agents according to organizational specifications, we also aim to integrate explainability mechanisms. Indeed, we intend to characterize and curate relevant emergent strategies to include as new organizational constraints in future training. In this respect, the idea of iterative improvement between training and explainability could greatly benefit from hierarchical learning, which helps better characterize and bring out strategies during learning. Furthermore, while the initial results obtained with LLM show it as a promising complementary tool for PRAHOMT, it may also offer new avenues for explaining collective behavior, especially in Cyberdefense scenarios where most networked environments are not visually or intuitively representable.
 
 % Ultimately, we also aim to improve the applicability of PRAHOM by developing dedicated interfaces built around PRAHOM making it more accessible to industrial and research contexts.
 
