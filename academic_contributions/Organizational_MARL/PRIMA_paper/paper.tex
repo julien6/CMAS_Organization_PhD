@@ -1,6 +1,44 @@
 \RequirePackage[2020-02-02]{latexrelease}
 \documentclass[runningheads]{llncs}
 
+% save the proof environment defined by the class
+\let\lncsproof\proof \let\lncsendproof\endproof \let\lncsqed\qed
+% remove the definitions in order to load amsthm
+\let\proof\relax\let\endproof\relax
+
+\usepackage{amsthm}
+
+% restore the class defined proof
+\let\proof\lncsproof \let\endproof\lncsendproof \let\qed\lncsqed
+
+\newtheoremstyle{freethm}% <name>
+ {3pt}% <Space above>
+ {3pt}% <Space below>
+ {\itshape}% <Body font>
+ {}% <Indent amount>
+ {\bfseries}% <Theorem head font>
+ {}% <Punctuation after theorem head>
+ {\newline}% <Space after theorem headi>
+ {\thmname{#1}\thmnumber{ #2}\thmnote{ (#3)}.}
+
+\theoremstyle{freethm}
+\newtheorem{mytheorem}{Theorem}
+
+% Define a new theorem style for proof outlines
+\newtheoremstyle{proofoutline}
+  {3pt}    % Space above
+  {3pt}    % Space below
+  {\itshape} % Body font
+  {}        % Indent amount
+  {\bfseries} % Theorem head font
+  {.}       % Punctuation after theorem head
+  { }       % Space after theorem head
+  {\thmname{#1}\thmnumber{ #2}\thmnote{ (#3)}} % Theorem head spec
+
+% Apply the new theorem style
+\theoremstyle{proofoutline}
+\newtheorem{proofoutline}{Proof Outline}
+
 \usepackage[english]{babel}
 \addto\extrasenglish{  
     \def\figureautorefname{Figure}
@@ -8,6 +46,7 @@
     \def\algorithmautorefname{Algorithm}
     \def\sectionautorefname{Section}
     \def\subsectionautorefname{Subsection}
+    \def\proofoutlineautorefname{Proof Outline}
 }
 
 \newcommand{\supertiny}{\fontsize{1}{2}\selectfont}
@@ -45,7 +84,7 @@
 %\usepackage{color}
 %\renewcommand\UrlFont{\color{blue}\rmfamily}
 
-\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm,amssymb,amsfonts}
 \usepackage[inline, shortlabels]{enumitem}
 \usepackage{tabularx}
 \usepackage{caption}
@@ -209,6 +248,7 @@ $ \hfill \phantom{x}
 \
 \setlength{\leftskip}{0pt}
 }
+
 
 % --------------------------------
 %             DOCUMENT
@@ -499,7 +539,7 @@ As illustrated in \Autoref{fig:PRAHOM_opc}, we propose a pattern format to simpl
     \item \textbf{correct\_policy}: Create and use a \textbf{constrained policy} $\pi_c \in \Pi, \pi_c = bld_{\pi c}(\pi, c\pi) = \{sample(c\pi_{joint}(\omega_{joint})) \ if \ \omega_{joint} \in Dom(c\pi_{joint}) \ and \ \omega_{joint} \notin Dom(\pi_{joint}), \ else \ \pi_{joint}(\omega_{joint})\}$, where an observable policy constraint $c\pi$ corrects the current policy $\pi$. $sample$ gets an element from a set randomly. $bld_{\pi c}: \Pi \times c\Pi \rightarrow \Pi$ enables creating a constrained policy by combining a regular policy and an observable policy constraint. This mode enables to respect safety guarantees internally.
 \end{itemize}
 
-In the annex, we provide \Autoref{proof:jpc_to_ac}, which outlines why constraining the action space during training at each step implies that the resulting joint-policy will necessarily be constrained.
+In the annex, we provide \autoref{proof:jpc_to_ac}, which outlines why constraining the action decision-making process dynamically during training at each step implies that the resulting joint-policy will necessarily be constrained.
 
 \
 
@@ -775,7 +815,7 @@ Eventually, even though the first results obtained with LLM show it as a promisi
 
 \section*{Annexes}\label{proof:jpc_to_ac}
 
-\subsection*{Action constraining during training implies result joint-policy constraining}
+\subsection*{Constraining the action decision-making process dynamically enables constraining policies}
 \input{proofs/jpc_to_ac.tex}
 
 \newpage

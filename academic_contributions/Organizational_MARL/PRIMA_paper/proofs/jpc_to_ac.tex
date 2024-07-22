@@ -1,32 +1,48 @@
-\begin{proof}\label{proof:jpc_to_ac}
-    
-    Let $n \in \mathbb{N}$ agents
-    
-    Let a Dec-POMDP, $d \in D$
-    
-    Let a cumulative reward expectancy, $s \in \mathbb{R}$
-    
-    Let some specifications constraints, $os_{init} \in OS$
-    
-    Let a joint-policy $\pi_{joint} \in \Pi_{joint}, \allowbreak \pi_{joint} = \{\pi_1,\pi_2..\pi_n\}, \pi_k \in \Pi,(k \in \mathbb{N}, k \leq n)$
-    
-    Let's consider only one episode
-    
-    Let $step_{max} \in \mathbb{N}$, the maximum number of steps per episode
-    
-    Let $Solv: \Pi \times \Omega \times A \times \mathbb{R} \rightarrow \Pi$, the RL algorithm that uses the reward, observation to improve a given agent's policy (possibly at each step) by updating the observation-action couples of the policy so that $Solv(\pi, \omega, r) = (\pi \setminus \{(\omega_p, a_p) | p \in \mathbb{N}\}) \cup \{(\omega_q, a_q) | q \in \mathbb{N}\}$
-    
-    For each step, the joint-policy is updated by the RL algorithm.
-    
-    Let $solutions = \{\pi_{joint,1}, \pi_{joint,1}.. \pi_{joint,d}\} (d \in \mathbb{N})$ the set of joint-policies obtained at a $s$ cumulative reward expectancy
-    
-    Let $satisfying = \{\pi_{joint,1}, \pi_{joint,1}.. \pi_{joint,f}\} (f \in \mathbb{N})$ the set of joint-policies that are allowed by the organization specifications $os_{init}$
-    
-    The joint-policies that satisfy the organization specifications and reach at least a cumulative reward expectancy are
-    Let $compliant = solution \cap solutions = \{\pi_{joint,1}, \pi_{joint,1}.. \pi_{joint,q}\} (q \in \mathbb{N})$
-    It means that for a given joint-policy in compliant, for a given agent's policy we cannot find a couple observation-action that is not in the matching satisfying joint-policy.
+\begin{proofoutline}\label{proof:jpc_to_ac}
 
-    Now, let's suppose we restrict the action space at each step for each agent.
+    We provide an overview of our approach to constrain the possible policies of trained agents through a simple abstract example. While this example is somewhat artificial, it serves to illustrate the general principle of our approach and gives insights into why it is indeed effective in constraining policies.
+
+    \
+
+    \noindent Let's consider an example with this initial configuration:
+
+    \begin{itemize}
+        \item $d=\langle S,A,T,R,\Omega, O, \gamma \rangle \in D$, the Dec-POMDP to solve (i.e maximizing $R$);
+        \item $\mathcal{A}, |\mathcal{A}| = n \in \mathbb{N}$, the  $n$ agents involved in the Dec-POMDP;
+        \item $s \in \mathbb{R}$, the cumulative reward expectancy to reach;
+        \item $\pi_{joint} \in \Pi_{joint}, \allowbreak \pi_{joint} = \{\pi_1..\pi_n\}, \pi_k \in \Pi (k \leq n)$, the joint-policy to update;
+        \item $ep_{max} = 1$, let's consider only one episode;
+        \item $step_{max}$, the maximum number of steps per episode;
+        \item $u_{marl}: \Pi_{joint} \times H_{joint} \times R_{joint} \rightarrow \Pi_{joint}$, the MARL algorithm that uses the joint-reward and joint-history to update a joint-policy;
+              \begin{itemize}
+                  \item $u_{marl,i}: \Pi \times H_{joint} \times R_{joint} \rightarrow \Pi$, the MARL algorithm to improve a single the policy of an agent $i$ (possibly at each step).
+              \end{itemize}
+    \end{itemize}
+
+    \noindent We assume some organizational specifications are defined, applied to agents, and associated with matching history subsets (at least from a theoretical point view):
+    \begin{itemize}
+        \item $os \in \mathcal{OS}$, the organizational specifications that agents must satisfy
+              \begin{itemize}
+                  \item $\mathcal{R}$, the roles that agents may be constrained to;
+                  \item $\mathcal{M}$, the missions that agents may be committed to;
+                  \item $\mathcal{OBL}$, the obligations indicating whether an agent playing a role $\rho \in \mathcal{R}$ is obligated to commit on mission $m \in \mathcal{M}$. In this example, we do not consider permissions.
+              \end{itemize}
+        \item $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$: gives the expected history subset for a role;
+        \item $mh: \mathcal{M} \rightarrow \mathcal{P}(H)$: gives the expected history subset for a mission;
+        \item $da: \mathcal{OBL} \rightarrow \mathcal{P}(A)$: gives the agents constrained to a role and obligated to commit on a mission.
+    \end{itemize}
+
+    \noindent We suppose there exists a set of joint-policies $S\Pi_{joint} = \{s\pi_{joint,1}.. s\pi_{joint,d}\} \allowbreak (d \in \mathbb{N})$, that enables reaching at least the $s$ cumulative reward expectancy.
+
+    \
+
+    \noindent We suppose there exists a set of joint-policies $O\Pi_{joint} = \{o\pi_{joint,1}.. o\pi_{joint,d'}\} (d' \in \mathbb{N})$ that satisfy the applied organizational specifications, so that an agent playing role $\rho \in \mathcal{R}$ and obligated to commit on mission $m \in \mathcal{M}$ should have its policy $o\pi_{joint,i} \ (i \leq d')$ to generate any matching history $h \in (rh(\rho) \cap mh(m))$.
+
+    \
+
+    \noindent We assume there exists a non-empty set of joint-policies $P\Pi = S\Pi \cap O\Pi \allowbreak = \{p\pi_{joint,1}..p\pi_{joint,q}\}, q \in \mathbb{N}$ that both reach at least the $s$ cumulative reward expectancy and satisfy the organizational specifications $os$.
+
+    \
 
     % -------
     At first step, the agent $i$ has a empty history $h = ()$ and its initial policy is $\pi_{i,0} \in \Pi$, has an empty previous action $a_0 = \emptyset$ and observation $\omega_0 = \emptyset$.
@@ -71,7 +87,7 @@
     At the end, its history is now $h = ((\omega_1, a_1), (\omega_2, a_2)..(\omega_{step_{max}}, a_{step_{max}}))$
 
     By construction, the $(\omega_i,a_i) \in h$ ($i \leq step_{max}$) belong to the policies that belong to the joint-policies $satisfying$.
-    
+
     By construction, $\pi_{i,step_{max}} \in \pi_{joint}, \pi_{joint} \in satisfying$.
 
     Applying several episodes does not change that result as it keeps the same policy from the end of an episode to the beginning of another one.
@@ -82,4 +98,4 @@
 
     Thus, the resulting joint-policy $\pi_{joint} = \{\pi_{i,step_{max}}, i \leq n\} \in solutions$
 
-\end{proof}
+\end{proofoutline}
