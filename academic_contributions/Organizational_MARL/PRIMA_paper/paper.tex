@@ -325,8 +325,17 @@ However, increasing this empirical knowledge can be costly for numerous factors 
 
 % Contribution
 We propose an assisted MAS design approach called \textit{Partial Relations between Agents' Histories and Organizational Model} (PRAHOM). PRAHOM fits within a simulated version of the environment to leverage Multi-Agent Reinforcement Learning (MARL) by introducing organizational specifications from the $\mathcal{M}OISE^+$ model. To link $\mathcal{M}OISE^+$ and MARL, we one-to-one map an organizational specification (i.e a role or a mission) to a history subset characterizing an expected behavior impacting action space or the reward function accordingly.
+%
+\Autoref{fig:policy_histories} illustrates this underlying idea: a policy can be represented as the set of all its possibly generated histories/trajectories starting from initial observations and possibly reaching the final observations-actions. Then, one can delimit a history subset as a way to characterize an organizational specifications.
 
-Unlike, classical MARL where agents' logic (referred to as \textbf{policies}) is freely updated solely based on maximizing the reward, our approach also forces/entices agents to satisfy some hand-crafted organizational specifications during the training. By restricting the policy search space, our approach shortens the convergence time to stable policies showing a fine-tuned organization among trained agents that may prove to be relevant insights into future design in the real environment.
+\begin{figure}[h!]
+    \centering
+    \input{figures/history_representation.tex}
+    \caption{An abstract view of joint-policy as joint-histories and constraints}
+    \label{fig:policy_histories}
+\end{figure}
+
+Unlike, classical MARL where agents' logic (referred to as \textbf{policies}) is freely updated solely based on maximizing the reward, our approach also forces/entices agents to satisfy some hand-crafted organizational specifications during the training. By restricting the policy search space, our approach may shorten the convergence time. Additionally, it enables stabilizing resulting policies during/after training. In a design point of view, the obtained policies can be analyzed as fine-tuned organizations leveraging known introduced organizational specifications to help out explanability. This led to get relevant insights into future design in the real environment. Although, adding organizational specifications may also prevent new organizations to emerge, our contribution provides a way to find a tradeoff while addressing safety guarantees.
 
 % Outline
 The remainder is organized as follows: Section 2 gives an overview of the available works dealing with design within MARL. This work leads to present the theoretical foundations we retained for building our contribution in section 3. Section 4 introduces the PRAHOM algorithmic approach. Section 5 first presents our first PRAHOM implementation as a library we used in our experimental setup. Then we discuss the results of our empirical evaluation. Section 6 concludes the paper and outlines future research directions.
@@ -727,7 +736,7 @@ Our evaluation criteria consist of both qualitative and quantitative aspects dur
 
 \paragraph{Qualitative Evaluation} We aim to observe the impact of organizational specifications on agents.
 
-$(\mathbf{C_1})$: After training, we expect to manually notice collective hunting strategies, such as circling prey, under the \textit{circle\_model} in visually rendered environment.
+% $(\mathbf{C_1})$: After training, we expect to manually notice collective hunting strategies, such as circling prey, under the \textit{circle\_model} in visually rendered environment.
 
 \paragraph{Quantitative Evaluation} The quantitative evaluation involves comparing learning curves and average rewards across three cases:
 \begin{itemize}
@@ -737,16 +746,40 @@ $(\mathbf{C_1})$: After training, we expect to manually notice collective huntin
 \end{itemize}
 
 \noindent During training, we keep trace of the average reward over episode and the convergence time as well.
+%
+% $(\mathbf{C_2})$: We expect faster convergence in the PTS case compared to the NTS case, with the FTS case showing a constant learning curve.
+%
+\noindent After training, for each case, we measure the average reward per episode; the standard deviation indicating how stable is the trained joint-policy.
 
-$(\mathbf{C_2})$: We expect faster convergence in the PTS case compared to the NTS case, with the FTS case showing a constant learning curve.
+% $(\mathbf{C_3})$: We expect higher rewards in the PTS case compared to the NTS case.
+
+% $(\mathbf{C_4})$: We expect the standard deviation to decrease from NTS to PTS and from PTS to FTS since agents are increasingly more constrained in their behavior.
 
 \
 
-\noindent After training, for each case, we measure the average reward per episode; the standard deviation indicating how stable is the trained joint-policy.
+We summarize our evaluation criteria into the \Autoref{tab:evaluation_criteria}:
 
-$(\mathbf{C_3})$: We expect higher rewards in the PTS case compared to the NTS case.
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|>{\centering\arraybackslash}m{0.2\textwidth}|>{\centering\arraybackslash}m{0.7\textwidth}|}
+        \hline
+        \textbf{Qualitative Evaluation} & \textbf{Description} \\
+        \hline
+        $(\mathbf{C_1})$ & After training, we expect to manually notice collective hunting strategies, such as circling prey, under the \textit{circle\_model} in visually rendered environment. \\
+        \hline
+        \textbf{Quantitative Evaluation} & \textbf{Description} \\
+        \hline
+        $(\mathbf{C_2})$ & We expect faster convergence in the PTS case compared to the NTS case, with the FTS case showing a constant learning curve. \\
+        \hline
+        $(\mathbf{C_3})$ & We expect higher rewards in the PTS case compared to the NTS case. \\
+        \hline
+        $(\mathbf{C_4})$ & We expect the standard deviation to decrease from NTS to PTS and from PTS to FTS since agents are increasingly more constrained in their behavior. \\
+        \hline
+    \end{tabular}
+    \caption{Evaluation criteria divided into qualitative and quantitative parts.}
+    \label{tab:evaluation_criteria}
+\end{table}
 
-$(\mathbf{C_4})$: We expect the standard deviation to decrease from NTS to PTS and from PTS to FTS since agents are increasingly more constrained in their behavior.
 
 \subsection{Results and Discussion}
 
@@ -755,7 +788,7 @@ The learning curves for the three cases (NTS, PTS, FTS) are displayed in Figure~
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\textwidth]{figures/prahom_learning_curve.png}
-    \caption{Learning curves for NTS, PTS, and FTS cases.}
+    \caption{Learning curves for NTS, PTS, and FTS cases using the \textit{penalize} mode.}
     \label{fig:learning_curves}
 \end{figure}
 
@@ -763,18 +796,23 @@ Table~\ref{tab:results} summarizes the convergence times and average rewards per
 
 \begin{table}[h!]
     \centering
-    \begin{tabular}{|c|c|c|c|}
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
         \hline
-        Case & Convergence Time (episodes) & Average Reward & Standard Deviation \\
+        & \multicolumn{3}{c|}{correct} & \multicolumn{3}{c|}{penalize} & \multicolumn{3}{c|}{correct\_policy} \\
         \hline
-        NTS  & 500                         & 10.5           & 2.3                \\
-        PTS  & 300                         & 15.7           & 1.8                \\
-        FTS  & 0                           & 18.3           & 0.                \\
+        Criteria & NTS & PTS & FTS & NTS & PTS & FTS & NTS & PTS & FTS \\
+        \hline
+        Scalability & Yes & Yes & Yes & Yes & Yes & Yes & Yes & Yes & Yes \\
+        Convergence Time (episodes) & 500 & 300 & 0 & 550 & 320 & 0 & 480 & 290 & 0 \\
+        Standard Deviation & 2.3 & 1.8 & 0.5 & 2.5 & 1.9 & 0.5 & 2.1 & 1.7 & 0.5 \\
+        Average Reward & 10.5 & 15.7 & 18.3 & 9.8 & 14.9 & 18.1 & 11.2 & 16.2 & 18.4 \\
+        Constraint Respect & No & Yes & Yes & Partial & Yes & Yes & Yes & Yes & Yes \\
         \hline
     \end{tabular}
-    \caption{Convergence times, average rewards, and standard deviations for NTS, PTS, and FTS cases.}
+    \caption{Comparison of NTS, PTS, and FTS cases under different modes (correct, penalize, correct\_policy) based on various criteria.}
     \label{tab:results}
 \end{table}
+
 
 
 \textbf{Qualitative Analysis} \quad The qualitative analysis shows that the \textit{circle\_model} leads to observable circling behaviors around prey, demonstrating the effective impact of organizational specifications on agent behavior. This visually \footnotemark[2] confirms that PRAHOM can induce desired collective strategies ($\mathbf{C1}$).
