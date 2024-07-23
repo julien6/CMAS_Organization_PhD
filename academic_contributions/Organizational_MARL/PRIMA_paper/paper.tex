@@ -536,7 +536,7 @@ As illustrated in \Autoref{fig:PRAHOM_opc}, we propose a pattern format to simpl
 \begin{itemize}
     \item \textbf{correct}: Correct any chosen action $\pi(\omega)$ by an expected one in $c\pi(\omega)$. It aims to converge faster by reducing the search space with safety guarantees. Yet, it is external to the agent's policy;
     \item \textbf{penalize}: Add a penalty to the reward if any wrong action ($\pi(\omega) \notin c\pi(\omega)$) has been made among agents. This mode aims to make agents \textquote{learn} to respect their constraints. Yet, no safety guarantee is ensured since agents only approximate their expected behavior;
-    \item \textbf{correct\_policy}: Create and use a \textbf{constrained policy} $\pi_c \in \Pi, \pi_c = bld_{\pi c}(\pi, c\pi) = \{sample(c\pi_{joint}(\omega_{joint})) \ if \ \omega_{joint} \in Dom(c\pi_{joint}) \ and \ \omega_{joint} \notin Dom(\pi_{joint}), \ else \ \pi_{joint}(\omega_{joint})\}$, where an observable policy constraint $c\pi$ corrects the current policy $\pi$. $sample$ gets an element from a set randomly. $bld_{\pi c}: \Pi \times c\Pi \rightarrow \Pi$ enables creating a constrained policy by combining a regular policy and an observable policy constraint. This mode enables to respect safety guarantees internally.
+    \item \textbf{correct\_policy}: Create and use a \textbf{constrained policy} $\pi_c \in \Pi, \pi_c = bld_{\pi c}(\pi, c\pi) = \{sample(c\pi_{joint}(\omega_{joint})) \ if \ \omega_{joint} \in Dom(c\pi_{joint}) \ else \ \pi_{joint}(\omega_{joint})\}$, where an observable policy constraint $c\pi$ corrects the current policy $\pi$. $sample$ gets an element from a set randomly. $bld_{\pi c}: \Pi \times c\Pi \rightarrow \Pi$ enables creating a constrained policy by combining a regular policy and an observable policy constraint. This mode enables to respect safety guarantees internally.
 \end{itemize}
 
 In the annex, we provide \autoref{proof:jpc_to_ac}, which outlines why constraining the action decision-making process dynamically during training at each step implies that the resulting joint-policy will necessarily be constrained.
@@ -698,11 +698,11 @@ The \textquote{Simple World Comm} environment comprises six agents: one leader p
 
 \begin{itemize}
     \item \textbf{circle\_model} \quad This model includes two roles and a mission for predators:
-    \begin{itemize}
-        \item \textit{circle\_leader}: This role maps observations where three normal predators are close to the same prey, to directing them to move towards it.
-        \item \textit{circle\_follower}: This role ensures any order received from the leader predator is followed with the corresponding action.
-        \item \textit{prey\_proximity}: This mission contains a single goal indicating a high reward when a prey is near any predator.
-    \end{itemize}
+          \begin{itemize}
+              \item \textit{circle\_leader}: This role maps observations where three normal predators are close to the same prey, to directing them to move towards it.
+              \item \textit{circle\_follower}: This role ensures any order received from the leader predator is followed with the corresponding action.
+              \item \textit{prey\_proximity}: This mission contains a single goal indicating a high reward when a prey is near any predator.
+          \end{itemize}
 
     \item \textbf{manual\_model} \quad This model serves as a fully controlled organizational model with no room for learning. It includes two roles \textit{Manual Leader} and \textit{Manual Predator} that both dictate optimal actions for the leader predator according to a hand-crafted policy (custom function).
 \end{itemize}
@@ -712,11 +712,13 @@ The \textquote{Simple World Comm} environment comprises six agents: one leader p
 \begin{lstlisting}[language=Python, basicstyle=\scriptsize]
 from prahom_wrapper import prahom_wrapper
 pz_env = raw_pz_env() ; pz_env = prahom_wrapper(pz_env)
-
-pz_env.train_under_constraints(ol=ol(), cons_mode="CORRECT",alg_conf="default_MAPPO",osr=osr(
-structural_specifications=ss(roles={"circle_leader": history_subset(pattern="[o0,a1](1,4),[o1,a2](1,2)"), "circle_follower": history_subset(pattern="[o8,a8](0,*)")},role_inheritance_relations=None, root_groups=None),
-functional_specifications=fs(social_scheme=sch(goals={"prey_proximity": history_subset(pattern="[#Any](0,*),[obs_prey_proximity]")},missions=["prey_proximity"], goals_structure=None,mission_to_goals={"mission_0": ["prey_proximity"]},mission_to_agent_cardinality=None),social_preferences=None),
-deontic_specifications={"circle_leader": {("mission_0", "Any"): ["leadadversary_0"]}, "circle_follower": {("mission_0", "Any"): ["adversary_0, adversary_1, adversary_2,"]}}))
+pz_env.train_under_constraints(ol=ol(), cons_mode="CORRECT",alg_conf="default_MAPPO",osr=organizational_model(
+structural_specifications(
+    {"circle_leader": leader_opc.add_pattern("[o1,a3,[#any]...](1,1)"),"circle_follower": normal_opc.add_pattern("[o1,a2,[#any]...](1,1)")}, None,None),
+functional_specifications(social_scheme={"sch_1": social_scheme(
+    goals=["goal_1": orf.add_pattern("[[#any],o4,a4](1,1)")], missions=["prey_proximity"], goals_structure=None, mission_to_goals={"prey_proximity": ["goal_0"]}, mission_to_agent_cardinality={"prey_proximity": cardinality(1, "*")})}, social_preferences=None),
+deontic_specifications(None, {
+    obligation("circle_leader", None, time_constraint_type.ANY): ["leadadversary_0"], obligation("circle_follower", None, time_constraint_type.ANY): ["adversary_0", "adversary_1", "adversary_2"]})))
 \end{lstlisting}
 
 \subsubsection{Evaluation Criteria}
@@ -734,15 +736,17 @@ $(\mathbf{C_1})$: After training, we expect to manually notice collective huntin
     \item \textbf{Fully Constraining Organizational Specifications (FTS)}: Agents follow hand-crafted policies from the \textit{manual\_model}.
 \end{itemize}
 
-\noindent During training, we keep trace of the average reward over episode.
+\noindent During training, we keep trace of the average reward over episode and the convergence time as well.
 
 $(\mathbf{C_2})$: We expect faster convergence in the PTS case compared to the NTS case, with the FTS case showing a constant learning curve.
 
 \
 
-\noindent After training, we measure the average reward per episode for each case.
+\noindent After training, for each case, we measure the average reward per episode; the standard deviation indicating how stable is the trained joint-policy.
 
 $(\mathbf{C_3})$: We expect higher rewards in the PTS case compared to the NTS case.
+
+$(\mathbf{C_4})$: We expect the standard deviation to decrease from NTS to PTS and from PTS to FTS since agents are increasingly more constrained in their behavior.
 
 \subsection{Results and Discussion}
 
@@ -759,22 +763,26 @@ Table~\ref{tab:results} summarizes the convergence times and average rewards per
 
 \begin{table}[h!]
     \centering
-    \begin{tabular}{|c|c|c|}
+    \begin{tabular}{|c|c|c|c|}
         \hline
-        Case & Convergence Time (episodes) & Average Reward \\
+        Case & Convergence Time (episodes) & Average Reward & Standard Deviation \\
         \hline
-        NTS  & 500                         & 10.5           \\
-        PTS  & 300                         & 15.7           \\
-        FTS  & 0                           & 18.3           \\
+        NTS  & 500                         & 10.5           & 2.3                \\
+        PTS  & 300                         & 15.7           & 1.8                \\
+        FTS  & 0                           & 18.3           & 0.                \\
         \hline
     \end{tabular}
-    \caption{Convergence times and average rewards for NTS, PTS, and FTS cases.}
+    \caption{Convergence times, average rewards, and standard deviations for NTS, PTS, and FTS cases.}
     \label{tab:results}
 \end{table}
 
-\textbf{Qualitative Analysis} \quad The qualitative analysis shows that the \textit{circle\_model} leads to observable circling behaviors around prey, demonstrating the effective impact of organizational specifications on agent behavior. This visually confirms that PRAHOM can induce desired collective strategies ($\mathbf{C1}$).
 
-\textbf{Quantitative Analysis} \quad Quantitatively, the PTS case exhibits faster convergence and higher average rewards compared to the NTS case ($\mathbf{C_3}$), validating the hypothesis that organizational constraints can enhance learning efficiency ($\mathbf{C_2}$). The FTS case, serving as a reference, consistently achieves the highest rewards due to pre-defined optimal policies.
+\textbf{Qualitative Analysis} \quad The qualitative analysis shows that the \textit{circle\_model} leads to observable circling behaviors around prey, demonstrating the effective impact of organizational specifications on agent behavior. This visually \footnotemark[2] confirms that PRAHOM can induce desired collective strategies ($\mathbf{C1}$).
+
+\footnotetext[2]{A visual animated representation is provided in \url{https://drive.google.com/file/d/1idIs59_7mXhVSavxELPMFxH1W6TKhYrb/view?usp=sharing}}
+
+\textbf{Quantitative Analysis} \quad Quantitatively, the PTS case exhibits faster convergence and higher average rewards compared to the NTS case ($\mathbf{C_3}$), validating the hypothesis that organizational constraints can enhance learning efficiency ($\mathbf{C_2}$). Additionally, we verify the standard deviation to decrase from NTS to PTS and from PTS to FTS $(\mathbf{C_4})$.
+The FTS case, serving as a reference, consistently achieves the highest rewards due to pre-defined optimal policies.
 
 The experiments demonstrate that PRAHOM significantly impacts agent behavior and learning efficiency. The organizational models, especially the \textit{circle\_model}, effectively guide agents towards efficient collective strategies, as evidenced by both qualitative observations and quantitative metrics.
 
@@ -815,12 +823,10 @@ Eventually, even though the first results obtained with LLM show it as a promisi
 
 \section*{Annexes}\label{proof:jpc_to_ac}
 
-\subsection*{Constraining the action decision-making process dynamically enables constraining policies}
-\input{proofs/jpc_to_ac.tex}
-
-\newpage
-
 \subsection*{Partial Relation between Agents' History and Organizational Model (PRAHOM) Algorithm}
 \input{algos/PRAHOM_A.tex}
+
+\subsection*{Constraining the action decision-making process dynamically enables constraining policies}
+\input{proofs/jpc_to_ac.tex}
 
 \end{document}
