@@ -304,10 +304,10 @@ $ \hfill \phantom{x}
 % 1 phrase par contrib/key point
 
 \begin{abstract}
-    
-    Designing a Multi-Agent System to achieve a goal in an environment often requires an organizational structure to coordinate and delegate tasks among agents. However, defining the policy of each agent can be challenging in complex environments. Multi-Agent Reinforcement Learning enables agents to learn how to reach a goal without explicitly considering the organization. While previous studies have introduced guided training in individual agents, a multi-agent context requires clarifying the implicit cooperation among multiple agents after training. We propose a novel algorithmic approach leveraging the $\mathcal{M}OISE^+$ Organizational Model that consists of linking organizational specifications, such as roles or missions, to the respective agents' histories, characterizing their behaviors. Our algorithm constrains the learning process based on organizational constraints. Evaluations conducted in a mixed competitive/cooperative Predator-Prey environment validate the impact of organizational specifications as constraints during training.
 
-    \keywords{Multi-Agent Reinforcement Learning \and Assisted-Design \and Organizational Models}
+    Designing a Multi-Agent System to achieve a goal in an environment often requires an organizational structure to coordinate and delegate tasks among agents. However, defining the agents' internal logic can be challenging in complex environments. Multi-Agent Reinforcement Learning enables agents to learn how to reach a goal without explicitly considering the organization. While previous studies have introduced guided training in individual agents, a multi-agent context requires clarifying the implicit cooperation among multiple agents after training. We propose a novel algorithmic approach leveraging the $\mathcal{M}OISE^+$ Organizational Model that consists in linking organizational specifications, such as roles or missions, to the respective agents' histories, characterizing their behaviors. Our algorithm constrains the learning process based on organizational constraints. Evaluations conducted in a mixed competitive/cooperative Predator-Prey environment validate the impact of organizational specifications as constraints during training.
+
+    \keywords{Agent-Oriented Software Engineering \and Multi-Agent Reinforcement Learning \and Assisted-Design \and Organizational Models}
 \end{abstract}
 
 % ====================================================================================================
@@ -315,19 +315,21 @@ $ \hfill \phantom{x}
 \section{Introduction}
 
 % Context
-In a top-down design approach, designing a Multi-Agent System (MAS) requires to establish an organization embeddable into the agents' internal logics (referred to as \textbf{policies}) that explains how agents coordinate their activities to collaboratively achieve a common expected goal~\cite{Picard2009}.
+In a top-down design approach, designing a Multi-Agent System (MAS) requires establishing an organization embeddable into the agents' internal logic (referred to as \textbf{policies}) that explains how agents coordinate their activities to collaboratively achieve a common expected goal~\cite{Picard2009}.
 %
-Consequently, designing a MAS can be viewed as an optimization problem, aiming to find the organization that promotes the best performance in achieving a goal. Methods such as GAIA~\cite{Wooldridge2000,Cernuzzi2014}, ADELFE~\cite{Mefteh2015}, or KB-ORG~\cite{Sims2008} rely on an iterative process of trial and error to gain knowledge of the environment and finding an appropriate organization~\cite{Sims2008}.
+Consequently, designing a MAS can be viewed as an optimization problem, aiming to find the organization that promotes the best performance in achieving a goal. Methods such as GAIA~\cite{Wooldridge2000,Cernuzzi2014}, ADELFE~\cite{Mefteh2015}, or KB-ORG~\cite{Sims2008} rely on an iterative process of trial and error to gain knowledge of the environment and find an appropriate organization~\cite{Sims2008}.
 
 % Problem
-However, increasing this empirical knowledge can be costly for numerous factors including the environment complexity or its restricted access, and the designers' unavailability. Moreover, relying solely on a limited knowledge may prevent to design a MAS that meets sufficient performances or that guarantees safety requirement~\cite{Mefteh2013}. Currently, no methods fully automate the design process of MAS. Addressing this issue would improve the trust and adoption of MARL systems in real-world applications~\cite{kok2006collaborative,omidshafiei2019learning}.
+However, increasing this empirical knowledge can be costly for numerous factors including the environment's complexity or its restricted access, and the designers' unavailability. Moreover, relying solely on limited knowledge may prevent the designing of a MAS that meets sufficient performance or that guarantees safety requirements~\cite{Mefteh2013}. Currently, no method fully automate the design process of MAS. Meeting this challenge would improve the trust and adoption of MARL systems in real-world applications~\cite{kok2006collaborative,omidshafiei2019learning}.
 
 % Contribution
-To address this concern, we propose extending \textit{Partial Relation between Agents' History and Organizational Model}~\cite{soule2024} (PRAHOM). PRAHOM is a general approach that leverages histories to integrate $\mathcal{M}OISE^+$~\cite{Hubner2007} organizational model into the MARL framework. This model is suitable to represent organizational specifications into the MARL framework. It makes it possible to envision constraining the learning. However, the current development in this area remains limited and does not clearly scale with the increasing number of organizational specifications. It is unsuitable for further application on more realistic scenarios.
+To address this concern, we propose extending \textit{Partial Relation between Agents' History and Organizational Model}~\cite{soule2024} (PRAHOM). PRAHOM is a general approach that leverages histories to integrate $\mathcal{M}OISE^+$~\cite{Hubner2007} organizational model into the MARL framework. $\mathcal{M}OISE^+$ is suitable to represent organizational specifications in the MARL framework. It makes it possible to envision constraining the learning. However, the current development in this area remains limited and does not scale with the increasing number of organizational specifications. It is unsuitable for further application in more realistic scenarios.
 
-Partially relying on PRAHOM, we propose a novel algorithm called \textit{PRAHOM Training} (PRAHOMT), which only requires the concepts of role and mission, thus addressing scalability issues. PRAHOMT can be seen as a way to assist MAS design. PRAHOMT links $\mathcal{M}OISE^+$ and MARL by one-to-one mapping an organizational specification (i.e a role or a mission) to a history subset characterizing an expected behavior impacting action space or the reward function accordingly.
+Partially relying on PRAHOM, we propose a novel algorithm called \textit{PRAHOM Training} (PRAHOMT), which only requires the concepts of role and mission, thus addressing scalability issues.
+% PRAHOMT can be seen as a way to assist MAS design.
+PRAHOMT links $\mathcal{M}OISE^+$ and MARL by one-to-one mapping an organizational specification (i.e a role or a mission) to a history subset characterizing an expected behavior impacting action space or the reward function accordingly.
 %
-\Autoref{fig:policy_histories} illustrates this underlying idea: a policy can be represented as the set of all its possibly generated histories/trajectories (arrows) starting from a initial observation-action couple (blue area) and possibly reaching one of the expected observation-action couples that characterize the goal (red area). Then, one can delimit a history subset as a way to characterize an organizational specification (organge area).
+\Autoref{fig:policy_histories} illustrates this underlying idea: a policy can be represented as the set of all its possibly generated histories/trajectories (arrows) in an abstract space representing all couples of joint-observations ($\Omega_{joint}$) and joint-actions ($A_{joint}$). A history starts from an initial observation-action couple (blue area) and possibly reaches one of the expected observation-action couples that characterize the goal (red area). The idea is to see a history subset as a way to characterize an organizational specification (orange area).
 
 \begin{figure}[h!]
     \centering
@@ -336,15 +338,15 @@ Partially relying on PRAHOM, we propose a novel algorithm called \textit{PRAHOM 
     \label{fig:policy_histories}
 \end{figure}
 
-Unlike, classical MARL where an agent's policy is freely updated solely based on maximizing the reward, our approach also forces/entices agents to satisfy some hand-crafted organizational specifications during the training. By restricting the policy search space, our approach may shorten the convergence time. It enables stabilizing resulting policies during/after training. In a design point of view, the obtained policies can be analyzed as fine-tuned organizations leveraging known introduced organizational specifications to help out explanability. This led to get relevant insights into future design in the real environment. Although, adding organizational specifications may also prevent new organizations to emerge, our contribution provides practical means for users to find a tradeoff while addressing safety guarantees.
+Unlike, classical MARL where an agent's policy is freely updated solely based on maximizing the reward, our approach also forces/entices agents to satisfy some hand-crafted organizational specifications during the training. By restricting the policy search space, our approach may shorten the convergence time. It enables stabilizing resulting policies during/after training. From a design point of view, the obtained policies can be analyzed as fine-tuned organizations leveraging known introduced organizational specifications to help out with explainability. This led to getting relevant insights into future design in the real environment. Although adding organizational specifications may also prevent new organizations from emerging, our contribution provides practical means for users to find a tradeoff while addressing safety guarantees.
 
 % Outline
-The remainder is organized as follows: \Autoref{sec:marl_background} presents the MARL framework our contribution is built upon. \Autoref{sec:related_works} gives an overview of the available works dealing with modifying policies within MARL. \Autoref{sec:linking_marl_moise} presents the proposed principles to link $\mathcal{M}OISE^+$ and MARL. \Autoref{sec:prahom_alg} introduces the PRAHOMT algorithm. \Autoref{sec:case_study} first presents our first PRAHOMT implementation as a library we used in our experimental setup, and discusses the results of our evaluation. \Autoref{sec:conclusion} concludes the paper and outlines future research directions.
+The remainder is organized as follows: \Autoref{sec:marl_background} presents the MARL framework our contribution is built on. \Autoref{sec:related_works} gives an overview of the available works dealing with modifying policies within MARL. \Autoref{sec:linking_marl_moise} presents the proposed principles to link $\mathcal{M}OISE^+$ and MARL. \Autoref{sec:prahom_alg} introduces the PRAHOMT algorithm. \Autoref{sec:case_study} first presents our PRAHOMT implementation as a library we used in our experimental setup, and discusses the results of our evaluation. \Autoref{sec:conclusion} concludes the paper and outlines future research directions.
 
 
 \section{MARL background}\label{sec:marl_background}
 
-To apply MARL techniques, we rely on the Decentralized Partially Observable Markov Decision Process (Dec-POMDP)~\cite{Oliehoek2016} because it considers multiple agents in a similar MAS manner. It relies on stochastic processes to model uncertainty of the environment for the changes induced by actions, received observations, communication. Additionally, unlike Partially Observable Stochastic Games (POSG), the reward function can be common to agents which fosters training for collaborative-oriented actions~\cite{Beynier2013}.
+To apply MARL techniques, we chose the Decentralized Partially Observable Markov Decision Process (Dec-POMDP)~\cite{Oliehoek2016} because it considers multiple agents in a similar MAS manner. It relies on stochastic processes to model the uncertainty of the environment for the changes induced by actions, received observations, and communication. Additionally, unlike Partially Observable Stochastic Games (POSG), the reward function can be common to agents which fosters training for collaborative-oriented actions~\cite{Beynier2013}.
 
 A Dec-POMDP $d \in D$ (with $D$ the set of Dec-POMDP) is a 7-tuple $d = (S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$ , where:
 $S = \{s_1,\dots,s_{|S|}\}$: the set of possible states;
@@ -359,32 +361,32 @@ Considering $m$ \textbf{teams} (also referred to as \textbf{groups}) each contai
 
 \begin{itemize}
 
-    \item $\Pi$: the set of policies. A \textbf{policy} $\pi \in \Pi, \pi: H \times \Omega \rightarrow A$ associate an observation to an action optionally using previous experiences as histories. It represents the agent's internal logic;
+    \item $\Pi$: the set of policies. A \textbf{policy} $\pi \in \Pi, \pi: H \times \Omega \rightarrow A$ associates an observation to an action optionally using previous experiences as histories. It represents the agent's internal logic;
     \item $\Pi_{joint}$: the set of joint-policies. A \textbf{joint-policy} $\pi_{joint} \in \Pi_{joint}, \pi_{joint}: H_{joint} \times \Omega^n \rightarrow A^n = \Pi^n$ chooses an action for each agent regarding their respective observation optionally using previous experiences as histories. It can be viewed as a set of policies used in agents;
     \item $H$: the set of histories. A \textbf{history} over $z \in \mathbb{N}$ steps (where $z$ is generally the maximum number of steps for an episode) is the $z$-tuple $h = ((\omega_{k}, a_{k}) | k \leq z, \omega \in \Omega, a \in A)$;
     \item $H_{joint}$: the set of joint-histories. A \textbf{joint-history} over $z \in \mathbb{N}$ steps $h_{joint} \in H_{joint}, h_{joint} = \{h_1,h_2 \dots h_n\}$ is the set of agents' histories;
     \item $U_{joint,i}(<\pi_{joint,i}, \pi_{joint,-i}>): \Pi_{joint} \rightarrow \mathbb{R}$: gives the \textbf{expected cumulative reward} over a finite horizon (if $\gamma < 1$ or the number of steps in an episode is finite), with $\pi_{joint,i}$ the joint policy for team $i$ and $\pi_{joint,-i}$ all of the other concatenated joint-policies (considered as fixed).
-    % \item $BR_{joint,i}(\pi_{joint,i}) = argmax_{\pi_{joint,i}}(U(<\pi_{joint,i},\pi_{joint,-i}>))$: gives the \textbf{best response} $\pi_{joint,i}^*$ in the sense that the team cannot change any of the policies in the joint-policy $\pi_{joint,i}^*$ to get a better expected cumulative reward than $U_i^* = U_{joint,i}(<\pi_{joint,i}^*, \pi_{joint,-i}>)$;
-    % \item $SR_{joint,i}(\pi_{joint,i}, s) = \{\pi_{joint,i} | U(<\pi_{joint,i},\pi_{joint,-i}>) \geq s\}$: gives the \textbf{sufficient response} as the set of joint-policies getting at least $s \in \mathbb{R}, s \leq U_i^*$ as expected cumulative reward.
+          % \item $BR_{joint,i}(\pi_{joint,i}) = argmax_{\pi_{joint,i}}(U(<\pi_{joint,i},\pi_{joint,-i}>))$: gives the \textbf{best response} $\pi_{joint,i}^*$ in the sense that the team cannot change any of the policies in the joint-policy $\pi_{joint,i}^*$ to get a better expected cumulative reward than $U_i^* = U_{joint,i}(<\pi_{joint,i}^*, \pi_{joint,-i}>)$;
+          % \item $SR_{joint,i}(\pi_{joint,i}, s) = \{\pi_{joint,i} | U(<\pi_{joint,i},\pi_{joint,-i}>) \geq s\}$: gives the \textbf{sufficient response} as the set of joint-policies getting at least $s \in \mathbb{R}, s \leq U_i^*$ as expected cumulative reward.
 \end{itemize}
 
-Various approaches enable solving Multi-Agent Reinforcement Learning (MARL) problems. We favoured \textbf{Policy-based} methods, such as Multi-Agent Proximal Policy Optimization~\cite{yu2022surprising} (MAPPO) and Multi-Agent Deep Deterministic Policy Gradient~\cite{lowe2017multi} (MADDPG). These algorithms directly parameterize the policy as $\pi_\theta$ to optimize it possibly using centralized training and decentralized execution.
+Various approaches enable solving Multi-Agent Reinforcement Learning (MARL) problems. We favored \textbf{Policy-based} methods, such as Multi-Agent Proximal Policy Optimization~\cite{yu2022surprising} (MAPPO) and Multi-Agent Deep Deterministic Policy Gradient~\cite{Lowe2017} (MADDPG). These algorithms directly parameterize the policy as $\pi_\theta$ to optimize it possibly using centralized training and decentralized execution.
 We refer to \textbf{solving} the Dec-POMDP at $s$ expectancy as finding the joint policies $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = \{\pi_{joint,i} | U(<\pi_{joint,i},\pi_{joint,-i}>) \geq s\}$ that gets the expected cumulative reward over a finite horizon at least at $s \in \mathbb{R}$.
 
 
 \section{Related works and positioning}\label{sec:related_works}
 
-The integration of organizational specifications in MAS learning processes is not largely addressed explicitly in literature. Yet, various approaches have been proposed to incorporate organizational constraints and policies in MAS to ensure agents adhere to certain requirements.
+The integration of organizational specifications in MAS learning processes is not largely addressed explicitly in the literature. Yet, various approaches have been proposed to incorporate organizational constraints and policies in MAS to ensure agents adhere to certain requirements.
 
 \textbf{Learning with Organizational Constraints} \quad
 %
 The integration of organizational constraints into the learning process of agents has been explored to various extents. In \cite{cruz2020norms}, the authors present a method for incorporating norms into the learning algorithms of agents, ensuring that their behavior remains within acceptable bounds. Additionally, \cite{villatoro2011social} proposes a mechanism for agents to learn and adapt to social norms in dynamic environments, highlighting the importance of norm adaptation in MAS. However, these norms cannot be individual.
 
-A relevant work set belong to the \emph{Specification-Guided Reinforcement Learning} that aims to generate policies that accomplish a specific task using external specifications to guide learning in achieving an objective under given constraints~\cite{Bansal2022}. Jothimurugan et al.~\cite{Jothimurugan2021} propose logical specification learning as exploiting the compositional structure of specifications to generate policies for complex tasks. However, it does not completely falls into the MARL framework we set for it requires introducing logical specifications.
+\emph{Specification-Guided Reinforcement Learning} aims to generate policies that accomplish a specific task using external specifications to guide learning in achieving an objective under given constraints~\cite{Bansal2022}. Jothimurugan et al.~\cite{Jothimurugan2021} propose logical specification learning as exploiting the compositional structure of specifications to generate policies for complex tasks. However, it does not completely falls into the MARL framework we set for it requires introducing logical specifications.
 
 \textbf{Policy-Based Approaches} \quad
 %
-Policy-based approaches provide a way to enforce organizational constraints by defining explicit policies that govern agent behavior. In \cite{krupanski2015norm}, the use of normative policies is investigated to guide agent interactions and decision-making processes. Moreover, \cite{vos2020governing} explores the use of governance mechanisms to enforce compliance with organizational policies in decentralized systems. However, these approaches face the lacks of explainability since most policies are black-box and cannot be easily modified.
+Policy-based approaches provide a way to enforce organizational constraints by defining explicit policies that govern agent behavior. In \cite{krupanski2015norm}, the use of normative policies is investigated to guide agent interactions and decision-making processes. Moreover, \cite{vos2020governing} explores the use of governance mechanisms to enforce compliance with organizational policies in decentralized systems. However, these approaches face a lack of explainability since most policies are black-box and cannot be easily modified.
 
 \textbf{Frameworks Integrating Organizational Aspects} \quad
 %
@@ -392,13 +394,13 @@ Wang et al.~\cite{Wang2020} introduce an approach in which similar emerging role
 
 \
 
-Despite these advancements, there is still a lack of works that explicitly use organizational specifications as a means of constraining agent learning regarding requirements. To our knowledge, no work can be used to generate a MAS that satisfy additional organizational constraints explicitly. Unlike these works, our originality is to explicitly use an organizational model as a general means of constraining learning regarding requirements.
+Despite these advancements, there is still a lack of works that explicitly use organizational specifications as a means of constraining agent learning regarding requirements. To our knowledge, no work can be used to generate a MAS that satisfies additional organizational constraints explicitly. Unlike these works, our originality is to explicitly use an organizational model as a general means of constraining learning regarding requirements.
 
 
 \section{Linking MARL and the $\mathcal{M}OISE^+$ model}\label{sec:linking_marl_moise}
 \label{sec:marl_moise_linking}
 
-In this section, we incrementally present the principles leading to impact the MARL according to organizational specifications. This includes constraining a policy to adhere to the expected behavior of a role and entice the policy to achieve a mission for a given time duration.
+In this section, we incrementally present the principles we propose to adapt the MARL according to organizational specifications. This includes constraining a policy to adhere to the expected behavior of a role and enticing the policy to achieve a mission for a given time duration.
 
 
 The $\mathcal{M}OISE^+$ model provides a comprehensive framework for specifying the structure and interactions within a Multi-Agent System (MAS). We utilize $\mathcal{M}OISE^+$ due to its compatibility with MARL and its formal description capabilities for agents' policies. The PRAHOMT's underlying approach bridges the gap between MARL and organizational modeling by embedding $\mathcal{M}OISE^+$ specifications into the MARL training process. This integration allows for the training of agents that adhere to predefined organizational roles and missions.
@@ -413,18 +415,18 @@ In $\mathcal{M}OISE^+$, \textbf{Organizational Specifications (OS)} are defined 
     \item $\mathcal{R}_{ss}$: The set of all roles ($\rho \in \mathcal{R}$).
     \item $\mathcal{IR}: \mathcal{R} \rightarrow \mathcal{R}$: The inheritance relation between roles ($\rho_1 \sqsubset \rho_2$).
     \item $\mathcal{RG} \subseteq \mathcal{GR}$: The set of root groups, $\mathcal{GR} = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, \allowbreak np, ng \rangle$, where:
-        %   \begin{itemize}
-              $\mathcal{R} \subseteq \mathcal{R}_{ss}$: The set of non-abstract roles.
-              $\mathcal{SG} \subseteq \mathcal{GR}$: The set of sub-groups.
-              $\mathcal{L} = \mathcal{R} \times \mathcal{R} \times \mathcal{TL}$: The set of links $(\rho_s, \rho_d, t)$, where $t \in \{acq, com, aut\}$ indicates the type of link (acquaintance, communication, authority).
-              $\mathcal{L}^{intra} \subseteq \mathcal{L}$: The set of intra-group links.
-              $\mathcal{L}^{inter} \subseteq \mathcal{L}$: The set of inter-group links.
-              $\mathcal{C} = \mathcal{R} \times \mathcal{R}$: The set of compatibilities $(\rho_a \bowtie \rho_b)$.
-              $\mathcal{C}^{intra} \subseteq \mathcal{C}$: The set of intra-group compatibilities.
-              $\mathcal{C}^{inter} \subseteq \mathcal{C}$: The set of inter-group compatibilities.
-              $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of agents adopting a role.
-              $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of each sub-group.
-        %   \end{itemize}
+          %   \begin{itemize}
+          $\mathcal{R} \subseteq \mathcal{R}_{ss}$: The set of non-abstract roles.
+          $\mathcal{SG} \subseteq \mathcal{GR}$: The set of sub-groups.
+          $\mathcal{L} = \mathcal{R} \times \mathcal{R} \times \mathcal{TL}$: The set of links $(\rho_s, \rho_d, t)$, where $t \in \{acq, com, aut\}$ indicates the type of link (acquaintance, communication, authority).
+          $\mathcal{L}^{intra} \subseteq \mathcal{L}$: The set of intra-group links.
+          $\mathcal{L}^{inter} \subseteq \mathcal{L}$: The set of inter-group links.
+          $\mathcal{C} = \mathcal{R} \times \mathcal{R}$: The set of compatibilities $(\rho_a \bowtie \rho_b)$.
+          $\mathcal{C}^{intra} \subseteq \mathcal{C}$: The set of intra-group compatibilities.
+          $\mathcal{C}^{inter} \subseteq \mathcal{C}$: The set of inter-group compatibilities.
+          $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of agents adopting a role.
+          $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of each sub-group.
+          %   \end{itemize}
 \end{itemize}
 
 Constraining policies directly is not feasible because most policy implementations rely on intractable black-box models such as neural networks. We propose to formally represent a role as a history subset $\mathcal{P}(H)$ containing histories an agent playing a role should generate, hence characterizing the role's expected behavior. As illustrated in \Autoref{fig:PRAHOM_osm_rels}, we propose each role to be mapped to a history subset through the $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$ bijection. An agent playing a role should have its policy constrained to generate histories belonging to the mapped history subset (at least from a theoretical point of view).
@@ -436,8 +438,8 @@ Constraining policies directly is not feasible because most policy implementatio
     \label{fig:PRAHOM_osm_rels}
 \end{figure}
 
-Since defining roles into a history subset faces issues for handling possibly numerous large and non manageable observations, we first propose to use labels to represent observations in a short-way. We introduce $ol: \mathcal{P}(\Omega) \rightarrow \mathcal{P}(L)$ to map some simple strings to real observations. In addition to a simple mapping, we also considered using a Large Language Model (LLM) for that purpose. % as illustrated in \Autoref{fig:PRAHOMT_ol}.
-The LLM is trained after real observation have been rendered visually and labelled by hand. Once trained, the LLM can be used conveniently to get real observations from labels, and may also be used to label some other observations.
+Since defining roles into a history subset faces issues for handling possibly numerous large and non-manageable observations (such as pixel tables), we first propose to use labels to represent observations in a short-way. We introduce $ol: \mathcal{P}(\Omega) \rightarrow \mathcal{P}(L)$ to map some simple strings to real observations. In addition to a simple mapping, we also considered using a Large Language Model (LLM) for that purpose. % as illustrated in \Autoref{fig:PRAHOMT_ol}.
+The LLM is trained after real observations have been rendered visually and labeled by hand. Once trained, the LLM can be used conveniently to get real observations from labels, and may also be used to label some other observations.
 
 % \begin{figure}[h!]
 %     \centering
@@ -446,24 +448,24 @@ The LLM is trained after real observation have been rendered visually and labell
 %     \label{fig:PRAHOMT_ol}
 % \end{figure}
 
-Second, defining a history subset exhaustively may require taking into account many cases, hence leading to high amount of histories. As illustrated in \Autoref{fig:PRAHOM_opc}
-Rather than defining a history subset exhaustively, we propose three short-ways to simplify its definition:
+Second, defining a history subset exhaustively may require taking into account many cases, hence leading to an important amount of histories. %As illustrated in \Autoref{fig:PRAHOM_opc}
+Rather than defining a history subset exhaustively, we propose three means to simplify its definition:
 %
-\quad i) a \textbf{pattern} format that follows the following rules: a sequence is denoted \textquote{[$label_{obs_1},label_{act_1}\dots$] \allowbreak ($card_{min},card_{max}$)} the \textquote{Any} label refer to any observation/action. This pattern is implemented an oriented graph denoted \textbf{history graph} where nodes are observations/actions and edges represent expected transitions relying on ordinal number and cardinalities; \quad
+\quad i) a \textbf{pattern} format that conform to the following rules: a sequence is denoted \textquote{[$label_{obs_1},label_{act_1}\dots$] \allowbreak ($card_{min},card_{max}$)} the \textquote{Any} label refer to any observation/action. This pattern is implemented an oriented graph denoted \textbf{history graph} where nodes are observations/actions and edges represent expected transitions relying on ordinal number and cardinalities; \quad
 %
-ii) \textbf{rules} to associate an action set depending on a history (possibly defined as a pattern) belonging to the history subset and a received observation. Once the observations and the associated actions are added in the history, this history should still belong to the history subset; \quad
+ii) \textbf{rules} to associate an action set depending on a history (possibly defined as a pattern) belonging to the history subset and a received observation. Once the observations and the associated actions are added to the history, this history should still belong to the history subset; \quad
 %
 iii) a \textbf{custom script} logic taking into account a history belonging to the history subset and a new observation to indicate the actions to add in the current history so it still belongs to the history subset.
 
 
 Considering a history subset is ultimately aimed to be used to constrain a policy to make it adhere to a role, we introduce an \textbf{observable policy constraint} $c\pi: H \times \Omega \rightarrow \mathcal{P}(A)$. $c\pi$ indicates the actions an agent's policy should be allowed to choose among when it receives an observation at each step.
 
-\begin{figure}[h!]
-    \centering
-    \input{figures/opc_scheme.tex}
-    \caption{An abstract view of observable policy constraint and its crafting}
-    \label{fig:PRAHOM_opc}
-\end{figure}
+% \begin{figure}[h!]
+%     \centering
+%     \input{figures/opc_scheme.tex}
+%     \caption{An abstract view of observable policy constraint and its crafting}
+%     \label{fig:PRAHOM_opc}
+% \end{figure}
 
 We propose to integrate observable policy constraints into an agent's policy via three modes:
 \textbf{correct}: Corrects any chosen action $\pi(\omega)$ to an expected one in $c\pi(\omega)$. It ensures safety but is external to the agent's policy; \quad
@@ -510,7 +512,9 @@ We consider a goal to be theoretically represented as a history subset. We propo
 
 We introduced the relation $da: \mathcal{PER} \cup \mathcal{OBL} \rightarrow \mathcal{P}(\mathcal{A})$ that indicates how agents are constrained to roles and committed on missions for a given time constraint. In order to take into account time constraints, we introduce a time-to-live for each permission/obligation through the relation $dttl: \mathcal{PER} \cup \mathcal{OBL} \times \mathcal{A} \rightarrow \mathbb{N}$. Then, they are to be decreased at each step if the given time constraint is not \textquote{Any} with the relation $dec: dttl \rightarrow dttl$. Then, the roles constrained to agents or committed missions may change after the reward function is changed.
 
-To differentiate between obligations and permissions and ensuring agents prioritize obligated missions over permitted ones, we propose multiplying the observable reward function of this mission by a high factor for obligated missions and a low factor for permitted ones.
+To differentiate between obligations and permissions and ensure agents prioritize obligated missions over permitted ones, we propose multiplying the observable reward function of this mission by a high factor for obligated missions and a low factor for permitted ones.
+
+Relying on these principles to integrate organizational specifications within the MARL framework, we established the PRAHOM algorithm.
 
 
 \section{PRAHOMT Algorithm}\label{sec:prahom_alg}
@@ -519,19 +523,19 @@ To differentiate between obligations and permissions and ensuring agents priorit
 
 % $PRAHOMT$ underlying idea is to represent roles and missions through permissions/obligations as history subset that agents are expected to generate while interacting.
 
-In this section, we provide an explanation of the PRAHOMT algorithm as outlined in \autoref{alg:PRAHOM-A}. It integrates organizational specifications into the learning by constraining joint-policies according to predefined roles, missions, and permission/obligation relations. This method ensures that the agents' behaviors align with organizational requirements while  optimizing joint-policy ($\pi_{joint,i,s}$) as output.
+In this section, we provide an explanation of the PRAHOMT algorithm as outlined in \autoref{alg:PRAHOM-A}. It integrates organizational specifications into the learning by constraining joint-policies according to predefined roles, missions, and permission/obligation relations. This ensures that the agents' behaviors align with organizational requirements while  optimizing joint-policy ($\pi_{joint,i,s}$) as output.
 
 \textbf{Initialization and Input Parameters}: \quad
-The algorithm starts by initializing the joint-policy ($\pi_{joint}$) with the initial joint-policy ($\pi_{joint,i,init}$) and setting the episode counter ($ep$) to zero (lines 1). The algorithm also sets a boolean variable ($sufficient$) to False, indicating that the cumulative reward expectancy has not yet been met.
+The algorithm starts by initializing the joint-policy ($\pi_{joint}$) with the initial joint-policy ($\pi_{joint,i,init}$) and setting the episode counter ($ep$) to zero (line 1). The algorithm also sets a boolean variable ($sufficient$) to False, indicating that the cumulative reward expectancy has not yet been met.
 
 \textbf{Step 1: Determine Joint Observable Policy Constraints}: \quad
-PRAHOMT determines the joint observable policy constraints ($c\pi_{joint}$) from the organizational specifications (lines 2). This step involves mapping roles and permissions/obligations to constraints on the joint-policy, ensuring that the agents' actions are in line with the organizational rules.
+PRAHOMT determines the joint observable policy constraints ($c\pi_{joint}$) from the organizational specifications via $bld_{opc}$ (line 2). This step involves mapping roles ($rh$), missions ($mh$), and permissions/obligations ($da$) to constraints on the joint-policy, ensuring that the agents' actions are in line with the organizational rules.
 
 \textbf{Step 2: Initialize Constrained Policy}: \quad
 If the mode of constraint integration is set to \textit{correct\_policy}, the algorithm creates and uses a joint constrained policy via $bld_{joint, \pi_c}$ based on the initial policy and the observable policy constraints ($c\pi_{joint}$) (line 4). This ensures that the initial policy is inherently aligned with the specified constraints from the beginning.
 
 \textbf{Step 3: Determine Observable Reward Functions}: \quad
-Next, PRAHOMT determines the observable reward functions $R_{m,joint}$ from the organizational specifications (line 5). This involves mapping missions and goals to reward functions, which will guide the agents towards achieving organizational sub-goals.
+Next, PRAHOMT determines the observable reward functions $R_{m,joint}$ from the organizational specifications via $bld_{mrf}$ (line 5). This involves mapping missions and goals to reward functions, which will guide the agents towards achieving organizational sub-goals. Then, these observable reward functions are integrated within the global reward function via $comb_{mrf}$.
 
 \textbf{Step 4: Main Training Loop}: \quad
 The main training loop runs for a maximum number of episodes ($ep_{max}$) or until the cumulative reward expectancy is met (line 6).
@@ -545,7 +549,7 @@ The main training loop runs for a maximum number of episodes ($ep_{max}$) or unt
 
           \begin{itemize}
               \item \textbf{Policy Update}:
-                    The joint-policy ($\pi_{joint}$) is updated using the MARL algorithm ($u_{marl}$) based on the current history and rewards (line 9).
+                    The joint-policy ($\pi_{joint}$) is updated using the MARL algorithm ($u_{marl}$) based on the current history ($rh_{joint,ep}$) and last rewards ($rh$) (line 9).
 
               \item \textbf{Action Selection}:
                     The next action is selected based on the current observation ($\pi_{joint}(\omega_{joint,t=step})$) (line 10).
@@ -557,20 +561,19 @@ The main training loop runs for a maximum number of episodes ($ep_{max}$) or unt
                     The current history is updated (line 17), and the action is applied to the environment to get the next observation and reward (line 18) adding any incurred penalties (line 19).
 
               \item \textbf{Update Constraints and Rewards}:
-                    Time-to-live values are decreased, and the reward functions and policies are updated accordingly (line 20).
+                    Time-to-live values are decreased, and the reward functions and policies are updated accordingly if some organizational specifications have changed (line 20).
           \end{itemize}
 
     \item \textbf{Check for Sufficiency}:
           After each episode, the algorithm checks whether the cumulative reward meets the expectancy ($is\_sufficient$) and increments the episode counter ($ep$) (line 21).
 \end{itemize}
 
-\textbf{Complexity and Scalability}: \quad The computational complexity of PRAHOMT primarily depends on the number of episodes ($ep_{max}$), the number of steps per episode ($step_{max}$), and the complexity of the MARL algorithm ($u_{marl}$). Each step involves updating the policy, selecting \& validating actions, and updating histories and rewards, which can be computationally intensive. The memory complexity depends on the need to store rewards, policies and histories. The history graphs we introduced allow histories to be merged compactly, reducing redundancy with limited impact on read cost.
+\textbf{Complexity and Scalability}: \quad The computational complexity of PRAHOMT primarily depends on the number of episodes ($ep_{max}$), the number of steps per episode ($step_{max}$), and the complexity of the MARL algorithm ($u_{marl}$). Each step involves updating the policy, selecting \& validating actions, and updating histories and rewards, which can be computationally intensive. The memory complexity depends on the need to store rewards, policies, and histories. The history graphs we introduced allow histories to be merged compactly, reducing redundancy with limited impact on read cost.
 
-Scalability can be challenging as the number of agents, roles, missions increases. Evaluating PRAHOMT scalability requires to consider an implemented version through these salient features: \quad
+Scalability can be challenging as the number of agents, roles, and missions increases. Evaluating PRAHOMT scalability requires considering an implemented version through these salient features: \quad
 \textbf{Parallelization:} Performance for updating/validating policies strongly depends on chosen MARL algorithms capabilities such as parallelization significantly improves it (especially in Policy Optimization algorithms); \quad
 \textbf{Efficient Data Structures:} The choice of data structures for storing and accessing histories or policies is crucial for reducing overhead.; \quad
 \textbf{Optimization of Reward Functions:} The logic for constructing/handling reward functions is important to enhance performance further.
-
 
 
 
@@ -578,34 +581,35 @@ Scalability can be challenging as the number of agents, roles, missions increase
 
 \subsection{Algorithm implementation: PRAHOMT Wrapper}
 
+\emph{PettingZoo} is a library that offers a standard API simplifying the development of multi-agent environments and facilitating the application of MARL algorithms.
+%
 We developed the \textit{PRAHOMT Wrapper}
 %
 % \footnote{Additional information are provided in addition to the code in \url{https://github.com/julien6/omarl_experiments}.}
 %
-as a proof-of-concept (PoC) tool to augment PettingZoo environments, facilitating the application of the PRAHOMT algorithm. This wrapper includes additional class methods to implement PRAHOMT's functionalities, streamlining the training process. The wrapper leverages the MARLlib~\cite{hu2022marllib} library, which offers a comprehensive range of state-of-the-art MARL algorithms and finely-tuned models.
+as a proof-of-concept (PoC) tool to augment PettingZoo environments, facilitating the application of the PRAHOMT algorithm. The wrapper leverages the MARLlib~\cite{hu2022marllib} library, which offers a wide range of state-of-the-art MARL algorithms and fine-tuned policy models for various environments.
+This wrapper provides an API of additional auxiliary classes to define organizational specifications and link them to their expected behavior:
 
-\textbf{History Subsets} \quad We implemented a \textit{history\_subset} class to handle history subsets based on predefined patterns or rules via an implemented history graph when dealing with patterns. Alternatively, custom functions can be employed to instantiate a history\_subset, allowing more flexibility.
+\textbf{Observation Labeling (ol)} \quad The observation labeling is handled by the singleton class \textit{ol\_mngr}, which is part of the API. This class employs the HuggingFace transformer model \textit{tiiuae/falcon-7b} to learn these mappings in conjunction with a simple dictionary. This class also provides an interactive process that allows users to label each observation during the labeling procedure.
 
-\textbf{Organizational Specifications to Relations} \quad The \textit{osr} class models a complete $\mathcal{M}OISE^+$ organizational model that includes roles, goals, and missions, which are directly mapped to \textit{history\_subset} objects initialized with expected patterns. This mapping implements \textit{rh}, \textit{gh}, and \textit{mh}. Permissions/obligations are also defined in the \textit{osr}, mapping the agents constrained to roles and committed to missions with time constraints, thus implementing the \textit{da} relation.
+\textbf{History Subsets} \quad The internal \textit{history\_subset} class is used to handle history subsets based on predefined patterns or rules via an implemented history graph when dealing with patterns. Alternatively, custom functions can be employed to instantiate a history\_subset, allowing more flexibility.
 
-\textbf{Observation Labeling (ol)} \quad The observation labeling is managed by the singleton \textit{ol\_mngr} class, which uses a regular dictionary to map observations to labels. It leverages the HuggingFace transformer model \textit{tiiuae/falcon-7b} to learn the mappings alongside the dictionary. The \textit{ol\_mngr} class includes an interactive process for users to label each displayed observation during the labeling process. %Post-training, the LLM can be employed to identify desired observations based on keywords, enhancing usability.
+\textbf{Observable Policy Constraint (opc)} \quad The \textit{opc} class is to be used by users to link pairs of (history\_pattern, observation) to lists of expected actions. Each association is integrated into a unified \textit{history\_subset} object.
 
-\textbf{History Graph} \quad We constructed the \textit{history graph} class from scratch following the theoretical foundation of ordinal numbers and cardinalities. The class provides functions to add histories or history patterns and to check whether a given history matches the stored patterns.
+\textbf{Constrained Policy (cons\_policy)} \quad The internal \textit{cons\_policy} class combines a regular MARLlib policy with an \textit{opc} object. The integration involves embedding policy constraints within the MARLlib policy framework, allowing the constrained policy to respect predefined action constraints.
 
-\textbf{Observable Policy Constraint (opc)} \quad The \textit{opc} class links pairs of (history\_pattern, observation) to lists of actions. Each association is integrated into a unified history graph object, ensuring consistency in policy constraints.
+\textbf{Observable Reward Function (orf)} \quad The \textit{orf} class enables users to instantiate an observable reward function based on \textit{history\_subset} objects. It includes a function that evaluates whether a given history matches the initial pattern: high rewards for matching patterns, and low rewards otherwise.
 
-\textbf{Constrained Policy (cons\_policy)} \quad The \textit{cons\_policy} class combines a regular MARLlib policy with an \textit{opc} object. The integration involves embedding policy constraints within the MARLlib policy framework, allowing the constrained policy to respect predefined action constraints.
+\textbf{Organizational Specifications to Relations (osr)} \quad The \textit{osr} class enables users to gather all previously instantiated elements into a complete $\mathcal{M}OISE^+$ organizational model (JSON representable). In this class, roles and goals are directly mapped respectively to \textit{opc} and \textit{orf} objects using either patterns, rules, or custom functions. This class implements \textit{rh}, \textit{gh}, and \textit{mh}. Permissions/obligations are also defined in this class: each obligation/permission as (role,missions,time constraint) triplet is mapped to agents, thus implementing the \textit{da} relation.
 
-\textbf{Observable Reward Function (orf)} \quad The \textit{orf} class constructs an observable reward functions based on history patterns. It includes a function that evaluates whether a given history matches the initial pattern: high rewards for matching patterns, low rewards otherwise.
+\textbf{Time-to-Live (dttl)} \quad The internal \textit{dttl} class uses the \textit{osr} object to manage time constraints and update the observable reward function / policy constraints.
 
-\textbf{Time-to-Live (dttl)} \quad The \textit{dttl} class is built using a Python dictionary that replicates data from the \textit{osr} object. This class manages the time constraints to update the observable reward function and policy constraints.
-
-Once the PettingZoo environment is wrapped with the PRAHOMT Wrapper, a function is provided to execute the PRAHOMT algorithm. This function accepts a JSON object containing MARLlib details, such as the chosen MARL algorithm (e.g., MADDPG or MAPPO). It processes all defined elements, retrieves roles and missions, converts them into \textit{opc} or \textit{orf} objects and so on. Ultimately outputs a dictionary mapping each agent to its trained policy.
+\textbf{Train under constraints} \quad Once the PettingZoo environment is wrapped with the PRAHOMT Wrapper and all auxiliary classes have been used to get an \textit{ol\_mngr} and \textit{os}. The wrapper' API provides the \textit{train\_under\_constraint()} function that enables executing the PRAHOMT algorithm taking \textit{ol\_mngr} and and \textit{os} objects as arguments (in addition to other MARLlib parameters). Ultimately, it generates MARLlib policy objects and statistical data.
 
 
 \subsection{Experimental Setup}
 
-The goal of our experiments is to show whether PRAHOMT indeed impact the agents' policies during/after training as expected. For that purpose, we selected the \textquote{Simple World Comm}~\cite{Lowe2017} PettingZoo environment. This environment simulates a predator-prey scenario where predators, including a leader predator, collaborate to catch faster-moving prey. Prey gain points by collecting food and avoiding predators. The leader predator can observe the entire map, navigate freely (except in obstacles), and communicate directional orders to other predators. This setup is well-suited to induce agents to adopt organizational patterns, thus testing the effectiveness of PRAHOMT in training agents.
+The goal of our experiments is to show whether PRAHOMT indeed impacts the agents' policies during/after training as expected. For that purpose, we selected the \textquote{Simple World Comm}~\cite{Lowe2017} PettingZoo environment. This environment simulates a predator-prey scenario where predators, including a leader predator, collaborate to catch faster-moving prey. Prey gain points by collecting food and avoiding predators. The leader predator can observe the entire map, navigate freely (except in obstacles), and communicate directional orders to other predators. This setup is well-suited to induce agents to adopt organizational patterns, thus testing the effectiveness of PRAHOMT in training agents.
 
 %The environment includes features such as obstacles and food items, with the following key attributes:
 
@@ -616,7 +620,7 @@ The goal of our experiments is to show whether PRAHOMT indeed impact the agents'
 %     \item \textbf{Rewards}: Prey gain points by collecting food and avoiding predators, while predators gain points by catching prey.
 % \end{itemize}
 
-\noindent We selected MAPPO and MADDPG algorithms for their proven effectiveness in cooperative multi-agent environments without the need for domain-specific algorithmic modifications or architectures~\cite{Yu2022}. We used their respective fine-tuned model provided by MARLlib to launch training.
+\noindent We selected the MAPPO algorithm for its proven effectiveness in cooperative multi-agent environments without the need for domain-specific algorithmic modifications or architectures~\cite{Yu2022}. We used their respective fine-tuned model provided by MARLlib to launch training.
 %
 To train the LLM in \texttt{ol}, we observed observations showing specific behaviors (\textit{three agents circling a single prey}). This labeling helps in easily identifying collective behaviors based on visual observations, enabling better control of agents' actions.
 
@@ -629,10 +633,10 @@ To train the LLM in \texttt{ol}, we observed observations showing specific behav
           \begin{itemize}
               \item \textit{circle\_leader}: This role maps observations where three normal predators are close to the same prey, to directing them to move towards it.
               \item \textit{circle\_follower}: This role ensures any order received from the leader predator is followed with the corresponding action.
-              \item \textit{prey\_proximity}: This mission contains a single goal indicating a high reward when a prey is near any predator.
+              \item \textit{prey\_proximity}: This mission contains a single goal indicating a high reward when prey is near any predator.
           \end{itemize}
 
-    \item \textbf{manual\_model} \quad This model serves as a fully controlled organizational model with no room for learning. It includes two roles \textit{Manual Leader} and \textit{Manual Predator} that both dictate optimal actions for the leader predator according to a hand-crafted policy (custom function).
+    \item \textbf{manual\_model} \quad This model serves as a fully controlled organizational model with no room for learning. It includes two roles \textit{manual\_leader} and \textit{manual\_redator} that both dictate optimal actions for the leader predator according to a hand-crafted policy (custom function).
 \end{itemize}
 
 % \noindent Here is an overview of the PRAHOMT Wrapper code used for \textbf{circle\_model} :
@@ -658,18 +662,18 @@ Our evaluation criteria rely both on qualitative and quantitative aspects during
     \item \textbf{Fully Constraining Organizational Specifications (FTS)}: Agents follow hand-crafted policies from the \textit{manual\_model}.
 \end{itemize}
 
-We used various metrics to help measuring the impact of PRAHOMT during/after training:
+We used various metrics to help measure the impact of PRAHOMT during/after training:
 \begin{itemize}
-    \item \textbf{Scalability}: Qualitative feedback for how well the algorithm can handle increasing numbers of agents and complexity of the environment (number of obstacles).
+    \item \textbf{Scalability}: Assesses qualitatively the ability to manage a growing number of agents and obstacles based on computational resource usage.
     \item \textbf{Convergence Time}: The number of episodes required for the algorithm to reach a stable solution. Shorter convergence times indicate faster learning.
-    \item \textbf{Standard Deviation}: Indicates the variability in the rewards obtained by the agents. Lower standard deviation signifies more consistent performance and possibly more stable organization.
-    \item \textbf{Average Reward}: The mean reward obtained per episode, reflecting the overall performance of the algorithm. Higher average rewards indicate better performance.
+    \item \textbf{Standard Deviation}: Indicates the variability in the rewards obtained by the agents. A lower standard deviation signifies more consistent performance and possibly more stable organization.
+    \item \textbf{Average Reward}: The mean reward obtained per episode reflects the overall performance of the algorithm.
     \item \textbf{Constraint Respect}: Assesses how well the agents adhere to the given organizational constraints. It is calculated as the inverse of the number of times the constraints are not satisfied. High constraint respect means that the agents are effectively following the rules.
 \end{itemize}
 
 Relying on these metrics, we summarized the criteria likely to show an effective expected impact of PRAHOMT during/after training:
 \begin{itemize}
-    \item $(\mathbf{C_1})$: We expected to manually notice some collective hunting strategies, such as circling, in visually rendered environment.
+    \item $(\mathbf{C_1})$: We expected to manually notice some collective hunting strategies, such as circling, in a visually rendered environment.
     \item $(\mathbf{C_2})$: We expect to see faster convergence in the PTS case compared to the NTS case, with the FTS case showing a constant learning curve.
     \item $(\mathbf{C_3})$: We expect higher rewards in the PTS case compared to the NTS case.
     \item $(\mathbf{C_4})$: We expect the standard deviation to decrease from NTS to PTS and from PTS to FTS since agents are increasingly more constrained in their behavior.
@@ -692,38 +696,55 @@ The learning curves for the three cases (NTS, PTS, FTS) for the \textit{penalize
 
 \begin{table}[h!]
     \centering
+    \caption{Comparison of NTS, PTS, and FTS cases under different modes (correct, penalize, correct\_policy) based on various metrics.\\}\label{tab:results}
     \setlength{\tabcolsep}{5pt}
     \begin{tabular}{cccccccccc}
-        \hline
+        \cline{2-10}
                            & \multicolumn{3}{c}{correct} & \multicolumn{3}{c}{penalize} & \multicolumn{3}{c}{correct\_policy}                                                         \\
-        \hline
+        \cline{2-10}
                            & NTS                         & PTS                          & FTS                                 & NTS         & PTS  & FTS  & NTS         & PTS  & FTS  \\
         \hline
-        Scalability        & Yes                         & Yes                          & Yes                                 & Yes         & Yes  & Yes  & Yes         & Yes  & Yes  \\
-        Convergence Time   & 500                         & 300                          & 0                                   & 550         & 320  & 0    & 480         & 290  & 0    \\
+        Scalability        & +                         & +                          & +                                 & ++         & ++  & ++  & +         & +  & +  \\
+        Convergence Time   & 100                         & 60                           & 0                                   & 75          & 24   & 0    & 90          & 55   & 0    \\
         Standard Deviation & 2.3                         & 1.8                          & 0.5                                 & 2.5         & 1.9  & 0.5  & 2.1         & 1.7  & 0.5  \\
-        Average Reward     & 10.5                        & 15.7                         & 18.3                                & 9.8         & 14.9 & 18.1 & 11.2        & 16.2 & 18.4 \\
+        Average Reward     & 500                         & 1200                         & 1800                                & 400         & 1100 & 1750 & 550         & 1300 & 1900 \\
         Constraint Respect & $\emptyset$                 & 1                            & 1                                   & $\emptyset$ & 0.8  & 1    & $\emptyset$ & 1    & 1    \\
     \end{tabular}
-
-    \caption{Comparison of NTS, PTS, and FTS cases under different modes (correct, penalize, correct\_policy) based on various metrics.}\label{tab:results}
 \end{table}
+%
+%
+% The qualitative analysis shows that the \textit{circle\_model} leads to observable circling behaviors around prey, demonstrating the effective impact of organizational specifications on agent behavior. This visually \footnotemark[2] confirms that PRAHOMT can induce desired collective strategies ($\mathbf{C1}$). Additionally, as expected, the \textit{manual\_model} gives good results while being stable.
+%
+%
+%
+% Quantitatively, for any mode, the PTS case exhibits faster convergence and higher average rewards compared to the NTS case ($\mathbf{C_3}$), validating the hypothesis that organizational constraints can enhance learning efficiency ($\mathbf{C_2}$). Additionally, we verify the standard deviation to decrease from NTS to PTS and from PTS to FTS $(\mathbf{C_4})$.
+%
+% The FTS case, serving as a reference, consistently achieves the highest rewards due to pre-defined optimal policies. We also verify the constraint respect to be fully covered in \textit{correct} and \textit{correct\_policy} modes but the \textit{penalize} mode ($\mathbf{C_5}$). Finally, we did not see scalability difficulties when adding up to 30 agents and obstacles for all cases encountered ($\mathbf{C_6}$). From the experiments conducted, the \textit{penalize} mode better faces scalability because it updates its internal policy using optimized computations while \textit{correct} and \textit{correct\_policy} require an aside correction function that may impact the overall computational performance.
+%
+% The experiments demonstrate that PRAHOMT significantly impacts agent behavior and learning efficiency. The organizational models, especially the \textit{circle\_model}, effectively guide agents towards efficient collective strategies, as evidenced by both qualitative observations and quantitative metrics.
+%
+The qualitative analysis shows that the \textit{circle\_model} induces observable circling behaviors around prey, confirming the impact of organizational specifications on agent actions
+%
+\footnote{A visual animated representation is provided in \url{https://drive.google.com/file/d/1fT8gDo91mraRU5Wq8s_GBtP_YxM4lBfr/view?usp=sharing}}
+%
+. This visual representation shows alignment with expected collective strategies ($\mathbf{C1}$). The \textit{manual\_model} also exhibited consistent further demonstrating the robustness of predefined policies.
 
+From a quantitative perspective, the metrics provide compelling evidence for the advantages of applying organizational constraints. In the PTS case, agents exhibited faster convergence compared to the NTS case across all modes, confirms that organizational constraints can accelerate the learning ($\mathbf{C2}$). The FTS case, which utilized hand-crafted policies, achieved immediate convergence, as expected, due to the absence of learning.
 
-The qualitative analysis shows that the \textit{circle\_model} leads to observable circling behaviors around prey, demonstrating the effective impact of organizational specifications on agent behavior. This visually \footnotemark[2] confirms that PRAHOMT can induce desired collective strategies ($\mathbf{C1}$). Additionally, as expected, the \textit{manual\_model} gives good results while being stable.
+The average reward metrics reveal that agents guided by the \textit{circle\_model} (PTS) consistently outperformed those in the unconstrained scenario (NTS), achieving higher rewards ($\mathbf{C3}$). This indicates that organizational constraints not only improve learning efficiency but also enhance overall performance. The FTS case, leveraging optimal policies, consistently achieved the highest rewards, highlighting the effectiveness of well-defined constraints. We also noticed that the \textit{penalize} mode shows slightly better average rewards than \textit{correct} and \textit{correct\_policy} modes. Indeed, \textit{penalize} may authorize not satisfy some organizational specifications if it increases the overall reward.
 
-\footnotetext[2]{A visual animated representation is provided in \url{https://drive.google.com/file/d/1fT8gDo91mraRU5Wq8s_GBtP_YxM4lBfr/view?usp=sharing}}
+The standard deviation of rewards, an indicator of performance variability, decreased progressively from NTS to PTS and from PTS to FTS ($\mathbf{C4}$). This reduction in variability suggests that organizational constraints contribute to more stable and consistent agent behavior. Lower standard deviations in the FTS case underscore the stability imparted by predefined policies. Again, the \textit{penalize} mode shows a slightly higher deviation because the policy is not strongly constrained by organizational specifications.
 
-Quantitatively, for any mode, the PTS case exhibits faster convergence and higher average rewards compared to the NTS case ($\mathbf{C_3}$), validating the hypothesis that organizational constraints can enhance learning efficiency ($\mathbf{C_2}$). Additionally, we verify the standard deviation to decrease from NTS to PTS and from PTS to FTS $(\mathbf{C_4})$.
+Constraint respect, assessed as the adherence to organizational rules, was fully met in the \textit{correct} and \textit{correct\_policy} modes, but not in the \textit{penalize} mode ($\mathbf{C5}$). This demonstrates that while agents can learn to follow constraints effectively, the constraint mode plays a crucial role in their adherence.
 
-The FTS case, serving as a reference, consistently achieves the highest rewards due to pre-defined optimal policies. We also verify the constraint respect to be fully covered in \textit{correct} and \textit{correct\_policy} modes but the \textit{penalize} mode ($\mathbf{C_5}$). Finally, we did not see scalability difficulties when adding up to 30 agents and obstacles for all cases encountered ($\mathbf{C_6}$). From the experiments conducted, the \textit{penalize} mode better face scalability because it updates its internal policy using optimized computations while \textit{correct} or \textit{correct\_policy} require an aside correction function that may impact the overall computational performance.
+Scalability, evaluated by increasing the number of agents and obstacles, was effectively handled in all cases ($\mathbf{C6}$). The \textit{penalize} mode demonstrated superior scalability, as it incorporates optimized computations for policy updates, in contrast to the aside correction functions required by the \textit{correct} and \textit{correct\_policy} modes, which can impact computational performance.
 
-The experiments demonstrate that PRAHOMT significantly impacts agent behavior and learning efficiency. The organizational models, especially the \textit{circle\_model}, effectively guide agents towards efficient collective strategies, as evidenced by both qualitative observations and quantitative metrics.
+In summary, the experimental results show that PRAHOMT enhances both agent behavior and learning efficiency. The \textit{circle\_model} successfully guides agents towards efficient collective strategies, as evidenced by the observed behaviors and quantitative metrics. These findings underscore the utility of organizational constraints in multi-agent reinforcement learning environments and is a first step towards a framework for future research and application.
 
 
 \section{Conclusion}\label{sec:conclusion}
 
-We proposed the PRAHOMT algorithm to augment the MARL framework with the $\mathcal{M}OISE^+$ model. PRAHOMT constrains agents' training according to organizational specifications. We evaluated PRAHOMT using our proposed proof of concept (PoC) implementation for the \textquote{Simple World Comm} predator-prey environment. Two organizational models were established: a minimally constrained model, \textquote{circle\_model}, and a fully constrained one, \textquote{manual\_model}. We conducted an evaluation of the fully-learned, fine-tuned, or predefined policies based on performance criteria in or after training.
+This paper proposes to see the design of a MAS as a problem under constraint where agents' policies are to be optimized. To integrate the constraints, we proposed the PRAHOMT algorithm to augment the MARL framework with the $\mathcal{M}OISE^+$ model. PRAHOMT constrains agents' training according to organizational specifications. We evaluated PRAHOMT using our proposed proof of concept (PoC) implementation for the \textquote{Simple World Comm} predator-prey environment. Two organizational models were established: a minimally constrained model, \textquote{circle\_model}, and a fully constrained one, \textquote{manual\_model}. We conducted an evaluation of the fully-learned, fine-tuned, or predefined policies based on performance criteria in or after training.
 %
 The results show that \textquote{circle\_model} provides a relevant tradeoff between constraints and free learning. Despite comprising simple predefined rules, it effectively complements learned behavior.
 
