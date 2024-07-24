@@ -446,7 +446,7 @@ The LLM is trained after real observation have been rendered visually and labell
 %     \label{fig:PRAHOMT_ol}
 % \end{figure}
 
-Second, defining a history subset exhaustively may require taking into account many cases, hence leading to high amount of histories. % As illustrated in \Autoref{fig:PRAHOM_opc}
+Second, defining a history subset exhaustively may require taking into account many cases, hence leading to high amount of histories. As illustrated in \Autoref{fig:PRAHOM_opc}
 Rather than defining a history subset exhaustively, we propose three short-ways to simplify its definition:
 %
 \quad i) a \textbf{pattern} format that follows the following rules: a sequence is denoted \textquote{[$label_{obs_1},label_{act_1}\dots$] \allowbreak ($card_{min},card_{max}$)} the \textquote{Any} label refer to any observation/action. This pattern is implemented an oriented graph denoted \textbf{history graph} where nodes are observations/actions and edges represent expected transitions relying on ordinal number and cardinalities; \quad
@@ -458,20 +458,17 @@ iii) a \textbf{custom script} logic taking into account a history belonging to t
 
 Considering a history subset is ultimately aimed to be used to constrain a policy to make it adhere to a role, we introduce an \textbf{observable policy constraint} $c\pi: H \times \Omega \rightarrow \mathcal{P}(A)$. $c\pi$ indicates the actions an agent's policy should be allowed to choose among when it receives an observation at each step.
 
-% \begin{figure}[h!]
-%     \centering
-%     \input{figures/opc_scheme.tex}
-%     \caption{An abstract view of observable policy constraint and its crafting}
-%     \label{fig:PRAHOM_opc}
-% \end{figure}
+\begin{figure}[h!]
+    \centering
+    \input{figures/opc_scheme.tex}
+    \caption{An abstract view of observable policy constraint and its crafting}
+    \label{fig:PRAHOM_opc}
+\end{figure}
 
 We propose to integrate observable policy constraints into an agent's policy via three modes:
-
-\begin{itemize}
-    \item \textbf{correct}: Corrects any chosen action $\pi(\omega)$ to an expected one in $c\pi(\omega)$. It ensures safety but is external to the agent's policy.
-    \item \textbf{penalize}: Adds a penalty to the reward if a wrong action ($\pi(\omega) \notin c\pi(\omega)$) is made, encouraging agents to learn their constraints but without safety guarantees.
-    \item \textbf{correct\_policy}: Creates a \textbf{constrained policy} $\pi_c \in \Pi, \pi_c = \{smpl(c\pi_{joint}(\omega_{joint})) \ if \ \omega_{joint} \in Dom(c\pi_{joint}) \ \allowbreak, \ \allowbreak else \ \allowbreak \pi_{joint}(\omega_{joint})\}$ where $smpl$ gets an element from a set randomly. An observable policy constraint $c\pi$ corrects the current policy $\pi$, hence respecting safety guarantees internally.
-\end{itemize}
+\textbf{correct}: Corrects any chosen action $\pi(\omega)$ to an expected one in $c\pi(\omega)$. It ensures safety but is external to the agent's policy; \quad
+\textbf{penalize}: Adds a penalty to the reward if a wrong action ($\pi(\omega) \notin c\pi(\omega)$) is made, encouraging agents to learn their constraints but without safety guarantees; \quad
+\textbf{correct\_policy}: Creates a \textbf{constrained policy} $\pi_c \in \Pi, \pi_c = \{smpl(c\pi_{joint}(\omega_{joint})) \allowbreak if \ \omega_{joint} \in Dom(c\pi_{joint}) \ \allowbreak, \ \allowbreak else \ \allowbreak \pi_{joint}(\omega_{joint})\}$ where $smpl$ gets an element from a set randomly. An observable policy constraint $c\pi$ corrects the current policy $\pi$, hence respecting safety guarantees internally.
 
 In the annex, we provide \autoref{proof:jpc_to_ac}, which outlines why constraining the action decision-making process dynamically during training at each step implies that the resulting joint-policy will necessarily be constrained.
 
@@ -569,12 +566,10 @@ The main training loop runs for a maximum number of episodes ($ep_{max}$) or unt
 
 \textbf{Complexity and Scalability}: \quad The computational complexity of PRAHOMT primarily depends on the number of episodes ($ep_{max}$), the number of steps per episode ($step_{max}$), and the complexity of the MARL algorithm ($u_{marl}$). Each step involves updating the policy, selecting \& validating actions, and updating histories and rewards, which can be computationally intensive. The memory complexity depends on the need to store rewards, policies and histories. The history graphs we introduced allow histories to be merged compactly, reducing redundancy with limited impact on read cost.
 
-Scalability can be challenging as the number of agents, roles, missions increases. Evaluating PRAHOMT scalability requires to consider an implemented version through these salient features:
-\begin{itemize}
-    \item \textbf{Parallelization:} Performance for updating/validating policies strongly depends on chosen MARL algorithms capabilities such as parallelization significantly improves it (especially in Policy Optimization algorithms);
-    \item \textbf{Efficient Data Structures:} The choice of data structures for storing and accessing histories or policies is crucial for reducing overhead.;
-    \item \textbf{Optimization of Reward Functions:} The logic for constructing/handling reward functions is important to enhance performance further.
-\end{itemize}
+Scalability can be challenging as the number of agents, roles, missions increases. Evaluating PRAHOMT scalability requires to consider an implemented version through these salient features: \quad
+\textbf{Parallelization:} Performance for updating/validating policies strongly depends on chosen MARL algorithms capabilities such as parallelization significantly improves it (especially in Policy Optimization algorithms); \quad
+\textbf{Efficient Data Structures:} The choice of data structures for storing and accessing histories or policies is crucial for reducing overhead.; \quad
+\textbf{Optimization of Reward Functions:} The logic for constructing/handling reward functions is important to enhance performance further.
 
 
 
@@ -709,19 +704,19 @@ The learning curves for the three cases (NTS, PTS, FTS) for the \textit{penalize
         Standard Deviation & 2.3                         & 1.8                          & 0.5                                 & 2.5         & 1.9  & 0.5  & 2.1         & 1.7  & 0.5  \\
         Average Reward     & 10.5                        & 15.7                         & 18.3                                & 9.8         & 14.9 & 18.1 & 11.2        & 16.2 & 18.4 \\
         Constraint Respect & $\emptyset$                 & 1                            & 1                                   & $\emptyset$ & 0.8  & 1    & $\emptyset$ & 1    & 1    \\
-        \hline
     \end{tabular}
-    \caption{Comparison of NTS, PTS, and FTS cases under different modes (correct, penalize, correct\_policy) based on various metrics.}
-    \label{tab:results}
+
+    \caption{Comparison of NTS, PTS, and FTS cases under different modes (correct, penalize, correct\_policy) based on various metrics.}\label{tab:results}
 \end{table}
 
 
-The qualitative analysis shows that the \textit{circle\_model} leads to observable circling behaviors around prey, demonstrating the effective impact of organizational specifications on agent behavior. This visually \footnotemark[2] confirms that PRAHOMT can induce desired collective strategies ($\mathbf{C1}$).
+The qualitative analysis shows that the \textit{circle\_model} leads to observable circling behaviors around prey, demonstrating the effective impact of organizational specifications on agent behavior. This visually \footnotemark[2] confirms that PRAHOMT can induce desired collective strategies ($\mathbf{C1}$). Additionally, as expected, the \textit{manual\_model} gives good results while being stable.
 
 \footnotetext[2]{A visual animated representation is provided in \url{https://drive.google.com/file/d/1fT8gDo91mraRU5Wq8s_GBtP_YxM4lBfr/view?usp=sharing}}
 
-Quantitatively, the PTS case exhibits faster convergence and higher average rewards compared to the NTS case ($\mathbf{C_3}$), validating the hypothesis that organizational constraints can enhance learning efficiency ($\mathbf{C_2}$). Additionally, we verify the standard deviation to decrease from NTS to PTS and from PTS to FTS $(\mathbf{C_4})$.
-The FTS case, serving as a reference, consistently achieves the highest rewards due to pre-defined optimal policies. We also verify the constraint respect to be fully covered in \textit{correct} and \textit{correct\_policy} modes but the \textit{penalize} mode ($(\mathbf{C_5})$). Finally, we did not see scalability difficulties when adding up to 30 agents and obstacles for all cases encountered ($(\mathbf{C_6})$). From the experiments conducted, the \textit{penalize} mode better face scalability because it updates its internal policy using optimized computations while \textit{correct} or \textit{correct\_policy} require an aside correction function that may impact the overall computational performance.
+Quantitatively, for any mode, the PTS case exhibits faster convergence and higher average rewards compared to the NTS case ($\mathbf{C_3}$), validating the hypothesis that organizational constraints can enhance learning efficiency ($\mathbf{C_2}$). Additionally, we verify the standard deviation to decrease from NTS to PTS and from PTS to FTS $(\mathbf{C_4})$.
+
+The FTS case, serving as a reference, consistently achieves the highest rewards due to pre-defined optimal policies. We also verify the constraint respect to be fully covered in \textit{correct} and \textit{correct\_policy} modes but the \textit{penalize} mode ($\mathbf{C_5}$). Finally, we did not see scalability difficulties when adding up to 30 agents and obstacles for all cases encountered ($\mathbf{C_6}$). From the experiments conducted, the \textit{penalize} mode better face scalability because it updates its internal policy using optimized computations while \textit{correct} or \textit{correct\_policy} require an aside correction function that may impact the overall computational performance.
 
 The experiments demonstrate that PRAHOMT significantly impacts agent behavior and learning efficiency. The organizational models, especially the \textit{circle\_model}, effectively guide agents towards efficient collective strategies, as evidenced by both qualitative observations and quantitative metrics.
 
