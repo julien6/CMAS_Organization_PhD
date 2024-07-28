@@ -287,7 +287,7 @@ The main contribution of this paper is the \textit{Cyberdefense-oriented PRAHOM}
 
 We assessed CoPRAHOM in the simulated scenario provided by the 3rd CAGE Challenge~\cite{cage_challenge_3_announcement}. It involves creating a Cyberdefense MAS for detecting, mitigating, and eliminating malware programs in a drone swarm. Using CoPRAHOM, we developed several Cyberdefense MAS models. These models are used by CoPRAHOM to guide and constrain agents' training to better achieve the scenario's goals and ensure safety requirements. We verify that the trained agents exhibit expected collective strategies while being also fine-tuned throughout the training, making the overall score comparable to leading entries on the leaderboard.
 
-The remainder of this paper is organized as follows. \Autoref{sec:marl_background} introduces the fundamentals of MARL. \Autoref{sec:related_works} reviews related works on MARL for Cyberdefense and agent training monitoring. \Autoref{sec:marl_moise_linking} outlines the $\mathcal{M}OISE^+$ model and its integration with MARL. \Autoref{sec:coprahom} describes the MASCARA architecture and the development of the CoPRAHOM algorithm. \Autoref{sec:prahom_wrapper} details our \textit{Proof of Concept} (PoC) implementation of CoPRAHOM and its practical functionalities. \Autoref{sec:experimental_setup} covers the experimental setup for the 3rd CAGE Challenge and the evaluation metrics for CoPRAHOM. \Autoref{sec:results_and_discussion} presents and discusses the results. Finally, \Autoref{sec:conclusion} concludes the paper and outlines future research directions.
+The remainder of this paper is organized as follows. \Autoref{sec:marl_background} introduces the fundamentals of MARL. \Autoref{sec:related_works} reviews related works on MARL for Cyberdefense and agent training monitoring. \Autoref{sec:marl_moise_linking} outlines the $\mathcal{M}OISE^+$ model and its integration with MARL. \Autoref{sec:coprahom} describes the MASCARA architecture and the development of the CoPRAHOM algorithm. \Autoref{sec:coprahom_wrapper} details our \textit{Proof of Concept} (PoC) implementation of CoPRAHOM and its practical functionalities. \Autoref{sec:experimental_setup} covers the experimental setup for the 3rd CAGE Challenge and the evaluation metrics for CoPRAHOM. \Autoref{sec:results_and_discussion} presents and discusses the results. Finally, \Autoref{sec:conclusion} concludes the paper and outlines future research directions.
 
 
 \section{MARL Background}\label{sec:marl_background}
@@ -496,7 +496,7 @@ After each episode, check whether the cumulative reward meets the expectancy and
 Through these steps, CoPRAHOM ensures that the agents' policies are aligned with the organizational specifications, enhancing the efficiency and effectiveness of Cyberdefense strategies in diverse scenarios.
 
 
-\subsection{Algorithm Implementation: CoPRAHOM Wrapper}
+\section{Algorithm Implementation: CoPRAHOM Wrapper}\label{sec:coprahom_wrapper}
 
 The implementation of the CoPRAHOM algorithm leverages the \emph{PettingZoo} library, which provides a standard API for developing multi-agent environments and applying MARL algorithms. We developed the \textit{CoPRAHOM Wrapper} as a proof-of-concept tool to augment PettingZoo environments, facilitating the application of the CoPRAHOM algorithm. This wrapper utilizes the MARLlib~\cite{hu2022marllib} library, which offers a variety of state-of-the-art MARL algorithms and fine-tuned policy models for different environments. The CoPRAHOM Wrapper provides an API with additional auxiliary classes to define organizational specifications and link them to their expected behavior in a Cyberdefense context.
 
@@ -526,7 +526,6 @@ Once the PettingZoo environment is wrapped with the CoPRAHOM Wrapper and all aux
 
 By implementing these components, CoPRAHOM facilitates the development of robust and adaptive Cyberdefense strategies within the MARL framework, ensuring that agents can effectively detect, analyze, and mitigate cyber threats in various scenarios, including IoT-based systems.
 
-
 \section{Experimental Setup}\label{sec:experimental_setup}
 
 In order to meet the requirements of the 3rd CAGE Challenge, our experimental setup involves creating Cyberdefense MAS models using $\mathcal{M}OISE^+$ organizational specifications. We established models with varying levels of constraints, including different roles and missions. For inspiration, we referred to the MASCARA architecture while developing these models. After implementing CoPRAHOM, we demonstrated its use in integrating the defined models to constrain agents' learning. Finally, we evaluated the impact of these models both during training and after deployment.
@@ -542,6 +541,69 @@ We selected the CybORG CAGE Challenge 3 environment, which simulates a swarm of 
     \item \textbf{Observation and State Shapes:} Diverse sensor data and cyber-threat indicators.
     \item \textbf{Rewards:} Points for securing assets, preventing attacks, and neutralizing threats.
 \end{itemize}
+
+\begin{figure}
+    \centering
+    
+    \begin{tikzpicture}
+        % Define the positions of the drones
+        \coordinate (A) at (0,0);
+        \coordinate (B) at (2,1);
+        \coordinate (C) at (1,3);
+        \coordinate (D) at (3,3);
+        \coordinate (E) at (4,1);
+        \coordinate (F) at (5,3);
+        \coordinate (G) at (6,1);
+        
+        % Draw the drones with the drone image
+        \foreach \pos in {A,B,C,D,E,F,G} {
+            \node at (\pos) {\includegraphics[width=1cm]{figures/drone_scheme.png}};
+        }
+        
+        % Draw the connections
+        \draw[dotted] (A) -- (B);
+        \draw[dotted] (B) -- (C);
+        \draw[dotted] (B) -- (D);
+        \draw[dotted] (D) -- (E);
+        \draw[dotted] (E) -- (F);
+        \draw[dotted] (F) -- (G);
+        
+        % Add agent symbols as green circles
+        \node[fill=green, circle, minimum size=7pt, inner sep=0pt] at (0.41,0.41) {};
+        \node[fill=green, circle, minimum size=7pt, inner sep=0pt] at (2.41,1.41) {};
+        \node[fill=green, circle, minimum size=7pt, inner sep=0pt] at (1.41,3.41) {};
+        \node[fill=green, circle, minimum size=7pt, inner sep=0pt] at (3.41,3.41) {};
+        \node[fill=green, circle, minimum size=7pt, inner sep=0pt] at (4.41,1.41) {};
+        \node[fill=green, circle, minimum size=7pt, inner sep=0pt] at (5.41,3.41) {};
+        \node[fill=green, circle, minimum size=7pt, inner sep=0pt] at (6.41,1.41) {};
+        
+        % Add blue circles to the left of some green circles
+        \node[fill=blue, circle, minimum size=7pt, inner sep=0pt] at (0.11,0.41) {};
+        \node[fill=blue, circle, minimum size=7pt, inner sep=0pt] at (2.11,1.41) {};
+        \node[fill=blue, circle, minimum size=7pt, inner sep=0pt] at (3.11,3.41) {};
+        \node[fill=blue, circle, minimum size=7pt, inner sep=0pt] at (5.11,3.41) {};
+        
+        % Add one additional circle to the left of an existing circle
+        \node[fill=red, circle, minimum size=7pt, inner sep=0pt] at (3.91,1.41) {}; % Example: red circle added
+    
+        % Add the legend
+        \node[fill=red, circle, minimum size=7pt, inner sep=0pt, label=right:{\small red agent}] at (0,-1.5) {};
+        \node[fill=blue, circle, minimum size=7pt, inner sep=0pt, label=right:{\small blue agent}] at (3,-1.5) {};
+        \node[fill=green, circle, minimum size=7pt, inner sep=0pt, label=right:{\small green agent}] at (6,-1.5) {};
+        
+        \node at (1,-2.5) {\includegraphics[width=1cm]{figures/drone_scheme.png}};
+        \node[anchor=west] at (2,-2.5) {\small drone};
+    
+        % Communication lines in legend
+        \begin{scope}
+            \draw[dotted] (4,-2.5) -- (5,-2.5);
+            \node[anchor=west] at (5.1,-2.5) {\small communication};
+        \end{scope}
+        
+    \end{tikzpicture}
+    
+    \caption{A view of the 3rd CAGE Challenge scenario}\label{fig:cage_illustration}
+\end{figure}
 
 \subsection{Organizational Models}
 
@@ -562,6 +624,8 @@ We selected the MAPPO algorithm for its proven effectiveness in cooperative mult
 
 To train the LLM in \texttt{ol}, we observed observations showing specific behaviors such as when a malware program is being detected. This labeling helps in easily identifying collective behaviors based on visual observations, enabling better control of agents' actions.
 
+\subsection{Evaluation Metrics}
+
 We used various metrics to measure the impact of CoPRAHOM during and after training:
 \begin{itemize}
     \item \textbf{Scalability}: Assesses the ability to manage a growing number of agents and obstacles based on computational resource usage.
@@ -569,16 +633,34 @@ We used various metrics to measure the impact of CoPRAHOM during and after train
     \item \textbf{Standard Deviation}: Indicates the variability in the rewards obtained by the agents. A lower standard deviation signifies more consistent performance and potentially more stable organization.
     \item \textbf{Average Reward}: The mean reward obtained per episode reflects the overall performance of the algorithm.
     \item \textbf{Constraint Respect}: Assesses how well the agents adhere to the given organizational constraints. It is calculated as the inverse of the number of times the constraints are not satisfied. High constraint respect means that the agents are effectively following the rules.
+    \item \textbf{Average Percentage of Infected Drones by Malware}: Measures the proportion of drones infected by malware during the simulation.
+    \item \textbf{Average Percentage of Successful Malware Attacks}: Indicates the success rate of malware attacks on the drone swarm.
+    \item \textbf{Mean Time to Detect}: Average time taken to detect malware in the system.
+    \item \textbf{Mean Time to Acknowledge}: Average time taken to acknowledge the detection of malware.
+    \item \textbf{Mean Time to Recovery}: Average time taken to recover drones from malware infections.
+    \item \textbf{Mean Time to Contain}: Average time taken to contain malware within the system.
+    \item \textbf{System Availability}: Percentage of time the system is fully operational and available.
+    \item \textbf{Service Level Agreement (SLA) Compliance}: Measures the compliance with predefined SLAs, indicating the reliability of the Cyberdefense system.
+    \item \textbf{Mean Time Between Failures (MTBF)}: Average time between successive failures in the system.
 \end{itemize}
 
-Relying on these metrics, we summarized the criteria likely to show an effective expected impact of PRAHOMT during/after training:
+\subsection{Criteria for Enhancement in Cyberdefense}
+
+Using the aforementioned metrics, we defined new criteria to assess the enhancement in Cyberdefense provided by CoPRAHOM compared to regular MARL learning, particularly focusing on the "Active Defense" model. The criteria are:
+
 \begin{itemize}
-    \item $(\mathbf{C_1})$: We expected to manually notice some collective strategies, such as isolating suspicious activities or coordinating defensive maneuvers.
-    \item $(\mathbf{C_2})$: We expect to see faster convergence in the PTS case compared to the NTS case, with the FTS case showing a constant learning curve.
-    \item $(\mathbf{C_3})$: We expect higher rewards in the PTS case compared to the NTS case.
-    \item $(\mathbf{C_4})$: We expect the standard deviation to decrease from NTS to PTS and from PTS to FTS since agents are increasingly more constrained in their behavior.
-    \item $(\mathbf{C_5})$: We expect the constraint respect to be fully covered in \textit{correct} and \textit{correct\_policy} modes but not in the \textit{penalize} mode.
-    \item $(\mathbf{C_6})$: We expect the scalability to be handled in all of the cases.
+    \item $\mathbf{C_1}$: Reduction in the average percentage of infected drones by malware. CoPRAHOM should result in a lower proportion of infected drones compared to regular MARL learning.
+    \item $\mathbf{C_2}$: Reduction in the average percentage of successful malware attacks. The success rate of malware attacks should be significantly lower with CoPRAHOM.
+    \item $\mathbf{C_3}$: Reduction in mean time to detect, acknowledge, recover, and contain. CoPRAHOM should demonstrate faster detection, acknowledgment, recovery, and containment times.
+    \item $\mathbf{C_4}$: Improvement in system availability. The system should exhibit higher availability under CoPRAHOM.
+    \item $\mathbf{C_5}$: Improvement in SLA compliance. Higher compliance with SLAs should be observed with CoPRAHOM.
+    \item $\mathbf{C_6}$: Increase in mean time between failures (MTBF). CoPRAHOM should lead to longer intervals between system failures.
+    \item $\mathbf{C_7}$: We expected to manually notice some collective strategies, such as isolating suspicious activities or coordinating defensive maneuvers.
+    \item $\mathbf{C_8}$: We expect to see faster convergence in the PTS case compared to the NTS case, with the FTS case showing a constant learning curve.
+    \item $\mathbf{C_9}$: We expect higher rewards in the PTS case compared to the NTS case.
+    \item $\mathbf{C_{10}}$: We expect the standard deviation to decrease from NTS to PTS and from PTS to FTS since agents are increasingly more constrained in their behavior.
+    \item $\mathbf{C_{11}}$: We expect the constraint respect to be fully covered in \textit{correct} and \textit{correct\_policy} modes but not in the \textit{penalize} mode.
+    \item $\mathbf{C_{12}}$: We expect the scalability to be handled in all of the cases.
 \end{itemize}
 
 \section{Results and Discussion}\label{sec:results_and_discussion}
@@ -615,7 +697,7 @@ Table \Autoref{tab:metrics_comparison} summarizes the convergence time, average 
 
 The organizational models effectively influenced drone behavior in the CybORG CAGE Challenge 3 environment. The Suspect Isolation Model demonstrated effective identification and isolation of drones exhibiting suspicious activities, enhancing overall security. This model ensured that potential threats were quickly identified and neutralized, preventing the spread of malicious activities within the drone swarm ($\mathbf{C_1}$).
 
-Figure \ref{fig:learning_curves} provides a comprehensive view of the learning curves for each model. The No Model scenario (blue) exhibited the slowest convergence and the lowest average rewards. The high variability in rewards indicates that agents struggled to find a consistent strategy, resulting in a high standard deviation.
+\Autoref{fig:learning_curves} provides a comprehensive view of the learning curves for each model. The No Model scenario (blue) exhibited the slowest convergence and the lowest average rewards. The high variability in rewards indicates that agents struggled to find a consistent strategy, resulting in a high standard deviation.
 
 In contrast, the Suspect Isolation Model (orange) showed faster convergence and higher average rewards compared to the No Model scenario. The reduced variability suggests that agents consistently identified and isolated suspicious activities, leading to more stable performance.
 
@@ -623,11 +705,11 @@ The Active Defense Model (green) exhibited the highest average rewards and the f
 
 The Manual Control Model (red dashed line) served as a baseline for comparison. While it performed better than the No Model scenario, it was outperformed by both the Suspect Isolation and Active Defense models. The manual control strategy, although effective, lacked the adaptability and efficiency provided by the automated organizational models.
 
-From a quantitative perspective, the metrics also provide evidence for the advantages of applying organizational constraints. As illustrated in Figure \ref{fig:learning_curves}, in the constrained policy case, agents exhibited faster convergence compared to the unconstrained scenario across all modes. This confirms that organizational constraints can accelerate learning ($\mathbf{C_2}$). The manually crafted policy case achieved immediate convergence, as expected, due to the absence of learning.
+From a quantitative perspective, the metrics also provide evidence for the advantages of applying organizational constraints. As illustrated in \Autoref{fig:learning_curves}, in the constrained policy case, agents exhibited faster convergence compared to the unconstrained scenario across all modes. This confirms that organizational constraints can accelerate learning ($\mathbf{C_2}$). The manually crafted policy case achieved immediate convergence, as expected, due to the absence of learning.
 
 The average reward metrics reveal that agents guided by the Suspect Isolation Model consistently outperformed those in the unconstrained scenario, achieving higher rewards ($\mathbf{C_3}$). This indicates that organizational constraints not only improve learning efficiency but also enhance overall performance. The manually crafted policies consistently achieved the highest rewards, highlighting the effectiveness of well-defined constraints.
 
-The standard deviation of rewards, an indicator of performance variability, decreased progressively from the unconstrained to the constrained scenarios ($\mathbf{C_4}$). This reduction in variability suggests that organizational constraints contribute to more stable and consistent agent behavior. As illustrated in Table \ref{tab:metrics_comparison}, the constrained policies show a lower variance compared to the unconstrained ones, stabilizing the performance.
+The standard deviation of rewards, an indicator of performance variability, decreased progressively from the unconstrained to the constrained scenarios ($\mathbf{C_4}$). This reduction in variability suggests that organizational constraints contribute to more stable and consistent agent behavior. As illustrated in \Autoref{tab:metrics_comparison}, the constrained policies show a lower variance compared to the unconstrained ones, stabilizing the performance.
 
 Constraint respect, assessed as the adherence to organizational rules, was fully met in the \textit{correct} and \textit{correct\_policy} modes, but not in the \textit{penalize} mode ($\mathbf{C_5}$). This demonstrates that while agents can learn to follow constraints effectively, the constraint mode plays a crucial role in their adherence.
 
