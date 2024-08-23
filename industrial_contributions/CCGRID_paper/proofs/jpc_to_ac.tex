@@ -1,0 +1,85 @@
+\begin{proof}\label{proof:jpc_to_ac}
+    
+    Let $n \in \mathbb{N}$ agents
+    
+    Let a Dec-POMDP, $d \in D$
+    
+    Let a cumulative reward expectancy, $s \in \mathbb{R}$
+    
+    Let some specifications constraints, $os_{init} \in OS$
+    
+    Let a joint-policy $\pi_{joint} \in \Pi_{joint}, \allowbreak \pi_{joint} = \{\pi_1,\pi_2..\pi_n\}, \pi_k \in \Pi,(k \in \mathbb{N}, k \leq n)$
+    
+    Let's consider only one episode
+    
+    Let $step_{max} \in \mathbb{N}$, the maximum number of steps per episode
+    
+    Let $Solv: \Pi \times \Omega \times A \times \mathbb{R} \rightarrow \Pi$, the RL algorithm that uses the reward, observation to improve a given agent's policy (possibly at each step) by updating the observation-action couples of the policy so that $Solv(\pi, \omega, r) = (\pi \setminus \{(\omega_p, a_p) | p \in \mathbb{N}\}) \cup \{(\omega_q, a_q) | q \in \mathbb{N}\}$
+    
+    For each step, the joint-policy is updated by the RL algorithm.
+    
+    Let $solutions = \{\pi_{joint,1}, \pi_{joint,1}.. \pi_{joint,d}\} (d \in \mathbb{N})$ the set of joint-policies obtained at a $s$ cumulative reward expectancy
+    
+    Let $satisfying = \{\pi_{joint,1}, \pi_{joint,1}.. \pi_{joint,f}\} (f \in \mathbb{N})$ the set of joint-policies that are allowed by the organization specifications $os_{init}$
+    
+    The joint-policies that satisfy the organization specifications and reach at least a cumulative reward expectancy are
+    Let $compliant = solution \cap solutions = \{\pi_{joint,1}, \pi_{joint,1}.. \pi_{joint,q}\} (q \in \mathbb{N})$
+    It means that for a given joint-policy in compliant, for a given agent's policy we cannot find a couple observation-action that is not in the matching satisfying joint-policy.
+
+    Now, let's suppose we restrict the action space at each step for each agent.
+
+    % -------
+    At first step, the agent $i$ has a empty history $h = ()$ and its initial policy is $\pi_{i,0} \in \Pi$, has an empty previous action $a_0 = \emptyset$ and observation $\omega_0 = \emptyset$.
+    (we choose $\pi_{i,0} \in \pi_{joint} | \pi_{joint} \in satisfying$)
+
+    When agent $i$ receives an observation $\omega_{1}$ and reward $r_1$:
+    The available actions are $A_1 = \{a | (\omega, a) \in \pi, \pi \in \pi_{joint},\pi_{joint} \in satisfying\}$
+
+    It updates its policy based on previous action, observation and reward: $\pi_{i,1} = Solv(\pi_{i,0}, \omega_0, a_0, r_1)$.
+    $\pi_{i,1} = (\pi_{i,0} \setminus \{(\omega_p, a_p) | p \in \mathbb{N}\}) \cup \{(\omega_q, a_q) | q \in \mathbb{N}\}$ with the $(\omega_p, a_p) \in (\pi_{i,0} \cup {(\omega_0, a_0)})$ and $(\omega_q, a_q) \in (\pi_{i,0} \cup {(\omega_0, a_0)})$. Consequently, $\pi_{i,1} \in \pi_{joint} | \pi_{joint} \in satisfying$.
+
+
+    It uses its policy to determine next action: $a_1 = \pi_{i,1}(\omega_1)$
+
+    % -----
+    At second step, the agent $i$ has now a non-empty history $h = ((\omega_1, a_1))$ and its policy is $\pi_{i,1} \in \Pi$, has a previous action $a_1$ and observation $\omega_1$.
+
+    When agent $i$ receives an observation $\omega_{2}$ and reward $r_2$:
+    The available actions are $A_1 = \{a | (\omega_2, a) \in \pi, \pi \in \pi_{joint},\pi_{joint} \in satisfying, \{(\omega_1, a_1)\} \in \pi\}$
+
+    (note: $A_1 \subset A_0$)
+
+    It updates its policy based on previous action, observation and reward: $\pi_{i,2} = Solv(\pi_{i,1}, \omega_0, a_0, r_2)$.
+    $\pi_{i,2} = (\pi_{i,1} \setminus \{(\omega_p, a_p) | p \in \mathbb{N}\}) \cup \{(\omega_q, a_q) | q \in \mathbb{N}\}$ with the $(\omega_p, a_p) \in (\pi_{i,1} \cup {(\omega_1, a_1)})$ and $(\omega_q, a_q) \in (\pi_{i,1} \cup {(\omega_1, a_1)})$. Consequently, $\pi_{i,2} \in \pi_{joint} | \pi_{joint} \in satisfying$.
+
+    It uses its policy to determine next action: $a_2 = \pi_{i,2}(\omega_2)$
+
+    % -----
+    At step $step_{max}$, the agent $i$ has now a non-empty history $h = ((\omega_1, a_1), (\omega_2, a_2)..(\omega_{step_{max}-1}, a_{step_{max}-1}))$
+
+    When agent $i$ receives an observation $\omega_{step_{max}}$
+    The available actions are $A_{step_{max}} = \{a | (\omega_{step_{max}}, a) \in \pi, \pi \in \pi_{joint},\pi_{joint} \in satisfying, \{(\omega', a') \in h\} \in \pi\}$
+
+    (note: $A_1 \subset A_0 \subset \dots \subset A_{step_{max}}$)
+
+    It updates its policy based on previous action, observation and reward: $\pi_{i,step_{max}} = Solv(\pi_{i,step_{max}-1}, \omega_0, a_0, r_{step_{max}})$.
+    $\pi_{i,step_{max}} = (\pi_{i,step_{max}-1} \setminus \{(\omega_p, a_p) | p \in \mathbb{N}\}) \cup \{(\omega_q, a_q) | q \in \mathbb{N}\}$ with the $(\omega_p, a_p) \in (\pi_{i,step_{max}-1} \cup {(\omega_{step_{max}-1}, a_{step_{max}-1})})$ and $(\omega_q, a_q) \in (\pi_{i,step_{max}-1} \cup {(\omega_{step_{max}-1}, a_{step_{max}-1})})$. Consequently, $\pi_{i,step_{max}} \in \pi_{joint} | \pi_{joint} \in satisfying$.
+
+    It uses its policy to determine next action: $a_{step_{max}} = \pi_{i,step_{max}}(\omega_{step_{max}})$
+
+    % -----
+    At the end, its history is now $h = ((\omega_1, a_1), (\omega_2, a_2)..(\omega_{step_{max}}, a_{step_{max}}))$
+
+    By construction, the $(\omega_i,a_i) \in h$ ($i \leq step_{max}$) belong to the policies that belong to the joint-policies $satisfying$.
+    
+    By construction, $\pi_{i,step_{max}} \in \pi_{joint}, \pi_{joint} \in satisfying$.
+
+    Applying several episodes does not change that result as it keeps the same policy from the end of an episode to the beginning of another one.
+
+    Thus, the resulting joint-policy $\pi_{joint} = \{\pi_{i,step_{max}}, i \leq n\} \in satisfying$
+
+    We assume the given design specification do not prevent the MARL algorithm to provide agents' policies that reach $s$ cumulative reward expectancy, then:
+
+    Thus, the resulting joint-policy $\pi_{joint} = \{\pi_{i,step_{max}}, i \leq n\} \in solutions$
+
+\end{proof}
