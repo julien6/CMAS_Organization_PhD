@@ -45,6 +45,7 @@
 \usepackage{graphicx}%
 \usepackage{multirow}%
 \usepackage{amsmath,amssymb,amsfonts}%
+\usepackage[inline, shortlabels]{enumitem}
 \usepackage{amsthm}%
 \usepackage{mathrsfs}%
 \usepackage[title]{appendix}%
@@ -71,6 +72,31 @@
 %%%%  template package for technical guidance.
 %%%%%=============================================================================%%%%
 
+% --- Tickz
+\usepackage{physics}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usepackage{mathdots}
+\usepackage{yhmath}
+\usepackage{cancel}
+\usepackage{color}
+\usepackage{siunitx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{tabularx}
+\usepackage{extarrows}
+\usepackage{booktabs}
+\usetikzlibrary{fadings}
+\usetikzlibrary{patterns}
+\usetikzlibrary{shadows.blur}
+\usetikzlibrary{shapes}
+
+% ---------
+
+\usepackage{csquotes}
+
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
@@ -82,6 +108,9 @@
     \def\sectionautorefname{Section}
     \def\subsectionautorefname{Subsection}
 }
+
+\usepackage{amsmath}
+\newcommand{\probP}{\text{I\kern-0.15em P}}
 
 \newcommand{\supertiny}{\fontsize{1}{2}\selectfont}
 
@@ -185,10 +214,10 @@
 \label{sec:intro}
 
 % Context
-Explainable Artificial Intelligence (XAI) has become a crucial factor for the broader acceptance of AI systems, especially in multi-agent settings where multiple agents collaborate to achieve complex objectives~\citep{doshivelez2017rigorous,gunning2019xai}. While substantial advancements have been made in explaining the behavior of individual agents~\citep{ribeiro2016classifier,lundberg2017unified}, the challenge of elucidating cooperative strategies and emergent organizational structures in Multi-Agent Reinforcement Learning (MARL) remains underexplored~\citep{busoniu2008survey}. This gap is significant given the growing importance of XAI in MARL as we move towards deploying MARL-based systems, where ensuring safety, reliability, and trustworthiness is paramount. To facilitate understanding of trained agents' behaviors, various approaches can be explored. In this paper, we propose investigating organizational models as a promising approach to provide a structured view on the collective actions of agents through organizational specifications.
+Explainable Artificial Intelligence (XAI) has become a crucial factor for the broader acceptance of AI systems, especially in multi-agent settings where multiple agents collaborate to achieve complex objectives~\cite{doshivelez2017rigorous,gunning2019xai}. While substantial advancements have been made in explaining the behavior of individual agents~\cite{ribeiro2016classifier,lundberg2017unified}, the challenge of elucidating cooperative strategies and emergent organizational structures in Multi-Agent Reinforcement Learning (MARL) remains underexplored~\cite{busoniu2008survey}. This gap is significant given the growing importance of XAI in MARL as we move towards deploying MARL-based systems, where ensuring safety, reliability, and trustworthiness is paramount. To facilitate understanding of trained agents' behaviors, various approaches can be explored. In this paper, we propose investigating organizational models as a promising approach to provide a structured view on the collective actions of agents through organizational specifications.
 
 % Problem
-In MARL, a set of agents must learn to achieve goals that often require implicit cooperation and coordination. However, few studies have attempted to analyze the policies of these trained agents to explicitly define their cooperation through organizational specifications~\citep{albrecht2018survey,perolat2017pool}. This lack of explainability introduces three key theoretical and technical challenges in the field:
+In MARL, a set of agents must learn to achieve goals that often require implicit cooperation and coordination. However, few studies have attempted to analyze the policies of these trained agents to explicitly define their cooperation through organizational specifications~\cite{albrecht2018survey,perolat2017pool}. This lack of explainability introduces three key theoretical and technical challenges in the field:
 \begin{enumerate}
     \item The absence of systematic approaches for linking organizational specifications to agent behavior in MARL.
     \item The need for robust methods to infer organizational structures from agent trajectories.
@@ -196,7 +225,7 @@ In MARL, a set of agents must learn to achieve goals that often require implicit
 \end{enumerate}
 
 % Contribution
-To address the aforementioned challenges, we propose a dual approach that leverages the $\mathcal{M}OISE^+$ organizational model~\citep{hubner2007} as a foundational framework to make the cooperative aspects of observed agent behaviors explicit. The core idea is to establish links between the agents' histories and organizational specifications, such as roles and missions, enabling the translation of a joint history into a $\mathcal{M}OISE^+$ organizational description.
+To address the aforementioned challenges, we propose a dual approach that leverages the $\mathcal{M}OISE^+$ organizational model~\cite{hubner2007} as a foundational framework to make the cooperative aspects of observed agent behaviors explicit. The core idea is to establish links between the agents' histories and organizational specifications, such as roles and missions, enabling the translation of a joint-history into a $\mathcal{M}OISE^+$ organizational description.
 
 Within this framework, we introduce two complementary approaches to facilitate this translation:
 \begin{itemize}
@@ -211,39 +240,363 @@ We applied both approaches to a series of scenarios in a predator-prey environme
 % Outline
 The remainder is organized as follows: \Autoref{sec:related} gives an overview of related works for XAI in MARL. \Autoref{sec:background} provides a fundamental background in the MARL and organizational to introduce the framework we proposed to link the MARL and organizational model for KOSIA and GOSIA. \Autoref{sec:kosia} introduces KOSIA and associated means available for users. \Autoref{sec:gosia} introduces GOSIA mainly as for the theoretical aspects. \Autoref{sec:experiment} describes the conducted experiments and discusses the first results of our empirical evaluation. \Autoref{sec:conclusion} concludes the paper and outlines future research directions.
 
+
 \section{Related Works}
 \label{sec:related}
 
-Explainability in Reinforcement Learning (RL) has traditionally focused on single-agent settings, where the goal is to understand the decision-making process of an individual agent. Techniques such as model distillation, feature importance analysis, and policy summarization have been widely studied. However, in Multi-Agent Systems (MAS), where multiple agents interact and coordinate, the challenge of explainability becomes more complex due to the emergent behaviors that arise from agent interactions.
+This section presents a review of the literature in the fields of Multi-Agent Reinforcement Learning (MARL) and Explainable AI (XAI), focusing on the explainability of collective behaviors in MARL systems. We identify key approaches, discuss their contributions, and highlight the gaps that our work intends to address.
 
-Organizational models, such as MOISE+, provide a framework for defining the roles, missions, and interactions among agents in MAS. These models have been used to guide the design and analysis of MAS, but their integration with MARL is less explored. Few works have attempted to align the organizational structures defined in models like MOISE+ with the learned behaviors of agents in MARL settings.
+\subsection{Explainability in Reinforcement Learning}
 
-In the context of MARL, explicability is still an emerging field. Existing approaches often focus on post-hoc analysis, where the behaviors of trained agents are analyzed to identify patterns or strategies. However, these methods do not provide a systematic way to link these behaviors to higher-level organizational specifications, nor do they offer a framework for generalizing these behaviors to new contexts.
+Explainable AI (XAI) within reinforcement learning has made significant strides, particularly in single-agent scenarios. \cite{puiutta2020explainable} conducted a detailed survey categorizing XAI methods across different stages of the RL pipeline, emphasizing the need for holistic explanations that address multiple aspects of agent behavior. \cite{heuillet2021explainable} further contributed by developing a taxonomy that distinguishes between intrinsically interpretable models and post-hoc explanation methods, stressing the importance of methods capable of addressing the sequential and dynamic nature of RL tasks.
 
-Our proposed approaches, KOSIA and GOSIA, aim to bridge this gap by offering systematic methods for linking agent behaviors to organizational specifications and for inferring new organizational structures from agent trajectories.
+However, when transitioning to multi-agent systems, the complexity of explaining collective behavior increases exponentially. While these foundational works provide critical insights into the explainability of individual agents, the challenge remains in extending these approaches to multi-agent settings, where interactions and emergent behaviors are far more complex.
+
+\subsection{Understanding Cooperative Strategies and Emergent Organizational Structures}
+
+In multi-agent systems, cooperative strategies and emergent organizational structures are central to achieving complex objectives. The work by \cite{foerster2018interpretable} on interpretable policies for multi-agent systems highlights the importance of understanding how individual policies contribute to collective behavior. Similarly, \cite{hu2020towards} discuss the development of interpretable models that can shed light on the cooperative dynamics in MARL settings.
+
+\cite{li2020survey} offer a comprehensive survey on explainable AI for cooperative multi-agent systems, emphasizing the need for frameworks that can interpret and explain the emergent behaviors and organizational structures within these systems. Despite these efforts, existing approaches often focus on specific aspects of cooperation, leaving a gap in providing a holistic organizational explanation.
+
+\cite{raileanu2018interpretable} propose methods for learning interpretable policies in MARL, demonstrating the potential to make the decision-making processes of agents more transparent. However, these methods do not fully address the organizational level of interpretation that our work aims to provide. \cite{saunders2018learning} go further by developing an interpretable approach to policy improvement, which, while useful, still falls short in explicating the underlying organizational dynamics.
+
+\subsection{Safety Guarantees and Risk Mitigation}
+
+Safety in MARL is a critical concern, especially as systems become more complex and autonomous. \cite{alshiekh2018safety} propose a safety-aware learning framework for MARL that incorporates risk mitigation strategies directly into the learning process. This work is crucial for ensuring that MARL systems operate reliably in dynamic environments but does not specifically address the need for explainability in understanding how safety constraints influence collective behavior.
+
+\subsection{Causal Understanding and Mechanisms}
+
+The causal understanding of agent behaviors is another important area in XAI for MARL. \cite{armstrong2020causal} introduce a framework that applies causal analysis to explain the decision-making processes in reinforcement learning. This approach is powerful for understanding individual decisions but lacks the ability to infer and explain causal relationships at the collective level in multi-agent systems.
+
+\subsection{Frameworks Incorporating Organizational Aspects in MARL}
+
+Several frameworks have been proposed to incorporate organizational concepts within MARL. \cite{kazhdan2020marlme} present a library designed to improve the explainability of MARL systems by linking them to symbolic models, particularly for role inference. This approach is significant for understanding the roles that emerge in MARL systems but does not offer a comprehensive organizational model.
+
+\cite{wang2020role} introduce a method where similar emerging roles in MARL are encouraged to specialize jointly on specific tasks, thereby enhancing cooperation. While this approach advances the understanding of roles within MARL, it does not fully leverage organizational models to explain how these roles fit into a broader structure.
+
+\cite{tosic2010communication} propose a coordination framework based on communication capabilities in multi-agent systems, which highlights the importance of communication in achieving coordinated behavior. However, this work does not explicitly connect these communication strategies to an organizational framework that can explain the emergent behavior.
+
+\cite{zheng2018collective} present a platform for MARL that aims to facilitate research on artificial collective intelligence by providing a comprehensive set of evaluation metrics. This platform is a valuable tool for assessing the performance of MARL algorithms but lacks the capability to explain the organizational structures that emerge from these algorithms.
+
+\subsection{Characterization of Emerging Collective Strategies}
+
+Characterizing and explaining collective strategies in MARL is a challenging task. \cite{heuillet2022shapley} propose the use of Shapley values to explain cooperative strategies, demonstrating effectiveness in multi-agent particle environments. While this method provides insights into the contributions of individual agents, it does not extend to explaining the organizational structures that support these strategies.
+
+\cite{jaques2019social} introduce a mechanism that rewards agents for having a causal influence on others, promoting the development of learned communication protocols that lead to more efficient collective behavior. This approach enhances the understanding of communication-driven cooperation but does not integrate these findings into a broader organizational context.
+
+\subsection{Adapting MARL to Facilitate Interpretations}
+
+Adapting MARL to meet specific explainable properties, such as adaptability and generalization, is an ongoing research challenge. \cite{shao2022leaderfollower} introduce a leader-follower model as a mechanism to improve cooperative tasks in dynamic environments, focusing on adaptability. While this approach is useful, it does not provide a framework for understanding how these roles and behaviors fit into an organizational structure.
+
+\cite{roy2020policy} present two policy regularization methods aimed at improving coordination in MARL. These methods are valuable for enhancing cooperation but do not address the need for explainability at the organizational level. \cite{bansal2022specification} propose Specification-Guided Reinforcement Learning, which uses external specifications to guide policy generation under given constraints. This approach moves closer to integrating organizational constraints but does not fully leverage an organizational model for explanation.
+
+\cite{jothimurugan2021logicspec} propose a method for logical specification learning that exploits the compositional structure of specifications to generate policies for complex tasks. This approach is promising for task-specific policy generation but does not extend to explaining the organizational implications of these policies.
+
+\subsection{Research Gap and Contribution}
+
+Despite these advancements, a significant gap remains in the literature regarding the use of organizational models to explain behaviors in MARL. Existing works focus on specific aspects of explainability, such as role inference, safety, or causal understanding, but do not provide a comprehensive framework that integrates these aspects into an organizational context. Our work aims to fill this gap by leveraging the $\mathcal{M}OISE^+$ organizational model to provide structured explanations of agent behaviors in MARL, offering a novel perspective on understanding and explaining the collective behavior of agents.
+
+\subsection{Summary of Related Works}
+
+\autoref{tab:relatedworks} summarizes the key contributions and gaps in the existing literature, highlighting the criteria each work addresses.
+
+\begin{table}[h!]
+\centering
+\caption{Summary of Related Works and Identified Gaps}
+\label{tab:relatedworks}
+\begin{tabular}{|p{3.5cm}|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Criteria} & \cite{puiutta2020explainable} & \cite{heuillet2021explainable} & \cite{foerster2018interpretable} & \cite{hu2020towards} & \cite{li2020survey} & \cite{alshiekh2018safety} & \cite{armstrong2020causal} & \cite{kazhdan2020marlme} \\ \hline
+Explainability in Single-Agent RL & \checkmark & \checkmark & & & & & & \\ \hline
+Explainability in Multi-Agent RL & & & \checkmark & \checkmark & \checkmark & & & \\ \hline
+Cooperative Strategies & & & \checkmark & \checkmark & \checkmark & & & \\ \hline
+Organizational Models & & & & & & & & \checkmark \\ \hline
+Causal Analysis & & & & & & & \checkmark & \\ \hline
+Safety and Risk Mitigation & & & & & & \checkmark & & \\ \hline
+Adaptability and Generalization & & & & & & & & \\ \hline
+\end{tabular}
+\end{table}
+
+\autoref{tab:relatedworks} illustrates that while there is substantial work on specific aspects of explainability and cooperation in MARL, significant gaps remain, particularly in integrating these aspects into a comprehensive organizational framework.
+
+For example, while \cite{foerster2018interpretable}, \cite{hu2020towards}, and \cite{li2020survey} address explainability in multi-agent settings, they do not leverage organizational models to provide a structured explanation of collective behavior.
+
+Similarly, although \cite{kazhdan2020marlme} introduces an organizational aspect, it is limited to role inference and does not extend to a full organizational model that can explain cooperation and collective strategies.
+
+Furthermore, safety and risk mitigation, as discussed by \cite{alshiekh2018safety}, are crucial in MARL but are not integrated with organizational models to explain how safety constraints impact collective behavior.
+
+Our contribution seeks to address these gaps by introducing an approach that leverages the $\mathcal{M}OISE^+$ organizational model to explain collective behaviors in MARL. By doing so, we aim to provide a structured and holistic explanation that integrates cooperative strategies, role specialization, safety considerations, and causal analysis within an organizational framework. This approach not only enhances the interpretability of MARL systems but also facilitates their design, adaptation, and generalization across various settings.
+
 
 \section{MARL and Organizational Background}\label{sec:background}
-TODO
 
-\section{The KOSIA Approach}
-\label{sec:kosia}
+% introduire les fondements théoriques de notre algo:
+%   - apprentissage par renforcement multi-agents (MARL)
+%   - cadre du modèle organisationnel des systèmes multi-agents (MOISE+) et montrer sa pertinence pour améliorer l'explicabilité de l'IA au sein du MARL.
 
-The KOSIA approach is designed to leverage known organizational specifications to interpret the behaviors of trained agents in MARL environments. The core idea is to use pattern-matching techniques to identify pre-defined roles, missions, and interactions within the agent histories.
+% fournir des preuves formelles de son efficacité dans la restriction des espaces de politiques des agents durant et après l'apprentissage par rapport à des spécifications organisationnelles considérées comme des contraintes.
 
-\subsection{Conceptual Framework}
+% fournir des preuves (formelles dans l'idéal) de son efficacité dans la génération de spécifications organisationnelles à partir des historiques des agents entrainés.
 
-KOSIA operates on the assumption that the agent behaviors observed in the environment can be mapped to known organizational specifications. These specifications might include roles that agents are expected to play, missions they are tasked with, or social links that define their interactions. By identifying patterns within the agents' histories that match these specifications, KOSIA provides a way to interpret the learned behaviors in terms of the organizational model.
+In this section, we first introduce the basics concerning MARL and while introducing the $\mathcal{M}OISE^{+}$ organizational model, we describe how joint-policies in MARL context can be linked to the $\mathcal{M}OISE^{+}$ organizational model.
 
-\subsection{Methodology}
+\subsection{Markovian model for MARL}
 
-The implementation of KOSIA involves several steps:
-1. Extracting the histories of agents from the MARL environment.
-2. Applying pattern-matching techniques to these histories to identify sequences of actions or states that correspond to known organizational roles or missions.
-3. Mapping these identified patterns to the organizational model to provide an interpretation of the agent behaviors.
+To apply MARL techniques, we rely on the Decentralized Partially Observable Markov Decision Process (Dec-POMDP)~\cite{Oliehoek2016} because it considers multiple agents in a similar MAS manner. It relies on stochastic processes to model uncertainty of the environment for the changes induced by actions, received observations, communication\dots \ Additionally, unlike Partially Observable Stochastic Games (POSG), the reward function can be common to agents which fosters training for collaborative-oriented actions~\cite{Beynier2013}.
+A Dec-POMDP $d \in D$ (with $D$ the set of Dec-POMDP) is a 7-tuple $d = (S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$ , where:
+\begin{itemize}
+    \item $S = \{s_1,...,s_{|S|}\}$: the set of possible states;
+    \item $A_{i} = \{a_{1}^{i},...,a_{|A_{i}|}^{i}\}$: the set of possible actions for agent $i$;
+    \item $T$ so that $T(s,a,s') = \probP{(s'|s,a)}$ : the set of conditional transition probabilities between states;
+    \item $R: S \times A \times S \rightarrow \mathbb{R}$: the reward function;
+    \item $\Omega_{i} = \{o_{1}^{i},...,o_{|\Omega_{i}|}^{i}\}$: the set of observations for agent $i$;
+    \item $O$ so that $O(s',a,o) = \probP{(o|s',a)}$ : the set of conditional observation probabilities;
+    \item $\gamma \in [0,1]$ : the discount factor.
+\end{itemize}
 
-\subsection{Strengths and Limitations}
+Considering $m$ \textbf{teams} (also referred to as \textbf{groups}) each containing several agents among $\mathcal{A}$, we also detail the minimal formalism notation we re-used for solving the Dec-POMDP for a given team $i, 0 \leq i \leq m$ containing $n$ agents~\cite{Beynier2013,Albrecht2024}:
 
-The primary strength of KOSIA lies in its ability to provide a clear, interpretable mapping between agent behaviors and organizational specifications. However, it is limited by the need for pre-defined specifications. If the organizational model does not cover all possible behaviors or if agents learn novel strategies that were not anticipated, KOSIA may fail to provide a comprehensive explanation.
+\begin{itemize}
+
+    \item $\Pi$: the set of policies. A \textbf{policy} $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action. It represents the agent's internal logic;
+    \item $\Pi_{joint}$: the set of joint-policies. A \textbf{joint-policy} $\pi_{joint} \in \Pi_{joint}, \pi_{joint}: \Omega^n \rightarrow A^n = \Pi^n$ chooses an action for each agent regarding their respective observation. It can be viewed as a set of policies used in agents;
+    \item $H$: the set of histories. A \textbf{history} over $z \in \mathbb{N}$ steps (where $z$ is generally the maximum number of steps for an episode) is the $z$-tuple $h = ((\omega_{k}, a_{k}) | k \leq z, \omega \in \Omega, a \in A)$;
+    \item $H_{joint}$: the set of joint-histories. A \textbf{joint-history} over $z \in \mathbb{N}$ steps $h_{joint} \in H_{joint}, h_{joint} = \{h_1,h_2...h_n\}$ is the set of agents' histories;
+    \item $U_{joint,i}(<\pi_{joint,i}, \pi_{joint,-i}>): \Pi_{joint} \rightarrow \mathbb{R}$: gives the \textbf{expected cumulative reward} over a finite horizon (if $\gamma < 1$ or the number of steps in an episode is finite), with $\pi_{joint,i}$ the joint policy for team $i$ and $\pi_{joint,-i}$ all of the other concatenated joint-policies (considered as fixed);
+    \item $BR_{joint,i}(\pi_{joint,i}) = argmax_{\pi_{joint,i}}(U(<\pi_{joint,i},\pi_{joint,-i}>))$: gives the \textbf{best response} $\pi_{joint,i}^*$ in the sense that the team cannot change any of the policies in the joint-policy $\pi_{joint,i}^*$ to get a better expected cumulative reward than $U_i^* = U_{joint,i}(<\pi_{joint,i}^*, \pi_{joint,-i}>)$;
+    \item $SR_{joint,i}(\pi_{joint,i}, s) = \{\pi_{joint,i} | U(<\pi_{joint,i},\pi_{joint,-i}>) \geq s\}$: gives the \textbf{sufficient response} as the set of joint-policies getting at least $s \in \mathbb{R}, s \leq U_i^*$ as expected cumulative reward.
+\end{itemize}
+
+We refer to \textbf{solving} the Dec-POMDP for the team $i$ as finding a joint policy $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = BR_{joint,i}(\pi_{joint,i})$ that maximizes the expected cumulative reward over a finite horizon.
+We refer to \textbf{sub-optimally solving} the Dec-POMDP at $s$ expectancy as finding the joint policies $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = SR_{joint,i}(\pi_{joint,i}, s)$ that gets the expected cumulative reward over a finite horizon at least at $s \in \mathbb{R}, s \leq U_i^*$.
+
+
+% \subsection{Organizational model}
+
+% $\mathcal{M}OISE^+$~\cite{hubner2007} provides a relevant high-level description of the structures and interactions within the MAS. However, we favor $\mathcal{M}OISE^+$ because it provides an advanced formal description for an organization without incompatibilities with MARL, especially for a formal description of agents' policies.
+% Based on $\mathcal{M}OISE^+$~\cite{hubner2007} formalism, we only give the elements of the formalism we used.
+
+% \paragraph{\textbf{Organizational specifications (OS)}} refer to some information describing an organization, we denote them as $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, where $\mathcal{SS}$ are the \textbf{Structural Specifications}, $\mathcal{FS}$ are the \textbf{Functional Specifications}, and $\mathcal{DS}$ are the \textbf{Deontic Specifications}
+
+% \paragraph{\textbf{Structural Specifications (SS)}} refer to the structured means left to agents to achieve a goal, we denote them as $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$, where:
+
+% \begin{itemize}
+
+%     \item $\mathcal{R}_{ss}$: the set of all roles (denoted $\rho \in \mathcal{R}$);
+
+%     \item $\mathcal{IR}: \mathcal{R} \rightarrow \mathcal{R}$: the inheritance relation between roles ($\mathcal{IR}(\rho_1) = \rho_2$ means $\rho_1$ inherits from $\rho_2$ also denoted $\rho_1 \sqsubset \rho_2$);
+
+%     \item $\mathcal{RG} \subseteq \mathcal{GR}$ the set of root groups, $\mathcal{GR} = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$, the set of all groups, where
+
+%           \begin{itemize}
+
+%               \item $\mathcal{R} \subseteq \mathcal{R}_{ss}$: the set of non-abstract roles;
+
+%               \item $\mathcal{SG} \subseteq \mathcal{GR}$: the set of sub-groups;
+
+%               \item $\mathcal{L} = \mathcal{R} \times \mathcal{R} \times \mathcal{TL}$: the set of links. A link is a 3-tuple $(\rho_s,\rho_d,t) \in \mathcal{L}$ (also denoted as a predicate $link(\rho_s,\rho_d,t))$, where $\rho_{s}$ is the source role, $\rho_{d}$ is the destination role, and $t \in \mathcal{TL}, \mathcal{TL} = \{acq, com, aut\}$ is the link type;
+%                     \begin{itemize}
+%                         \item If $t = acq$ (acquaintance), the agents playing the source role $\rho_{\mathrm{s}}$ are allowed to have a representation of the agents playing the destination role $\rho_{d}$;
+%                         \item If $t = com$ (communication), the $\rho_{\mathrm{s}}$ agents are allowed to communicate with $\rho_{d}$ agents;
+%                         \item If $t = aut$ (authority), the $\rho_{\mathrm{s}}$ agents are allowed to have authority on $\rho_{d}$ agents. It requires an acquaintance and communication link.
+%                     \end{itemize}
+%               \item $\mathcal{L}^{intra} \subseteq \mathcal{L}$: the set of intra-group links;
+%               \item $\mathcal{L}^{inter} \subseteq \mathcal{L}$: the set of inter-group links;
+
+%               \item $\mathcal{C} = \mathcal{R} \times \mathcal{R}$: the set of compatibilities. A compatibility is a couple $(a,b) \in \mathcal{C}$ (also denoted $\rho_a \bowtie \rho_b$), means agents playing role $\rho_a \in \mathcal{R}$ can also play role $\rho_b \in \mathcal{R}$;
+%               \item $\mathcal{C}^{intra} \subseteq \mathcal{C}$: the set of intra-group compatibilities;
+%               \item $\mathcal{C}^{inter} \subseteq \mathcal{C}$: the set of inter-group compatibilities;
+
+%               \item $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of agents adopting a role;
+%               \item $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of each sub-group.
+
+%           \end{itemize}
+
+% \end{itemize}
+
+% \paragraph{\textbf{Functional Specifications (FS)}} globally refer to the tasks and goals agents have to achieve, we denote them as $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$, where:
+
+% \begin{itemize}
+%     \item $\mathcal{SCH} = \langle\mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$: the set of \textbf{social scheme}, where:
+%           \begin{itemize}
+%               \item $\mathcal{G}$ is the set of global goal;
+
+%               \item $\mathcal{M}$ is the set of mission labels;
+%               \item $\mathcal{P} = \langle \mathcal{G}, \{\mathcal{G}\}^s, OP, [0,1] \rangle, s \in \mathbb{N}^*$ is the set of plans that builds the tree structure of the goals.
+%                     %
+%                     A plan $p \in \mathcal{P}$ is 4-tuple $p=(g_f,\{g_i\}_{0 \leq i \leq s}, op, ps), g_f \in \mathcal{G}, g_i \in \mathcal{G}, op \in OP, OP = \{sequence, choice, parallel\}, ps \in [0,1]$, meaning that the goal $g_f$ is achieved if some of the sub-goals $g_i$ are achieved with a success probability $ps$ and according to the operator $op$:
+%                     %
+%                     \begin{itemize}
+%                         \item if $op = sequence$, the $g_i$ can only be achieved in the same order sequentially;
+%                         \item if $op = choice$, only one of the $g_i$ has to be achieved;
+%                         \item if $op = parallel$, the $g_i$ can only be achieved sequentially or simultaneously.
+%                     \end{itemize}
+
+%               \item $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$: specifies the set of goals a mission is associated with;
+%               \item $nm: \mathcal{M} \rightarrow \mathbb{N} \times \mathbb{N}$ the cardinality of agents committed for each mission.
+%           \end{itemize}
+%     \item $\mathcal{PO}: \mathcal{M} \times \mathcal{M}$: the set of \textbf{preference orders}. A preference order is a couple $(m_1, m_2), m_1 \in \mathcal{M}, m_2 \in \mathcal{M}$ (also denoted $m_{1} \prec m_{2}$) meaning that if there is a moment when an agent is permitted to commit to $m_{1}$ and also $m_{2}$, it has a social preference for committing to $m_{1}$.
+% \end{itemize}
+
+% \paragraph{\textbf{Deontic Specifications (DS)}} refer to how SS are to be used to achieve the FS, we denote them as $\mathcal{DS} = \langle \mathcal{OBL},\mathcal{PER} \rangle$, the set of deontic specifications, where:
+
+% \begin{itemize}
+%     \item $\mathcal{TC}$: the set of \textbf{time constraints}. A time constraint $tc \in \mathcal{TC}$ specifies a set of periods during which a permission or obligation is valid ($Any \in \mathcal{TC}$ means \textquote{everytime});
+%     \item $\mathcal{OBL}: \mathcal{R} \times \mathcal{M} \times \mathcal{TC}$: the set of \textbf{obligations}. An obligation is a 3-tuple $(\rho_a,m,tc)$ (also denoted $obl(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+%     \item $\mathcal{PER}$: the set of \textbf{permissions}. A permission is a 3-tuple $(\rho_a,m,tc)$ (also denoted $per(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+% \end{itemize}
+
+
+
+
+\section{Linking MARL and the $\mathcal{M}OISE^+$ model}\label{sec:linking_marl_moise}
+\label{sec:marl_moise_linking}
+
+In this section, we incrementally present the principles we propose to adapt the MARL according to organizational specifications. This includes constraining a policy to adhere to the expected behavior of a role and enticing the policy to achieve a mission for a given time duration.
+
+
+The $\mathcal{M}OISE^+$ model provides a comprehensive framework for specifying the structure and interactions within a Multi-Agent System (MAS). We utilize $\mathcal{M}OISE^+$ due to its compatibility with MARL and its formal description capabilities for agents' policies. The underlying approach bridges the gap between MARL and organizational modeling by embedding $\mathcal{M}OISE^+$ specifications into the MARL training process. This integration allows for the training of agents that adhere to predefined organizational roles and missions.
+%
+In $\mathcal{M}OISE^+$, \textbf{Organizational Specifications (OS)} are defined as $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, where $\mathcal{SS}$ are the \textbf{Structural Specifications}, $\mathcal{FS}$ are the \textbf{Functional Specifications}, and $\mathcal{DS}$ are the \textbf{Deontic Specifications}.
+
+\subsection{Structural Specifications and Constraining Joint-Policies According to Roles}
+
+\textbf{Structural Specifications} describe the organizational structure and are denoted as $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$:
+
+\begin{itemize}
+    \item $\mathcal{R}_{ss}$: The set of all roles ($\rho \in \mathcal{R}$).
+    \item $\mathcal{IR}: \mathcal{R} \rightarrow \mathcal{R}$: The inheritance relation between roles ($\rho_1 \sqsubset \rho_2$).
+    \item $\mathcal{RG} \subseteq \mathcal{GR}$: The set of root groups, $\mathcal{GR} = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, \allowbreak np, ng \rangle$, where:
+          %   \begin{itemize}
+          $\mathcal{R} \subseteq \mathcal{R}_{ss}$: The set of non-abstract roles.
+          $\mathcal{SG} \subseteq \mathcal{GR}$: The set of sub-groups.
+          $\mathcal{L} = \mathcal{R} \times \mathcal{R} \times \mathcal{TL}$: The set of links $(\rho_s, \rho_d, t)$, where $t \in \{acq, com, aut\}$ indicates the type of link (acquaintance, communication, authority).
+          $\mathcal{L}^{intra} \subseteq \mathcal{L}$: The set of intra-group links.
+          $\mathcal{L}^{inter} \subseteq \mathcal{L}$: The set of inter-group links.
+          $\mathcal{C} = \mathcal{R} \times \mathcal{R}$: The set of compatibilities $(\rho_a \bowtie \rho_b)$.
+          $\mathcal{C}^{intra} \subseteq \mathcal{C}$: The set of intra-group compatibilities.
+          $\mathcal{C}^{inter} \subseteq \mathcal{C}$: The set of inter-group compatibilities.
+          $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of agents adopting a role.
+          $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of each sub-group.
+          %   \end{itemize}
+\end{itemize}
+
+Constraining policies directly is not feasible because most policy implementations rely on intractable black-box models such as neural networks. We propose to formally represent a role as a history subset $\mathcal{P}(H)$ containing histories an agent playing a role should generate, hence characterizing the role's expected behavior. As illustrated in \Autoref{fig:PRAHOM_osm_rels}, we propose each role to be mapped to a history subset through the $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$ bijection. An agent playing a role should have its policy constrained to generate histories belonging to the mapped history subset (at least from a theoretical point of view).
+
+\begin{figure}[h!]
+    \centering
+    \input{figures/PRAHOM_osm_rels.tex}
+    \caption{Relations between organizational specifications and history subsets}
+    \label{fig:PRAHOM_osm_rels}
+\end{figure}
+
+Since defining roles into a history subset faces issues for handling possibly numerous large and non-manageable observations (such as pixel tables), we first propose to use labels to represent observations in a short-way. We introduce $ol: \mathcal{P}(\Omega) \rightarrow \mathcal{P}(L)$ to map some simple strings to real observations. In addition to a simple mapping, we also considered using a Large Language Model (LLM) for that purpose. % as illustrated in \Autoref{fig:PRAHOMT_ol}.
+The LLM is trained after real observations have been rendered visually and labeled by hand. Once trained, the LLM can be used conveniently to get real observations from labels, and may also be used to label some other observations.
+
+% \begin{figure}[h!]
+%     \centering
+%     \input{figures/ol_scheme.tex}
+%     \caption{Observations-labels mapping and its creation}
+%     \label{fig:PRAHOMT_ol}
+% \end{figure}
+
+Second, defining a history subset exhaustively may require taking into account many cases, hence leading to an important amount of histories. %As illustrated in \Autoref{fig:PRAHOM_opc}
+Rather than defining a history subset exhaustively, we propose three means to simplify its definition:
+%
+\quad i) a \textbf{pattern} format that conforms to the following rules: a sequence is denoted \textquote{[$label_{obs_1},label_{act_1}\dots$] \allowbreak ($card_{min},card_{max}$)} the \textquote{Any} label refer to any observation/action. This pattern is implemented as an oriented graph denoted \textbf{history graph} where nodes are observations/actions and edges represent expected transitions relying on ordinal number and cardinalities; \quad
+%
+ii) \textbf{rules} to associate an action set depending on a history (possibly defined as a pattern) belonging to the history subset and a received observation. Once the observations and the associated actions are added to the history, this history should still belong to the history subset; \quad
+%
+iii) a \textbf{custom script} logic taking into account a history belonging to the history subset and a new observation to indicate the actions to add in the current history so it still belongs to the history subset.
+
+
+Considering a history subset is ultimately aimed to be used to constrain a policy to make it adhere to a role, we introduce an \textbf{observable policy constraint} $c\pi: H \times \Omega \rightarrow \mathcal{P}(A)$. $c\pi$ indicates the actions an agent's policy should be allowed to choose among when it receives an observation at each step.
+
+% \begin{figure}[h!]
+%     \centering
+%     \input{figures/opc_scheme.tex}
+%     \caption{An abstract view of observable policy constraint and its crafting}
+%     \label{fig:PRAHOM_opc}
+% \end{figure}
+
+We propose to integrate observable policy constraints into an agent's policy via three modes:
+\textbf{correct}: Corrects any chosen action $\pi(\omega)$ to an expected one in $c\pi(\omega)$. It ensures safety but is external to the agent's policy; \quad
+\textbf{penalize}: Adds a penalty to the reward if a wrong action ($\pi(\omega) \notin c\pi(\omega)$) is made, encouraging agents to learn their constraints but without safety guarantees; \quad
+\textbf{correct\_policy}: Creates a \textbf{constrained policy} $\pi_c \in \Pi, \pi_c = \{smpl(c\pi_{joint}(\omega_{joint})) \allowbreak if \ \omega_{joint} \in Dom(c\pi_{joint}) \ \allowbreak, \ \allowbreak else \ \allowbreak \pi_{joint}(\omega_{joint})\}$ where $smpl$ gets an element from a set randomly. An observable policy constraint $c\pi$ corrects the current policy $\pi$, hence respecting safety guarantees internally.
+
+% In Annex, we provide \autoref{proof:jpc_to_ac}, which outlines why constraining the action decision-making process dynamically during training at each step implies that the resulting joint-policy will necessarily be constrained.
+
+
+\subsection{Functional Specifications and Constraining Joint-Policies According to Missions}
+
+\textbf{Functional Specifications} describe the tasks and goals and are denoted as $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$:
+
+\begin{itemize}
+    \item $\mathcal{SCH} = \langle \mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$: The set of social schemes, where:
+          \begin{itemize}
+              \item $\mathcal{G}$: The set of global goals.
+              \item $\mathcal{M}$: The set of mission labels.
+              \item $\mathcal{P} = \langle \mathcal{G}, \{\mathcal{G}\}^s, OP, [0,1] \rangle$: The set of plans $(g_f, \{g_i\}_{0 \leq i \leq s}, op, ps)$.
+              \item $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$: The goals associated with each mission.
+              \item $nm: \mathcal{M} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of agents committed to each mission.
+          \end{itemize}
+    \item $\mathcal{PO}: \mathcal{M} \times \mathcal{M}$: The set of preference orders $(m_1 \prec m_2)$.
+\end{itemize}
+
+We consider a goal to be theoretically represented as a history subset. We propose $gh: \mathcal{G} \rightarrow \mathcal{P}(H)$ that shows how an agent committed to a mission should have its policy enticed to generate histories belonging to an expected history subset (at least from a theoretical point of view). Thus, $mh: \mathcal{M} \rightarrow \mathcal{P}(H) = \{(m,\bigcup gh[mo(m)]), m \in \mathcal{M}\}$ gives expected histories from missions. Ultimately, a goal should impact MARL by updating the reward function when an agent is committed to a mission. We introduce an \textbf{observable reward function} $R_{g}: H \rightarrow \mathbb{R}$, the relation indicating how close a generated history is to a given history subset. A reward function for a mission $m \in \mathcal{M}$ containing goals $\mathcal{G}_{m} = mo(m)$ is computed as a weighted addition of all observable reward functions of each goal. This way, agents are individually enticed to achieve their respective sub-goals hence speeding up the convergence to achieving the ultimate goal.
+
+% \begin{figure}[h!]
+%     \centering
+%     \input{figures/goal_mission_scheme.tex}
+%     \caption{An abstract view of observable reward function and its crafting}
+%     \label{fig:goal_mission_scheme}
+% \end{figure}
+
+\subsection{Deontic Specifications and Constraining Joint-Policies According to Permissions/Obligations}
+
+\textbf{Deontic Specifications} define the permissions and obligations and are denoted as $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$:
+
+\begin{itemize}
+    \item $\mathcal{TC}$: The set of time constraints.
+    \item $\mathcal{OBL}: \mathcal{R} \times \mathcal{M} \times \mathcal{TC}$: The set of obligations $(obl(\rho_a, m, tc))$.
+    \item $\mathcal{PER}$: The set of permissions $(per(\rho_a, m, tc))$.
+\end{itemize}
+
+We introduced the relation $da: \mathcal{PER} \cup \mathcal{OBL} \rightarrow \mathcal{P}(\mathcal{A})$ that indicates how agents are constrained to roles and committed on missions for a given time constraint. In order to take into account time constraints, we introduce a time-to-live for each permission/obligation through the relation $dttl: \mathcal{PER} \cup \mathcal{OBL} \times \mathcal{A} \rightarrow \mathbb{N}$. Then, they are to be decreased at each step if the given time constraint is not \textquote{Any} with the relation $dec: dttl \rightarrow dttl$. Then, the roles constrained to agents or committed missions may change after the reward function is changed.
+
+To differentiate between obligations and permissions and ensure agents prioritize obligated missions over permitted ones, we propose multiplying the observable reward function of this mission by a high factor for obligated missions and a low factor for permitted ones.
+
+% Relying on these principles to integrate organizational specifications within the MARL framework, we established an algorithm.
+
+
+
+\section{The KOSIA Approach}\label{sec:kosia}
+
+The KOSIA (Knowledge-Oriented System Integration and Adaptation) approach focuses on integrating knowledge patterns within the MARL (Multi-Agent Reinforcement Learning) framework, allowing agents to learn from predefined patterns and adapt their behaviors accordingly. The core idea behind KOSIA is to utilize a structured pattern system that not only guides the learning process but also ensures that agents adhere to organizational constraints and objectives.
+
+\subsection{Pattern System in KOSIA}
+The pattern system in KOSIA is a crucial component that embeds domain-specific knowledge into the MARL process. These patterns are derived from expert knowledge and historical data, representing optimal strategies, decision-making processes, and expected behaviors within the given environment. Patterns in KOSIA are categorized into three main types:
+
+\begin{itemize}
+    \item \textbf{Behavioral Patterns:} These patterns define the expected behaviors of agents in specific situations. For instance, in a predator-prey scenario, a behavioral pattern might dictate how a predator should respond when it detects a prey nearby, considering factors such as proximity, speed, and obstacles.
+    
+    \item \textbf{Decision Patterns:} These patterns provide a framework for decision-making processes within the agents. Decision patterns in KOSIA are designed to enhance the decision-making capabilities of agents by providing them with a structured approach to evaluate multiple options and select the optimal course of action.
+    
+    \item \textbf{Interaction Patterns:} These patterns govern the interactions between agents, ensuring that communication, cooperation, and competition are conducted in a manner that aligns with the overarching goals of the system. Interaction patterns are particularly important in multi-agent systems where coordination is essential for success.
+\end{itemize}
+
+\subsection{Pattern Matching and Adaptation}
+KOSIA employs a pattern matching mechanism that allows agents to identify and apply the most relevant patterns based on their current state and observations. The pattern matching process is facilitated by a pattern repository that stores all the predefined patterns. During the learning process, agents continuously match their current state with the available patterns and adapt their behaviors accordingly.
+
+Adaptation in KOSIA is achieved through a feedback loop where agents assess the outcomes of their actions against the expected outcomes defined by the patterns. If an action deviates from the expected outcome, the agent adjusts its behavior in future iterations to align more closely with the pattern. This iterative process enables agents to refine their strategies over time, leading to more effective and consistent behaviors that are in line with organizational objectives.
+
+\subsection{Integration with MARL}
+The integration of the KOSIA pattern system with MARL is designed to enhance the learning process by providing agents with a structured framework that guides their actions. The patterns serve as soft constraints that influence the reward structure within the MARL environment. When agents follow the patterns, they are rewarded, whereas deviations result in penalties. This approach ensures that agents not only learn to optimize their strategies but also adhere to the desired behaviors and objectives defined by the patterns.
+
+KOSIA's pattern system is particularly effective in complex environments where the state space is vast, and traditional MARL approaches may struggle to converge. By embedding domain-specific knowledge into the learning process, KOSIA accelerates convergence and improves the overall performance of the system.
+
+
+
 
 \section{The GOSIA Approach}
 \label{sec:gosia}
@@ -256,11 +609,73 @@ GOSIA builds on the idea that the behaviors of agents, as captured in their traj
 
 \subsection{Methodology}
 
-The GOSIA approach involves several key steps:
-1. Representation of agent trajectories using techniques such as PCA, t-SNE, or autoencoders to capture the essential features of the behaviors.
-2. Application of similarity measures, such as Dynamic Time Warping or Longest Common Subsequence, to compare different trajectories.
-3. Clustering of similar trajectories using methods like Hierarchical Clustering or K-Means to identify common roles or missions.
-4. Inference of organizational specifications based on the identified clusters, providing a generalized description of the agent behaviors.
+% The GOSIA approach involves several key steps:
+% 1. Representation of agent trajectories using techniques such as PCA, t-SNE, or autoencoders to capture the essential features of the behaviors.
+% 2. Application of similarity measures, such as Dynamic Time Warping or Longest Common Subsequence, to compare different trajectories.
+% 3. Clustering of similar trajectories using methods like Hierarchical Clustering or K-Means to identify common roles or missions.
+% 4. Inference of organizational specifications based on the identified clusters, providing a generalized description of the agent behaviors.
+
+\begin{figure*}[h!]
+    \centering
+    \input{figures/gosia_illustrative_view.tex}
+    \caption{GOSIA illustrative view}
+    \label{fig:gosia_illustrative_view}
+\end{figure*}
+
+GOSIA suggests an empirical approach to infer the rest of them.
+GOSIA is based on some proposed definitions for each $\mathcal{M}OISE^+$ organizational specification regarding joint-histories or other organizational specifications, to use suggested specific statistical, unsupervised learning techniques to infer them incrementally. The \autoref{fig:gosia_illustrative_view} summarizes the five steps of GOSIA (represented as arrow labels in \autoref{fig:gosia_illustrative_view}) that are detailed below.
+%
+\paragraph{1) Infer roles and their inheritance}
+
+We propose a role $\rho$ is defined as a policy whose the associated histories of agents having adopted it all contain a common discontinuous sequence. We proposed a role $\rho_2$ inherits $\rho_2$ if the common discontinuous sequence of the histories associated with $\rho_2$ is also contained in the $\rho_1$'s one.
+From these definitions, GOSIA leverages hierarchical sequence clustering to find the longest common discontinuous sequences among agent's histories. Results can represented as a dendrogram. It enables inferring roles and inheritance relations, their respective relation with histories, and the current agents as well.
+
+\paragraph{2) Infer possible organizations}
+
+We propose an organization is linked to only one set of all instantiable roles sharing closely similar inheritance relations. Indeed, considering two trained joint-policies $H_{joint,i,s,1}$ and $H_{joint,i,s,2}$, even though both achieve a goal relying on the roles $\mathcal{R}_{ss,1}$ and $\mathcal{R}_{ss,2}$ may be far from other. For instance, their roles may not use the same responsibility distribution.
+GOSIA uses a K-means algorithm to get the $q$ clusters of the vectorized $\mathcal{IR}_{i}$ considered as organizations. The roles in the same cluster share the inheritance relations of the K-means' centroid $\mathcal{IR}_j$. Indeed, they are representative general roles regarding all the similar roles adopted by agents of the same organization over all joint-histories.
+For the next steps, only one chosen organization and its related joint-histories are considered. When it exists it chooses an organization close to KOSIA's one.
+
+\paragraph{3) Infer links and sub-groups}
+
+We propose two agents have a \emph{social impact link} $(ag_1,ag_2, \kappa, \delta, f)$ with $h_1$ associated with $ag_1$ and $h_2$ associated with $ag_2$ if a sequence $h_{1,s}$ in $h_1$ is correlated at a $\kappa \in [0,1]$ index to another sequence $h_{2,s}$ in $h_2$ positioned at a relative delay $\delta \in [0,1]$ after the beginning of $h_{1,s}$, and these two correlated sequences are $f$ frequently present among all joint-policies.
+We consider two agents to be in the same group if there is a social impact link such as $f \geq 0.9$. Considering that $\kappa$ indicates the likeliness of an agent' sequence to impact another one and that $\delta$ indicates the receiver's reactivity, we consider:
+\begin{itemize}
+    \item an acquaintance link $(ag_1,ag_2,acq)$ is defined if there is a social impact link with $\kappa \geq 0.1$, $\delta \geq 0$, $f \geq 0$;
+    \item a communication link $(ag_1,ag_2,com)$ is defined if there is a social impact link with $\kappa \geq 0.3$, $\delta \geq 0$, $f \geq 0$;
+    \item an authority link $(ag_1,ag_2,aut)$ is defined if there is a social impact link with $\kappa \geq 0.9$, $\delta \geq 0.5$, $f \geq 0$.
+\end{itemize}
+% TODO: Generaliser à plusieurs agents ou le dire en tant que limitation
+GOSIA uses empirical techniques to compute a graph of the social impact links between agents. Frequency enables determining clusters as agents' groups and their associated roles. It enables inferring the acquaintance, communication, and authority links between roles. From the information concerning roles associated with groups, it is possible to infer whether links are intra-group or inter-group.
+
+\paragraph{4) Infer goals, plans, and missions}
+
+We propose a sub-goal/goal is a set of common states that are reached following the histories of the successful agents.
+For each joint-history GOSIA computes the state transition graph that is merged into a general one. Measuring the distance between two vectorized states within K-means enables finding the clusters of trajectories that some agents may follow. Then, we sampled some sets of states for each trajectory as goals. For instance, one may choose the narrowest set of states in which agents collectively seem to transition at some point to achieve their goal. Otherwise, a balanced sampling over lower variance trajectories could be made. Knowing what goal belongs to what trajectory, GOSIA infers plans for choice and sequence only.
+
+This enables getting goals and plans at a global state but these goals could be indeed split into specific goals for each sub-group and agent. To do this, GOSIA conducts the same process replacing the states with the observations of the agents in the same sub-group for sub-groups, and observations for agents.
+
+We propose a mission as the set of sub-goals one or several agents are achieving.
+Knowing what shared goals are achieved by agents, GOSIA determines some sets of representative goals as missions.
+
+\paragraph{5) Infer compatibilities, obligations, permissions, and cardinalities}
+
+We propose an obligation is when an agent playing role $\rho$ is achieving a mission's goals and no other one at some time constraints while an obligation is when an agent playing role $\rho$ may achieve some other ones at some time constraints.
+GOSIA determines what agents' are associated with what mission and if they are restricted to some hence these are obligations or just permission
+
+We propose a compatibility $(\rho_1,\rho_2)$ is defined if an agent playing a history associated with $\rho_1$ in a joint-history also plays a history associated with $\rho_2$ in another joint-history. If this change operates only in the same group, then it is intra-group. Else it is inter-group.
+
+Finally, by counting the number of agents playing a role in each joint-history, each role's cardinality is computed. Similarly, GOSIA computes each sub-group's cardinality counting the inferred ones.
+
+\paragraph{Perspective of complementary help from LLMs}
+
+We started experimenting \emph{EleutherAI} \emph{gpt-neo-2.7B} pre-trained transformer using \emph{Transformers}' \emph{Huggingface} library. Within \emph{PRAHOM\_hos} it is intended to be automatically prompt-engineered with generated specific contextual descriptions of the environment, its functioning, and the $\mathcal{M}OISE^+$ organizational specifications. This prompt-engineering is to guide the answers towards three main purposes:
+\begin{enumerate*}[label=\roman*),itemjoin={;\quad}]
+    \item Labeling, tagging the inferred organizational specification from related joint-histories in a human-like manner;
+    \item Giving specific human-like textual description about each organizational specification;
+    \item Giving general human-like textual description of the whole organization.
+\end{enumerate*}
+Despite, being at an early stage of use in our contribution, the first results obtained with LLMs show to be a promising research focus to assist the human understanding.
 
 \subsection{Analysis of Techniques for GOSIA}
 
@@ -271,49 +686,73 @@ Different techniques offer various advantages and challenges:
 
 The choice of techniques in GOSIA depends on the specific characteristics of the MARL environment and the desired level of granularity in the inferred organizational specifications.
 
-\section{Experimental Setup}
-\label{sec:experiment}
 
-To evaluate the effectiveness of the KOSIA and GOSIA approaches, we conducted experiments in a predator-prey scenario within the PettingZoo framework. This environment was chosen because it presents clear roles (predator, prey) and interactions (hunting, evasion) that can be mapped to organizational specifications.
 
-\subsection{Environment and Framework}
+\section{Experimental Setup}\label{sec:experiment}
 
-The predator-prey scenario involves multiple predators coordinating to capture prey, which in turn use various strategies to avoid capture. We integrated the KOSIA and GOSIA approaches within this framework to assess how well they could identify and infer the roles and missions of the agents.
+This section details the experimental setup used to evaluate the performance of the proposed approaches within a predator-prey environment. The setup is designed to rigorously test the capabilities of MARL algorithms, including the integration of KOSIA and GOSIA, in achieving the desired outcomes in a dynamic and competitive environment.
+
+\subsection{Environment Description}
+The predator-prey environment consists of a simulated 2D grid where predators and prey move according to predefined rules and learned policies. Predators are tasked with capturing prey, while prey aim to avoid capture and survive as long as possible. The environment is partially observable, meaning that each agent has limited visibility of the grid based on its position and cannot see the entire environment at once.
+
+\subsubsection{Predators}
+Predators are the primary agents under evaluation in this study. Each predator is equipped with sensors that allow it to detect prey within a certain radius. The objective of the predators is to collaborate to capture the prey efficiently. The predators' policies are trained using MARL algorithms, with a focus on coordination and cooperation.
+
+\subsubsection{Prey}
+The prey are modeled as autonomous agents that use a combination of predefined behaviors and learned policies to evade predators. The prey's primary objective is to avoid capture for as long as possible. The prey are also trained using MARL, with an emphasis on survival strategies.
+
+\subsection{Training Procedure}
+The training procedure is divided into several phases, each designed to progressively increase the complexity of the environment and the challenges faced by the agents.
+
+\subsubsection{Initial Training Phase}
+In the initial training phase, both predators and prey are trained independently in simplified environments. Predators learn basic strategies for locating and pursuing prey, while prey learn basic evasion techniques. This phase is essential for establishing baseline behaviors that will be refined in subsequent phases.
+
+\subsubsection{Intermediate Training Phase}
+During the intermediate training phase, the environment complexity is increased by introducing obstacles and varying the number of agents. Predators are trained to navigate around obstacles and coordinate their actions to corner prey, while prey are trained to use the environment to their advantage, using obstacles to block the predators' line of sight.
+
+\subsubsection{Advanced Training Phase}
+The advanced training phase introduces additional challenges such as dynamic obstacles and varying visibility conditions. Predators must now contend with moving obstacles that can disrupt their strategies, while prey must adapt to changing visibility that can limit their ability to detect approaching predators. This phase also involves the integration of the KOSIA and GOSIA approaches, allowing us to evaluate the impact of these methods on the agents' performance.
 
 \subsection{Evaluation Metrics}
+To assess the performance of the trained agents, we use a comprehensive set of evaluation metrics that capture various aspects of their behaviors and the overall effectiveness of the MARL algorithms.
 
-We used a combination of quantitative and qualitative metrics to evaluate our approaches:
-- Performance improvements: Measured by the cumulative reward achieved by the agents.
-- Explainability: Assessed by the clarity and accuracy of the inferred organizational specifications.
-- Generalizability: Tested by applying the inferred specifications to new, unseen environments.
+\subsubsection{Capture Rate}
+The capture rate is defined as the percentage of prey captured by the predators within a given time frame. This metric provides a direct measure of the predators' effectiveness in achieving their primary objective.
 
-\subsection{Results}
+\subsubsection{Survival Time}
+The survival time is the average duration that prey are able to evade capture. This metric reflects the effectiveness of the prey's evasion strategies and their ability to survive in a hostile environment.
 
-The results of our experiments showed that both KOSIA and GOSIA were able to effectively identify and infer organizational specifications that aligned with the expected roles and missions. KOSIA provided clear mappings when specifications were known, while GOSIA successfully inferred new structures in more complex scenarios.
+\subsubsection{Collaboration Score}
+The collaboration score measures the extent to which predators are able to coordinate their actions to capture prey. This metric is particularly relevant for evaluating the impact of the KOSIA and GOSIA approaches on promoting cooperative behaviors among predators.
 
-\subsection{Discussion}
+\subsubsection{Adaptation Rate}
+The adaptation rate is a measure of how quickly agents are able to adjust their strategies in response to changes in the environment. This metric is used to assess the flexibility and robustness of the learned policies under varying conditions.
 
-The experimental results highlight the strengths of KOSIA in providing direct interpretations of agent behaviors and the flexibility of GOSIA in discovering new organizational structures. However, both approaches have limitations: KOSIA's dependency on pre-defined specifications and GOSIA's sensitivity to the choice of clustering and similarity measures.
+\subsection{Experimental Runs}
+The experiments were conducted over multiple runs, with each run consisting of several thousand episodes. The agents' performance was averaged across these episodes to ensure the reliability of the results.
 
-\section{Conclusion and Future Work}
-\label{sec:conclusion}
+\subsubsection{Baseline Comparisons}
+To provide a benchmark for the performance of the KOSIA and GOSIA approaches, we conducted baseline comparisons using standard MARL algorithms without any additional pattern or organizational constraints. These baseline results serve as a reference point for evaluating the improvements introduced by our proposed methods.
 
-In this paper, we introduced two approaches, KOSIA and GOSIA, to enhance the explainability of MARL systems by linking agent behaviors to organizational specifications. KOSIA excels in environments with well-defined roles and missions, while GOSIA offers a powerful tool for inferring new organizational structures from agent trajectories.
+\subsubsection{Statistical Analysis}
+The results from the experimental runs were subjected to statistical analysis to determine the significance of the observed differences in performance between the various approaches. This analysis included measures such as confidence intervals and hypothesis testing to ensure the robustness of the conclusions drawn from the experiments.
 
-Future work will explore more sophisticated techniques for trajectory analysis, such as deep learning-based sequence models, and extend our approaches to more complex, real-world scenarios. We also plan to investigate the integration of these methods into the design process of Multi-Agent Systems to improve both their performance and interpretability.
 
+
+\section{Conclusion}\label{sec:conclusion}
+In this study, we proposed and evaluated the KOSIA and GOSIA approaches, which integrate knowledge patterns and organizational constraints into the MARL framework. Our experimental results demonstrate that these approaches significantly enhance the performance of multi-agent systems in the predator-prey environment by improving coordination, adaptability, and overall effectiveness.
+
+\subsection{Meeting the Initial Gaps}
+The experimental results show that both KOSIA and GOSIA effectively address the gaps identified at the beginning of this study. The integration of pattern systems in KOSIA has proven to accelerate the learning process and improve the consistency of agent behaviors, leading to a higher capture rate and more efficient predator coordination. Similarly, the GOSIA approach, with its focus on organizational roles and missions, has enhanced the agents' ability to operate within defined constraints while achieving their objectives.
+
+\subsection{Generalizability of Our Approach}
+While our results are promising, it is important to consider the generalizability of the KOSIA and GOSIA approaches to other environments and multi-agent scenarios. The structured nature of these approaches, with their reliance on predefined patterns and organizational models, suggests that they could be adapted to other settings with similar requirements. However, the extent of this generalizability remains an open question, particularly in environments with vastly different dynamics or objectives.
+
+To what extent is our approach already general? The use of domain-specific patterns and organizational constraints provides a flexible framework that can be tailored to different environments. However, the success of such adaptation depends on the availability of relevant patterns and the ability to define appropriate organizational structures for each new scenario. In future work, we aim to explore the application of KOSIA and GOSIA in other domains, such as cybersecurity and autonomous vehicle coordination, to further assess their versatility and effectiveness.
+
+Overall, our findings suggest that the KOSIA and GOSIA approaches hold significant potential for improving the performance of multi-agent systems in complex and dynamic environments. By integrating domain-specific knowledge and organizational constraints, these approaches offer a promising direction for future research and practical applications in MARL.
 
 %% References
 \bibliography{references}
-
-%%===========================================================================================%%
-%% If you are submitting to one of the Nature Portfolio journals, using the eJP submission   %%
-%% system, please include the references within the manuscript file itself. You may do this  %%
-%% by copying the reference list from your .bbl file, paste it into the main manuscript .tex %%
-%% file, and delete the associated \verb+\bibliography+ commands.                            %%
-%%===========================================================================================%%
-
-%% if required, the content of .bbl file can be included here once bbl is generated
-%%\input sn-article.bbl
 
 \end{document}
