@@ -238,7 +238,7 @@ Given that GOSIA was refined through empirical iterations, our contribution also
 We applied both approaches to a series of scenarios in a predator-prey environment, where agents are required to adopt collective strategies for hunting or defense. The results demonstrate that our general approach enables getting description of roles, missions and other organizational specifications that align with expected ones for each scenario. Our approach does enhance the interpretability of agent behaviors at the collective level for this scenario. Furthermore, we discussed the generalization of our approach to various environments and next steps in that purpose.
 
 % Outline
-The remainder is organized as follows: \Autoref{sec:related} gives an overview of related works for XAI in MARL. \Autoref{sec:background} provides a fundamental background in the MARL and organizational to introduce the framework we proposed to link the MARL and organizational model for KOSIA and GOSIA. \Autoref{sec:kosia} introduces KOSIA and associated means available for users. \Autoref{sec:gosia} introduces GOSIA mainly as for the theoretical aspects. \Autoref{sec:experiment} describes the conducted experiments and discusses the first results of our empirical evaluation. \Autoref{sec:conclusion} concludes the paper and outlines future research directions.
+The remainder of this paper is organized as follows: \Autoref{sec:related} provides an overview of related works in XAI within the context of MARL. In \Autoref{sec:background}, we present the foundational background on MARL and the $\mathcal{M}OISE^+$ organizational model. \Autoref{sec:kosia} introduces the KOSIA framework, which links $\mathcal{M}OISE^+$ organizational specifications to agents' histories using pre-defined patterns. Next, \Autoref{sec:gosia} defines GOSIA, a set of constructs for interpreting joint histories into organizational specializations. The experimental setup and corresponding results are discussed in \Autoref{sec:experiment}. Finally, \Autoref{sec:conclusion} summarizes the key findings and outlines potential directions for future research.
 
 
 \section{Related Works}
@@ -371,115 +371,91 @@ We refer to \textbf{solving} the Dec-POMDP for the team $i$ as finding a joint p
 We refer to \textbf{sub-optimally solving} the Dec-POMDP at $s$ expectancy as finding the joint policies $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = SR_{joint,i}(\pi_{joint,i}, s)$ that gets the expected cumulative reward over a finite horizon at least at $s \in \mathbb{R}, s \leq U_i^*$.
 
 
-% \subsection{Organizational model}
+\subsection{Organizational model}
 
-% $\mathcal{M}OISE^+$~\cite{hubner2007} provides a relevant high-level description of the structures and interactions within the MAS. However, we favor $\mathcal{M}OISE^+$ because it provides an advanced formal description for an organization without incompatibilities with MARL, especially for a formal description of agents' policies.
-% Based on $\mathcal{M}OISE^+$~\cite{hubner2007} formalism, we only give the elements of the formalism we used.
+$\mathcal{M}OISE^+$~\cite{hubner2007} provides a relevant high-level description of the structures and interactions within the MAS. However, we favor $\mathcal{M}OISE^+$ because it provides an advanced formal description for an organization without incompatibilities with MARL, especially for a formal description of agents' policies.
+Based on $\mathcal{M}OISE^+$~\cite{hubner2007} formalism, we only give the elements of the formalism we used.
 
-% \paragraph{\textbf{Organizational specifications (OS)}} refer to some information describing an organization, we denote them as $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, where $\mathcal{SS}$ are the \textbf{Structural Specifications}, $\mathcal{FS}$ are the \textbf{Functional Specifications}, and $\mathcal{DS}$ are the \textbf{Deontic Specifications}
+\paragraph{\textbf{Organizational specifications (OS)}} refer to some information describing an organization, we denote them as $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, where $\mathcal{SS}$ are the \textbf{Structural Specifications}, $\mathcal{FS}$ are the \textbf{Functional Specifications}, and $\mathcal{DS}$ are the \textbf{Deontic Specifications}
 
-% \paragraph{\textbf{Structural Specifications (SS)}} refer to the structured means left to agents to achieve a goal, we denote them as $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$, where:
-
-% \begin{itemize}
-
-%     \item $\mathcal{R}_{ss}$: the set of all roles (denoted $\rho \in \mathcal{R}$);
-
-%     \item $\mathcal{IR}: \mathcal{R} \rightarrow \mathcal{R}$: the inheritance relation between roles ($\mathcal{IR}(\rho_1) = \rho_2$ means $\rho_1$ inherits from $\rho_2$ also denoted $\rho_1 \sqsubset \rho_2$);
-
-%     \item $\mathcal{RG} \subseteq \mathcal{GR}$ the set of root groups, $\mathcal{GR} = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$, the set of all groups, where
-
-%           \begin{itemize}
-
-%               \item $\mathcal{R} \subseteq \mathcal{R}_{ss}$: the set of non-abstract roles;
-
-%               \item $\mathcal{SG} \subseteq \mathcal{GR}$: the set of sub-groups;
-
-%               \item $\mathcal{L} = \mathcal{R} \times \mathcal{R} \times \mathcal{TL}$: the set of links. A link is a 3-tuple $(\rho_s,\rho_d,t) \in \mathcal{L}$ (also denoted as a predicate $link(\rho_s,\rho_d,t))$, where $\rho_{s}$ is the source role, $\rho_{d}$ is the destination role, and $t \in \mathcal{TL}, \mathcal{TL} = \{acq, com, aut\}$ is the link type;
-%                     \begin{itemize}
-%                         \item If $t = acq$ (acquaintance), the agents playing the source role $\rho_{\mathrm{s}}$ are allowed to have a representation of the agents playing the destination role $\rho_{d}$;
-%                         \item If $t = com$ (communication), the $\rho_{\mathrm{s}}$ agents are allowed to communicate with $\rho_{d}$ agents;
-%                         \item If $t = aut$ (authority), the $\rho_{\mathrm{s}}$ agents are allowed to have authority on $\rho_{d}$ agents. It requires an acquaintance and communication link.
-%                     \end{itemize}
-%               \item $\mathcal{L}^{intra} \subseteq \mathcal{L}$: the set of intra-group links;
-%               \item $\mathcal{L}^{inter} \subseteq \mathcal{L}$: the set of inter-group links;
-
-%               \item $\mathcal{C} = \mathcal{R} \times \mathcal{R}$: the set of compatibilities. A compatibility is a couple $(a,b) \in \mathcal{C}$ (also denoted $\rho_a \bowtie \rho_b$), means agents playing role $\rho_a \in \mathcal{R}$ can also play role $\rho_b \in \mathcal{R}$;
-%               \item $\mathcal{C}^{intra} \subseteq \mathcal{C}$: the set of intra-group compatibilities;
-%               \item $\mathcal{C}^{inter} \subseteq \mathcal{C}$: the set of inter-group compatibilities;
-
-%               \item $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of agents adopting a role;
-%               \item $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of each sub-group.
-
-%           \end{itemize}
-
-% \end{itemize}
-
-% \paragraph{\textbf{Functional Specifications (FS)}} globally refer to the tasks and goals agents have to achieve, we denote them as $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$, where:
-
-% \begin{itemize}
-%     \item $\mathcal{SCH} = \langle\mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$: the set of \textbf{social scheme}, where:
-%           \begin{itemize}
-%               \item $\mathcal{G}$ is the set of global goal;
-
-%               \item $\mathcal{M}$ is the set of mission labels;
-%               \item $\mathcal{P} = \langle \mathcal{G}, \{\mathcal{G}\}^s, OP, [0,1] \rangle, s \in \mathbb{N}^*$ is the set of plans that builds the tree structure of the goals.
-%                     %
-%                     A plan $p \in \mathcal{P}$ is 4-tuple $p=(g_f,\{g_i\}_{0 \leq i \leq s}, op, ps), g_f \in \mathcal{G}, g_i \in \mathcal{G}, op \in OP, OP = \{sequence, choice, parallel\}, ps \in [0,1]$, meaning that the goal $g_f$ is achieved if some of the sub-goals $g_i$ are achieved with a success probability $ps$ and according to the operator $op$:
-%                     %
-%                     \begin{itemize}
-%                         \item if $op = sequence$, the $g_i$ can only be achieved in the same order sequentially;
-%                         \item if $op = choice$, only one of the $g_i$ has to be achieved;
-%                         \item if $op = parallel$, the $g_i$ can only be achieved sequentially or simultaneously.
-%                     \end{itemize}
-
-%               \item $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$: specifies the set of goals a mission is associated with;
-%               \item $nm: \mathcal{M} \rightarrow \mathbb{N} \times \mathbb{N}$ the cardinality of agents committed for each mission.
-%           \end{itemize}
-%     \item $\mathcal{PO}: \mathcal{M} \times \mathcal{M}$: the set of \textbf{preference orders}. A preference order is a couple $(m_1, m_2), m_1 \in \mathcal{M}, m_2 \in \mathcal{M}$ (also denoted $m_{1} \prec m_{2}$) meaning that if there is a moment when an agent is permitted to commit to $m_{1}$ and also $m_{2}$, it has a social preference for committing to $m_{1}$.
-% \end{itemize}
-
-% \paragraph{\textbf{Deontic Specifications (DS)}} refer to how SS are to be used to achieve the FS, we denote them as $\mathcal{DS} = \langle \mathcal{OBL},\mathcal{PER} \rangle$, the set of deontic specifications, where:
-
-% \begin{itemize}
-%     \item $\mathcal{TC}$: the set of \textbf{time constraints}. A time constraint $tc \in \mathcal{TC}$ specifies a set of periods during which a permission or obligation is valid ($Any \in \mathcal{TC}$ means \textquote{everytime});
-%     \item $\mathcal{OBL}: \mathcal{R} \times \mathcal{M} \times \mathcal{TC}$: the set of \textbf{obligations}. An obligation is a 3-tuple $(\rho_a,m,tc)$ (also denoted $obl(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
-%     \item $\mathcal{PER}$: the set of \textbf{permissions}. A permission is a 3-tuple $(\rho_a,m,tc)$ (also denoted $per(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
-% \end{itemize}
-
-
-
-
-\section{Linking MARL and the $\mathcal{M}OISE^+$ model}\label{sec:linking_marl_moise}
-\label{sec:marl_moise_linking}
-
-In this section, we incrementally present the principles we propose to adapt the MARL according to organizational specifications. This includes constraining a policy to adhere to the expected behavior of a role and enticing the policy to achieve a mission for a given time duration.
-
-
-The $\mathcal{M}OISE^+$ model provides a comprehensive framework for specifying the structure and interactions within a Multi-Agent System (MAS). We utilize $\mathcal{M}OISE^+$ due to its compatibility with MARL and its formal description capabilities for agents' policies. The underlying approach bridges the gap between MARL and organizational modeling by embedding $\mathcal{M}OISE^+$ specifications into the MARL training process. This integration allows for the training of agents that adhere to predefined organizational roles and missions.
-%
-In $\mathcal{M}OISE^+$, \textbf{Organizational Specifications (OS)} are defined as $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, where $\mathcal{SS}$ are the \textbf{Structural Specifications}, $\mathcal{FS}$ are the \textbf{Functional Specifications}, and $\mathcal{DS}$ are the \textbf{Deontic Specifications}.
-
-\subsection{Structural Specifications and Constraining Joint-Policies According to Roles}
-
-\textbf{Structural Specifications} describe the organizational structure and are denoted as $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$:
+\paragraph{\textbf{Structural Specifications (SS)}} refer to the structured means left to agents to achieve a goal, we denote them as $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$, where:
 
 \begin{itemize}
-    \item $\mathcal{R}_{ss}$: The set of all roles ($\rho \in \mathcal{R}$).
-    \item $\mathcal{IR}: \mathcal{R} \rightarrow \mathcal{R}$: The inheritance relation between roles ($\rho_1 \sqsubset \rho_2$).
-    \item $\mathcal{RG} \subseteq \mathcal{GR}$: The set of root groups, $\mathcal{GR} = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, \allowbreak np, ng \rangle$, where:
-          %   \begin{itemize}
-          $\mathcal{R} \subseteq \mathcal{R}_{ss}$: The set of non-abstract roles.
-          $\mathcal{SG} \subseteq \mathcal{GR}$: The set of sub-groups.
-          $\mathcal{L} = \mathcal{R} \times \mathcal{R} \times \mathcal{TL}$: The set of links $(\rho_s, \rho_d, t)$, where $t \in \{acq, com, aut\}$ indicates the type of link (acquaintance, communication, authority).
-          $\mathcal{L}^{intra} \subseteq \mathcal{L}$: The set of intra-group links.
-          $\mathcal{L}^{inter} \subseteq \mathcal{L}$: The set of inter-group links.
-          $\mathcal{C} = \mathcal{R} \times \mathcal{R}$: The set of compatibilities $(\rho_a \bowtie \rho_b)$.
-          $\mathcal{C}^{intra} \subseteq \mathcal{C}$: The set of intra-group compatibilities.
-          $\mathcal{C}^{inter} \subseteq \mathcal{C}$: The set of inter-group compatibilities.
-          $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of agents adopting a role.
-          $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of each sub-group.
-          %   \end{itemize}
+
+    \item $\mathcal{R}_{ss}$: the set of all roles (denoted $\rho \in \mathcal{R}$);
+
+    \item $\mathcal{IR}: \mathcal{R} \rightarrow \mathcal{R}$: the inheritance relation between roles ($\mathcal{IR}(\rho_1) = \rho_2$ means $\rho_1$ inherits from $\rho_2$ also denoted $\rho_1 \sqsubset \rho_2$);
+
+    \item $\mathcal{RG} \subseteq \mathcal{GR}$ the set of root groups, $\mathcal{GR} = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$, the set of all groups, where
+
+          \begin{itemize}
+
+              \item $\mathcal{R} \subseteq \mathcal{R}_{ss}$: the set of non-abstract roles;
+
+              \item $\mathcal{SG} \subseteq \mathcal{GR}$: the set of sub-groups;
+
+              \item $\mathcal{L} = \mathcal{R} \times \mathcal{R} \times \mathcal{TL}$: the set of links. A link is a 3-tuple $(\rho_s,\rho_d,t) \in \mathcal{L}$ (also denoted as a predicate $link(\rho_s,\rho_d,t))$, where $\rho_{s}$ is the source role, $\rho_{d}$ is the destination role, and $t \in \mathcal{TL}, \mathcal{TL} = \{acq, com, aut\}$ is the link type;
+                    \begin{itemize}
+                        \item If $t = acq$ (acquaintance), the agents playing the source role $\rho_{\mathrm{s}}$ are allowed to have a representation of the agents playing the destination role $\rho_{d}$;
+                        \item If $t = com$ (communication), the $\rho_{\mathrm{s}}$ agents are allowed to communicate with $\rho_{d}$ agents;
+                        \item If $t = aut$ (authority), the $\rho_{\mathrm{s}}$ agents are allowed to have authority on $\rho_{d}$ agents. It requires an acquaintance and communication link.
+                    \end{itemize}
+              \item $\mathcal{L}^{intra} \subseteq \mathcal{L}$: the set of intra-group links;
+              \item $\mathcal{L}^{inter} \subseteq \mathcal{L}$: the set of inter-group links;
+
+              \item $\mathcal{C} = \mathcal{R} \times \mathcal{R}$: the set of compatibilities. A compatibility is a couple $(a,b) \in \mathcal{C}$ (also denoted $\rho_a \bowtie \rho_b$), means agents playing role $\rho_a \in \mathcal{R}$ can also play role $\rho_b \in \mathcal{R}$;
+              \item $\mathcal{C}^{intra} \subseteq \mathcal{C}$: the set of intra-group compatibilities;
+              \item $\mathcal{C}^{inter} \subseteq \mathcal{C}$: the set of inter-group compatibilities;
+
+              \item $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of agents adopting a role;
+              \item $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of each sub-group.
+
+          \end{itemize}
+
 \end{itemize}
+
+\paragraph{\textbf{Functional Specifications (FS)}} globally refer to the tasks and goals agents have to achieve, we denote them as $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$, where:
+
+\begin{itemize}
+    \item $\mathcal{SCH} = \langle\mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$: the set of \textbf{social scheme}, where:
+          \begin{itemize}
+              \item $\mathcal{G}$ is the set of global goal;
+
+              \item $\mathcal{M}$ is the set of mission labels;
+              \item $\mathcal{P} = \langle \mathcal{G}, \{\mathcal{G}\}^s, OP, [0,1] \rangle, s \in \mathbb{N}^*$ is the set of plans that builds the tree structure of the goals.
+                    %
+                    A plan $p \in \mathcal{P}$ is 4-tuple $p=(g_f,\{g_i\}_{0 \leq i \leq s}, op, ps), g_f \in \mathcal{G}, g_i \in \mathcal{G}, op \in OP, OP = \{sequence, choice, parallel\}, ps \in [0,1]$, meaning that the goal $g_f$ is achieved if some of the sub-goals $g_i$ are achieved with a success probability $ps$ and according to the operator $op$:
+                    %
+                    \begin{itemize}
+                        \item if $op = sequence$, the $g_i$ can only be achieved in the same order sequentially;
+                        \item if $op = choice$, only one of the $g_i$ has to be achieved;
+                        \item if $op = parallel$, the $g_i$ can only be achieved sequentially or simultaneously.
+                    \end{itemize}
+
+              \item $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$: specifies the set of goals a mission is associated with;
+              \item $nm: \mathcal{M} \rightarrow \mathbb{N} \times \mathbb{N}$ the cardinality of agents committed for each mission.
+          \end{itemize}
+    \item $\mathcal{PO}: \mathcal{M} \times \mathcal{M}$: the set of \textbf{preference orders}. A preference order is a couple $(m_1, m_2), m_1 \in \mathcal{M}, m_2 \in \mathcal{M}$ (also denoted $m_{1} \prec m_{2}$) meaning that if there is a moment when an agent is permitted to commit to $m_{1}$ and also $m_{2}$, it has a social preference for committing to $m_{1}$.
+\end{itemize}
+
+\paragraph{\textbf{Deontic Specifications (DS)}} refer to how SS are to be used to achieve the FS, we denote them as $\mathcal{DS} = \langle \mathcal{OBL},\mathcal{PER} \rangle$, the set of deontic specifications, where:
+
+\begin{itemize}
+    \item $\mathcal{TC}$: the set of \textbf{time constraints}. A time constraint $tc \in \mathcal{TC}$ specifies a set of periods during which a permission or obligation is valid ($Any \in \mathcal{TC}$ means \textquote{everytime});
+    \item $\mathcal{OBL}: \mathcal{R} \times \mathcal{M} \times \mathcal{TC}$: the set of \textbf{obligations}. An obligation is a 3-tuple $(\rho_a,m,tc)$ (also denoted $obl(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+    \item $\mathcal{PER}$: the set of \textbf{permissions}. A permission is a 3-tuple $(\rho_a,m,tc)$ (also denoted $per(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+\end{itemize}
+
+
+
+
+
+\section{The KOSIA Approach}\label{sec:kosia}
+
+The KOSIA approach leverages linking pre-defined patterns to a set of histories that characterize an expected behavior.
+Although simple, the proposed pattern framework is thought to represent optimal strategies covering variously complex purposes ranging from simple interaction protocls to complex decision-making.
+
+\subsection{Structural Specifications: Linking Roles to Histories}
 
 Constraining policies directly is not feasible because most policy implementations rely on intractable black-box models such as neural networks. We propose to formally represent a role as a history subset $\mathcal{P}(H)$ containing histories an agent playing a role should generate, hence characterizing the role's expected behavior. As illustrated in \Autoref{fig:PRAHOM_osm_rels}, we propose each role to be mapped to a history subset through the $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$ bijection. An agent playing a role should have its policy constrained to generate histories belonging to the mapped history subset (at least from a theoretical point of view).
 
@@ -500,7 +476,7 @@ The LLM is trained after real observations have been rendered visually and label
     \label{fig:PRAHOMT_ol}
 \end{figure}
 
-Second, defining a history subset exhaustively may require taking into account many cases, hence leading to an important amount of histories. %As illustrated in \Autoref{fig:PRAHOM_opc}
+Second, defining a history subset exhaustively may require taking into account many cases, hence leading to an important amount of histories. As illustrated in \Autoref{fig:PRAHOM_opc}.
 Rather than defining a history subset exhaustively, we propose three means to simplify its definition:
 %
 \quad i) a \textbf{pattern} format that conforms to the following rules: a sequence is denoted \textquote{[$label_{obs_1},label_{act_1}\dots$] \allowbreak ($card_{min},card_{max}$)} the \textquote{Any} label refer to any observation/action. This pattern is implemented as an oriented graph denoted \textbf{history graph} where nodes are observations/actions and edges represent expected transitions relying on ordinal number and cardinalities; \quad
@@ -519,37 +495,17 @@ Considering a history subset is ultimately aimed to be used to constrain a polic
     \label{fig:PRAHOM_opc}
 \end{figure}
 
-We propose to integrate observable policy constraints into an agent's policy via three modes:
-\textbf{correct}: Corrects any chosen action $\pi(\omega)$ to an expected one in $c\pi(\omega)$. It ensures safety but is external to the agent's policy; \quad
-\textbf{penalize}: Adds a penalty to the reward if a wrong action ($\pi(\omega) \notin c\pi(\omega)$) is made, encouraging agents to learn their constraints but without safety guarantees; \quad
-\textbf{correct\_policy}: Creates a \textbf{constrained policy} $\pi_c \in \Pi, \pi_c = \{smpl(c\pi_{joint}(\omega_{joint})) \allowbreak if \ \omega_{joint} \in Dom(c\pi_{joint}) \ \allowbreak, \ \allowbreak else \ \allowbreak \pi_{joint}(\omega_{joint})\}$ where $smpl$ gets an element from a set randomly. An observable policy constraint $c\pi$ corrects the current policy $\pi$, hence respecting safety guarantees internally.
 
-
-
-\subsection{Functional Specifications and Constraining Joint-Policies According to Missions}
-
-\textbf{Functional Specifications} describe the tasks and goals and are denoted as $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$:
-
-\begin{itemize}
-    \item $\mathcal{SCH} = \langle \mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$: The set of social schemes, where:
-          \begin{itemize}
-              \item $\mathcal{G}$: The set of global goals.
-              \item $\mathcal{M}$: The set of mission labels.
-              \item $\mathcal{P} = \langle \mathcal{G}, \{\mathcal{G}\}^s, OP, [0,1] \rangle$: The set of plans $(g_f, \{g_i\}_{0 \leq i \leq s}, op, ps)$.
-              \item $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$: The goals associated with each mission.
-              \item $nm: \mathcal{M} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of agents committed to each mission.
-          \end{itemize}
-    \item $\mathcal{PO}: \mathcal{M} \times \mathcal{M}$: The set of preference orders $(m_1 \prec m_2)$.
-\end{itemize}
+\subsection{Functional Specifications: Linking Missions to Histories}
 
 We consider a goal to be theoretically represented as a history subset. We propose $gh: \mathcal{G} \rightarrow \mathcal{P}(H)$ that shows how an agent committed to a mission should have its policy enticed to generate histories belonging to an expected history subset (at least from a theoretical point of view). Thus, $mh: \mathcal{M} \rightarrow \mathcal{P}(H) = \{(m,\bigcup gh[mo(m)]), m \in \mathcal{M}\}$ gives expected histories from missions. Ultimately, a goal should impact MARL by updating the reward function when an agent is committed to a mission. We introduce an \textbf{observable reward function} $R_{g}: H \rightarrow \mathbb{R}$, the relation indicating how close a generated history is to a given history subset. A reward function for a mission $m \in \mathcal{M}$ containing goals $\mathcal{G}_{m} = mo(m)$ is computed as a weighted addition of all observable reward functions of each goal. This way, agents are individually enticed to achieve their respective sub-goals hence speeding up the convergence to achieving the ultimate goal.
 
-% \begin{figure}[h!]
-%     \centering
-%     \input{figures/goal_mission_scheme.tex}
-%     \caption{An abstract view of observable reward function and its crafting}
-%     \label{fig:goal_mission_scheme}
-% \end{figure}
+\begin{figure}[h!]
+    \centering
+    \input{figures/goal_mission_scheme.tex}
+    \caption{An abstract view of observable reward function and its crafting}
+    \label{fig:goal_mission_scheme}
+\end{figure}
 
 \subsection{Deontic Specifications and Constraining Joint-Policies According to Permissions/Obligations}
 
@@ -564,36 +520,6 @@ We consider a goal to be theoretically represented as a history subset. We propo
 We introduced the relation $da: \mathcal{PER} \cup \mathcal{OBL} \rightarrow \mathcal{P}(\mathcal{A})$ that indicates how agents are constrained to roles and committed on missions for a given time constraint. In order to take into account time constraints, we introduce a time-to-live for each permission/obligation through the relation $dttl: \mathcal{PER} \cup \mathcal{OBL} \times \mathcal{A} \rightarrow \mathbb{N}$. Then, they are to be decreased at each step if the given time constraint is not \textquote{Any} with the relation $dec: dttl \rightarrow dttl$. Then, the roles constrained to agents or committed missions may change after the reward function is changed.
 
 To differentiate between obligations and permissions and ensure agents prioritize obligated missions over permitted ones, we propose multiplying the observable reward function of this mission by a high factor for obligated missions and a low factor for permitted ones.
-
-% Relying on these principles to integrate organizational specifications within the MARL framework, we established an algorithm.
-
-
-
-\section{The KOSIA Approach}\label{sec:kosia}
-
-The KOSIA (Knowledge-Oriented System Integration and Adaptation) approach focuses on integrating knowledge patterns within the MARL (Multi-Agent Reinforcement Learning) framework, allowing agents to learn from predefined patterns and adapt their behaviors accordingly. The core idea behind KOSIA is to utilize a structured pattern system that not only guides the learning process but also ensures that agents adhere to organizational constraints and objectives.
-
-\subsection{Pattern System in KOSIA}
-The pattern system in KOSIA is a crucial component that embeds domain-specific knowledge into the MARL process. These patterns are derived from expert knowledge and historical data, representing optimal strategies, decision-making processes, and expected behaviors within the given environment. Patterns in KOSIA are categorized into three main types:
-
-\begin{itemize}
-    \item \textbf{Behavioral Patterns:} These patterns define the expected behaviors of agents in specific situations. For instance, in a predator-prey scenario, a behavioral pattern might dictate how a predator should respond when it detects a prey nearby, considering factors such as proximity, speed, and obstacles.
-
-    \item \textbf{Decision Patterns:} These patterns provide a framework for decision-making processes within the agents. Decision patterns in KOSIA are designed to enhance the decision-making capabilities of agents by providing them with a structured approach to evaluate multiple options and select the optimal course of action.
-
-    \item \textbf{Interaction Patterns:} These patterns govern the interactions between agents, ensuring that communication, cooperation, and competition are conducted in a manner that aligns with the overarching goals of the system. Interaction patterns are particularly important in multi-agent systems where coordination is essential for success.
-\end{itemize}
-
-\subsection{Pattern Matching and Adaptation}
-KOSIA employs a pattern matching mechanism that allows agents to identify and apply the most relevant patterns based on their current state and observations. The pattern matching process is facilitated by a pattern repository that stores all the predefined patterns. During the learning process, agents continuously match their current state with the available patterns and adapt their behaviors accordingly.
-
-Adaptation in KOSIA is achieved through a feedback loop where agents assess the outcomes of their actions against the expected outcomes defined by the patterns. If an action deviates from the expected outcome, the agent adjusts its behavior in future iterations to align more closely with the pattern. This iterative process enables agents to refine their strategies over time, leading to more effective and consistent behaviors that are in line with organizational objectives.
-
-\subsection{Integration with MARL}
-The integration of the KOSIA pattern system with MARL is designed to enhance the learning process by providing agents with a structured framework that guides their actions. The patterns serve as soft constraints that influence the reward structure within the MARL environment. When agents follow the patterns, they are rewarded, whereas deviations result in penalties. This approach ensures that agents not only learn to optimize their strategies but also adhere to the desired behaviors and objectives defined by the patterns.
-
-KOSIA's pattern system is particularly effective in complex environments where the state space is vast, and traditional MARL approaches may struggle to converge. By embedding domain-specific knowledge into the learning process, KOSIA accelerates convergence and improves the overall performance of the system.
-
 
 
 
