@@ -48,3 +48,60 @@ Voici un résumé détaillé des critiques provenant de "reviews.pdf", ainsi que
 4. **Clarifier les contributions** de l'article en une section dédiée, en explicitant les différences avec les travaux antérieurs.
 
 Ces modifications devraient aider à mieux répondre aux critiques des reviewers et à améliorer la qualité globale du document.
+
+
+---
+---
+
+
+### Critiques de Fond
+
+#### 1. **Justification du Choix du Modèle MOISE+**
+- **Commentaire Reviewer #1 :** Pourquoi choisir MOISE+ plutôt qu’un autre modèle organisationnel comme AGR ? Une comparaison et une justification des avantages de MOISE+ par rapport à d'autres modèles sont nécessaires.
+- **Suggestion :** Ajouter une section comparative qui montre pourquoi MOISE+ est mieux adapté pour des scénarios avec des contraintes organisationnelles et expliquer en quoi il est supérieur pour guider le processus d’apprentissage par rapport à d'autres frameworks comme AGR.
+
+#### 2. **Choix de l'Apprentissage par Renforcement (RL)**
+- **Commentaire Reviewer #1 :** Pourquoi utiliser le RL, en particulier les méthodes basées sur les politiques ? D'autres techniques comme la recherche de politique directe par neuro-évolution, les régulateurs linéaires quadratiques (LQR) ou le contrôle stochastique pourraient être pertinentes. Le papier entre dans le cadre du RL basé sur des modèles (model-based RL) mais ne discute pas d'autres alternatives comme le contrôle prédictif (MPC).
+- **Suggestion :** Justifier pourquoi les techniques basées sur les politiques (policy-based RL) ont été choisies par rapport à ces autres techniques. Discuter des avantages spécifiques du RL par rapport à des approches basées sur l'optimisation ou des stratégies sans modèles.
+
+#### 3. **Comparaison Expérimentale avec d'Autres Approches**
+- **Commentaire Reviewer #1 et #2 :** Le papier manque de comparaison avec d’autres approches intégrant des spécifications organisationnelles dans le MARL.
+- **Suggestion :** Inclure des expériences comparatives avec des méthodes utilisant des informations organisationnelles, comme ROMA ou des approches de co-apprentissage multi-agent. Comparer les performances en termes de convergence, robustesse et efficacité.
+
+#### 4. **Qualité des Spécifications Organisationnelles**
+- **Commentaire Reviewer #2 :** La performance des agents dépend fortement de la qualité des spécifications organisationnelles préalablement définies.
+- **Suggestion :** Discuter des limitations potentielles de PRAHOMT lorsque les spécifications organisationnelles sont incomplètes ou mal définies. Proposer des stratégies pour automatiser ou apprendre ces spécifications à partir des données.
+
+#### 5. **Utilisation et Extension de PRAHOM**
+- **Commentaire Reviewer #3 :** Le papier ne clarifie pas suffisamment ce qui est emprunté de PRAHOM et ce qui est nouveau dans PRAHOMT. Les différences entre PRAHOM et PRAHOMT ne sont pas bien expliquées.
+- **Suggestion :** Inclure une section spécifique expliquant en détail les contributions de PRAHOMT par rapport à PRAHOM. Mettre en avant les améliorations et les nouvelles fonctionnalités ajoutées, et expliquer pourquoi seules les missions et rôles sont utilisées.
+
+#### 6. **Impact des Contraintes Organisationnelles dans des Scénarios Complexes**
+- **Commentaire Reviewer #3 :** L'approche est testée dans un scénario relativement simple de prédateur-proie. Comment l'approche se généralise-t-elle à des scénarios plus complexes ?
+- **Suggestion :** Ajouter des expériences ou des discussions sur des environnements plus complexes où les agents doivent coopérer de manière plus sophistiquée (par exemple, des tâches industrielles ou de sauvetage) pour montrer la robustesse et l’adaptabilité de PRAHOMT.
+
+#### 7. **Explorations Alternatives comme le Model Predictive Control (MPC)**
+- **Commentaire Reviewer #1 :** Le papier entre dans le cadre du model-based RL, mais ne discute pas d'autres alternatives comme le MPC.
+- **Suggestion :** Inclure une discussion sur les avantages et inconvénients de PRAHOMT par rapport à des approches de contrôle prédictif (MPC) et d'autres méthodes d'optimisation basées sur des modèles.
+
+### Critiques de Forme
+
+#### 1. **Clarté de l'Introduction et des Objectifs**
+- **Commentaire Reviewer #3 :** L'introduction est confuse et ne clarifie pas suffisamment les objectifs du travail.
+- **Suggestion :** Réécrire l’introduction pour exposer clairement les objectifs du papier, les contributions principales, et la motivation derrière le choix de l’approche. Inclure un paragraphe expliquant pourquoi l'intégration des modèles organisationnels est importante pour le MARL.
+
+#### 2. **Présentation et Organisation**
+- **Commentaire Reviewer #1 et #3 :** Bien que l'organisation générale soit correcte, le texte contient des répétitions et manque de cohérence dans la présentation des concepts clés.
+- **Suggestion :** Réorganiser les sections pour éviter les répétitions. Par exemple, regrouper les discussions sur PRAHOM et PRAHOMT dans une section dédiée, puis détailler la méthodologie.
+
+#### 3. **Clarté de l'Écriture**
+- **Commentaire Reviewer #3 :** Le texte est parfois confus et nécessite une révision complète.
+- **Suggestion :** Simplifier le texte en utilisant des phrases plus courtes et des explications plus claires. Ajouter des exemples concrets pour illustrer les concepts complexes et améliorer la lisibilité globale.
+
+#### 4. **Répétitions dans les Références**
+- **Commentaire Reviewer #1 :** Certaines références sont répétées inutilement.
+- **Suggestion :** Réviser les références pour éliminer les doublons et s'assurer que chaque référence apporte une information unique et pertinente.
+
+#### 5. **Description des Expériences**
+- **Commentaire Reviewer #2 :** Les expériences manquent de comparaisons avec d'autres algorithmes existants utilisant des informations organisationnelles.
+- **Suggestion :** Ajouter des comparaisons directes avec d'autres algorithmes de MARL intégrant des informations organisationnelles, et fournir plus de détails sur les métriques et les configurations expérimentales.
