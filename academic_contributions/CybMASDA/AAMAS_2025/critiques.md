@@ -1,4 +1,49 @@
-Voici un résumé détaillé des critiques provenant de "reviews.pdf", ainsi que des suggestions pour les aborder.
+----
+----
+## Résumé
+L'idée principale consiste à guider le processus d'apprentissage multi-agent (MARL) en imposant des contraintes qui limitent l'ensemble des actions autorisées pour chaque agent. Ces contraintes sont définies par des paires (observation, historique) et peuvent être utilisées pour structurer l'organisation du système multi-agent (SMA), restreindre l'espace de recherche des politiques des agents et garantir le respect de certaines normes ou exigences (comme la sûreté de fonctionnement ou des exigences de sécurité).
+
+**Objectifs de la contribution :**
+
+- **Guidage de l'apprentissage :** Réduire l'espace de recherche des politiques des agents en imposant des contraintes, ce qui peut améliorer l'efficacité de l'apprentissage.
+- **Sûreté et conformité :** Assurer que les politiques apprises respectent des contraintes de sûreté et de sécurité.
+- **Explicabilité :** Offrir une structure plus compréhensible pour les humains en utilisant des contraintes qui reflètent des comportements ou des structures organisationnelles préexistantes.
+- **Conception facilitée :** Permettre la conception d'un SMA où les détails exacts des politiques ne sont pas spécifiés en avance, mais où une forme abstraite des comportements attendus est déjà connue.
+
+**Points de Clarification et Questions**
+
+**Validité Théorique :**
+
+- Comment formuler précisément les contraintes ? Quelle est la structure exacte des paires (observation, historique) et des ensembles d'actions autorisées ? Est-il nécessaire de définir formellement des relations d'ordre sur les actions ou les observations ?
+- Comment s’assurer que les contraintes sont compatibles avec les capacités d’apprentissage des algorithmes MARL ? Par exemple, certaines contraintes pourraient-elles rendre l'espace d'apprentissage non convexe ou irréaliste à explorer pour les algorithmes courants ?
+
+**État de l’Art et Originalité :**
+
+- En quoi cette approche se distingue-t-elle des méthodes de Constrained Reinforcement Learning ou des approches de Safe Exploration déjà existantes ? Quelles sont les contributions exactes qui n'ont pas encore été explorées ?
+- Existe-t-il des travaux similaires utilisant MOISE+ ou d’autres cadres organisationnels comme AGR pour imposer des contraintes pendant l’apprentissage ? Si oui, en quoi cette approche se différencie-t-elle ?
+
+**Apport Mesurable :**
+
+- Quels seraient les indicateurs ou métriques permettant de démontrer les bénéfices de cette approche ? Par exemple, quelles mesures montreraient une amélioration en termes de performance d'apprentissage, de respect des contraintes, ou de qualité de l'organisation par rapport à des méthodes sans contraintes ?
+- Quels sont les scénarios expérimentaux envisagés pour valider cette approche ? Sont-ils suffisamment génériques pour montrer que la contribution est applicable à différents types de SMA ?
+
+**Implémentation Pratique :**
+
+- Comment intégrer ces contraintes dans un environnement d'apprentissage MARL existant ? Est-ce par le biais d’une approche de reward shaping, de policy shaping (modification des politiques en temps réel), ou par une autre méthode comme le Shielding ?
+- Comment gérer les conflits potentiels entre différentes contraintes ? Par exemple, si deux contraintes dictent des actions incompatibles dans une même situation, quelle stratégie est utilisée pour résoudre ce conflit ?
+
+**Objectifs Spécifiques :**
+
+- Quel est le niveau de granularité des contraintes ? Sont-elles appliquées de manière fine (par agent individuel) ou à un niveau plus global (coordination d’équipe) ?
+- Cette approche est-elle conçue pour être générale (applicable à tout type de SMA) ou pour des cas spécifiques (comme la défense cybernétique) ? Comment cela affecte-t-il la définition des contraintes ?
+
+**Perspectives et Extensions :**
+
+- Comment cette méthode pourrait-elle être étendue à des SMA qui nécessitent des adaptations dynamiques des contraintes (par exemple, en fonction de changements dans l'environnement ou des objectifs) ?
+- Comment cette approche pourrait-elle être combinée avec d'autres mécanismes d’apprentissage ou d’optimisation (par exemple, apprentissage par imitation ou apprentissage hiérarchique) pour améliorer la performance ou la robustesse des agents ?
+
+-----
+-----
 
 ### **Critiques du fond :**
 
