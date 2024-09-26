@@ -1,5 +1,3 @@
-----
-----
 ## Résumé
 L'idée principale consiste à guider le processus d'apprentissage multi-agent (MARL) en imposant des contraintes qui limitent l'ensemble des actions autorisées pour chaque agent. Ces contraintes sont définies par des paires (observation, historique) et peuvent être utilisées pour structurer l'organisation du système multi-agent (SMA), restreindre l'espace de recherche des politiques des agents et garantir le respect de certaines normes ou exigences (comme la sûreté de fonctionnement ou des exigences de sécurité).
 
