@@ -32,18 +32,27 @@ Ce papier vise à explorer deux problèmes centraux liés à l'adéquation organ
 
 Pour répondre à ces deux problèmes, nous proposons deux contributions majeures :
 
-1. **MOISE+MARL Framework (MM)** : Nous introduisons un nouveau framework de MARL qui intègre le modèle organisationnel MOISE+ dans l'apprentissage multi-agent. Ce framework permet de formaliser et de contraindre les politiques des agents en utilisant les concepts de rôles et de missions issus du modèle MOISE+. Les spécifications organisationnelles peuvent être appliquées manuellement aux agents sous forme de contraintes, affectant automatiquement à la fois leurs politiques et la fonction de récompense. Ce framework introduit également des structures de données spécifiques telles que des patterns de comportement et des arbres de décision basé sur les patterns de comportements pour permettre à l'utilisateur de définir des rôles et des objectifs.
+1. **MOISE+MARL Framework (MM)** : Nous introduisons un nouveau framework de MARL qui intègre le modèle organisationnel MOISE+ dans l'apprentissage multi-agent. Ce framework permet de formaliser et de contraindre les politiques des agents en introduisant des **spécifications organisationnelles** que sont les rôles et les missions issus du modèle MOISE+. Les spécifications organisationnelles peuvent être appliquées manuellement aux agents sous forme de contraintes additionnelles, affectant automatiquement à la fois leurs politiques et la fonction de récompense. Ce framework introduit également des structures de données spécifiques telles que des patterns de comportement et des arbres de décision basé sur les patterns de comportements pour permettre à l'utilisateur de définir des rôles et des objectifs.
 
-2. **History-based Evaluation in MOISE+MARL (HEMM)** : Nous proposons un algorithme permettant d'évaluer automatiquement l'adéquation organisationnelle des politiques apprises. Cet algorithme utilise des techniques d'apprentissage non supervisé pour généraliser des rôles et des missions à partir des comportements observés dans les politiques conjointes. En mesurant l'écart entre les spécifications organisationnelles inférées et les comportements réels, nous définissons une nouvelle métrique multi-dimensionnelle, le **niveau d'adéquation organisationnelle**, qui quantifie dans quelle mesure une politique respecte les spécifications organisationnelles.
+2. **History-based Evaluation in MOISE+MARL (HEMM)** : Nous proposons un algorithme permettant d'évaluer quantitativement et automatiquement l'adéquation organisationnelle des politiques apprises. Cet algorithme utilise des techniques d'apprentissage non supervisé pour généraliser des rôles et des missions à partir de l'ensemble des comportements observés au cours de plusieurs épisodes de test. En mesurant l'écart entre les spécifications organisationnelles abstraites inférées et les comportements réels, nous définissons une nouvelle métrique multi-dimensionnelle, le **niveau d'adéquation organisationnelle**, qui quantifie dans quelle mesure une politique adhère aux spécifications organisationnelles inferées.
+
+**Evaluation & Conclusion**
+
+Nous avons évalué conjointement MOISE+MARL et HEMM en mettant en jeu:
+ - quatre environnements présentant différentes contraintes environnementales et objectifs pour lesquels on s'attend à ce que les politiques conjointes efficaces soient proches ou éloginées de politique adéquates organisationnellement. Ces environnements sont: overcooked, predator-prey, warehouse management, ant simulation
+ - deux algorithmes MARL policy-based (MADDPG et MAPPO) connus pour favoriser une convergence stable et un algorithme value-based 
+ - plusieurs ensemble de spécifications organisationnelles appliquée
+
+
 
 **Structure du papier**
 
 La suite du papier est organisée comme suit :
-- **Section II** : Introduit le concept d'adéquation organisationelle ainsi que des problèmes de son évaluation et de son contrôle en les mettant en relation avec les travaux liés dans la literature.
-- **Section III** : Introduit le framework MOISE+MARL pour .
-- **Section IV** : Introduit le problème de l'évaluation de l'adéquation organisationnelle et analyse des travaux existants.
-- **Section V** : Introduction de l'algorithme HEMM et démonstration de son application à l'évaluation de l'adéquation organisationnelle.
-- **Section VI** : Description du cadre expérimental utilisé pour évaluer les contributions proposées.
+- **Section II** : Met en relation le problème du contrôle de l'adéquation organisationnelle vis-à-vis des travaux de les SMA et le MARL.
+- **Section III** : Introduit le framework MOISE+MARL et montre comment il peut participer au controle de l'adéquation organisationnelle.
+- **Section IV** : Introduit le problème de l'évaluation de l'adéquation organisationnelle au regard des travaux existants.
+- **Section V** : Introduit l'algorithme HEMM qui propose une approche quantitative pour l'évaluation de l'adéquation organisationnelle.
+- **Section VI** : Décrit le protocole experimental et justifie les choix relatifs au protocole d'experimentions tels que les environnements, les algorithmes MARL et hyper-paramètres choisis.
 - **Section VII** : Présentation des résultats expérimentaux.
 - **Section VIII** : Discussion et conclusion sur l'évaluation et le contrôle de l'adéquation organisationnelle par les contributions proposées.
 
