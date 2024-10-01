@@ -34,14 +34,26 @@ Pour répondre à ces deux problèmes, nous proposons deux contributions majeure
 
 1. **MOISE+MARL Framework (MM)** : Nous introduisons un nouveau framework de MARL qui intègre le modèle organisationnel MOISE+ dans l'apprentissage multi-agent. Ce framework permet de formaliser et de contraindre les politiques des agents en introduisant des **spécifications organisationnelles** que sont les rôles et les missions issus du modèle MOISE+. Les spécifications organisationnelles peuvent être appliquées manuellement aux agents sous forme de contraintes additionnelles, affectant automatiquement à la fois leurs politiques et la fonction de récompense. Ce framework introduit également des structures de données spécifiques telles que des patterns de comportement et des arbres de décision basé sur les patterns de comportements pour permettre à l'utilisateur de définir des rôles et des objectifs.
 
-2. **History-based Evaluation in MOISE+MARL (HEMM)** : Nous proposons un algorithme permettant d'évaluer quantitativement et automatiquement l'adéquation organisationnelle des politiques apprises. Cet algorithme utilise des techniques d'apprentissage non supervisé pour généraliser des rôles et des missions à partir de l'ensemble des comportements observés au cours de plusieurs épisodes de test. En mesurant l'écart entre les spécifications organisationnelles abstraites inférées et les comportements réels, nous définissons une nouvelle métrique multi-dimensionnelle, le **niveau d'adéquation organisationnelle**, qui quantifie dans quelle mesure une politique adhère aux spécifications organisationnelles inferées.
+2. **History-based Evaluation in MOISE+MARL (HEMM)** : Nous proposons un algorithme permettant d'évaluer quantitativement et automatiquement l'adéquation organisationnelle des politiques apprises. Cet algorithme utilise des techniques d'apprentissage non supervisé pour généraliser des rôles et des missions à partir de l'ensemble des comportements observés au cours de plusieurs épisodes de test. En mesurant l'écart entre les spécifications organisationnelles abstraites inférées et les comportements réels, nous définissons une nouvelle métrique multi-dimensionnelle, le **niveau d'adéquation organisationnelle**, qui quantifie dans quelle mesure une politique se conforme aux spécifications organisationnelles inferées.
+
+// Draft
+Note:
+ - un rôle qui mappe toutes les observations possibles à une seule action va totalement contraindre les comportements des agents. Si tous les agents adhèrent à de tels rôles, alors le niveau d'adéquation organisationnelle est maximum car la variance au sein de chacun des clusters des historiques des agents est très faible (i.e tous les historiques qui se ressemblent suffisament se ressemblent fortement)
+ - un rôle qui mappe toutes les observations à au moins une action, laisant plus de marge de manoeuvre aux agents. Par conséquent, deux cas extrèmes sont possible: ou bien les agents générent des actions différentes de façon constante, c'est à dire que les politiques ne convergent pas et donc la variance augmente; ou bien les politiques convergent vers des politiques stables et donc la variance est plus petite. Ainsi, dans ce cas, il y a plus de marge de manoeuvre aux agents car ils doivent aussi apprendre par eux-même quels actions associer aux observations non-connues. Ainsi, dans un cas extrème les agents qui convergent vers des politiques stables ont tendance à générer des historiques regroupables dans des cluster de faible variance. Dans une autre extrème, les agents qui ne convergent pas vers des politiques stables présentent un nombre de cluster supérieur au nombre de rôle prédéfinis avec des variances élevées.
+ - un rôle qui mappe une partie des observations à toutes les actions possibles, correspond en fait à aucun rôle car les agents doivent apprendre eux-mêmes à associer une observation à une action.
+
+Ainsi, si les agents ne convergent pas soit en raison de l'environnement et de l'objectif (qui impose des contraintes ou incitations qui guident les agents vers des rôles "naturels"), alors il est toujours possible d'ajouter des spécifications organisationnelles (qui impose des contraintes supplémentaires vers des rôles "artificiels" qui peuvent néanmoins étendre le fonctionnement des rôles "naturels").
+Dans le cas où l'on applique des rôles aux agents afin de contraindre les comportements des agents dans l'espoir de les faire converger vers des rôles, les agents doivent optimiser les comportements non-couverts afin d'atteindre l'objectif final. Pour réaliser ce raffinement de la partie restant à optimiser des politiques, il est possible de les orienter dans la bonne direction en les incitant à atteindre des objectifs intermediaires pour les agents qui adoptent le même rôle (qui constituent donc la partie fonctionnelle des agents).
+
 
 **Evaluation & Conclusion**
 
 Nous avons évalué conjointement MOISE+MARL et HEMM en mettant en jeu:
  - quatre environnements présentant différentes contraintes environnementales et objectifs pour lesquels on s'attend à ce que les politiques conjointes efficaces soient proches ou éloginées de politique adéquates organisationnellement. Ces environnements sont: overcooked, predator-prey, warehouse management, ant simulation
- - deux algorithmes MARL policy-based (MADDPG et MAPPO) connus pour favoriser une convergence stable et un algorithme value-based 
- - plusieurs ensemble de spécifications organisationnelles appliquée
+ - deux algorithmes MARL policy-based (MADDPG et MAPPO) connus pour favoriser une convergence stable et un algorithme value-based Q-Mix qui favorise plutôt la performance. Weighted
+Policy Learner (WPL) ; The PGD algorithm is a variant of the
+GIGA algorithm ; OLPOMDP and GAPS
+ - plusieurs ensembles de spécifications organisationnelles pour chacun des environnements de sorte à contraindre davantage les comportements des agents ou leur permettre plus de degré de liberté.
 
 
 
