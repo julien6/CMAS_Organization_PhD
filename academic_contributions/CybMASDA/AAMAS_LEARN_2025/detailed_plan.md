@@ -39,9 +39,9 @@ Pour répondre à ces deux problèmes, nous proposons deux contributions majeure
 **Structure du papier**
 
 La suite du papier est organisée comme suit :
-- **Section II** : Présentation du problème du contrôle de l'adéquation organisationnelle et des travaux existants dans ce domaine.
-- **Section III** : Description détaillée du framework MOISE+MARL et justification des choix de conception.
-- **Section IV** : Discussion du problème de l'évaluation de l'adéquation organisationnelle et analyse des travaux existants.
+- **Section II** : Introduit le concept d'adéquation organisationelle ainsi que des problèmes de son évaluation et de son contrôle en les mettant en relation avec les travaux liés dans la literature.
+- **Section III** : Introduit le framework MOISE+MARL pour .
+- **Section IV** : Introduit le problème de l'évaluation de l'adéquation organisationnelle et analyse des travaux existants.
 - **Section V** : Introduction de l'algorithme HEMM et démonstration de son application à l'évaluation de l'adéquation organisationnelle.
 - **Section VI** : Description du cadre expérimental utilisé pour évaluer les contributions proposées.
 - **Section VII** : Présentation des résultats expérimentaux.
