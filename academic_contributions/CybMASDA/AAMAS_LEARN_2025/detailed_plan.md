@@ -8,11 +8,11 @@ Cette politique conjointe ne définit pas seulement les actions individuelles de
 
 Toutefois, dans certains environnements, les contraintes imposées font que de nombreuses solutions optimales ou satisfaisantes conduisent à des comportements qui ressemblent à une organisation structurée et fonctionnelle, comparable à celle des organisations humaines.
 
-Une idée intuitive est que cette ressemblance entre la politique et une organisation structurée n'est qu'une interprétation inspirée des sociétés humaines. Cela revient à associer les comportements des agents entraînés à des rôles, où chaque rôle délimite les actions possibles des agents et semble répondre à des objectifs précis, contribuant ainsi à maximiser la récompense dans l'atteinte de l'objectif final.
+Une idée intuitive est que cette ressemblance entre la politique et une organisation structurée et fonctionnel n'est qu'une interprétation inspirée des sociétés humaines. Cela revient à associer les comportements des agents entraînés à des rôles, où chaque rôle délimite les actions possibles des agents et semble répondre à des fonctions précises, contribuant ainsi à maximiser la récompense dans l'atteinte de l'objectif final.
 
 De manière plus générale, on peut interpréter les comportements des agents entraînés comme appartenant à un continuum allant d'un collectif d'agents déstructurés et non fonctionalisés à une organisation pleinement structurée et fonctionnelle. Cette ressemblance naturelle entre la politique conjointe avec une organisation structurée et fonctionnelle est fondamentalement influencée par les contraintes environnementales et les objectifs fixés.
 
-Au-delà des contraintes environnementales et des objectifs initiaux, l'ajout de contraintes spécifiques peut encourager ou forcer les agents à adopter une organisation plus structurée et fonctionnelle, définie par l'utilisateur. Cela peut par exemple se faire en reprenant et affinant la structure et fonction de l'organisation émergente de la politique conjointe.
+Au-delà des contraintes environnementales et de l'objectif initial, l'ajout de contraintes spécifiques peut encourager ou forcer les agents à adopter une organisation plus structurée et fonctionnelle, définie par l'utilisateur. Cela peut par exemple se faire en reprenant et affinant les rôles et sous-objectifs de l'organisation émergente issue de la politique conjointe.
 
 Nous appelons cette similitude entre la politique conjointe et une organisation structurée et fonctionnelle "adéquation organisationnelle".
 
@@ -36,32 +36,23 @@ Pour répondre à ces deux problèmes, nous proposons deux contributions majeure
 
 2. **History-based Evaluation in MOISE+MARL (HEMM)** : Nous proposons un algorithme permettant d'évaluer quantitativement et automatiquement l'adéquation organisationnelle des politiques apprises. Cet algorithme utilise des techniques d'apprentissage non supervisé pour généraliser des rôles et des missions à partir de l'ensemble des comportements observés au cours de plusieurs épisodes de test. En mesurant l'écart entre les spécifications organisationnelles abstraites inférées et les comportements réels, nous définissons une nouvelle métrique multi-dimensionnelle, le **niveau d'adéquation organisationnelle**, qui quantifie dans quelle mesure une politique se conforme aux spécifications organisationnelles inferées.
 
-// Draft
-Note:
- - un rôle qui mappe toutes les observations possibles à une seule action va totalement contraindre les comportements des agents. Si tous les agents adhèrent à de tels rôles, alors le niveau d'adéquation organisationnelle est maximum car la variance au sein de chacun des clusters des historiques des agents est très faible (i.e tous les historiques qui se ressemblent suffisament se ressemblent fortement)
- - un rôle qui mappe toutes les observations à au moins une action, laisant plus de marge de manoeuvre aux agents. Par conséquent, deux cas extrèmes sont possible: ou bien les agents générent des actions différentes de façon constante, c'est à dire que les politiques ne convergent pas et donc la variance augmente; ou bien les politiques convergent vers des politiques stables et donc la variance est plus petite. Ainsi, dans ce cas, il y a plus de marge de manoeuvre aux agents car ils doivent aussi apprendre par eux-même quels actions associer aux observations non-connues. Ainsi, dans un cas extrème les agents qui convergent vers des politiques stables ont tendance à générer des historiques regroupables dans des cluster de faible variance. Dans une autre extrème, les agents qui ne convergent pas vers des politiques stables présentent un nombre de cluster supérieur au nombre de rôle prédéfinis avec des variances élevées.
- - un rôle qui mappe une partie des observations à toutes les actions possibles, correspond en fait à aucun rôle car les agents doivent apprendre eux-mêmes à associer une observation à une action.
-
-Ainsi, si les agents ne convergent pas soit en raison de l'environnement et de l'objectif (qui impose des contraintes ou incitations qui guident les agents vers des rôles "naturels"), alors il est toujours possible d'ajouter des spécifications organisationnelles (qui impose des contraintes supplémentaires vers des rôles "artificiels" qui peuvent néanmoins étendre le fonctionnement des rôles "naturels").
-Dans le cas où l'on applique des rôles aux agents afin de contraindre les comportements des agents dans l'espoir de les faire converger vers des rôles, les agents doivent optimiser les comportements non-couverts afin d'atteindre l'objectif final. Pour réaliser ce raffinement de la partie restant à optimiser des politiques, il est possible de les orienter dans la bonne direction en les incitant à atteindre des objectifs intermediaires pour les agents qui adoptent le même rôle (qui constituent donc la partie fonctionnelle des agents).
-
-
-**Evaluation & Conclusion**
+**Evaluation & Trouvailles**
 
 Nous avons évalué conjointement MOISE+MARL et HEMM en mettant en jeu:
- - quatre environnements présentant différentes contraintes environnementales et objectifs pour lesquels on s'attend à ce que les politiques conjointes efficaces soient proches ou éloginées de politique adéquates organisationnellement. Ces environnements sont: overcooked, predator-prey, warehouse management, ant simulation
- - deux algorithmes MARL policy-based (MADDPG et MAPPO) connus pour favoriser une convergence stable et un algorithme value-based Q-Mix qui favorise plutôt la performance. Weighted
-Policy Learner (WPL) ; The PGD algorithm is a variant of the
-GIGA algorithm ; OLPOMDP and GAPS
- - plusieurs ensembles de spécifications organisationnelles pour chacun des environnements de sorte à contraindre davantage les comportements des agents ou leur permettre plus de degré de liberté.
+ - Quatre environnements présentant différentes contraintes environnementales et objectifs dont pour certains on s'attend à ce que les politiques conjointes efficaces soient proches ou éloginées de politique adéquates organisationnellement. Ces environnements sont: overcooked, predator-prey, warehouse management, ant simulation
+ - Deux algorithmes MARL policy-based (Multi-Agent REINFORCE et MAPPO) connus pour favoriser une convergence stable, deux algorithmes Actor-Critic (MADDPG et SAC), un algorithme value-based (DQN) et un algorithme model-based (Dyna-Q) qui favorise la performance sur le long terme.
+ - Trois ensembles de spécifications organisationnelles pour chacun des environnements de sorte à contraindre progressivement davantage les agents à se conformer à des comportements prédéfinis ou leur permettre plus de degré de liberté.
 
-
+Nous vérifions bien que :
+ - Dans les environnements perçus comme plus susceptibles de faire émérger des politiques adéquates organisationnellement, on peut non-seulement manuellement constater que les agents semblent se conformer à des rôles "naturels" pour atteindre des objectifs "naturels", mais aussi vérifier que le "niveau d'adéquation organisationel" inferé par HEMM est plus important dans ces environnements par rapport aux autres. Les rôles et missions inferés via HEMM correspondent aux observations manuelles et attentes.
+ - Les algorithmes policy-based en particulier MADDPG semblent plus appropriés pour faire converger les agents vers des politiques stables nécéssaires pour permettre aux agents de tendre à des comportements homogènes à chaque épisode. A contrario, les algorithmes value-based tels que Q-Mix, montre une trop grande variance de comportement bien que les performances des agents restent élevées.
+ - L'application de spécifications organisationnelles issues d'ensemble de spécifications contraignants augmentent significativement le "niveau d'adéquation" calculé via HEMM tandis que les rôles et missions obtenus par généralisation via HEMM sont quasiment identiques aux spécifications prédéfinies appliquées. Cela prouve que le framework MOISE+MARL permet bien de controler les agents par le biais de spécifications organisationnelles prédéfinies et que les modifications opérées dans les politiques au moyen de contraintes ou incitations sont retrouvables quasiment à l'identique avec HEMM.
 
 **Structure du papier**
 
 La suite du papier est organisée comme suit :
 - **Section II** : Met en relation le problème du contrôle de l'adéquation organisationnelle vis-à-vis des travaux de les SMA et le MARL.
-- **Section III** : Introduit le framework MOISE+MARL et montre comment il peut participer au controle de l'adéquation organisationnelle.
+- **Section III** : Introduit le framework MOISE+MARL et montre comment il permet le controle de l'adéquation organisationnelle.
 - **Section IV** : Introduit le problème de l'évaluation de l'adéquation organisationnelle au regard des travaux existants.
 - **Section V** : Introduit l'algorithme HEMM qui propose une approche quantitative pour l'évaluation de l'adéquation organisationnelle.
 - **Section VI** : Décrit le protocole experimental et justifie les choix relatifs au protocole d'experimentions tels que les environnements, les algorithmes MARL et hyper-paramètres choisis.
@@ -70,25 +61,25 @@ La suite du papier est organisée comme suit :
 
 ---
 
-### II) Problème du contrôle de l'adéquation organisationnelle
+### II) Le contrôle de l'adéquation organisationnelle dans la litterature
 
 Dans cette section, nous abordons le problème de guider les agents multi-agents vers des politiques respectant des spécifications organisationnelles. Les principaux défis incluent la formalisation de rôles et de missions adaptés, ainsi que la garantie que les politiques apprises soient sûres, interprétables et efficaces.
 
 ---
 
-### III) Framework MOISE+MARL
+### III) Le Framework MOISE+MARL
 
 Le framework MOISE+MARL permet d'étendre les concepts d'organisation dans le cadre de l'apprentissage multi-agent. Il repose sur l'intégration des rôles et des missions comme contraintes supplémentaires pour les agents, influençant à la fois leurs actions et la manière dont ils perçoivent les récompenses.
 
 ---
 
-### IV) Problème de l'évaluation de l'adéquation organisationnelle
+### IV) Le problème de l'évaluation de l'adéquation organisationnelle dans la littérature
 
 L'évaluation de l'adéquation organisationnelle consiste à déterminer si les politiques apprises par les agents peuvent être interprétées comme une organisation structurée. Cette section présente les approches et les défis actuels dans ce domaine.
 
 ---
 
-### V) Algorithme HEMM
+### V) L'algorithme HEMM
 
 L'algorithme HEMM vise à inférer et évaluer les rôles et missions des agents dans un environnement multi-agent, à partir de l'historique des actions et observations. Il généralise les comportements en créant des structures organisationnelles implicites basées sur les actions des agents et en identifiant des sous-objectifs à partir des observations. Voici une formalisation propre de cet algorithme.
 
@@ -148,7 +139,7 @@ L'algorithme HEMM vise à inférer et évaluer les rôles et missions des agents
    2. **Un ensemble de sous-objectifs** (missions), généralisé à partir des trajectoires d'observations des agents.
    3. **Une métrique d'adéquation organisationnelle**, basée sur la variance entre les rôles abstraits et les comportements observés, ainsi que sur la correspondance entre les sous-objectifs inférés et les actions réalisées.
 
-### Synthèse
+#### Synthèse
 
 L'algorithme HEMM permet de générer des rôles et des missions implicites à partir de l'observation des actions et des observations des agents dans un environnement multi-agent. En appliquant des techniques d'apprentissage non supervisé, HEMM propose une méthode pour évaluer quantitativement et qualitativement l'adéquation d'une politique conjointe à une organisation structurée, tout en fournissant une métrique d'évaluation robuste pour mesurer cette adéquation.
 
@@ -169,3 +160,20 @@ Cette section présente les résultats expérimentaux et montre comment nos cont
 ### VIII) Discussion et conclusion
 
 Nous concluons en soulignant l'importance de l'adéquation organisationnelle dans les systèmes multi-agents et en proposant des pistes pour de futurs travaux dans ce domaine.
+
+
+
+### Annexes
+
+// Draft
+Note:
+
+Adéquation organisationnelle:
+ - Pourquoi ? Le point de départ de ce concept vient que dans certains environnements les contraintes environnementales font que les agents aboutissent naturellement à une politique conjointe dont l'ensemble des comportements observés peut s'apparenter à une organisation structurée (disposant de rôles) et fonctionnelle (les agents ayant des rôles cherchent à atteindre des sous-objectifs). Cependant, cette ressemblance n'est pas parfaite ou totale car il est toujours possible que certains des agents entrainés choissent des actions qui n'appartiennent pas aux actions habituellement associé au rôle qu'on leur présume. Le concept d'adéquation orga
+
+ - un rôle qui mappe toutes les observations possibles à une seule action va totalement contraindre les comportements des agents. Si tous les agents adhèrent à de tels rôles, alors le niveau d'adéquation organisationnelle est maximum car la variance au sein de chacun des clusters des historiques des agents est très faible (i.e tous les historiques qui se ressemblent suffisament se ressemblent fortement)
+ - un rôle qui mappe toutes les observations à au moins une action, laisant plus de marge de manoeuvre aux agents. Par conséquent, deux cas extrèmes sont possible: ou bien les agents générent des actions différentes de façon constante, c'est à dire que les politiques ne convergent pas et donc la variance augmente; ou bien les politiques convergent vers des politiques stables et donc la variance est plus petite. Ainsi, dans ce cas, il y a plus de marge de manoeuvre aux agents car ils doivent aussi apprendre par eux-même quels actions associer aux observations non-connues. Ainsi, dans un cas extrème les agents qui convergent vers des politiques stables ont tendance à générer des historiques regroupables dans des cluster de faible variance. Dans une autre extrème, les agents qui ne convergent pas vers des politiques stables présentent un nombre de cluster supérieur au nombre de rôle prédéfinis avec des variances élevées.
+ - un rôle qui mappe une partie des observations à toutes les actions possibles, correspond en fait à aucun rôle car les agents doivent apprendre eux-mêmes à associer une observation à une action.
+
+Ainsi, si les agents ne convergent pas soit en raison de l'environnement et de l'objectif (qui impose des contraintes ou incitations qui guident les agents vers des rôles "naturels"), alors il est toujours possible d'ajouter des spécifications organisationnelles (qui impose des contraintes supplémentaires vers des rôles "artificiels" qui peuvent néanmoins étendre le fonctionnement des rôles "naturels").
+Dans le cas où l'on applique des rôles aux agents afin de contraindre les comportements des agents dans l'espoir de les faire converger vers des rôles, les agents doivent optimiser les comportements non-couverts afin d'atteindre l'objectif final. Pour réaliser ce raffinement de la partie restant à optimiser des politiques, il est possible de les orienter dans la bonne direction en les incitant à atteindre des objectifs intermediaires pour les agents qui adoptent le même rôle (qui constituent donc la partie fonctionnelle des agents).
