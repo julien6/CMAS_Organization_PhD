@@ -212,36 +212,195 @@ on Autonomous Agents and Multiagent Systems (AAMAS 2025)}{May 19 -- 23, 2025}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Introduction}
+% I) Introduction
 
-\subsection{Contexte}
-Le MARL peut être utilisé pour résoudre le problème de trouver une politique conjointe qui guide les agents vers un objectif dans un environnement donné. Cette politique ne se limite pas aux actions individuelles mais régit également les interactions entre agents. Dans certains environnements, les contraintes imposées conduisent à des comportements ressemblant à une organisation humaine structurée et fonctionnelle. Nous appelons cette similitude "adéquation organisationnelle".
+% Contexte
+Le MARL peut être considéré comme une approche permettant de résoudre le problème de trouver une politique conjointe qui guide les agents vers l'atteinte d'un objectif donné dans un environnement spécifique.
+Cette politique conjointe ne définit pas seulement les actions individuelles des agents, mais régit également leurs interactions entre eux, voire avec l'ensemble des autres agents, sans préconception d'un ordre ou d'une structure organisationnelle.
 
-\subsection{Problème}
-Ce travail aborde deux problèmes majeurs :
+Toutefois, dans certains environnements, les contraintes imposées font que de nombreuses solutions optimales ou satisfaisantes conduisent à des comportements qui ressemblent à une organisation structurée et fonctionnelle, comparable à celle des organisations humaines.
+
+Une idée intuitive est que cette ressemblance entre la politique et une organisation structurée et fonctionnelle n'est qu'une interprétation inspirée des sociétés humaines. Cela revient à associer les comportements des agents entraînés à des rôles, où chaque rôle délimite les actions possibles des agents et semble répondre à des fonctions précises, contribuant ainsi à maximiser la récompense dans l'atteinte de l'objectif final.
+
+De manière plus générale, on peut interpréter les comportements des agents entraînés comme appartenant à un continuum allant d'un collectif d'agents déstructurés et non fonctionnalisés à une organisation pleinement structurée et fonctionnelle. Cette ressemblance naturelle entre la politique conjointe et une organisation structurée et fonctionnelle est fondamentalement influencée par les contraintes environnementales et les objectifs fixés.
+
+Au-delà des contraintes environnementales et de l'objectif initial, l'ajout de contraintes spécifiques peut encourager ou forcer les agents à adopter une organisation plus structurée et fonctionnelle, définie par l'utilisateur. Cela peut, par exemple, se faire en reprenant et en affinant les rôles et sous-objectifs de l'organisation émergente issue de la politique conjointe.
+Nous appelons cette similitude entre la politique conjointe et une organisation structurée et fonctionnelle \textbf{adéquation organisationnelle}.
+
+\
+
+% Problème
+\noindent Ce papier vise à répondre à deux problèmes centraux liés à l'adéquation organisationnelle.
+
+\quad \textbf{i) L'évaluation de l'adéquation organisationnelle} vise à évaluer dans quelle mesure une politique conjointe peut être rapprochée d'une organisation structurée et fonctionnelle. Un des enjeux de ce problème est de mieux comprendre les cas où les agents peuvent être considérés comme formant une organisation structurée et fonctionnelle, compte tenu des contraintes imposées par l'environnement, l'objectif et d'autres contraintes optionnelles.
+% La littérature aborde l'évaluation des politiques en termes de rôles (structure) ou d'objectifs (fonction). Cependant, ces travaux manquent souvent d'une approche systématique et générale. Les méthodes actuelles offrent peu d'outils clairs pour mesurer de manière quantitative et qualitative cette adéquation organisationnelle.
+
+\quad \textbf{ii) Le contrôle de l'adéquation organisationnelle} vise à guider les agents vers des politiques qui se conforment à une organisation structurée, définie par des contraintes spécifiques prédéfinies par l'utilisateur. L'objectif est de contraindre ou d'inciter les agents à adopter des comportements qui respectent des rôles et des missions, ce qui permet de contrôler leurs actions dans un cadre organisationnel. Les enjeux incluent la réduction de l'espace de recherche des politiques, l'amélioration de la convergence, et la garantie du respect des contraintes de sûreté.
+% Les travaux existants dans ce domaine sont limités, notamment en ce qui concerne la manière dont l'utilisateur peut interagir avec les spécifications organisationnelles de manière pratique et flexible.
+
+\
+
+% Contribution
+\noindent Pour répondre à ces deux problèmes, nous proposons deux contributions majeures :
+
+\quad \textbf{i) Le Framework MOISE+MARL}, un nouveau framework de MARL qui intègre le modèle organisationnel MOISE+ dans l'apprentissage multi-agent. Ce framework permet de formaliser et de contraindre les politiques des agents en introduisant des \textbf{spécifications organisationnelles}, que sont les rôles et les missions issus du modèle MOISE+. Les spécifications organisationnelles peuvent être appliquées manuellement aux agents sous forme de contraintes additionnelles, affectant automatiquement à la fois leurs politiques et la fonction de récompense. Ce framework introduit également des structures de données spécifiques telles que des patterns de comportement et des arbres de décision basés sur les patterns de comportements pour permettre à l'utilisateur de définir des rôles et des objectifs.
+
+\quad \textbf{ii)} L'algorithme \textbf{History-based Evaluation in MOISE+MARL} (HEMM) permettant d'évaluer quantitativement et automatiquement l'adéquation organisationnelle des politiques apprises. Cet algorithme utilise des techniques d'apprentissage non supervisé pour généraliser des rôles et des missions à partir de l'ensemble des comportements observés au cours de plusieurs épisodes de test. En mesurant l'écart entre les spécifications organisationnelles abstraites inférées et les comportements réels, nous définissons une nouvelle métrique multidimensionnelle, le \textbf{niveau d'adéquation organisationnelle} qui quantifie dans quelle mesure une politique se conforme aux spécifications organisationnelles inférées.
+
+\
+
+% Évaluation & Trouvailles
+\noindent Nous avons évalué conjointement MOISE+MARL et HEMM en mettant en jeu :
 \begin{itemize}
-    \item \textbf{Évaluation de l'adéquation organisationnelle} : mesurer dans quelle mesure une politique conjointe peut être rapprochée d'une organisation structurée et fonctionnelle.
-    \item \textbf{Contrôle de l'adéquation organisationnelle} : guider les agents vers des politiques conformes à une organisation structurée, définie par des contraintes spécifiques.
+  \item Quatre environnements présentant différentes contraintes environnementales et objectifs, dont certains pour lesquels on s'attend à ce que les politiques conjointes efficaces soient proches ou éloignées de politiques adéquates organisationnellement. Ces environnements sont : overcooked, predator-prey, warehouse management, et ant simulation.
+  \item Deux algorithmes MARL policy-based (Multi-Agent REINFORCE et MAPPO) connus pour favoriser une convergence stable, deux algorithmes Actor-Critic (MADDPG et SAC), un algorithme value-based (DQN) et un algorithme model-based (Dyna-Q) favorisant la performance à long terme.
+  \item Trois ensembles de spécifications organisationnelles pour chacun des environnements, de sorte à contraindre progressivement davantage les agents à se conformer à des comportements prédéfinis ou leur permettre plus de liberté.
 \end{itemize}
 
-\subsection{Contribution}
-Nous proposons deux contributions principales :
+\noindent Nous vérifions que :
 \begin{itemize}
-    \item \textbf{Framework MOISE+MARL} : un nouveau framework intégrant les spécifications organisationnelles de MOISE+ dans le MARL, permettant de formaliser et contraindre les politiques des agents par des rôles et missions.
-    \item \textbf{Algorithme HEMM} : un algorithme d'évaluation automatique et quantitative de l'adéquation organisationnelle basée sur les historiques d'actions des agents.
+  \item Dans les environnements où l'on attend l'émergence de politiques adéquates organisationnellement, on peut non seulement observer manuellement que les agents semblent se conformer à des rôles "naturels" pour atteindre des objectifs "naturels", mais aussi vérifier que le "niveau d'adéquation organisationnelle" inféré par HEMM est plus élevé dans ces environnements par rapport aux autres. Les rôles et missions inférés via HEMM correspondent aux observations manuelles et attentes.
+  \item Les algorithmes policy-based, en particulier MADDPG, semblent plus appropriés pour faire converger les agents vers des politiques stables, nécessaires pour permettre des comportements homogènes à chaque épisode. À l'inverse, les algorithmes value-based, tels que Q-Mix, montrent une variance de comportement plus élevée, bien que les performances des agents restent élevées.
+  \item L'application de spécifications organisationnelles issues de jeux de spécifications plus contraignantes augmente significativement le "niveau d'adéquation" calculé via HEMM, tandis que les rôles et missions obtenus par généralisation via HEMM sont presque identiques aux spécifications prédéfinies appliquées. Cela prouve que le framework MOISE+MARL permet bien de contrôler les agents via des spécifications organisationnelles prédéfinies et que les modifications opérées dans les politiques au moyen de contraintes ou incitations sont retrouvables presque à l'identique avec HEMM.
 \end{itemize}
+
+% Structure du papier
+La reste du papier est organisé comme suit : la \autoref{sec:control_problem} analyse le problème du contrôle de l'adéquation organisationnelle par rapport aux travaux sur les SMA et le MARL. La \autoref{sec:moise_marl_framework} présente le framework MOISE+MARL et explique comment il permet le contrôle de l'adéquation organisationnelle. La \autoref{sec:evaluation_problem} introduit le problème de l'évaluation de l'adéquation organisationnelle dans la littérature. La \autoref{sec:hemm_algorithm} décrit l'algorithme HEMM, une approche quantitative pour évaluer l'adéquation organisationnelle. La \autoref{sec:experimental_setup} décrit le protocole expérimental, justifie les choix des environnements, des algorithmes MARL et des hyper-paramètres. La \autoref{sec:results} présente les résultats expérimentaux. Enfin, la \autoref{sec:discussion_conclusion} discute et conclut sur l'évaluation et le contrôle de l'adéquation organisationnelle par les contributions proposées.
+
 
 \section{Le contrôle de l'adéquation organisationnelle dans la littérature}
+\label{sec:control_problem}
 
 Dans cette section, nous passons en revue les travaux existants sur la formalisation des rôles et des missions dans les systèmes multi-agents, ainsi que sur les méthodes d'apprentissage multi-agent permettant de guider les comportements.
 
 \section{Le Framework MOISE+MARL}
+\label{sec:moise_marl_framework}
+
 Le framework MOISE+MARL combine le modèle organisationnel MOISE+ avec des techniques de MARL pour contraindre les politiques des agents à respecter des rôles et missions pré-définis. Cela permet de contrôler leurs comportements dans un cadre organisationnel et d'améliorer la convergence des politiques vers des objectifs collectifs.
 
+In this section, we incrementally present the principles we propose to adapt the MARL according to organizational specifications. This includes constraining a policy to adhere to the expected behavior of a role and enticing the policy to achieve a mission for a given time duration.
+
+
+The $\mathcal{M}OISE^+$ model provides a comprehensive framework for specifying the structure and interactions within a Multi-Agent System (MAS). We utilize $\mathcal{M}OISE^+$ due to its compatibility with MARL and its formal description capabilities for agents' policies. The PRAHOMT's underlying approach bridges the gap between MARL and organizational modeling by embedding $\mathcal{M}OISE^+$ specifications into the MARL training process. This integration allows for the training of agents that adhere to predefined organizational roles and missions.
+%
+In $\mathcal{M}OISE^+$, \textbf{Organizational Specifications (OS)} are defined as $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, where $\mathcal{SS}$ are the \textbf{Structural Specifications}, $\mathcal{FS}$ are the \textbf{Functional Specifications}, and $\mathcal{DS}$ are the \textbf{Deontic Specifications}.
+
+\subsection{Structural Specifications and Constraining Joint-Policies According to Roles}
+
+\textbf{Structural Specifications} describe the organizational structure and are denoted as $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$:
+
+\begin{itemize}
+    \item $\mathcal{R}_{ss}$: The set of all roles ($\rho \in \mathcal{R}$).
+    \item $\mathcal{IR}: \mathcal{R} \rightarrow \mathcal{R}$: The inheritance relation between roles ($\rho_1 \sqsubset \rho_2$).
+    \item $\mathcal{RG} \subseteq \mathcal{GR}$: The set of root groups, $\mathcal{GR} = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, \allowbreak np, ng \rangle$, where:
+          %   \begin{itemize}
+          $\mathcal{R} \subseteq \mathcal{R}_{ss}$: The set of non-abstract roles.
+          $\mathcal{SG} \subseteq \mathcal{GR}$: The set of sub-groups.
+          $\mathcal{L} = \mathcal{R} \times \mathcal{R} \times \mathcal{TL}$: The set of links $(\rho_s, \rho_d, t)$, where $t \in \{acq, com, aut\}$ indicates the type of link (acquaintance, communication, authority).
+          $\mathcal{L}^{intra} \subseteq \mathcal{L}$: The set of intra-group links.
+          $\mathcal{L}^{inter} \subseteq \mathcal{L}$: The set of inter-group links.
+          $\mathcal{C} = \mathcal{R} \times \mathcal{R}$: The set of compatibilities $(\rho_a \bowtie \rho_b)$.
+          $\mathcal{C}^{intra} \subseteq \mathcal{C}$: The set of intra-group compatibilities.
+          $\mathcal{C}^{inter} \subseteq \mathcal{C}$: The set of inter-group compatibilities.
+          $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of agents adopting a role.
+          $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of each sub-group.
+          %   \end{itemize}
+\end{itemize}
+
+Constraining policies directly is not feasible because most policy implementations rely on intractable black-box models such as neural networks. We propose to formally represent a role as a history subset $\mathcal{P}(H)$ containing histories an agent playing a role should generate, hence characterizing the role's expected behavior. As illustrated in \autoref{fig:PRAHOM_osm_rels}, we propose each role to be mapped to a history subset through the $rh: \mathcal{R} \rightarrow \mathcal{P}(H)$ bijection. An agent playing a role should have its policy constrained to generate histories belonging to the mapped history subset (at least from a theoretical point of view).
+
+\begin{figure}[h!]
+    \centering
+    \input{figures/PRAHOM_osm_rels.tex}
+    \caption{Relations between organizational specifications and history subsets}
+    \label{fig:PRAHOM_osm_rels}
+\end{figure}
+
+Since defining roles into a history subset faces issues for handling possibly numerous large and non-manageable observations (such as pixel tables), we first propose to use labels to represent observations in a short-way. We introduce $ol: \mathcal{P}(\Omega) \rightarrow \mathcal{P}(L)$ to map some simple strings to real observations. In addition to a simple mapping, we also considered using a Large Language Model (LLM) for that purpose. % as illustrated in \Autoref{fig:PRAHOMT_ol}.
+The LLM is trained after real observations have been rendered visually and labeled by hand. Once trained, the LLM can be used conveniently to get real observations from labels, and may also be used to label some other observations.
+
+% \begin{figure}[h!]
+%     \centering
+%     \input{figures/ol_scheme.tex}
+%     \caption{Observations-labels mapping and its creation}
+%     \label{fig:PRAHOMT_ol}
+% \end{figure}
+
+Second, defining a history subset exhaustively may require taking into account many cases, hence leading to an important amount of histories. %As illustrated in \Autoref{fig:PRAHOM_opc}
+Rather than defining a history subset exhaustively, we propose three means to simplify its definition:
+%
+\quad i) a \textbf{pattern} format that conforms to the following rules: a sequence is denoted \textquote{[$label_{obs_1},label_{act_1}\dots$] \allowbreak ($card_{min},card_{max}$)} the \textquote{Any} label refer to any observation/action. This pattern is implemented as an oriented graph denoted \textbf{history graph} where nodes are observations/actions and edges represent expected transitions relying on ordinal number and cardinalities; \quad
+%
+ii) \textbf{rules} to associate an action set depending on a history (possibly defined as a pattern) belonging to the history subset and a received observation. Once the observations and the associated actions are added to the history, this history should still belong to the history subset; \quad
+%
+iii) a \textbf{custom script} logic taking into account a history belonging to the history subset and a new observation to indicate the actions to add in the current history so it still belongs to the history subset.
+
+
+Considering a history subset is ultimately aimed to be used to constrain a policy to make it adhere to a role, we introduce an \textbf{observable policy constraint} $c\pi: H \times \Omega \rightarrow \mathcal{P}(A)$. $c\pi$ indicates the actions an agent's policy should be allowed to choose among when it receives an observation at each step.
+
+% \begin{figure}[h!]
+%     \centering
+%     \input{figures/opc_scheme.tex}
+%     \caption{An abstract view of observable policy constraint and its crafting}
+%     \label{fig:PRAHOM_opc}
+% \end{figure}
+
+We propose to integrate observable policy constraints into an agent's policy via three modes:
+\textbf{correct}: Corrects any chosen action $\pi(\omega)$ to an expected one in $c\pi(\omega)$. It ensures safety but is external to the agent's policy; \quad
+\textbf{penalize}: Adds a penalty to the reward if a wrong action ($\pi(\omega) \notin c\pi(\omega)$) is made, encouraging agents to learn their constraints but without safety guarantees; \quad
+\textbf{correct\_policy}: Creates a \textbf{constrained policy} $\pi_c \in \Pi, \pi_c = \{smpl(c\pi_{joint}(\omega_{joint})) \allowbreak if \ \omega_{joint} \in Dom(c\pi_{joint}) \ \allowbreak, \ \allowbreak else \ \allowbreak \pi_{joint}(\omega_{joint})\}$ where $smpl$ gets an element from a set randomly. An observable policy constraint $c\pi$ corrects the current policy $\pi$, hence respecting safety guarantees internally.
+
+In Annex, we provide \autoref{proof:jpc_to_ac}, which outlines why constraining the action decision-making process dynamically during training at each step implies that the resulting joint-policy will necessarily be constrained.
+
+
+\subsection{Functional Specifications and Constraining Joint-Policies According to Missions}
+
+\textbf{Functional Specifications} describe the tasks and goals and are denoted as $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$:
+
+\begin{itemize}
+    \item $\mathcal{SCH} = \langle \mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$: The set of social schemes, where:
+          \begin{itemize}
+              \item $\mathcal{G}$: The set of global goals.
+              \item $\mathcal{M}$: The set of mission labels.
+              \item $\mathcal{P} = \langle \mathcal{G}, \{\mathcal{G}\}^s, OP, [0,1] \rangle$: The set of plans $(g_f, \{g_i\}_{0 \leq i \leq s}, op, ps)$.
+              \item $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$: The goals associated with each mission.
+              \item $nm: \mathcal{M} \rightarrow \mathbb{N} \times \mathbb{N}$: The cardinality of agents committed to each mission.
+          \end{itemize}
+    \item $\mathcal{PO}: \mathcal{M} \times \mathcal{M}$: The set of preference orders $(m_1 \prec m_2)$.
+\end{itemize}
+
+We consider a goal to be theoretically represented as a history subset. We propose $gh: \mathcal{G} \rightarrow \mathcal{P}(H)$ that shows how an agent committed to a mission should have its policy enticed to generate histories belonging to an expected history subset (at least from a theoretical point of view). Thus, $mh: \mathcal{M} \rightarrow \mathcal{P}(H) = \{(m,\bigcup gh[mo(m)]), m \in \mathcal{M}\}$ gives expected histories from missions. Ultimately, a goal should impact MARL by updating the reward function when an agent is committed to a mission. We introduce an \textbf{observable reward function} $R_{g}: H \rightarrow \mathbb{R}$, the relation indicating how close a generated history is to a given history subset. A reward function for a mission $m \in \mathcal{M}$ containing goals $\mathcal{G}_{m} = mo(m)$ is computed as a weighted addition of all observable reward functions of each goal. This way, agents are individually enticed to achieve their respective sub-goals hence speeding up the convergence to achieving the ultimate goal.
+
+% \begin{figure}[h!]
+%     \centering
+%     \input{figures/goal_mission_scheme.tex}
+%     \caption{An abstract view of observable reward function and its crafting}
+%     \label{fig:goal_mission_scheme}
+% \end{figure}
+
+\subsection{Deontic Specifications and Constraining Joint-Policies According to Permissions/Obligations}
+
+\textbf{Deontic Specifications} define the permissions and obligations and are denoted as $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$:
+
+\begin{itemize}
+    \item $\mathcal{TC}$: The set of time constraints.
+    \item $\mathcal{OBL}: \mathcal{R} \times \mathcal{M} \times \mathcal{TC}$: The set of obligations $(obl(\rho_a, m, tc))$.
+    \item $\mathcal{PER}$: The set of permissions $(per(\rho_a, m, tc))$.
+\end{itemize}
+
+We introduced the relation $da: \mathcal{PER} \cup \mathcal{OBL} \rightarrow \mathcal{P}(\mathcal{A})$ that indicates how agents are constrained to roles and committed on missions for a given time constraint. In order to take into account time constraints, we introduce a time-to-live for each permission/obligation through the relation $dttl: \mathcal{PER} \cup \mathcal{OBL} \times \mathcal{A} \rightarrow \mathbb{N}$. Then, they are to be decreased at each step if the given time constraint is not \textquote{Any} with the relation $dec: dttl \rightarrow dttl$. Then, the roles constrained to agents or committed missions may change after the reward function is changed.
+
+To differentiate between obligations and permissions and ensure agents prioritize obligated missions over permitted ones, we propose multiplying the observable reward function of this mission by a high factor for obligated missions and a low factor for permitted ones.
+
+Relying on these principles to integrate organizational specifications within the MARL framework, we established the PRAHOM algorithm.
+
 \section{Le problème de l'évaluation de l'adéquation organisationnelle dans la littérature}
+\label{sec:evaluation_problem}
+
 Cette section aborde les méthodes existantes pour évaluer si les comportements des agents peuvent être interprétés comme le résultat d'une organisation structurée. Les approches existantes manquent d'une évaluation systématique et généralisée de l'adéquation organisationnelle.
 
 \section{L'algorithme HEMM}
+\label{sec:hemm_algorithm}
 L'algorithme HEMM permet d'inférer et d'évaluer automatiquement les rôles et missions à partir des comportements observés dans plusieurs épisodes de simulation. HEMM génère des rôles abstraits et des missions à partir des historiques d'actions et des observations des agents.
 
 \subsection{Étapes de l'algorithme HEMM}
@@ -296,6 +455,9 @@ To comprehensively evaluate the performance of SHF and the baseline methods, we 
     \item \textbf{Coordination Score}: A measure of how well agents are able to coordinate their actions to achieve a common goal \cite{foerster2018counterfactual}. This is particularly relevant in environments like Predator-Prey where coordinated behavior is essential \cite{foerster2016learning}.
     \item \textbf{Safety Violations}: The number of times agents take actions that violate predefined safety constraints. This metric is critical in environments where safety is a primary concern, such as the Cyber-Defense Simulation \cite{bastani2018verifiable, wei2019safe}.
     \item \textbf{Explainability Score}: An evaluation of how well the actions of agents can be explained based on their assigned roles and missions \cite{ghosal2021explainable}. This score is derived from human evaluations and automated metrics that compare agent actions to predefined organizational specifications \cite{su2021toward}.
+    \item \textbf{Robustness Score}: TODO
+    \item \textbf{Generalization Score}: TODO
+    \item \textbf{Standard Deviation}: TODO
 \end{itemize}
 
 % TODO: Relate the evaluation metrics to LEARN's focus on "learning agent capabilities", "learning under uncertainty", and "adversarial learning".
