@@ -247,7 +247,7 @@ Les systèmes multi-agents (SMA) sont au cœur de nombreuses applications, allan
 
 Les méthodes actuelles d'apprentissage par renforcement multi-agent (MARL) ont montré leur efficacité pour générer des politiques optimales dans des environnements dynamiques. Toutefois, ces approches manquent souvent de mécanismes explicites pour imposer des contraintes organisationnelles et garantir que les agents respectent des normes de sûreté essentielles pour des environnements critiques, comme la logistique en entrepôts ou la défense cybernétique.
 
-Cet article présente une nouvelle méthode, \textbf{SAMMASD} (Semi-Automated MARL-based MAS Design), qui combine le framework \textbf{MOISE+MARL} avec l'algorithme d'évaluation \textbf{HEMM} pour inférer et appliquer des structures organisationnelles aux politiques apprises par les agents. L'intégration de \textbf{MOISE+}, un modèle organisationnel orienté multi-agents, permet de contraindre l'apprentissage des agents en définissant des rôles et des missions, ce qui favorise l'émergence de comportements interprétables et conformes aux exigences de sûreté.
+Cet article présente une nouvelle méthode, \textbf{SAMMASD} (Semi-Automated MARL-based MAS Design), qui combine le framework \textbf{$mathcal{M}OISE^+$MARL} avec l'algorithme d'évaluation \textbf{HEMM} pour inférer et appliquer des structures organisationnelles aux politiques apprises par les agents. L'intégration de \textbf{$mathcal{M}OISE^+$}, un modèle organisationnel orienté multi-agents, permet de contraindre l'apprentissage des agents en définissant des rôles et des missions, ce qui favorise l'émergence de comportements interprétables et conformes aux exigences de sûreté.
 
 Le reste de cet article est structuré comme suit : la \autoref{sec:related_works} présente les travaux connexes dans le domaine du MARL et des modèles organisationnels pour SMA. La \autoref{sec:approach} décrit en détail les quatre phases de la méthode SAMMASD. Ensuite, la \autoref{sec:evaluation} discute des résultats expérimentaux obtenus dans un scénario de gestion de flux d'entrepôt. Enfin, la \autoref{sec:conclusion} conclut et propose des pistes de travail futures.
 
@@ -260,7 +260,7 @@ Le reste de cet article est structuré comme suit : la \autoref{sec:related_work
 
 \section{Travaux connexes}
 \label{sec:related_works}
-La conception de systèmes multi-agents (SMA) assistée par des modèles organisationnels a été largement étudiée dans la littérature. En particulier, le modèle \textbf{MOISE+}, introduit par Gleizes et al. \cite{gleize2008moise}, propose une structure formelle pour spécifier les rôles, les missions, et les relations entre agents dans un SMA. Ces spécifications permettent de guider le développement de systèmes complexes en assurant une cohérence entre les objectifs collectifs et les comportements individuels des agents. Cependant, MOISE+ ne fournit pas de mécanismes pour intégrer directement l'apprentissage des politiques par renforcement, une lacune que notre travail cherche à combler.
+La conception de systèmes multi-agents (SMA) assistée par des modèles organisationnels a été largement étudiée dans la littérature. En particulier, le modèle \textbf{$mathcal{M}OISE^+$}, introduit par Gleizes et al. \cite{gleize2008moise}, propose une structure formelle pour spécifier les rôles, les missions, et les relations entre agents dans un SMA. Ces spécifications permettent de guider le développement de systèmes complexes en assurant une cohérence entre les objectifs collectifs et les comportements individuels des agents. Cependant, $mathcal{M}OISE^+$ ne fournit pas de mécanismes pour intégrer directement l'apprentissage des politiques par renforcement, une lacune que notre travail cherche à combler.
 
 D'un autre côté, les méthodes d'apprentissage par renforcement multi-agent (\textbf{MARL}) ont connu un essor ces dernières années, avec des approches telles que \textbf{MADDPG} (Multi-Agent Deep Deterministic Policy Gradient) \cite{lowe2017multi} et \textbf{Q-Mix} \cite{rashid2018qmix}. Ces algorithmes permettent aux agents d'apprendre des politiques optimales en collaboration ou en compétition dans des environnements partiellement observables. Néanmoins, ces méthodes se concentrent principalement sur la performance des politiques sans se soucier des contraintes organisationnelles ou des besoins en explicabilité, ce qui limite leur applicabilité dans des contextes nécessitant une coordination stricte entre agents.
 
@@ -271,33 +271,167 @@ Des travaux récents ont exploré des méthodologies agiles pour le développeme
 
 \subsection{Aperçu général}
 
-Notre méthode, SAMMASD, s'articule autour de quatre phases principales : (1) la modélisation de l'environnement et des contraintes, (2) l'apprentissage des politiques via \textbf{MOISE+MARL}, (3) l'analyse des comportements avec \textbf{HEMM}, et (4) le développement et le déploiement du SMA. Cette approche permet de guider le processus d'apprentissage des agents en respectant des contraintes organisationnelles strictes, tout en garantissant l'efficacité des politiques apprises. Le cycle de vie d'un SMA conçu avec SAMMASD est illustré dans la \autoref{fig:cycle}.
+Le coeur de la méthode SAMMASD est de considerer la conception d'un SMA comme un problème d'optimisation sous contraintes. La variable à optimiser est alors la politique conjointe pour maximiser la récompense cumulée sous des contraintes additionnelles données. En suivant cette approche, nous avons choisi d'adopter une approche incluant des spécifications organisationnelle en MARL comme contraintes additionnelles. Ces spécifications organisationnelles permettent à l'utilisateur de laisser un certain degré de controle non-seulement des comportements individuels des agents, mais aussi de pouvoir gérer l'ensemble des agents en jouant sur celles-ci.
+L'objectif est alors de guider l'apprentissage des agents en respectant des contraintes organisationnelles sous la forme de role et d'objectifs, tout en garantissant chercher une efficacité suffisante des politiques apprises.
+
+Notre méthode, SAMMASD, s'articule autour de quatre phases principales : (1) la modélisation de l'environnement, de l'objectif et des contraintes organisationnelles selon le framework proposé, (2) l'apprentissage des politiques via plusieurs algorithmes MARL, (3) l'analyse des comportements et l'inférence de spécifications organisationnelles avec une méthode proposée, et (4) le développement et le déploiement du SMA. Cette approche permet de guider le processus d'apprentissage des agents en respectant des contraintes organisationnelles strictes, tout en garantissant l'efficacité des politiques apprises. Le cycle de vie d'un SMA conçu avec SAMMASD est illustré dans la \autoref{fig:cycle}.
+
+% Description formelle des phases
 
 \subsection{Phase 1 : Modélisation}
 
-L'étape de modélisation vise à créer un modèle simulé qui capture fidèlement les dynamiques et les contraintes de l'environnement réel, tout en incluant des spécifications organisationnelles et des objectifs. Ce modèle servira de base pour entraîner les agents dans un environnement contrôlé. Cette étape est cruciale pour s'assurer que les agents apprennent dans un contexte sécurisé et optimisé.
+L'étape de modélisation vise à créer un modèle simulé qui capture fidèlement les dynamiques et les contraintes de l'environnement cible, tout en incluant des spécifications organisationnelles et des objectifs. Ce modèle servira de base pour entraîner les agents dans un environnement contrôlé. Cette étape est cruciale pour s'assurer que les agents apprennent dans une simulation fidèle à la réalité du système cible dans un cadre sécurisé et facilitant la recherche d'une solution.
 
-\paragraph{Entrées}
+Cette phase prend en entré les éléments suivants :
 \begin{itemize}
-    \item \textbf{Environnement réel} : Informations détaillées sur l'environnement cible, comprenant les états possibles, les transitions et les caractéristiques de l'environnement.
-    \item \textbf{Description du problème} : Définition des objectifs à atteindre sous forme de fonction de récompense.
-    \item \textbf{Contraintes additionnelles} : Exigences spécifiques à respecter, pouvant inclure des normes, règles d'organisation, ou contraintes de sûreté.
+    \item \textbf{Environnement} : Une copie "émulée" de l'environnement réel ou l'environment cible lui-même si cela est possible.
+    \item \textbf{Description du problème} : La description détaillée des objectifs à atteindre pour les agents, c'est à dire les états recherchés.
+    \item \textbf{Contraintes additionnelles} : Des exigences spécifiques à respecter, pouvant inclure des normes, règles d'organisation, ou contraintes de sûreté.
 \end{itemize}
+
+Une fois les élements collectés, la modélisation suit les étapes suivantes :
+\begin{enumerate}
+  \item \textit{Modélisation de l'environnement simulé}: Des agents observateurs sont déployés pour collecter des traces de l'environnement réel ou de sa copie sécurisée. Ces traces sont utilisées pour générer un modèle simulé de l'environnement en utilisant une technique de \textit{System Identification}.
+  \item \textit{Formulation de la fonction de récompense} : L'utilisateur doit mettre en place la logique d'une fonction de récompense qu'il estime être la plus adaptée pour atteindre les objectifs fixés. 
+  \item \textit{Formulation des spécifications $mathcal{M}OISE^+$MARL} : Les contraintes organisationnelles et les sous-objectifs sont formalisés en utilisant le framework $mathcal{M}OISE^+$MARL. Les rôles et les missions sont définis pour guider les agents dans leur apprentissage.
+\end{enumerate}
+
+\subsubsection{Modélisation de l'environnement simulé}
+
+Un \textbf{Dec-POMDP} est généralement formalisé par un tuple $d = \langle N, S, A, P, R, \Omega, O, \gamma \rangle$, où :
+\begin{itemize}
+    \item \( N \) est l'ensemble des agents.
+    \item \( S \) est l'ensemble des états possibles du système.
+    \item \( A = \times_{i=1}^N A_i \) est l'ensemble des actions possibles pour chaque agent \(i\).
+    \item \( P : S \times A \times S \to [0, 1] \) est la fonction de transition d'états, qui définit la probabilité de passer d'un état \(s\) à un état \(s'\) sous l'action \(a\).
+    \item \( R : S \times A \to \mathbb{R} \) est la fonction de récompense.
+    \item \( \Omega = \times_{i=1}^N \Omega_i \) est l'ensemble des observations possibles pour chaque agent \(i\).
+    \item \( O : S \times A \times \Omega \to [0, 1] \) est la fonction d'observation, qui définit la probabilité qu'une observation \(\omega\) soit perçue après une transition \(s \to s'\) sous l'action \(a\).
+    \item \( \gamma \in [0, 1] \) est le facteur d'actualisation.
+\end{itemize}
+
+Un ensemble de spécifications tirées du modèle $\mathcal{M}OISE^+$ est noté $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, où $\mathcal{SS}$ sont les \textbf{Spécifications Structurelles}, $\mathcal{FS}$ sont les \textbf{Spécifications Fonctionnelles}, et $\mathcal{DS}$ sont les \textbf{Spécifications Déontiques}.
+
+\paragraph{\textbf{Spécifications Structurelles (SS)}} se réfèrent aux moyens structurés laissés aux agents pour atteindre un objectif, que nous notons $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$, où :
+
+\begin{itemize}
+    \item $\mathcal{R}_{ss}$ : l'ensemble de tous les rôles (noté $\rho \in \mathcal{R}$) ;
+    \item $\mathcal{IR} : \mathcal{R} \rightarrow \mathcal{R}$ : la relation d'héritage entre rôles ($\mathcal{IR}(\rho_1) = \rho_2$ signifie que $\rho_1$ hérite de $\rho_2$, noté également $\rho_1 \sqsubset \rho_2$) ;
+    \item $\mathcal{RG} \subseteq \mathcal{GR}$ : l'ensemble des groupes racines, $\mathcal{GR} = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$, l'ensemble de tous les groupes, où :
+          \begin{itemize}
+              \item $\mathcal{R} \subseteq \mathcal{R}_{ss}$ : l'ensemble des rôles non abstraits ;
+              \item $\mathcal{SG} \subseteq \mathcal{GR}$ : l'ensemble des sous-groupes ;
+              \item $\mathcal{L} = \mathcal{R} \cross \mathcal{R} \cross \mathcal{TL}$ : l'ensemble des liens. Un lien est un 3-uplet $(\rho_s,\rho_d,t) \in \mathcal{L}$ (noté aussi $link(\rho_s,\rho_d,t))$, où $\rho_{s}$ est le rôle source, $\rho_{d}$ est le rôle destination, et $t \in \mathcal{TL}, \mathcal{TL} = \{acq, com, aut\}$ est le type de lien :
+                    \begin{itemize}
+                        \item Si $t = acq$ (acquaintance), les agents jouant le rôle source $\rho_{\mathrm{s}}$ sont autorisés à avoir une représentation des agents jouant le rôle destination $\rho_{d}$ ;
+                        \item Si $t = com$ (communication), les agents $\rho_{\mathrm{s}}$ peuvent communiquer avec les agents $\rho_{d}$ ;
+                        \item Si $t = aut$ (authority), les agents $\rho_{\mathrm{s}}$ ont autorité sur les agents $\rho_{d}$, nécessitant des liens d'acquaintance et de communication.
+                    \end{itemize}
+              \item $\mathcal{L}^{intra} \subseteq \mathcal{L}$ : l'ensemble des liens intra-groupes ;
+              \item $\mathcal{L}^{inter} \subseteq \mathcal{L}$ : l'ensemble des liens inter-groupes ;
+              \item $\mathcal{C} = \mathcal{R} \cross \mathcal{R}$ : l'ensemble des compatibilités. Une compatibilité est un couple $(a,b) \in \mathcal{C}$ (noté aussi $\rho_a \bowtie \rho_b$), ce qui signifie que les agents jouant le rôle $\rho_a \in \mathcal{R}$ peuvent également jouer le rôle $\rho_b \in \mathcal{R}$ ;
+              \item $\mathcal{C}^{intra} \subseteq \mathcal{C}$ : l'ensemble des compatibilités intra-groupes ;
+              \item $\mathcal{C}^{inter} \subseteq \mathcal{C}$ : l'ensemble des compatibilités inter-groupes ;
+              \item $np : \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$ : la relation donnant la cardinalité des agents adoptant un rôle ;
+              \item $ng : \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$ : la relation donnant la cardinalité de chaque sous-groupe.
+          \end{itemize}
+\end{itemize}
+
+\paragraph{\textbf{Spécifications Fonctionnelles (FS)}} désignent globalement les tâches et objectifs que les agents doivent atteindre, que nous notons $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$, où :
+
+\begin{itemize}
+    \item $\mathcal{SCH} = \langle\mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$ : l'ensemble des \textbf{schémas sociaux}, où :
+          \begin{itemize}
+              \item $\mathcal{G}$ est l'ensemble des objectifs globaux ;
+              \item $\mathcal{M}$ est l'ensemble des labels de mission ;
+              \item $\mathcal{P} = \langle \mathcal{G}, \{\mathcal{G}\}^s, OP, [0,1] \rangle, s \in \mathbb{N}^*$ est l'ensemble des plans qui construisent la structure arborescente des objectifs. Un plan $p \in \mathcal{P}$ est un 4-uplet $p=(g_f,\{g_i\}_{0 \leq i \leq s}, op, ps)$, ce qui signifie que l'objectif $g_f$ est atteint si certains des sous-objectifs $g_i$ sont atteints avec une probabilité de succès $ps$ et selon l'opérateur $op$ :
+                    \begin{itemize}
+                        \item si $op = sequence$, les $g_i$ peuvent seulement être atteints dans le même ordre séquentiellement ;
+                        \item si $op = choice$, un seul des $g_i$ doit être atteint ;
+                        \item si $op = parallel$, les $g_i$ peuvent être atteints séquentiellement ou simultanément.
+                    \end{itemize}
+              \item $mo : \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$ : spécifie l'ensemble des objectifs associés à une mission ;
+              \item $nm : \mathcal{M} \rightarrow \mathbb{N} \times \mathbb{N}$ : la cardinalité des agents engagés pour chaque mission.
+          \end{itemize}
+    \item $\mathcal{PO} : \mathcal{M} \cross \mathcal{M}$ : l'ensemble des \textbf{ordres de préférence}. Un ordre de préférence est un couple $(m_1, m_2)$, ce qui signifie que si un agent est autorisé à s'engager dans $m_1$ et $m_2$ en même temps, il a une préférence sociale pour $m_1$.
+\end{itemize}
+
+\paragraph{\textbf{Spécifications Déontiques (DS)}} se réfèrent à la façon dont les SS sont utilisées pour atteindre les FS, que nous notons $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$, l'ensemble des spécifications déontiques, où :
+
+\begin{itemize}
+    \item $\mathcal{TC}$ : l'ensemble des \textbf{contraintes temporelles}. Une contrainte temporelle $tc \in \mathcal{TC}$ spécifie un ensemble de périodes pendant lesquelles une permission ou obligation est valide ($Any \in \mathcal{TC}$ signifie \textquote{tout le temps}) ;
+    \item $\mathcal{OBL} : \mathcal{R} \cross \mathcal{M} \cross \mathcal{TC}$ : l'ensemble des \textbf{obligations}. Une obligation est un 3-uplet $(\rho_a, m, tc)$, signifiant qu'un agent jouant le rôle $\rho_a \in \mathcal{R}$ est obligé de s'engager dans la mission $m \in \mathcal{M}$ pour une contrainte temporelle donnée $tc \in \mathcal{TC}$ ;
+    \item $\mathcal{PER}$ : l'ensemble des \textbf{permissions}. Une permission est un 3-uplet $(\rho_a, m, tc)$, signifiant qu'un agent jouant le rôle $\rho_a \in \mathcal{R}$ est autorisé à s'engager dans la mission $m \in \mathcal{M}$ pour une contrainte temporelle donnée $tc \in \mathcal{TC}$.
+\end{itemize}
+
+
+\subsubsection{Formulation de la fonction de récompense}
+
+\subsubsection{Formulation des spécifications $mathcal{M}OISE^+$MARL}
+
+
+
+
+Le framework \textbf{$mathcal{M}OISE^+$MARL} enrichit le cadre du MARL en intégrant des spécifications organisationnelles qui structurent et contrôlent les comportements des agents. En utilisant les rôles et missions de \textbf{$mathcal{M}OISE^+$}, ce formalisme permet de guider les agents dans un environnement multi-agent selon des contraintes organisationnelles.
+
+\paragraph{Description Globale}
+
+La structure formelle de \textbf{$mathcal{M}OISE^+$MARL} repose sur l'ajout de deux ensembles fondamentaux dans le cadre Dec-POMDP : 
+
+\begin{itemize}
+    \item \textbf{Observation-Actions Constraint (OAC)} : Un ensemble de relations modélisant les rôles en associant chaque observation d'un agent à un ensemble d'actions autorisées. Cela contraint les comportements possibles selon les rôles organisationnels.
+    \item \textbf{Trajectory-based Reward Function (TRF)} : Un ensemble de relations associant des trajectoires d'actions à des récompenses, définissant ainsi les missions par des objectifs précis que les agents doivent atteindre.
+\end{itemize}
+
+\paragraph{Formalisation Complète}
+
+Pour lier les structures $mathcal{M}OISE^+$ aux contraintes d'apprentissage MARL, nous définissons les relations suivantes :
+
+\begin{itemize}
+    \item \textbf{OAC (Observation-Actions Constraint)} : 
+    \begin{itemize}
+        \item $\text{OAC} = \{ oac_1, oac_2, \dots, oac_k \}$
+        \item Chaque relation \( oac \in \text{OAC} \) est définie par une fonction \( oac: \Omega \rightarrow \mathcal{P}(A) \), associant chaque observation \( o \in \Omega \) à un ensemble d'actions \( A \) autorisées.
+    \end{itemize}
+    \item \textbf{TRF (Trajectory-based Reward Function)} : 
+    \begin{itemize}
+        \item $\text{TRF} = \{ trf_1, trf_2, \dots, trf_m \}$
+        \item Chaque relation \( trf \in \text{TRF} \) est une fonction \( trf: H \rightarrow \mathbb{R} \), attribuant une récompense à chaque trajectoire \( h \in H \).
+    \end{itemize}
+    \item \textbf{Déontiques (Relation DA)} :
+    \begin{itemize}
+        \item La relation \( \text{DA}: \mathcal{D} \rightarrow \mathcal{P}(\mathcal{A}) \) relie les spécifications déontiques aux agents, permettant de définir les permissions et obligations selon les rôles et missions.
+    \end{itemize}
+    \item \textbf{Relation Role-OAC (ROAC)} :
+    \begin{itemize}
+        \item La relation \( \text{ROAC}: \mathcal{R} \rightarrow \text{OAC} \) associe chaque rôle de $mathcal{M}OISE^+$ à une relation dans OAC, encadrant les actions des agents pour chaque rôle.
+    \end{itemize}
+    \item \textbf{Relation Objective-TRF (OTRF)} :
+    \begin{itemize}
+        \item La relation \( \text{OTRF}: \mathcal{G} \rightarrow \text{TRF} \) lie les objectifs aux relations de TRF, en représentant les objectifs sous forme de récompenses dans le MARL.
+    \end{itemize}
+\end{itemize}
+
+\paragraph{Intérêt du Formalisme $mathcal{M}OISE^+$MARL}
+
+
+
+
 
 \paragraph{Processus}
 \begin{enumerate}
     \item \textbf{Création du Modèle Simulé} :\\
     Si un modèle simulé existe déjà, il sera utilisé pour intégrer l'objectif et les contraintes. Sinon, on crée un modèle simulé en collectant des traces de l'environnement réel ou d'une copie sécurisée de celui-ci.
     
-    \item \textbf{Incorporation des Contraintes MOISE+MARL} :\\
-    Utilisation des spécifications de \textbf{MOISE+} pour structurer les rôles et missions des agents via les contraintes \textbf{OAC} et \textbf{TRF}.
+    \item \textbf{Incorporation des Contraintes $mathcal{M}OISE^+$MARL} :\\
+    Utilisation des spécifications de \textbf{$mathcal{M}OISE^+$} pour structurer les rôles et missions des agents via les contraintes \textbf{OAC} et \textbf{TRF}.
     
     \item \textbf{Formulation du Modèle de Simulation} :\\
     Enrichissement du modèle par l'ajout des contraintes additionnelles pour encadrer le comportement des agents dans un cadre étendu du Dec-POMDP.
 \end{enumerate}
 
 \paragraph{Sortie}
-Un modèle \textbf{MOISE+MARL} intégrant l'environnement simulé, l'objectif (fonction de récompense), et les contraintes additionnelles (OAC, TRF).
+Un modèle \textbf{$mathcal{M}OISE^+$MARL} intégrant l'environnement simulé, l'objectif (fonction de récompense), et les contraintes additionnelles (OAC, TRF).
 
 \RestyleAlgo{ruled}
 \SetKwComment{Comment}{// }{}
@@ -312,7 +446,7 @@ Un modèle \textbf{MOISE+MARL} intégrant l'environnement simulé, l'objectif (f
     $additional\_constraints$ : Contraintes organisationnelles et de sûreté (TRF, OAC)
 }
 \KwOut{%
-    $model$ : Un modèle MOISE+MARL avec l'environnement simulé, l'objectif, et les contraintes
+    $model$ : Un modèle $mathcal{M}OISE^+$MARL avec l'environnement simulé, l'objectif, et les contraintes
 }
 
 % Étape 1: Créer ou utiliser un modèle simulé
@@ -335,7 +469,7 @@ $simulated\_env$.AddObjective($problem\_desc.objective\_function$)\;
     }
 }
 
-% Étape 3: Incorporer les spécifications MOISE+MARL
+% Étape 3: Incorporer les spécifications $mathcal{M}OISE^+$MARL
 $oac \gets$ GenerateOAC($simulated\_env$, $problem\_desc.roles$)\;
 $trf \gets$ GenerateTRF($simulated\_env$, $problem\_desc.missions$)\;
 $model \gets$ MOISE\_MARL\_Model($simulated\_env$, $oac$, $trf$)\;
@@ -348,56 +482,36 @@ $model \gets$ MOISE\_MARL\_Model($simulated\_env$, $oac$, $trf$)\;
 Ce processus établit un environnement d'apprentissage sécurisé et guidé pour les agents, en s'assurant qu'ils respectent les contraintes définies tout en poursuivant leurs objectifs de manière efficace.
 
 
-\subsubsection{Formalisation de MOISE+MARL}
+\subsubsection{Intégration de la System Identification dans un Dec-POMDP}
 
-Le framework **MOISE+MARL** enrichit le cadre de l'**Apprentissage par Renforcement Multi-Agent (MARL)** en intégrant des spécifications organisationnelles qui structurent et contrôlent les comportements des agents. En utilisant les rôles et missions de **MOISE+**, ce formalisme permet de guider les agents dans un environnement multi-agent selon des contraintes organisationnelles.
+Dans le cadre d'un \textbf{Dec-POMDP} enrichi par la \textbf{System Identification}, nous utilisons le formalisme suivant, où chaque composante du modèle est ajustée à partir de données collectées pour reproduire les dynamiques de l'environnement cible. 
 
-\paragraph{Description Globale}
+\subsubsection{Ajout de la System Identification dans le Dec-POMDP}
 
-La structure formelle de **MOISE+MARL** repose sur l'ajout de deux ensembles fondamentaux dans le cadre Dec-POMDP : 
+La \textbf{System Identification} permet d'enrichir ce formalisme en estimant le modèle de transition, les observations et les récompenses à partir de traces collectées. Ainsi, nous obtenons les ajustements suivants :
 
-\begin{itemize}
-    \item \textbf{Observation-Actions Constraint (OAC)} : Un ensemble de relations modélisant les rôles en associant chaque observation d'un agent à un ensemble d'actions autorisées. Cela contraint les comportements possibles selon les rôles organisationnels.
-    \item \textbf{Trajectory-based Reward Function (TRF)} : Un ensemble de relations associant des trajectoires d'actions à des récompenses, définissant ainsi les missions par des objectifs précis que les agents doivent atteindre.
-\end{itemize}
+\paragraph{Modèle de Transition \(\hat{P}\)}
+La fonction de transition estimée est définie par :
+\[
+\hat{P}(s' \mid s, a, \theta) \approx P(s' \mid s, a)
+\]
+où \(\theta\) représente les paramètres de la transition, ajustés pour minimiser l'écart entre les transitions réelles et estimées.
 
-\paragraph{Formalisation Complète}
+\paragraph{Fonction d'Observation \(\hat{O}\)}
+De même, l'observation est approchée par :
+\[
+\hat{O}(\omega \mid s', a, \phi) \approx O(\omega \mid s', a)
+\]
+où \(\phi\) est le vecteur de paramètres qui permet d'estimer les probabilités d'observation sur la base des traces collectées.
 
-Pour lier les structures MOISE+ aux contraintes d'apprentissage MARL, nous définissons les relations suivantes :
+\paragraph{Fonction de Récompense \(\hat{R}\)}
+La fonction de récompense est également ajustée :
+\[
+\hat{R}(s, a, \rho) \approx R(s, a)
+\]
+où \(\rho\) sont les paramètres de récompense qui permettent de reproduire les incitations spécifiques de l'environnement cible.
 
-\begin{itemize}
-    \item \textbf{OAC (Observation-Actions Constraint)} : 
-    \begin{itemize}
-        \item $\text{OAC} = \{ oac_1, oac_2, \dots, oac_k \}$
-        \item Chaque relation \( oac \in \text{OAC} \) est définie par une fonction \( oac: \Omega \rightarrow \mathcal{P}(A) \), associant chaque observation \( o \in \Omega \) à un ensemble d'actions \( A \) autorisées.
-    \end{itemize}
-    \item \textbf{TRF (Trajectory-based Reward Function)} : 
-    \begin{itemize}
-        \item $\text{TRF} = \{ trf_1, trf_2, \dots, trf_m \}$
-        \item Chaque relation \( trf \in \text{TRF} \) est une fonction \( trf: H \rightarrow \mathbb{R} \), attribuant une récompense à chaque trajectoire \( h \in H \).
-    \end{itemize}
-    \item \textbf{Déontiques (Relation DA)} :
-    \begin{itemize}
-        \item La relation \( \text{DA}: \mathcal{D} \rightarrow \mathcal{P}(\mathcal{A}) \) relie les spécifications déontiques aux agents, permettant de définir les permissions et obligations selon les rôles et missions.
-    \end{itemize}
-    \item \textbf{Relation Role-OAC (ROAC)} :
-    \begin{itemize}
-        \item La relation \( \text{ROAC}: \mathcal{R} \rightarrow \text{OAC} \) associe chaque rôle de MOISE+ à une relation dans OAC, encadrant les actions des agents pour chaque rôle.
-    \end{itemize}
-    \item \textbf{Relation Objective-TRF (OTRF)} :
-    \begin{itemize}
-        \item La relation \( \text{OTRF}: \mathcal{G} \rightarrow \text{TRF} \) lie les objectifs aux relations de TRF, en représentant les objectifs sous forme de récompenses dans le MARL.
-    \end{itemize}
-\end{itemize}
-
-\paragraph{Intérêt du Formalisme MOISE+MARL}
-
-Ce formalisme guide l'apprentissage multi-agent en imposant des contraintes basées sur des rôles et des missions organisationnels. Il permet de mieux structurer les comportements d'agents dans des systèmes multi-agents complexes, assurant ainsi un alignement avec les normes organisationnelles et facilitant la sûreté et l'explicabilité des politiques apprises.
-
-
-%%%%%%%%%
-
-\subsection{Comparaison des Méthodes de Modélisation Automatisée}
+\subsubsection{Comparaison des Méthodes de Modélisation Automatisée}
 
 Dans cette sous-section, nous présentons une analyse des différentes méthodes permettant de modéliser un environnement cible de manière fidèle et automatisée. Les méthodes considérées sont l'Identification de Systèmes, l'Apprentissage par Imitation, la Modélisation Approximative (Surrogate Modeling), et le Jumeau Numérique (Digital Twin). Nous utilisons des critères spécifiques pour évaluer ces méthodes en fonction de leur adéquation aux besoins de la modélisation automatisée.
 
@@ -447,9 +561,19 @@ Coût Computationnel (CC)                & Élevé                         & Moy
 
 Les méthodes d'\textbf{Identification de Systèmes} et de \textbf{Jumeau Numérique} sont connues pour leur fidélité accrue à l'environnement réel, mais elles nécessitent souvent des ajustements manuels et un coût computationnel élevé. L'\textbf{Apprentissage par Imitation} est plus automatisé et nécessite moins de données mathématiques, bien qu'il soit souvent moins précis. La \textbf{Modélisation Approximative} offre un bon compromis pour des applications générales avec des exigences computationnelles moyennes, mais elle peut nécessiter une intervention manuelle pour ajuster les modèles aux changements de l'environnement.
 
+Les étapes de cette approche sont les suivantes :
+\begin{enumerate}
+    \item \textbf{Collecte de Traces} : Les agents collectent des séquences de transitions \((s, a, s')\), des observations \(\omega\), et des récompenses \(r\).
+    \item \textbf{Estimation des Paramètres} : Les paramètres \((\theta, \phi, \rho)\) sont estimés par l'application de techniques d'identification.
+    \item \textbf{Modélisation Révisée} : Les fonctions \((\hat{P}, \hat{O}, \hat{R})\) sont ajustées afin d'obtenir un modèle simulé fidèle à l'environnement.
+    \item \textbf{Entraînement et Validation} : Le modèle simulé est utilisé pour entraîner les agents et valider leurs politiques dans un environnement de test avant un éventuel déploiement dans l'environnement réel.
+\end{enumerate}
+
+
+%%%%%%%%%%
 
 \subsection{Phase 2 : Résolution}
-Dans cette phase, nous utilisons des algorithmes \textbf{MARL} pour résoudre le problème formalisé dans l'environnement simulé. Les algorithmes comme \textbf{MADDPG} et \textbf{MAPPO} sont utilisés pour apprendre des politiques qui respectent à la fois les objectifs de performance et les contraintes organisationnelles définies par \textbf{MOISE+}. L'intégration de \textbf{MOISE+} dans le processus d'apprentissage permet de restreindre l'espace de recherche des politiques, rendant ainsi le processus plus efficace et garantissant la sûreté du système.
+Dans cette phase, nous utilisons des algorithmes \textbf{MARL} pour résoudre le problème formalisé dans l'environnement simulé. Les algorithmes comme \textbf{MADDPG} et \textbf{MAPPO} sont utilisés pour apprendre des politiques qui respectent à la fois les objectifs de performance et les contraintes organisationnelles définies par \textbf{$mathcal{M}OISE^+$}. L'intégration de \textbf{$mathcal{M}OISE^+$} dans le processus d'apprentissage permet de restreindre l'espace de recherche des politiques, rendant ainsi le processus plus efficace et garantissant la sûreté du système.
 
 \begin{itemize}
   \item \textbf{Entrées :} Problème formalisé, contraintes organisationnelles.
@@ -458,7 +582,7 @@ Dans cette phase, nous utilisons des algorithmes \textbf{MARL} pour résoudre le
 \end{itemize}
 
 \subsection{Phase 3 : Analyse}
-Une fois les politiques apprises, elles sont analysées à l'aide de \textbf{HEMM}, un algorithme qui infère les rôles et les missions des agents en se basant sur leurs comportements observés. L'analyse permet d'identifier les écarts entre les rôles inférés et les rôles prédéfinis dans \textbf{MOISE+}, offrant ainsi une évaluation de l'adéquation organisationnelle du SMA. Les résultats de cette analyse sont ensuite traduits en plans détaillés, qui seront utilisés pour le développement final du système.
+Une fois les politiques apprises, elles sont analysées à l'aide de \textbf{HEMM}, un algorithme qui infère les rôles et les missions des agents en se basant sur leurs comportements observés. L'analyse permet d'identifier les écarts entre les rôles inférés et les rôles prédéfinis dans \textbf{$mathcal{M}OISE^+$}, offrant ainsi une évaluation de l'adéquation organisationnelle du SMA. Les résultats de cette analyse sont ensuite traduits en plans détaillés, qui seront utilisés pour le développement final du système.
 
 \begin{itemize}
   \item \textbf{Entrées :} Politiques conjointes des agents.
@@ -484,7 +608,7 @@ Nous avons appliqué SAMMASD à un scénario de gestion de flux de paquets dans 
   \item \textbf{Métriques :} Temps de conception, robustesse des politiques, respect des contraintes organisationnelles.
 \end{itemize}
 
-Les résultats montrent que les agents entraînés via \textbf{MOISE+MARL} respectent les contraintes organisationnelles définies et optimisent les objectifs de performance, tout en générant des comportements interprétables grâce à l'analyse par \textbf{HEMM}.
+Les résultats montrent que les agents entraînés via \textbf{$mathcal{M}OISE^+$MARL} respectent les contraintes organisationnelles définies et optimisent les objectifs de performance, tout en générant des comportements interprétables grâce à l'analyse par \textbf{HEMM}.
 
 \section{Conclusion}
 \label{sec:conclusion}
