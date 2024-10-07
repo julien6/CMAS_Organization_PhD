@@ -251,6 +251,13 @@ Cet article présente une nouvelle méthode, \textbf{SAMMASD} (Semi-Automated MA
 
 Le reste de cet article est structuré comme suit : la \autoref{sec:related_works} présente les travaux connexes dans le domaine du MARL et des modèles organisationnels pour SMA. La \autoref{sec:approach} décrit en détail les quatre phases de la méthode SAMMASD. Ensuite, la \autoref{sec:evaluation} discute des résultats expérimentaux obtenus dans un scénario de gestion de flux d'entrepôt. Enfin, la \autoref{sec:conclusion} conclut et propose des pistes de travail futures.
 
+\begin{figure*}[h!]
+  \centering
+  \input{figures/cycle.tex}
+  \caption{Cycle de vie d'un SMA conçu avec SAMMASD.}
+  \label{fig:cycle}
+\end{figure*}
+
 \section{Travaux connexes}
 \label{sec:related_works}
 La conception de systèmes multi-agents (SMA) assistée par des modèles organisationnels a été largement étudiée dans la littérature. En particulier, le modèle \textbf{MOISE+}, introduit par Gleizes et al. \cite{gleize2008moise}, propose une structure formelle pour spécifier les rôles, les missions, et les relations entre agents dans un SMA. Ces spécifications permettent de guider le développement de systèmes complexes en assurant une cohérence entre les objectifs collectifs et les comportements individuels des agents. Cependant, MOISE+ ne fournit pas de mécanismes pour intégrer directement l'apprentissage des politiques par renforcement, une lacune que notre travail cherche à combler.
@@ -266,13 +273,6 @@ Des travaux récents ont exploré des méthodologies agiles pour le développeme
 
 Notre méthode, SAMMASD, s'articule autour de quatre phases principales : (1) la modélisation de l'environnement et des contraintes, (2) l'apprentissage des politiques via \textbf{MOISE+MARL}, (3) l'analyse des comportements avec \textbf{HEMM}, et (4) le développement et le déploiement du SMA. Cette approche permet de guider le processus d'apprentissage des agents en respectant des contraintes organisationnelles strictes, tout en garantissant l'efficacité des politiques apprises. Le cycle de vie d'un SMA conçu avec SAMMASD est illustré dans la \autoref{fig:cycle}.
 
-\begin{figure*}
-  \centering
-  \input{figures/cycle.tex}
-  \caption{Cycle de vie d'un SMA conçu avec SAMMASD.}
-  \label{fig:cycle}
-\end{figure*}
-
 \subsection{Phase 1 : Modélisation}
 
 L'étape de modélisation vise à créer un modèle simulé qui capture fidèlement les dynamiques et les contraintes de l'environnement réel, tout en incluant des spécifications organisationnelles et des objectifs. Ce modèle servira de base pour entraîner les agents dans un environnement contrôlé. Cette étape est cruciale pour s'assurer que les agents apprennent dans un contexte sécurisé et optimisé.
@@ -287,17 +287,17 @@ L'étape de modélisation vise à créer un modèle simulé qui capture fidèlem
 \paragraph{Processus}
 \begin{enumerate}
     \item \textbf{Création du Modèle Simulé} :\\
-    Si un modèle simulé existe déjà, il sera utilisé pour intégrer l’objectif et les contraintes. Sinon, on crée un modèle simulé en collectant des traces de l’environnement réel ou d’une copie sécurisée de celui-ci.
+    Si un modèle simulé existe déjà, il sera utilisé pour intégrer l'objectif et les contraintes. Sinon, on crée un modèle simulé en collectant des traces de l'environnement réel ou d'une copie sécurisée de celui-ci.
     
     \item \textbf{Incorporation des Contraintes MOISE+MARL} :\\
     Utilisation des spécifications de \textbf{MOISE+} pour structurer les rôles et missions des agents via les contraintes \textbf{OAC} et \textbf{TRF}.
     
     \item \textbf{Formulation du Modèle de Simulation} :\\
-    Enrichissement du modèle par l’ajout des contraintes additionnelles pour encadrer le comportement des agents dans un cadre étendu du Dec-POMDP.
+    Enrichissement du modèle par l'ajout des contraintes additionnelles pour encadrer le comportement des agents dans un cadre étendu du Dec-POMDP.
 \end{enumerate}
 
 \paragraph{Sortie}
-Un modèle \textbf{MOISE+MARL} intégrant l’environnement simulé, l’objectif (fonction de récompense), et les contraintes additionnelles (OAC, TRF).
+Un modèle \textbf{MOISE+MARL} intégrant l'environnement simulé, l'objectif (fonction de récompense), et les contraintes additionnelles (OAC, TRF).
 
 \RestyleAlgo{ruled}
 \SetKwComment{Comment}{// }{}
@@ -343,10 +343,6 @@ $model \gets$ MOISE\_MARL\_Model($simulated\_env$, $oac$, $trf$)\;
 \Return{$model$}
 
 \end{algorithm}
-
-
-
-
 
 
 Ce processus établit un environnement d'apprentissage sécurisé et guidé pour les agents, en s'assurant qu'ils respectent les contraintes définies tout en poursuivant leurs objectifs de manière efficace.
@@ -400,6 +396,58 @@ Ce formalisme guide l'apprentissage multi-agent en imposant des contraintes bas�
 
 
 %%%%%%%%%
+
+\subsection{Comparaison des Méthodes de Modélisation Automatisée}
+
+Dans cette sous-section, nous présentons une analyse des différentes méthodes permettant de modéliser un environnement cible de manière fidèle et automatisée. Les méthodes considérées sont l'Identification de Systèmes, l'Apprentissage par Imitation, la Modélisation Approximative (Surrogate Modeling), et le Jumeau Numérique (Digital Twin). Nous utilisons des critères spécifiques pour évaluer ces méthodes en fonction de leur adéquation aux besoins de la modélisation automatisée.
+
+\paragraph{Critères d'Évaluation}
+
+\begin{itemize}
+    \item \textbf{Niveau d'Intervention Manuelle (NIM)} : La méthode nécessite-t-elle que l'utilisateur développe ou configure manuellement une partie du modèle simulé ?
+    \item \textbf{Niveau de Modélisation Mathématique (NMM)} : La méthode inclut-elle des modèles mathématiques pour représenter l'environnement ?
+    \item \textbf{Applicabilité Générale (AG)} : La méthode peut-elle modéliser une large variété d'environnements sans restrictions spécifiques ?
+    \item \textbf{Requiert une Version Émulée (RVE)} : La méthode nécessite-t-elle une copie émulée de l'environnement cible pour générer ou valider le modèle ?
+    \item \textbf{Mise à Jour Automatique (MUA)} : La méthode permet-elle de mettre à jour le modèle automatiquement sans intervention humaine ?
+    \item \textbf{Automatisation Complète (AC)} : La méthode offre-t-elle une procédure entièrement automatisée pour construire et gérer le modèle ?
+    \item \textbf{Adaptabilité en Temps Réel (ATR)} : La méthode peut-elle s'adapter en temps réel aux changements de l'environnement cible ?
+    \item \textbf{Niveau de Fidélité au Système Réel (NFS)} : La méthode fournit-elle un modèle avec un haut niveau de fidélité par rapport au système cible ?
+    \item \textbf{Exigences en Données (ED)} : Quel est le volume et le type de données requis pour construire et maintenir le modèle ?
+    \item \textbf{Coût Computationnel (CC)} : Quelles sont les exigences en termes de ressources de calcul pour générer et mettre à jour le modèle ?
+\end{itemize}
+
+\paragraph{Comparaison des Méthodes}
+
+Le tableau \ref{tab:comparaison-methodes} présente une comparaison des méthodes d'Identification de Systèmes, d'Apprentissage par Imitation, de Modélisation Approximative, et de Jumeau Numérique en fonction des critères mentionnés.
+
+
+\begin{table*}[h!]
+\centering
+\caption{Comparaison des méthodes de modélisation automatisée selon différents critères}
+\begin{tabular}{|p{5cm}|c|c|c|c|}
+\hline
+\textbf{Critères}                   & \textbf{System Identification} & \textbf{Imitation Learning} & \textbf{Surrogate Modeling} & \textbf{Digital Twin} \\
+\hline
+Niveau d'Intervention Manuelle (NIM)    & Moyen                         & Bas                          & Moyen                       & Haut                 \\
+Niveau de Modélisation Mathématique (NMM) & Élevé                         & Faible                       & Élevé                       & Moyen                \\
+Applicabilité Générale (AG)             & Moyenne                       & Élevée                       & Moyenne                     & Moyenne              \\
+Requiert une Version Émulée (RVE)       & Non                           & Non                          & Non                         & Oui                  \\
+Mise à Jour Automatique (MUA)           & Moyenne                       & Élevée                       & Moyenne                     & Élevée               \\
+Automatisation Complète (AC)            & Moyenne                       & Moyenne                      & Moyenne                     & Variable             \\
+Adaptabilité en Temps Réel (ATR)        & Faible                        & Faible                       & Moyenne                     & Élevée               \\
+Niveau de Fidélité au Système Réel (NFS) & Moyen                         & Bas                          & Moyen                       & Élevé                \\
+Exigences en Données (ED)               & Élevées                       & Moyennes                     & Élevées                     & Élevées              \\
+Coût Computationnel (CC)                & Élevé                         & Moyen                        & Moyen                       & Élevé                \\
+\hline
+\end{tabular}
+\label{tab:comparaison-methodes}
+\end{table*}
+
+\paragraph{Explications des Comparaisons}
+
+Les méthodes d'\textbf{Identification de Systèmes} et de \textbf{Jumeau Numérique} sont connues pour leur fidélité accrue à l'environnement réel, mais elles nécessitent souvent des ajustements manuels et un coût computationnel élevé. L'\textbf{Apprentissage par Imitation} est plus automatisé et nécessite moins de données mathématiques, bien qu'il soit souvent moins précis. La \textbf{Modélisation Approximative} offre un bon compromis pour des applications générales avec des exigences computationnelles moyennes, mais elle peut nécessiter une intervention manuelle pour ajuster les modèles aux changements de l'environnement.
+
+
 \subsection{Phase 2 : Résolution}
 Dans cette phase, nous utilisons des algorithmes \textbf{MARL} pour résoudre le problème formalisé dans l'environnement simulé. Les algorithmes comme \textbf{MADDPG} et \textbf{MAPPO} sont utilisés pour apprendre des politiques qui respectent à la fois les objectifs de performance et les contraintes organisationnelles définies par \textbf{MOISE+}. L'intégration de \textbf{MOISE+} dans le processus d'apprentissage permet de restreindre l'espace de recherche des politiques, rendant ainsi le processus plus efficace et garantissant la sûreté du système.
 
