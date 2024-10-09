@@ -219,7 +219,7 @@ Les méthodes actuelles d'apprentissage par renforcement multi-agent (MARL) ont 
 
 Cet article présente une nouvelle méthode, \textbf{SAMMASD} (Semi-Automated MARL-based MAS Design), qui combine le framework \textbf{$mathcal{M}OISE^+$MARL} avec l'algorithme d'évaluation \textbf{HEMM} pour inférer et appliquer des structures organisationnelles aux politiques apprises par les agents. L'intégration de \textbf{$mathcal{M}OISE^+$}, un modèle organisationnel orienté multi-agents, permet de contraindre l'apprentissage des agents en définissant des rôles et des missions, ce qui favorise l'émergence de comportements interprétables et conformes aux exigences de sûreté.
 
-Le reste de cet article est structuré comme suit : la \autoref{sec:related_works} présente les travaux connexes dans le domaine du MARL et des modèles organisationnels pour SMA. La \autoref{sec:apprdeah} décrit en détail les quatre phases de la méthode SAMMASD. Ensuite, la \autoref{sec:evaluation} discute des résultats expérimentaux obtenus dans un scénario de gestion de flux d'entrepôt. Enfin, la \autoref{sec:conclusion} conclut et propose des pistes de travail futures.
+Le reste de cet article est structuré comme suit : la \autoref{sec:related_works} présente les travaux connexes dans le domaine du MARL et des modèles organisationnels pour SMA. La \autoref{sec:apprragh} décrit en détail les quatre phases de la méthode SAMMASD. Ensuite, la \autoref{sec:evaluation} discute des résultats expérimentaux obtenus dans un scénario de gestion de flux d'entrepôt. Enfin, la \autoref{sec:conclusion} conclut et propose des pistes de travail futures.
 
 \section{Travaux connexes}
 \label{sec:related_works}
@@ -230,7 +230,7 @@ D'un autre côté, les méthodes d'apprentissage par renforcement multi-agent (\
 Des travaux récents ont exploré des méthodologies agiles pour le développement de SMA, en combinant des approches orientées agent avec des pratiques agiles \cite{winikoff2021agile}. Ces méthodes visent à faciliter l'itération rapide dans la conception de SMA, mais elles n'intègrent pas directement les dynamiques d'apprentissage en MARL. Notre approche s'inscrit dans cette lignée en combinant l'apprentissage automatisé via MARL avec des spécifications organisationnelles, comblant ainsi le fossé entre les processus d'apprentissage et les exigences de conception organisationnelle.
 
 \section{Approche de conception organisationnelle proposée pour les SMA}
-\label{sec:apprdeah}
+\label{sec:apprragh}
 
 \begin{figure*}[h!]
     \centering
@@ -258,38 +258,46 @@ Un \textbf{Dec-POMDP} est formalisé par un tuple $D = \langle N, S, A, P, R, \O
     \item $\gamma \in [0, 1] $ est le facteur d'actualisation.
 \end{itemize}
 
-Résoudre un Dec-POMDP implique de trouver une politique conjointe qui maximise la récompense cumulative espérée dans le temps formalisée comme la fonction de valeur $V_\pi$ qui représente la récompense cumulative espérée en partant d'un état initial $s \in S$ et en suivant la politique conjointe $\pi$, en appliquant succesivement les action conjointe $a \in A^N$:
-
-\[
-V_\pi(s) = \mathbb{E} \left[ \sum_{t=0}^{\infty} \gamma^t R(s_t, a_t) \bigg| \pi \right]
-\]
-
 Le modèle $\mathcal{M}OISE^+$ est formalisé par un tuple $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$. Ici, nous présentons une version minimale du formalisme de $\mathcal{M}OISE^+$ :
 \begin{itemize}
     \item $\mathcal{SS} = \langle \mathcal{R} \rangle$, les spécifications structurelles sont définies par un ensemble de rôles $\mathcal{R}$;
-    \item $\mathcal{FS} = \langle \mathcal{G}, \mathcal{M}, mo \rangle$, les spécifications fonctionnelles sont un ensemble d'objectifs $\mathcal{G}$, un ensemble de mission $\mathcal{M}$ et une fonction $mo$ qui associe une mission à un ensemble d'objectifs;
-    \item $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$, les spécifications déontiques, où :
-    \begin{itemize}
-        \item $\mathcal{TC}$ : l'ensemble des \textbf{contraintes temporelles}. Une contrainte temporelle $tc \in \mathcal{TC}$ spécifie un ensemble de périodes pendant lesquelles une permission ou obligation est valide ($Any \in \mathcal{TC}$ signifie \textquote{tout le temps}) ;
-        \item $\mathcal{OBL} : \mathcal{R} \cross \mathcal{M} \cross \mathcal{TC}$ : l'ensemble des \textbf{obligations}. Une obligation est un 3-uplet $(\rho_a, m, tc)$, signifiant qu'un agent jouant le rôle $\rho_a \in \mathcal{R}$ est obligé de s'engager dans la mission $m \in \mathcal{M}$ pour une contrainte temporelle donnée $tc \in \mathcal{TC}$ ;
-        \item $\mathcal{PER}$ : l'ensemble des \textbf{permissions}. Une permission est un 3-uplet $(\rho_a, m, tc)$, signifiant qu'un agent jouant le rôle $\rho_a \in \mathcal{R}$ est autorisé à s'engager dans la mission $m \in \mathcal{M}$ pour une contrainte temporelle donnée $tc \in \mathcal{TC}$.
-    \end{itemize}
-
+    \item $\mathcal{FS} = \langle \mathcal{G}, \mathcal{M}, mo \rangle$, les spécifications fonctionnelles sont un ensemble d'objectifs $\mathcal{G}$, un ensemble de mission $\mathcal{M}$ et une fonction $mo$ qui associe une mission à un ensemble d'objectifs ;
+    \item $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$, les spécifications déontiques constitué des permissions $\mathcal{PER}$ et obligations $\mathcal{OBL}$ comme deux ensemble de 3-uplet $(\rho_a, m, tc)$, signifiant respectivement qu'un agent jouant le rôle $\rho_a \in \mathcal{R}$ est autorisé ou obligé à s'engager dans la mission $m \in \mathcal{M}$ pour une contrainte temporelle donnée $tc \in \mathcal{TC}$. Une contrainte temporelle $tc \in \mathcal{TC}$ spécifie un ensemble de périodes pendant lesquelles une permission ou obligation est valide.% ($Any \in \mathcal{TC}$ signifie \textquote{tout le temps}).
 \end{itemize}
 
-Nous définissons des contraintes additionnelles à prendre en compte lors de l'apprentissage MARL, en introduisant les relations suivantes:
+Nous introduisons trois nouvelles relations designées comme "Constraint Guides" pour déterminer la logique des rôles et objectifs $\mathcal{\mathcal{M}OISE^+}$ dans le formalisme Dec-POMDP:
 
 \begin{itemize}
-    \item $dea: \Omega \rightarrow \mathcal{P}(A)$, la relation \textbf{Dynamic Expected Actions} (DEA) qui associe chaque observation $o \in \Omega$ à un ensemble d'actions $A$. Cette relation est à la base de de deux types de contraintes: une contrainte dure en forçant un agent à choisir parmi des actions autorisées ; et une contrainte molle en penalisant la récompense si l'agent choisie une action non-autorisée.
-    \item $trf: H \rightarrow \mathbb{R}$, la relation \textbf{Trajectory-based Reward Function} (TRF) qui associe un réel à partir d'une trajectoire $h \in H$ suivi par un agent. Cette relation permet de représenter une contrainte molle en attribuant un bonus ou malus à la récompense si  sur les trajectoires des agents.
+    \item \textbf{Role Action Guide} (RAG) \quad $rag: \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, la relation qui permet de modéliser un rôle comme un ensemble de règles qui à chaque observation $\omega \in \Omega$ reçu par l'agent associe des actions attendues $A \in \mathcal{P}(A)$ chacune associée à une dureté de contrainte $ch \in [0,1]$ ($ch = 0$ par défaut). En restreignant le choix de la prochaine action à celles autorisées, l'agent est forcé d'adherer au comportement attendu du rôle ;
+    \item \textbf{Role Reward Guide} (RRG) \quad $rrg: \Omega \times A \to \mathbb{R} = \{r_m \text{ if } a \in A, a \notin A_\omega, \ \omega \in \Omega, \ rag(\omega) = A_\omega \times \mathbb{R_\omega}; \text{ else } 0\}$, la relation qui permet de modéliser un rôle en ajoutant un malus $r_m$ à la récompense globale si l'action choisie par l'agent $a \in A$ n'est pas autorisée pour inciter l'agent à adherer au comportement attendu d'un role ;
+    \item \textbf{Goal Reward Guide} (GRG) \quad $grg: H \rightarrow \mathbb{R}$, la relation qui permet de modéliser un objectif comme une contrainte molle en ajoutant un bonus $r_b \in \mathbb{R}$ à la récompense globale si la trajectoire de l'agent $h \in H$ contient une sous-séquence $h_g \in H_g$ caractéristique de l'objectif de sorte à inciter l'agent à trouver un moyen pour l'atteindre.
 \end{itemize}
 
-Enfin, pour instancier les spécifications organisationnelles sur les agents lors de l'entrainement, nous introduisons les relations suivantes :
+Enfin, pour lier les spécifications organisationnelles de $\mathcal{M}OISE^+$ aux "Constraint Guides" et aux agents, nous introduisons les relations suivantes :
 \begin{itemize}
-    \item $da: \mathcal{D} \rightarrow \mathcal{P}(\mathcal{A})$, la relation qui relie les spécifications déontiques aux agents, permettant de définir les permissions et obligations selon les rôles et missions.
-    \item $rdea: \mathcal{R} \rightarrow dea$, la relation qui associe chaque rôle de $\mathcal{M}OISE^+$ à une relation $dea$, encadrant les actions des agents pour chaque rôle.
-    \item $otrf: \mathcal{G} \rightarrow trf$ la relation qui lie les objectifs aux relations de trf, en représentant les objectifs sous forme de récompenses dans le MARL.
+    \item \textbf{Deontic specifications to Agents} (DA) \quad $da: \mathcal{D} \rightarrow \mathcal{P}(\mathcal{A})$, la relation qui relie les spécifications déontiques aux agents, permettant de définir les permissions et obligations selon les rôles et missions.
+    \item \textbf{Role to Constraint Guide} (RCG) \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$, la relation qui associe chaque rôle de $\mathcal{M}OISE^+$ à une relation $rag$ ou $rrg$, forçant/incitant l'agent à suivre les actions attendu pour le role $\rho \in \mathcal{R}$.
+    \item \textbf{Goal to Constraint Guide} (GCG) \quad $gcg: \mathcal{G} \rightarrow grg$ la relation qui lie les objectifs aux relations de trf, en représentant les objectifs sous forme de récompenses dans le MARL.
 \end{itemize}
+
+Résoudre un problème MOISE+MARL implique de trouver une politique conjointe qui maximise la fonction de valeur $V_\pi$ qui représente la récompense cumulative espérée en partant d'un état initial $s \in S$ et en suivant la politique conjointe $\pi$, en appliquant succesivement les action conjointe $a \in A^N$ sous les contraintes additonnelles des "Constraint Guides" impactant l'espace des actions et la récompense :
+
+\begin{figure*}
+\[
+  \sum_{\substack{
+    a_{t+1} \in A \text{ if } rn() > ch_{t+1}, \\
+    a_{t+1} \in A_{t+1} \text{ else, } \\ 
+    rag(\omega_t) = A_{t+1} \times \mathbb{R} \\
+    = ach ; ach(a_{t+1}) = ch_{t+1}
+}}{\pi(a_{t+1} | \omega_t)} \sum_{s_{t+1} \in S}{T(s_{t+1} | s_t, a_{t+1}) [R(s_t,a_{t+1},s_{t+1}) + gcg(h_{t+1}) + (1-ch) \times rrg(\omega_t,a_{t+1})]}
+\]
+\end{figure*}
+
+Avec $rn: \emptyset \to [0,1]$, une fonction random uniforme
+
+\[
+  \pi^* = argmax_{\pi}(V^\pi(s_0)), \ \forall s_0 \in S_0 \subseteq S
+\]
 
 Notre méthode, SAMMASD, s'articule autour de quatre phases principales : (1) la modélisation de l'environnement, de l'objectif et des contraintes organisationnelles selon le framework proposé, (2) l'apprentissage des politiques via plusieurs algorithmes MARL, (3) l'analyse des comportements et l'inférence de spécifications organisationnelles avec une méthode proposée, et (4) le développement et le déploiement du SMA. Cette approche permet de guider le processus d'apprentissage des agents en respectant des contraintes organisationnelles strictes, tout en garantissant l'efficacité des politiques apprises. Le cycle de vie d'un SMA conçu avec SAMMASD est illustré dans la \autoref{fig:cycle}.
 
@@ -333,7 +341,7 @@ Les contraintes organisationnelles et les sous-objectifs sont formalisés en uti
 \KwIn{%
     $real\_env$ : Environnement réel avec états et transitions,\\
     $problem\_desc$ : Description du problème avec fonction de récompense,\\
-    $additional\_constraints$ : Contraintes organisationnelles et de sûreté (trf, dea)
+    $additional\_constraints$ : Contraintes organisationnelles et de sûreté (trf, rag)
 }
 \KwOut{%
     $model$ : Un modèle $mathcal{M}OISE^+$MARL avec l'environnement simulé, l'objectif, et les contraintes
@@ -360,9 +368,9 @@ $simulated\_env$.AddObjective($problem\_desc.objective\_function$)\;
 }
 
 % Étape 3: Incorporer les spécifications $mathcal{M}OISE^+$MARL
-$dea \gets$ Generatedea($simulated\_env$, $problem\_desc.roles$)\;
+$rag \gets$ Generaterag($simulated\_env$, $problem\_desc.roles$)\;
 $trf \gets$ Generatetrf($simulated\_env$, $problem\_desc.missions$)\;
-$model \gets$ MOISE\_MARL\_Model($simulated\_env$, $dea$, $trf$)\;
+$model \gets$ MOISE\_MARL\_Model($simulated\_env$, $rag$, $trf$)\;
 
 \Return{$model$}
 
