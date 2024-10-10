@@ -60,6 +60,7 @@
 \usepackage{color}
 \usepackage{siunitx}
 \usepackage{array}
+\usepackage{cuted}
 \usepackage{multirow}
 % \usepackage{amssymb}
 \usepackage{gensymb}
@@ -262,7 +263,7 @@ Le modèle $\mathcal{M}OISE^+$ est formalisé par un tuple $\mathcal{OS} = \lang
 \begin{itemize}
     \item $\mathcal{SS} = \langle \mathcal{R} \rangle$, les spécifications structurelles sont définies par un ensemble de rôles $\mathcal{R}$;
     \item $\mathcal{FS} = \langle \mathcal{G}, \mathcal{M}, mo \rangle$, les spécifications fonctionnelles sont un ensemble d'objectifs $\mathcal{G}$, un ensemble de mission $\mathcal{M}$ et une fonction $mo$ qui associe une mission à un ensemble d'objectifs ;
-    \item $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$, les spécifications déontiques constitué des permissions $\mathcal{PER}$ et obligations $\mathcal{OBL}$ comme deux ensemble de 3-uplet $(\rho_a, m, tc)$, signifiant respectivement qu'un agent jouant le rôle $\rho_a \in \mathcal{R}$ est autorisé ou obligé à s'engager dans la mission $m \in \mathcal{M}$ pour une contrainte temporelle donnée $tc \in \mathcal{TC}$. Une contrainte temporelle $tc \in \mathcal{TC}$ spécifie un ensemble de périodes pendant lesquelles une permission ou obligation est valide.% ($Any \in \mathcal{TC}$ signifie \textquote{tout le temps}).
+    \item $\mathcal{DS} = \Rho \times \mathcal{M} \times T_c \times {0,1}, les spécifications déontiques comme un 4-uplet $(\rho_a, m, t_c, t)$, signifiant respectivement qu'un agent jouant le rôle $\rho_a \in \mathcal{R}$ est autorisé si ()$t = 0$) ou obligé (si $t = 1$) à s'engager dans la mission $m \in \mathcal{M}$ pour une contrainte temporelle donnée $tc \in \mathcal{TC}$. Une contrainte temporelle $tc \in \mathcal{TC}$ spécifie un ensemble de périodes pendant lesquelles une permission ou obligation est valide.% ($Any \in \mathcal{TC}$ signifie \textquote{tout le temps}).
 \end{itemize}
 
 Nous introduisons trois nouvelles relations designées comme "Constraint Guides" pour déterminer la logique des rôles et objectifs $\mathcal{\mathcal{M}OISE^+}$ dans le formalisme Dec-POMDP:
@@ -280,23 +281,36 @@ Enfin, pour lier les spécifications organisationnelles de $\mathcal{M}OISE^+$ a
     \item \textbf{Goal to Constraint Guide} (GCG) \quad $gcg: \mathcal{G} \rightarrow grg$ la relation qui lie les objectifs aux relations de trf, en représentant les objectifs sous forme de récompenses dans le MARL.
 \end{itemize}
 
-Résoudre un problème MOISE+MARL implique de trouver une politique conjointe qui maximise la fonction de valeur $V_\pi$ qui représente la récompense cumulative espérée en partant d'un état initial $s \in S$ et en suivant la politique conjointe $\pi$, en appliquant succesivement les action conjointe $a \in A^N$ sous les contraintes additonnelles des "Constraint Guides" impactant l'espace des actions et la récompense :
+Résoudre un problème MOISE+MARL implique de trouver une politique conjointe qui maximise la fonction de valeur $V^\pi$ qui représente la récompense cumulative espérée en partant d'un état initial $s \in S$ et en suivant la politique conjointe $\pi$, en appliquant succesivement les action conjointe $a \in A^N$ sous les contraintes additonnelles des "Constraint Guides" impactant l'espace des actions et la récompense :
 
-\begin{figure*}[h!]
-  \label{eq:maximize_function}
-  \centering
-  \begin{align}
-    V^\pi(s_t) = \sum_{\substack{
-      a_{t+1} \in A_{t+1} \text{ if } rn() \leq ch_{t+1}, \\ 
-      a_{t+1} \in A \text{ else}
-  }}{\pi(a_{t+1} | \omega_t)} \sum_{s_{t+1} \in S}{T(s_{t+1} | s_t, a_{t+1})[R(s_t,a_{t+1},s_{t+1}) + gcg(h_{t+1}) + (1-ch) \times rrg(\omega_t,a_{t+1})]} \\
-  \text{with } rag(\omega_t) = A_{t+1} \times \mathbb{R} = ach, \ ach(a_{t+1}) = ch_{t+1} ; { and } $rn: \emptyset \to [0,1]$, a uniform random function.
-  \end{align}  
+Pour une spécification déontique $(\rho,m,t_c)$ appliquée à un seul agent, ce dernier contraint à un rôle $\rho \in mathcal{R}$ et permis/autorisé  à s'engager à une mission, la fonction de valeur $V^\pi$ a la forme suivante :
+\begin{figure*}
+
+\begin{gather*}
+  \text{\quad (1) \quad \qquad }V^\pi(s_t) = \sum_{\substack{a_{t+1} \in A \text{ if } rn() > ch_{t+1}, \\ 
+  a_{t+1} \in A_{t+1} \text{ else}
+  }}{\pi(a_{t+1} | \omega_t)} \sum_{s_{t+1} \in S}{T(s_{t+1} | s_t, a_{t+1})[R(s_t,a_{t+1},s_{t+1}) + gcg(h_{t+1}) + (1-ch) \times rrg(\omega_t,a_{t+1})]}
+\end{gather*}
+
+\
+
+Avec $rag(\omega_t) = A_{t+1} \times \mathbb{R} = ach, \ ach(a_{t+1}) = ch_{t+1} ; \text{ and } rn: \emptyset \to [0,1]$, a uniform random function ; rsm: 
 \end{figure*}
 
-\[
-  \pi^* = argmax_{\pi}(V^\pi(s_0)), \ \forall s_0 \in S_0 \subseteq S
-\]
+En considérant plusieurs agents respectivement contraints à des rôles et permis/autorisés à s'engager respectivement à une mission, la fonction de valeur $V^\pi$ a la forme suivante :
+
+\begin{figure*}
+
+  \begin{gather*}
+    \text{\quad (1) \quad \qquad }V^\pi(s_t) = \sum_{\substack{a_{t+1} \in A \text{ if } rn() > ch_{t+1}, \\ 
+    a_{t+1} \in A_{t+1} \text{ else}
+    }}{\pi(a_{t+1} | \omega_t)} \sum_{s_{t+1} \in S}{T(s_{t+1} | s_t, a_{t+1})[R(s_t,a_{t+1},s_{t+1}) + gcg(h_{t+1}) + (1-ch) \times rrg(\omega_t,a_{t+1})]}
+  \end{gather*}
+  
+  \
+  
+  Avec $rag(\omega_t) = A_{t+1} \times \mathbb{R} = ach, \ ach(a_{t+1}) = ch_{t+1} ; \text{ and } rn: \emptyset \to [0,1]$, a uniform random function.
+  \end{figure*}
 
 Notre méthode, SAMMASD, s'articule autour de quatre phases principales : (1) la modélisation de l'environnement, de l'objectif et des contraintes organisationnelles selon le framework proposé, (2) l'apprentissage des politiques via plusieurs algorithmes MARL, (3) l'analyse des comportements et l'inférence de spécifications organisationnelles avec une méthode proposée, et (4) le développement et le déploiement du SMA. Cette approche permet de guider le processus d'apprentissage des agents en respectant des contraintes organisationnelles strictes, tout en garantissant l'efficacité des politiques apprises. Le cycle de vie d'un SMA conçu avec SAMMASD est illustré dans la \autoref{fig:cycle}.
 
