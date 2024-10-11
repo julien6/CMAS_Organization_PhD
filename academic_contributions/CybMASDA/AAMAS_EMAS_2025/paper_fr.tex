@@ -233,93 +233,104 @@ Des travaux récents ont exploré des méthodologies agiles pour le développeme
 \section{Approche de conception organisationnelle proposée pour les SMA}
 \label{sec:apprragh}
 
-\begin{figure*}[h!]
-    \centering
-    \input{figures/cycle.tex}
-    \caption{Cycle de vie d'un SMA conçu avec SAMMASD.}
-    \label{fig:cycle}
-  \end{figure*}
+Le coeur de la méthode SAMMASD est de considerer la conception d'un SMA comme un problème d'optimisation sous contraintes. La variable à optimiser est alors la politique conjointe pour maximiser la récompense cumulée sous des contraintes additionnelles données. SAMMASD inclue des spécifications organisationnelle en MARL comme contraintes additionnelles permettant à l'utilisateur de controler au moins partiellement non-seulement des comportements individuels des agents, mais aussi de pouvoir gérer l'ensemble des agents en ne jouant que sur celles-ci. Nous formalisons cette approche en proposant le framework MOISE+MARL.
 
-\subsection{Aperçu général}
-
-Le coeur de la méthode SAMMASD est de considerer la conception d'un SMA comme un problème d'optimisation sous contraintes. La variable à optimiser est alors la politique conjointe pour maximiser la récompense cumulée sous des contraintes additionnelles données. SAMMASD inclue des spécifications organisationnelle en MARL comme contraintes additionnelles permettant à l'utilisateur de controler au moins partiellement non-seulement des comportements individuels des agents, mais aussi de pouvoir gérer l'ensemble des agents en jouant sur celles-ci.
+\subsection{\textbf{Framework MOISE+MARL}}
 
 L'objectif est alors de guider l'apprentissage des agents en respectant des contraintes organisationnelles sous la forme de role et d'objectifs, tout en garantissant une efficacité suffisante des politiques apprises dans leur environment.
 Nous formalisons cette idée en proposant le framework MOISE+MARL qui combine le formalisme d'un Decentralized Partially Observable Markov Decision Process (Dec-POMDP) avec le modèle organisationnel $\mathcal{M}OISE^+$.
 
-Un \textbf{Dec-POMDP} est formalisé par un tuple $D = \langle N, S, A, P, R, \Omega, O, \gamma \rangle$, où :
-\begin{itemize}
-    \item $\mathcal{A}$, l'ensemble des $N \in \mathbb{N}$ agents;
-    \item $S$, l'ensemble des états possibles de l'environment (agents compris);
-    \item $A = \times_{i=1}^N A_i $, l'ensemble des actions possibles pour chaque agent $i$;
-    \item $T: S \times A^N \to S$, la fonction de transition d'états qui définit le prochain état $s'$ à partir d'un état $s$ sous l'action conjointe $a$;
-    \item $R: S \times A^N \times  S \to \mathbb{R}$, la fonction de récompense associant une récompense $r$ à chaque transition $(s, a, s')$;
-    \item $\Omega = \times_{i=1}^N \Omega_i $ est l'ensemble des observations possibles pour chaque agent $i$;
-    \item $O: S \times A \to \Omega$ est la fonction d'observation qui définit la prochaine observation $\omega$ d'un agent lorsque ce dernier applique une action $a$ dans l'état $s$;
+\textbf{Dec-POMDP} \quad défini par un tuple $D = \langle N, S, A, P, R, \Omega, O, \gamma \rangle$, où :
+%
+\begin{itemize*}[label={},itemjoin={; }]
+    \item $\mathcal{A}$, l'ensemble des $N \in \mathbb{N}$ agents
+    \item $S$, l'ensemble des états possibles de l'environment (agents compris)
+    \item $A = \times_{i=1}^N A_i $, l'ensemble des actions possibles pour chaque agent $i$
+    \item $T: S \times A^N \to S$, la fonction de transition d'états qui définit le prochain état $s'$ à partir d'un état $s$ sous l'action conjointe $a$
+    \item $R: S \times A^N \times  S \to \mathbb{R}$, la fonction de récompense associant une récompense $r$ à chaque transition $(s, a, s')$
+    \item $\Omega = \times_{i=1}^N \Omega_i $ est l'ensemble des observations possibles pour chaque agent $i$
+    \item $O: S \times A \to \Omega$ est la fonction d'observation qui définit la prochaine observation $\omega$ d'un agent lorsque ce dernier applique une action $a$ dans l'état $s$
     \item $\gamma \in [0, 1] $ est le facteur d'actualisation.
-\end{itemize}
+\end{itemize*}
 
-Le modèle $\mathcal{M}OISE^+$ est formalisé par un tuple $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$. Ici, nous présentons une version minimale du formalisme de $\mathcal{M}OISE^+$ :
-\begin{itemize}
-    \item $\mathcal{SS} = \langle \mathcal{R} \rangle$, les spécifications structurelles sont définies par un ensemble de rôles $\mathcal{R}$;
-    \item $\mathcal{FS} = \langle \mathcal{G}, \mathcal{M}, mo \rangle$, les spécifications fonctionnelles sont un ensemble d'objectifs $\mathcal{G}$, un ensemble de mission $\mathcal{M}$ et une fonction $mo$ qui associe une mission à un ensemble d'objectifs ;
-    \item $\mathcal{DS} = \mathcal{R} \times \mathcal{M} \times T_c \times \{0,1\}$, les spécifications déontiques comme un ensemble de 4-uplets $(\rho_a, m, t_c, t)$, signifiant respectivement qu'un agent jouant le rôle $\rho_a \in \mathcal{R}$ est autorisé (si $t = 0$) ou obligé (si $t = 1$) à s'engager dans la mission $m \in \mathcal{M}, \ m \subseteq \mathcal{G}$ pour une contrainte temporelle donnée $tc \in \mathcal{TC}$ spécifiant une période pendant laquelle la permission/obligation est valide.
-\end{itemize}
+$\mathbf{\mathcal{M}OISE^+}$ \quad défini par un tuple $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$. Ici, nous présentons une version minimale du formalisme de $\mathcal{M}OISE^+$ :
+\begin{itemize*}[label={},itemjoin={; }]
+    \item $\mathcal{SS} = \langle \mathcal{R} \rangle$, les spécifications structurelles sont définies par un ensemble de rôles $\mathcal{R}$
+    \item $\mathcal{FS} = \langle \mathcal{G}, \mathcal{M}, mo \rangle$, les spécifications fonctionnelles sont un ensemble d'objectifs $\mathcal{G}$, un ensemble de mission $\mathcal{M}$ et une fonction $mo: \mathcal{M} \to \mathcal{P}(\mathcal{G} \times [0,1])$ qui associe une mission $m \in \mathcal{M}$ à un ensemble d'objectifs chacun pondéré par un poids $\{(g_1,w_0), (g_2,w_1)\dots\}, w_i \in [0,1], g_i \in \mathcal{G}$
+    \item $\mathcal{DS} = \mathcal{R} \times \mathcal{M} \times T_c \times \{0,1\}$, les spécifications déontiques comme un ensemble de 4-uplets $(\rho_a, m, \allowbreak t_c, p)$, signifiant respectivement qu'un agent jouant le rôle $\rho_a \in \mathcal{R}$ est autorisé (si $p = 0$) ou obligé (si $p = 1$) à s'engager dans la mission $m \in \mathcal{M}, \ m \subseteq \mathcal{G}$ pour une contrainte temporelle donnée $t_c \in \mathcal{TC}, t_c = \mathcal{P}(N)$ spécifiant une période pendant laquelle la permission/obligation est valide.
+\end{itemize*}
 
-Nous introduisons trois nouvelles relations designées comme "Constraint Guides" pour décrire la logique des rôles et objectifs $\mathcal{\mathcal{M}OISE^+}$ dans le formalisme Dec-POMDP:
+\textbf{Constraint Guides} \quad sont trois nouvelles relations introduites pour décrire la logique des rôles et objectifs $\mathcal{M}OISE^+$ dans le formalisme Dec-POMDP:
 
-\begin{itemize}
-    \item \textbf{Role Action Guide} (RAG) \quad $rag: \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, la relation qui permet de modéliser un rôle comme un ensemble de règles qui à chaque observation $\omega \in \Omega$ reçu par l'agent associe des actions attendues $A \in \mathcal{P}(A)$ chacune associée à une dureté de contrainte $ch \in [0,1]$ ($ch = 0$ par défaut). En restreignant le choix de la prochaine action à celles autorisées, l'agent est forcé d'adherer au comportement attendu du rôle ;
-    \item \textbf{Role Reward Guide} (RRG) \quad $rrg: \Omega \times A \to \mathbb{R} = \{r_m \text{ if } a \in A, a \notin A_\omega, \ \omega \in \Omega, \ rag(\omega) = A_\omega \times \mathbb{R_\omega}; \text{ else } 0\}$, la relation qui permet de modéliser un rôle en ajoutant un malus $r_m$ à la récompense globale si l'action choisie par l'agent $a \in A$ n'est pas autorisée pour inciter l'agent à adherer au comportement attendu d'un role ;
+\begin{itemize}[label={},itemjoin={; }]
+    \item \textbf{Role Action Guide} (RAG) \quad $rag: \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, la relation qui permet de modéliser un rôle comme un ensemble de règles qui à chaque observation $\omega \in \Omega$ reçu par l'agent associe des actions attendues $A \in \mathcal{P}(A)$ chacune associée à une dureté de contrainte $ch \in [0,1]$ ($ch = 0$ par défaut). En restreignant le choix de la prochaine action parmi celles autorisées, l'agent est forcé d'adherer au comportement attendu du rôle
+    \item \textbf{Role Reward Guide} (RRG) \quad $rrg: \Omega \times A \to \mathbb{R} = \{r_m \text{ if } a \in A, a \notin A_\omega, \ \omega \in \Omega, \ rag(\omega) = A_\omega \times \mathbb{R_\omega}; \text{ else } 0\}$, la relation qui permet de modéliser un rôle en ajoutant un malus $r_m$ à la récompense globale si l'action choisie par l'agent $a \in A$ n'est pas autorisée pour inciter l'agent à adherer au comportement attendu d'un role
     \item \textbf{Goal Reward Guide} (GRG) \quad $grg: H \rightarrow \mathbb{R}$, la relation qui permet de modéliser un objectif comme une contrainte molle en ajoutant un bonus $r_b \in \mathbb{R}$ à la récompense globale si la trajectoire de l'agent $h \in H$ contient une sous-séquence $h_g \in H_g$ caractéristique de l'objectif de sorte à inciter l'agent à trouver un moyen pour l'atteindre.
 \end{itemize}
 
-Enfin, pour lier les spécifications organisationnelles de $\mathcal{M}OISE^+$ aux "Constraint Guides" et aux agents, nous introduisons les relations suivantes :
+Enfin, pour lier les spécifications organisationnelles de $\mathcal{M}OISE^+$ aux "Constraint Guides" et aux agents, nous introduisons les relations utilitaires suivantes :
 \begin{itemize}
-    \item \textbf{Deontic specifications to Agents} (DA) \quad $da: \mathcal{D} \rightarrow \mathcal{P}(\mathcal{A})$, la relation qui relie les spécifications déontiques aux agents, permettant de définir les permissions et obligations selon les rôles et missions.
-    \item \textbf{Role to Constraint Guide} (RCG) \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$, la relation qui associe chaque rôle de $\mathcal{M}OISE^+$ à une relation $rag$ ou $rrg$, forçant/incitant l'agent à suivre les actions attendu pour le role $\rho \in \mathcal{R}$.
+    \item \textbf{Agent to Role} (AR) \quad $ar: \mathcal{A} \to \mathcal{R}$, la relation bijective qui relie un agent à un rôle ;
+    \item \textbf{Role to Constraint Guide} (RCG) \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$, la relation qui associe chaque rôle de $\mathcal{M}OISE^+$ à une relation $rag$ ou $rrg$, forçant/incitant l'agent à suivre les actions attendu pour le role $\rho \in \mathcal{R}$ ;
     \item \textbf{Goal to Constraint Guide} (GCG) \quad $gcg: \mathcal{G} \rightarrow grg$ la relation qui lie les objectifs aux relations de trf, en représentant les objectifs sous forme de récompenses dans le MARL.
 \end{itemize}
 
-Résoudre un problème MOISE+MARL implique de trouver une politique conjointe qui maximise la fonction de valeur $V^\pi$ qui représente la récompense cumulative espérée en partant d'un état initial $s \in S$ et en suivant la politique conjointe $\pi$, en appliquant succesivement les action conjointe $a \in A^N$ sous les contraintes additonnelles des "Constraint Guides" impactant l'espace des actions et la récompense :
+Résoudre un problème MOISE+MARL implique de trouver une politique conjointe qui maximise la fonction de valeur $V^\pi$ qui représente la récompense cumulative espérée en partant d'un état initial $s \in S$ et en suivant la politique conjointe $\pi$, en appliquant succesivement les action conjointe $a \in A^N$ sous les contraintes additonnelles des "Constraint Guides". La formalisation de la résolution est décrite dans la \hyperref[eq:value_function]{Definition 1} en adaptant la définition de la fonction de valeur pour les rôles (en rouge) et les missions (en bleu), impactant ainsi l'espace des actions et la récompense.
 
-Pour une spécification déontique $(\rho,m,t_c)$ appliquée à un seul agent, ce dernier est contraint à un rôle $\rho \in mathcal{R}$ et est permis ou autorisé selon $t \in \{0,1\}$ à s'engager à une mission $m \in \mathcal{M}, \mathcal{G} = mo(m) = \{g_0, g_1 \dots g_n\}$, la fonction de valeur $V^\pi$ a la forme suivante :
+% \begin{gather*}
+%   (1) \quad V^\pi(s_t) = \hspace{-0.4cm} \sum_{\textcolor{red}{ \substack{a_{t} \in rac(A)}
+%   }}{\hspace{-0.4cm} \pi(a_{t} | \omega_t)} \sum_{s_{t+1} \in S}{T(s_{t+1} | s_t, a_{t})[R(s_t,a_{t},s_{t+1})} \\
+%    + \ \hspace{-0.cm} \allowbreak
+%   \textcolor{blue}{rrc(h_{t+1})} + \textcolor{red}{mrc(\omega_t, a_t)} + V^{\pi}(s_{t+1})]
+% \end{gather*}
 
-\begin{figure*}
-
-\begin{gather*}
-  \text{ (1) \quad}V^\pi(s_t) = \sum_{\textcolor{red}{ \substack{a_{t} \in A \text{ if } rn() > ch_{t}, \\ 
-  a_{t} \in A_{t} \text{ else}}
-  }}{\pi(a_{t} | \omega_t)} \sum_{s_{t+1} \in S}{T(s_{t+1} | s_t, a_{t+1})[R(s_t,a_{t},s_{t+1}) + \textcolor{blue}{ \frac{1}{1 - t + \epsilon} \times grg(h_{t+1}) } + \textcolor{red}{(1-ch) \times rrg(\omega_t,a_{t+1})}]}
-\end{gather*}
-
-\
-
-Avec $rag(\omega_t) = A_{t} \times \mathbb{R}, (a_t, ch_{t}) \in A_{t} \times \mathbb{R} ; \text{ and } rn: \emptyset \to [0,1]$, a uniform random function ; rsm: rgc; $h_t = \{h_0 = \langle \rangle, h_{t+1} = \langle h_t, (\omega_{t+1}, a_{t+1}) \rangle \}$
-\end{figure*}
-
-En considérant plusieurs agents respectivement contraints à des rôles et permis/autorisés à s'engager respectivement à une mission, la fonction de valeur $V^\pi$ a la forme suivante :
-
-\begin{figure*}
-
+\begin{figure*}[h!]
+  \label{eq:value_function}
+  \raggedright
+  \textbf{Definition 1 : Fonction de valeur adaptée aux "Constraint Guides" pour un agent donné $i$}
   \begin{gather*}
-    \text{\quad (1) \quad \qquad }V^\pi(s_t) = \sum_{\substack{a_{t+1} \in A \text{ if } rn() > ch_{t+1}, \\ 
-    a_{t+1} \in A_{t+1} \text{ else}
-    }}{\pi(a_{t+1} | \omega_t)} \sum_{s_{t+1} \in S}{T(s_{t+1} | s_t, a_{t+1})[R(s_t,a_{t+1},s_{t+1}) + gcg(h_{t+1}) + (1-ch) \times rrg(\omega_t,a_{t+1})]}
+    \text{ \quad \quad}V^\pi(s_t) = \hspace{-0.75cm} \sum_{\textcolor{red}{ \substack{a_{t} \in A \text{ if } rn() < ch_{t}, \\ 
+    a_{t} \in A_{t} \text{ else}}
+    }}{\hspace{-0.7cm} \pi(a_{t} | \omega_t)} \sum_{s_{t+1} \in S}{T(s_{t+1} | s_t, a_{t})[R(s_t,a_{t},s_{t+1}) + \hspace{-0.1cm} \textcolor{blue}{ \sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \times \frac{grg_m(h_{t+1})}{1 - p + \epsilon} } } + \textcolor{red}{ch_t \times rrg(\omega_t,a_{t+1})} + V^{\pi}(s_{t+1})]}
+  \end{gather*}  
+  %
+  \textcolor{red}{\[\text{With } rag(\omega_t) = A_{t} \times \mathbb{R} \text{, } (a_t, ch_{t}) \in A_{t} \times \mathbb{R} \text{ ; } \text{ and } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
+  %
+  \textcolor{blue}{
+  \begin{gather*}
+  \text{With } \omega_t = O(\omega_t | s_t, a_t) \text{ ; } h_t = \{h_0 = \langle \rangle, h_{t+1} = \langle h_t, (\omega_{t+1}, a_{t+1}) \rangle \} \text{ ; } grg_m(h) = \hspace{-0.8cm} \sum_{(grg_i,w_i) \in mo(m)}{\hspace{-0.8cm} w_i \times grg_i(h)} \text{ ; } \epsilon \in \mathbb{R}_{>0} \text{ ; } \\
+  v_m(t) = \{ 1 \text{ if } t \in t_c \text{ ; else } 0 \} \text{ ; } \text{ and } \mathcal{M}_i = \{m_j | (ar(i),m_j,t_c,p) \in \mathcal{M}\}
   \end{gather*}
-  
-  \
-  
-  Avec $rag(\omega_t) = A_{t+1} \times \mathbb{R} = ach, \ ach(a_{t+1}) = ch_{t+1} ; \text{ and } rn: \emptyset \to [0,1]$, a uniform random function.
+  }
+
   \end{figure*}
+
+A un instant $t \in \mathbb{N}$, on considère un agent $i$ contraint à un rôle $\rho = ar(i)$. Pour chaque spécification déontique associé valide temporellement $d_i = (\rho,m_i,t_{c_i},p_i)$ (telles que $v_{m_i}(t) = t \in t_{c_i}$), l'agent est permis (si $p_i = 0$) ou obligé (si $p_i = 1$) de s'engager à la mission $m_i \in \mathcal{M}, \mathcal{G}_{m_i} = mo(m_i), n \in \mathbb{N}$.
+%
+D'abord, à partir de l'observation reçue $\omega_t$, l'agent doit choisir une action soit : dans l'ensemble des actions attendues du rôle $A_t$ si une valeur aléatoire est inférieur à la dureté de contrainte de role $ch_t$; soit dans l'ensemble de toutes les actions $A$ sinon. Si $ch_t = 1$ le rôle est fortement contraint à l'agent et faiblement sinon.
+%
+Ensuite, l'action est appliquée dans l'état courant $s_t$ pour passer à l'état suivant $s_{t+1}$, générer l'observation suivante $\omega_{t+1}$, et générer la récompense. La récompense est la somme de la récompense globale avec les pénalités et bonus obtenus par les spécifications organisationnelles: \quad i) la somme des bonus des objectifs associés à chaque mission associé (via les "Goal Reward Guide"), valide temporellement (via $v_m(t)$), pondérés par le poids associé ($\frac{1}{1-p+\epsilon}$) ; \quad ii) la pénalité associée au rôle (via les ""Role Reward Guide") pondérée par la dureté de contrainte au role.
+
+En considérant plusieurs agents respectivement contraints à des rôles et permis/autorisés à s'engager respectivement à une mission.
+
+
+\subsection{Aperçu général}
 
 Notre méthode, SAMMASD, s'articule autour de quatre phases principales : (1) la modélisation de l'environnement, de l'objectif et des contraintes organisationnelles selon le framework proposé, (2) l'apprentissage des politiques via plusieurs algorithmes MARL, (3) l'analyse des comportements et l'inférence de spécifications organisationnelles avec une méthode proposée, et (4) le développement et le déploiement du SMA. Cette approche permet de guider le processus d'apprentissage des agents en respectant des contraintes organisationnelles strictes, tout en garantissant l'efficacité des politiques apprises. Le cycle de vie d'un SMA conçu avec SAMMASD est illustré dans la \autoref{fig:cycle}.
 
 % Description formelle des phases
 
+
+\begin{figure*}[h!]
+  \centering
+  \input{figures/cycle.tex}
+  \caption{Cycle de vie d'un SMA conçu avec SAMMASD.}
+  \label{fig:cycle}
+\end{figure*}
+
 \subsection{Phase 1 : Modélisation}
 
-L'étape de modélisation vise à créer un modèle simulé qui capture fidèlement les dynamiques et les contraintes de l'environnement cible, tout en incluant des spécifications organisationnelles et des objectifs. Ce modèle servira de base pour entraîner les agents dans un environnement contrôlé. Cette étape est cruciale pour s'assurer que les agents apprennent dans une simulation fidèle à la réalité du système cible dans un cadre sécurisé et facilitant la recherche d'une solution. Le processus de cette phase est décrit dans \autoref{alg:modeling}.
+L'étape de modélisation vise à créer un modèle simulé qui capture fidèlement les dynamiques et les contraintes de l'environnement cible, définir des spécifications organisationnelles et des objectifs. Ce modèle servira de base pour entraîner les agents dans un environnement contrôlé. Cette étape est cruciale pour s'assurer que les agents apprennent dans une simulation fidèle à la réalité du système cible dans un cadre sécurisé et facilitant la recherche d'une solution. % Le processus de cette phase est décrit dans \autoref{alg:modeling}.
 
 Cette phase prend les éléments suivants en entrée :
 \begin{itemize}
@@ -328,97 +339,15 @@ Cette phase prend les éléments suivants en entrée :
     \item \textbf{Contraintes additionnelles} : Des exigences spécifiques à respecter, pouvant inclure des normes, règles d'organisation, ou contraintes de sûreté.
 \end{itemize}
 
-Une fois les élements collectés, la modélisation suit les étapes suivantes :
-
-\subsubsection{Modélisation de l'environnement simulé}
-  
-Des agents observateurs sont déployés pour collecter des traces de l'environnement réel ou de sa copie sécurisée. Ces traces sont utilisées pour générer un modèle simulé de l'environnement en utilisant une technique de \textit{System Identification}.
-
-\subsubsection{Formulation de la fonction de récompense}
-
-L'utilisateur doit mettre en place la logique d'une fonction de récompense qu'il estime être la plus adaptée pour atteindre les objectifs fixés. 
-
-\subsubsection{Formulation des spécifications $mathcal{M}OISE^+$MARL}
-
-Les contraintes organisationnelles et les sous-objectifs sont formalisés en utilisant le framework $mathcal{M}OISE^+$MARL. Les rôles et les missions sont définis pour guider les agents dans leur apprentissage.
+Une fois les élements collectés, la modélisation suit les étapes suivantes : 
 
 
+\paragraph{\textbf{1) Modélisation de l'environnement simulé}} \quad
 
-
-\RestyleAlgo{ruled}
-\SetKwComment{Comment}{// }{}
-
-\begin{algorithm}[hbt!]
-  \caption{Étape de Modélisation pour SAMMASD}\label{alg:modeling}
-
-  \SetAlgoLined
-\KwIn{%
-    $real\_env$ : Environnement réel avec états et transitions,\\
-    $problem\_desc$ : Description du problème avec fonction de récompense,\\
-    $additional\_constraints$ : Contraintes organisationnelles et de sûreté (trf, rag)
-}
-\KwOut{%
-    $model$ : Un modèle $mathcal{M}OISE^+$MARL avec l'environnement simulé, l'objectif, et les contraintes
-}
-
-% Étape 1: Créer ou utiliser un modèle simulé
-\If{SimulatedModelExists($real\_env$)}{
-    $simulated\_env \gets$ GetExistingSimulatedModel($real\_env$)\;
-}
-\Else{
-    $safe\_env\_copy \gets$ CreateSafeCopy($real\_env$)\;
-    $traces \gets$ CollectTraces($safe\_env\_copy$)\;
-    $simulated\_env \gets$ GenerateSimulatedModel($traces$)\;
-}
-
-% Étape 2: Ajouter l'objectif et les contraintes
-$simulated\_env$.AddObjective($problem\_desc.objective\_function$)\;
-\ForEach{$constraint$ in $additional\_constraints$}{
-    \eIf{$constraint.Type$ == "Soft"}{
-        ApplyRewardShaping($simulated\_env$, $constraint$)\;
-    }{
-        ApplyShielding($simulated\_env$, $constraint$)\;
-    }
-}
-
-% Étape 3: Incorporer les spécifications $mathcal{M}OISE^+$MARL
-$rag \gets$ Generaterag($simulated\_env$, $problem\_desc.roles$)\;
-$trf \gets$ Generatetrf($simulated\_env$, $problem\_desc.missions$)\;
-$model \gets$ MOISE\_MARL\_Model($simulated\_env$, $rag$, $trf$)\;
-
-\Return{$model$}
-
-\end{algorithm}
-
-
-Ce processus établit un environnement d'apprentissage sécurisé et guidé pour les agents, en s'assurant qu'ils respectent les contraintes définies tout en poursuivant leurs objectifs de manière efficace.
-
-
-
-
-\subsubsection{Comparaison des Méthodes de Modélisation Automatisée}
-
-Dans cette sous-section, nous présentons une analyse des différentes méthodes permettant de modéliser un environnement cible de manière fidèle et automatisée. Les méthodes considérées sont l'Identification de Systèmes, l'Apprentissage par Imitation, la Modélisation Approximative (Surrogate Modeling), et le Jumeau Numérique (Digital Twin). Nous utilisons des critères spécifiques pour évaluer ces méthodes en fonction de leur adéquation aux besoins de la modélisation automatisée.
-
-\paragraph{Critères d'Évaluation}
-
-\begin{itemize}
-    \item \textbf{Niveau d'Intervention Manuelle (NIM)} : La méthode nécessite-t-elle que l'utilisateur développe ou configure manuellement une partie du modèle simulé ?
-    \item \textbf{Niveau de Modélisation Mathématique (NMM)} : La méthode inclut-elle des modèles mathématiques pour représenter l'environnement ?
-    \item \textbf{Applicabilité Générale (AG)} : La méthode peut-elle modéliser une large variété d'environnements sans restrictions spécifiques ?
-    \item \textbf{Requiert une Version Émulée (RVE)} : La méthode nécessite-t-elle une copie émulée de l'environnement cible pour générer ou valider le modèle ?
-    \item \textbf{Mise à Jour Automatique (MUA)} : La méthode permet-elle de mettre à jour le modèle automatiquement sans intervention humaine ?
-    \item \textbf{Automatisation Complète (AC)} : La méthode offre-t-elle une procédure entièrement automatisée pour construire et gérer le modèle ?
-    \item \textbf{Adaptabilité en Temps Réel (ATR)} : La méthode peut-elle s'adapter en temps réel aux changements de l'environnement cible ?
-    \item \textbf{Niveau de Fidélité au Système Réel (NFS)} : La méthode fournit-elle un modèle avec un haut niveau de fidélité par rapport au système cible ?
-    \item \textbf{Exigences en Données (ED)} : Quel est le volume et le type de données requis pour construire et maintenir le modèle ?
-    \item \textbf{Coût Computationnel (CC)} : Quelles sont les exigences en termes de ressources de calcul pour générer et mettre à jour le modèle ?
-\end{itemize}
-
-\paragraph{Comparaison des Méthodes}
+\noindent Nous définissons la modélisation de l'environment comme l'élaboration d'une fonction d'observation approximée $\hat{O}: S \times A \to \Omega, \hat{O}(s_t,a_t) = \omega_{t+1}$ telle que $|\hat{O} \cap O| \geq f$, où $f \in \mathbb{R}$ est la fidélité à l'environment réel décrit par $O$.
+Il s'agit pour le concepteur de reproduire fidèlement la logique de l'environnement qui amène l'agent à recevoir des observations à chaque transition d'état. 
 
 Le tableau \ref{tab:comparaison-methodes} présente une comparaison des méthodes d'Identification de Systèmes, d'Apprentissage par Imitation, de Modélisation Approximative, et de Jumeau Numérique en fonction des critères mentionnés.
-
 
 \begin{table*}[h!]
 \centering
@@ -442,20 +371,36 @@ Coût Computationnel (CC)                & Élevé                         & Moy
 \label{tab:comparaison-methodes}
 \end{table*}
 
-\paragraph{Explications des Comparaisons}
+Chacune de ces méthodes se distingue par son approche et son niveau de fidélité par rapport au système cible. L'Identification de Systèmes s'appuie sur une modélisation mathématique précise qui repose sur l'observation et l'ajustement de paramètres en fonction des données collectées. Cela implique généralement une intervention humaine significative, notamment pour les environnements où les dynamiques sont connues et représentables par des équations. En revanche, l'Apprentissage par Imitation ne requiert pas nécessairement de modèle mathématique, mais plutôt une observation du comportement pour que le modèle reproduise celui-ci. Cette méthode est efficace pour capturer des comportements complexes, mais peut être limitée en précision et nécessiter de nombreux exemples pour générer des résultats robustes.
 
-Les méthodes d'\textbf{Identification de Systèmes} et de \textbf{Jumeau Numérique} sont connues pour leur fidélité accrue à l'environnement réel, mais elles nécessitent souvent des ajustements manuels et un coût computationnel élevé. L'\textbf{Apprentissage par Imitation} est plus automatisé et nécessite moins de données mathématiques, bien qu'il soit souvent moins précis. La \textbf{Modélisation Approximative} offre un bon compromis pour des applications générales avec des exigences computationnelles moyennes, mais elle peut nécessiter une intervention manuelle pour ajuster les modèles aux changements de l'environnement.
+D'autre part, la Modélisation Approximative et les Jumeaux Numériques sont des méthodes adaptées à des contextes où la complexité du système ou les exigences de mise à jour automatique sont élevées. La Modélisation Approximative génère des représentations simplifiées à partir de techniques statistiques ou de l'apprentissage automatique, permettant d'optimiser des systèmes complexes à moindre coût de calcul. Bien qu'elle offre une grande flexibilité, elle peut être moins précise qu'un modèle fondé sur des équations exactes. Le Jumeau Numérique, quant à lui, crée une réplique numérique du système réel, synchronisée en temps réel, permettant des mises à jour continues et une fidélité accrue au système cible. Cependant, la création d'un jumeau numérique est plus coûteuse en termes de collecte de données et de ressources, et nécessite souvent une version émulée du système cible. En somme, le choix de la méthode doit prendre en compte les besoins en termes de précision, de flexibilité, et de capacité d'automatisation, afin de sélectionner la solution la plus adaptée à l'application visée.
 
-Les étapes de cette approche sont les suivantes :
-\begin{enumerate}
-    \item \textbf{Collecte de Traces} : Les agents collectent des séquences de transitions $(s, a, s')$, des observations $\omega$, et des récompenses $r$.
-    \item \textbf{Estimation des Paramètres} : Les paramètres $(\theta, \phi, \rho)$ sont estimés par l'application de techniques d'identification.
-    \item \textbf{Modélisation Révisée} : Les fonctions $(\hat{P}, \hat{O}, \hat{R})$ sont ajustées afin d'obtenir un modèle simulé fidèle à l'environnement.
-    \item \textbf{Entraînement et Validation} : Le modèle simulé est utilisé pour entraîner les agents et valider leurs politiques dans un environnement de test avant un éventuel déploiement dans l'environnement réel.
-\end{enumerate}
+Dans notre méthode, nous favorisons les techniques de "Imitation Learning" car beaucoup de ces techniques ne requierent pas d'intervention humaine, sont applicables à une majorité d'environnements tout en permettant de capturer la complexité de l'environment après un entrainement suffisant. Bien que ces techniques peuvent présenter un manque de lisibilité en particulier pour ceux basés sur des architectures de réseaux de neuronne, nous ne considérons que la fidélité comme critère principal de notre méthode.
 
+Dans cette optique, la méthode suggère de procéder comme suit: des agents observateurs (possiblement humains) sont déployés pour collecter des traces de l'environnement réel ou d'une copie sécurisée. Ces traces sont rassemblées et utilisées pour entrainer un modèle basé sur un Recurrent Neural Networks (RNN). Cette architecture est particulierement adapté pour prédire la prochaine observation en étant optimisé pour apprendre à partir de séquence.
 
-%%%%%%%%%%
+\paragraph{\textbf{2) Formulation de la fonction de récompense}} \quad
+
+\noindent Nous définissons la formulation de la fonction de récompense comme : \quad i) la recherche d'une description claire des différents états recherchés et sa description comme des (sous-)trajectoires plus généralement afin de caractériser au mieux l'objectif global ; \quad ii) la recherche d'un moyen de mesurer seulement la distance entre l'état courant et ces trajectoires voulus. L'utilisateur doit donc mettre en place la logique d'une fonction de récompense qu'il estime être la plus adaptée pour atteindre les objectifs fixés.
+
+La recherche d'une description claire des états recherchés n'est pas toujours trivial en fonction des environnements. Bien que consideré comme admise dans notre méthode, cette recherche peut être appuyée par des techniques d'Inverse Reinforcement Learning (IRL) consistant à s'inspirer des comportements observés des agents dans un environment réel pour en détérminer l'objectif final. D'autre part, nous préconisons la vision d'un objectif comme indépendant des agents. C'est pourquoi l'objectif ne doit pas chercher à influencer directement les agents afin qu'ils adoptent un comportement attendu (il s'agit plutôt de la vision d'un rôle). Une fois établies, ces différents états voulus peuvent être présentés comme un ensemble de (sous-)trajectoires.
+
+Concernant la recherche d'un moyen de mesurer la distance entre l'état courant et l'ensemble des trajctoires voulus, nous suggérons d'utiliser la séquence commune la plus longue entre la (sous-)trajectoire caractérisant l'objectif et l'historique courant des agents. Cette mesure a l'avantage d'être simple et pertinente lorsque la séquence associée à la trajectoire d'un objectif est continue (ce qui est le cas dans nos experimentations). Néanmoins, elle moins facilement applicable lorsque la séquence associée à l'objectif est discontinue. D'autres mesures issues des travaux sur les séries temporelles sont également envisageables.
+
+\paragraph{\textbf{3) Formulation des spécifications $mathcal{M}OISE^+$MARL}} \quad
+
+\noindent Nous définissons la formulation des spécifications organizationnelles comme l'établissement des relation : \quad i) $ar$, liant les agents à des rôles ; \quad ii) $rcg$
+
+Les contraintes organisationnelles et les sous-objectifs sont formalisés en utilisant le framework $mathcal{M}OISE^+$MARL. Les rôles et les missions sont définis pour guider les agents dans leur apprentissage.
+
+\
+
+Au terme de cette phase, la sortie comprend les éléments suivants:
+\begin{itemize}
+    \item \textbf{Un modèle de l'environnement} sous forme d'une fonction d'approximation de la fonction d'observation ;
+    \item \textbf{Une fonction de récompense} indiquant objectivement aux agents à quel point ils se trouvent proche ou éloigné de l'objectif global ;
+    \item \textbf{Un ensemble de spécifications organisationnelles} décrites comme 
+\end{itemize}
 
 \subsection{Phase 2 : Résolution}
 Dans cette phase, nous utilisons des algorithmes \textbf{MARL} pour résoudre le problème formalisé dans l'environnement simulé. Les algorithmes comme \textbf{MADDPG} et \textbf{MAPPO} sont utilisés pour apprendre des politiques qui respectent à la fois les objectifs de performance et les contraintes organisationnelles définies par \textbf{$mathcal{M}OISE^+$}. L'intégration de \textbf{$mathcal{M}OISE^+$} dans le processus d'apprentissage permet de restreindre l'espace de recherche des politiques, rendant ainsi le processus plus efficace et garantissant la sûreté du système.
