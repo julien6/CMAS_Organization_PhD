@@ -108,6 +108,8 @@
     \def\proofoutlineautorefname{Proof Outline}
 }
 
+\DeclareMathAlphabet\mathbfcal{OMS}{cmsy}{b}{n}
+
 \newcommand{\supertiny}{\fontsize{1}{2}\selectfont}
 
 
@@ -218,7 +220,7 @@ Les systèmes multi-agents (SMA) sont au cœur de nombreuses applications, allan
 
 Les méthodes actuelles d'apprentissage par renforcement multi-agent (MARL) ont montré leur efficacité pour générer des politiques optimales dans des environnements dynamiques. Toutefois, ces approches manquent souvent de mécanismes explicites pour imposer des contraintes organisationnelles et garantir que les agents respectent des normes de sûreté essentielles pour des environnements critiques, comme la logistique en entrepôts ou la défense cybernétique.
 
-Cet article présente une nouvelle méthode, \textbf{SAMMASD} (Semi-Automated MARL-based MAS Design), qui combine le framework \textbf{$mathcal{M}OISE^+$MARL} avec l'algorithme d'évaluation \textbf{HEMM} pour inférer et appliquer des structures organisationnelles aux politiques apprises par les agents. L'intégration de \textbf{$mathcal{M}OISE^+$}, un modèle organisationnel orienté multi-agents, permet de contraindre l'apprentissage des agents en définissant des rôles et des missions, ce qui favorise l'émergence de comportements interprétables et conformes aux exigences de sûreté.
+Cet article présente une nouvelle méthode, \textbf{SAMMASD} (Semi-Automated MARL-based MAS Design), qui combine le framework \textbf{MOISE+MARL} avec la méthode d'évaluation \textbf{HEMM} pour inférer et appliquer des structures organisationnelles aux politiques apprises par les agents. L'intégration de \textbf{$mathcal{M}OISE^+$}, un modèle organisationnel orienté multi-agents, permet de contraindre l'apprentissage des agents en définissant des rôles et des missions, ce qui favorise l'émergence de comportements interprétables et conformes aux exigences de sûreté.
 
 Le reste de cet article est structuré comme suit : la \autoref{sec:related_works} présente les travaux connexes dans le domaine du MARL et des modèles organisationnels pour SMA. La \autoref{sec:apprragh} décrit en détail les quatre phases de la méthode SAMMASD. Ensuite, la \autoref{sec:evaluation} discute des résultats expérimentaux obtenus dans un scénario de gestion de flux d'entrepôt. Enfin, la \autoref{sec:conclusion} conclut et propose des pistes de travail futures.
 
@@ -233,7 +235,7 @@ Des travaux récents ont exploré des méthodologies agiles pour le développeme
 \section{Approche de conception organisationnelle proposée pour les SMA}
 \label{sec:apprragh}
 
-Le coeur de la méthode SAMMASD est de considerer la conception d'un SMA comme un problème d'optimisation sous contraintes. La variable à optimiser est alors la politique conjointe pour maximiser la récompense cumulée sous des contraintes additionnelles données. SAMMASD inclue des spécifications organisationnelle en MARL comme contraintes additionnelles permettant à l'utilisateur de controler au moins partiellement non-seulement des comportements individuels des agents, mais aussi de pouvoir gérer l'ensemble des agents en ne jouant que sur celles-ci. Nous formalisons cette approche en proposant le framework MOISE+MARL.
+Le coeur de la méthode SAMMASD est de considerer la conception d'un SMA comme un problème d'optimisation sous contraintes. La variable à optimiser est alors la \textbf{politique conjointe} qui est l'ensemble des logiques internes des agents leur permettant de déterminer leurs prochaines actions. L'objectif est de maximiser est la récompense cumulée en suivant cette politique conjointe sous des contraintes additionnelles données. SAMMASD inclue des spécifications organisationnelle en MARL comme contraintes additionnelles permettant à l'utilisateur de controler au moins partiellement non-seulement des comportements individuels des agents, mais aussi de pouvoir gérer l'ensemble des agents en ne jouant que sur celles-ci. Nous formalisons cette approche en proposant le framework MOISE+MARL. Puis, nous l'utilisons pour construire les quatre phases de notre méthode.
 
 \subsection{\textbf{Framework MOISE+MARL}}
 
@@ -260,22 +262,30 @@ $\mathbf{\mathcal{M}OISE^+}$ \quad défini par un tuple $\mathcal{OS} = \langle 
     \item $\mathcal{DS} = \mathcal{R} \times \mathcal{M} \times T_c \times \{0,1\}$, les spécifications déontiques comme un ensemble de 4-uplets $(\rho_a, m, \allowbreak t_c, p)$, signifiant respectivement qu'un agent jouant le rôle $\rho_a \in \mathcal{R}$ est autorisé (si $p = 0$) ou obligé (si $p = 1$) à s'engager dans la mission $m \in \mathcal{M}, \ m \subseteq \mathcal{G}$ pour une contrainte temporelle donnée $t_c \in \mathcal{TC}, t_c = \mathcal{P}(N)$ spécifiant une période pendant laquelle la permission/obligation est valide.
 \end{itemize*}
 
-\textbf{Constraint Guides} \quad sont trois nouvelles relations introduites pour décrire la logique des rôles et objectifs $\mathcal{M}OISE^+$ dans le formalisme Dec-POMDP:
+Les \textbf{Constraint Guides} \quad sont trois nouvelles relations introduites pour décrire la logique des rôles et objectifs $\mathcal{M}OISE^+$ dans le formalisme Dec-POMDP:
 
-\begin{itemize}[label={},itemjoin={; }]
-    \item \textbf{Role Action Guide} (RAG) \quad $rag: \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, la relation qui permet de modéliser un rôle comme un ensemble de règles qui à chaque observation $\omega \in \Omega$ reçu par l'agent associe des actions attendues $A \in \mathcal{P}(A)$ chacune associée à une dureté de contrainte $ch \in [0,1]$ ($ch = 0$ par défaut). En restreignant le choix de la prochaine action parmi celles autorisées, l'agent est forcé d'adherer au comportement attendu du rôle
-    \item \textbf{Role Reward Guide} (RRG) \quad $rrg: \Omega \times A \to \mathbb{R} = \{r_m \text{ if } a \in A, a \notin A_\omega, \ \omega \in \Omega, \ rag(\omega) = A_\omega \times \mathbb{R_\omega}; \text{ else } 0\}$, la relation qui permet de modéliser un rôle en ajoutant un malus $r_m$ à la récompense globale si l'action choisie par l'agent $a \in A$ n'est pas autorisée pour inciter l'agent à adherer au comportement attendu d'un role
-    \item \textbf{Goal Reward Guide} (GRG) \quad $grg: H \rightarrow \mathbb{R}$, la relation qui permet de modéliser un objectif comme une contrainte molle en ajoutant un bonus $r_b \in \mathbb{R}$ à la récompense globale si la trajectoire de l'agent $h \in H$ contient une sous-séquence $h_g \in H_g$ caractéristique de l'objectif de sorte à inciter l'agent à trouver un moyen pour l'atteindre.
+\begin{itemize}
+    \item \textbf{Role Action Guide} (RAG) \quad $rag: H \times \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, la relation qui permet de modéliser un rôle comme un ensemble de règles qui à chaque couple constitué d'un historique $h \in H$ et d'une observation reçue par l'agent $\omega \in \Omega$, associe des actions attendues $A \in \mathcal{P}(A)$ chacune associée à une dureté de contrainte $ch \in [0,1]$ ($ch = 1$ par défaut). En restreignant le choix de la prochaine action parmi celles autorisées, l'agent est forcé d'adherer au comportement attendu du rôle
+    \item \textbf{Role Reward Guide} (RRG) \quad $rrg: H \times \Omega \times A \to \mathbb{R} = \{r_m \text{ if } a \notin A_\omega \text{, } rag(h, \omega) = A_\omega \times \mathbb{R} \text{, } h \in H; \text{ else } 0\}$, la relation qui permet de modéliser un rôle en ajoutant un malus $r_m$ à la récompense globale si la dernière action choisie par l'agent $a \in A$ n'est pas autorisée. Cela vise à inciter l'agent à adherer au comportement attendu d'un role
+    \item \textbf{Goal Reward Guide} (GRG) \quad $grg: H \rightarrow \mathbb{R}$, la relation qui permet de modéliser un objectif comme une contrainte molle en ajoutant un bonus $r_b \in \mathbb{R}$ à la récompense globale si l'historique de l'agent $h \in H$ contient une sous-séquence $h_g \in H_g$ caractéristique de l'objectif de sorte à inciter l'agent à trouver un moyen pour l'atteindre.
 \end{itemize}
 
-Enfin, pour lier les spécifications organisationnelles de $\mathcal{M}OISE^+$ aux "Constraint Guides" et aux agents, nous introduisons les relations utilitaires suivantes :
+Enfin, pour lier les spécifications organisationnelles de $\mathcal{M}OISE^+$ aux "Constraint Guides" et aux agents, nous introduisons les relations \textbf{Linkers} suivantes :
 \begin{itemize}
     \item \textbf{Agent to Role} (AR) \quad $ar: \mathcal{A} \to \mathcal{R}$, la relation bijective qui relie un agent à un rôle ;
     \item \textbf{Role to Constraint Guide} (RCG) \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$, la relation qui associe chaque rôle de $\mathcal{M}OISE^+$ à une relation $rag$ ou $rrg$, forçant/incitant l'agent à suivre les actions attendu pour le role $\rho \in \mathcal{R}$ ;
     \item \textbf{Goal to Constraint Guide} (GCG) \quad $gcg: \mathcal{G} \rightarrow grg$ la relation qui lie les objectifs aux relations de trf, en représentant les objectifs sous forme de récompenses dans le MARL.
 \end{itemize}
 
-Résoudre un problème MOISE+MARL implique de trouver une politique conjointe qui maximise la fonction de valeur $V^\pi$ qui représente la récompense cumulative espérée en partant d'un état initial $s \in S$ et en suivant la politique conjointe $\pi$, en appliquant succesivement les action conjointe $a \in A^N$ sous les contraintes additonnelles des "Constraint Guides". La formalisation de la résolution est décrite dans la \hyperref[eq:value_function]{Definition 1} en adaptant la définition de la fonction de valeur pour les rôles (en rouge) et les missions (en bleu), impactant ainsi l'espace des actions et la récompense.
+MOISE+MARL est donc défini par le tuple $MM = \langle D, \mathcal{OS}, ar, rcg, \allowbreak gcg, rag, rrg, grg\rangle$.
+Résoudre le problème décrit par MOISE+MARL implique de trouver une politique conjointe $\pi^{j} = \Omega^{N} \to A^{N} = \{\pi^j_0,\pi^j_1\dots\pi^j_N\}$ qui maximise la fonction de valeur $V^{\pi^{j}}$ (ou atteint un seuil minimal) qui représente la récompense cumulative espérée en partant d'un état initial $s \in S$ et en suivant la politique conjointe $\pi^{j}$, en appliquant succesivement les actions conjointes $a^{j} \in A^N$ sous les contraintes additonnelles des "Constraint Guides" (en incluant les "Linkers"). Les agents parcourent alors chacun une trajectoire (aussi appelée historique) $h \in H, h = \langle(o_0,a_0), (o_1,a_1)\dots\rangle$. La fonction de valeur à maximiser (ou atteindre un seuil minimal) est décrite dans le cas où les agents agissent les uns après les autres séquentiellement (mode Agent Environnement Cycle - AEC) dans la \hyperref[eq:single_value_function]{Definition 1} en adaptant sa définition pour les rôles (en rouge) et les missions (en bleu), impactant ainsi l'espace des actions et la récompense. La figure \autoref{fig:mm_synthesis} illustre synthetiquement les liens ente $\mathcal{M}OISE^+$ et Dec-POMDP au travers du framework MOISE+MARL.
+
+\begin{figure*}[h!]
+  \centering
+  \input{figures/mm_synthesis.tex}
+  \caption{Une vue synthétique du framework MOISE+MARL}
+  \label{fig:mm_synthesis}
+\end{figure*}
 
 % \begin{gather*}
 %   (1) \quad V^\pi(s_t) = \hspace{-0.4cm} \sum_{\textcolor{red}{ \substack{a_{t} \in rac(A)}
@@ -285,34 +295,39 @@ Résoudre un problème MOISE+MARL implique de trouver une politique conjointe qu
 % \end{gather*}
 
 \begin{figure*}[h!]
-  \label{eq:value_function}
+  \label{eq:single_value_function}
   \raggedright
-  \textbf{Definition 1 : Fonction de valeur adaptée aux "Constraint Guides" pour un agent donné $i$}
+  \textbf{\quad Definition 1 : Fonction de valeur adaptée aux "Constraint Guides" en AEC}
   \begin{gather*}
-    \text{ \quad \quad}V^\pi(s_t) = \hspace{-0.75cm} \sum_{\textcolor{red}{ \substack{a_{t} \in A \text{ if } rn() < ch_{t}, \\ 
+    \text{\quad \quad} V^{\pi^j}(s_t) = \hspace{-0.75cm} \sum_{\textcolor{red}{ \substack{a_{t} \in A \text{ if } rn() < ch_{t}, \\ 
     a_{t} \in A_{t} \text{ else}}
-    }}{\hspace{-0.7cm} \pi(a_{t} | \omega_t)} \sum_{s_{t+1} \in S}{T(s_{t+1} | s_t, a_{t})[R(s_t,a_{t},s_{t+1}) + \hspace{-0.1cm} \textcolor{blue}{ \sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \times \frac{grg_m(h_{t+1})}{1 - p + \epsilon} } } + \textcolor{red}{ch_t \times rrg(\omega_t,a_{t+1})} + V^{\pi}(s_{t+1})]}
+    }}{\hspace{-0.7cm} \pi_i(a_{t} | \omega_t)} \sum_{s_{t+1} \in S}{\hspace{-0.1cm} T(s_{t+1} | s_t, a_{t})[R(s_t,a_{t},s_{t+1}) + \hspace{-0.1cm} \textcolor{blue}{ \sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \frac{grg_m(h_{t+1})}{1 - p + \epsilon} } } + \textcolor{red}{ch_t \times rrg(\omega_t,a_{t+1})} + V^{\pi^j_{i+1 \ mod \ N}}(s_{t+1})]}
   \end{gather*}  
   %
-  \textcolor{red}{\[\text{With } rag(\omega_t) = A_{t} \times \mathbb{R} \text{, } (a_t, ch_{t}) \in A_{t} \times \mathbb{R} \text{ ; } \text{ and } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
+  \textcolor{red}{\[\text{With } rag(h_t, \omega_t) = A_{t} \times \mathbb{R} \text{, } (a_t, ch_{t}) \in A_{t} \times \mathbb{R} \text{ ; } \text{ and } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
   %
+  \vspace{-0.5cm}
   \textcolor{blue}{
   \begin{gather*}
-  \text{With } \omega_t = O(\omega_t | s_t, a_t) \text{ ; } h_t = \{h_0 = \langle \rangle, h_{t+1} = \langle h_t, (\omega_{t+1}, a_{t+1}) \rangle \} \text{ ; } grg_m(h) = \hspace{-0.8cm} \sum_{(grg_i,w_i) \in mo(m)}{\hspace{-0.8cm} w_i \times grg_i(h)} \text{ ; } \epsilon \in \mathbb{R}_{>0} \text{ ; } \\
+  \text{With } \omega_t = O(\omega_t | s_t, a_t) \text{ ; } h_t = \{h_0 = \langle \rangle, h_{t+1} = \langle h_t, (\omega_{t+1}, a_{t+1}) \rangle \} \text{ ; } grg_m(h) = \hspace{-0.8cm} \sum_{(grg_i,w_i) \in mo(m)}{\hspace{-0.8cm} w_i \times grg_i(h)} \text{ ; } \epsilon \in \mathbb{R}_{>0} \text{ ; }
+  \end{gather*}
+  }
+  \vspace{-0.75cm}
+  \textcolor{blue}{
+  \begin{gather*}
   v_m(t) = \{ 1 \text{ if } t \in t_c \text{ ; else } 0 \} \text{ ; } \text{ and } \mathcal{M}_i = \{m_j | (ar(i),m_j,t_c,p) \in \mathcal{M}\}
   \end{gather*}
   }
-
+  \vspace{-0.6cm}
   \end{figure*}
 
-A un instant $t \in \mathbb{N}$, on considère un agent $i$ contraint à un rôle $\rho = ar(i)$. Pour chaque spécification déontique associé valide temporellement $d_i = (\rho,m_i,t_{c_i},p_i)$ (telles que $v_{m_i}(t) = t \in t_{c_i}$), l'agent est permis (si $p_i = 0$) ou obligé (si $p_i = 1$) de s'engager à la mission $m_i \in \mathcal{M}, \mathcal{G}_{m_i} = mo(m_i), n \in \mathbb{N}$.
+A un instant $t \in \mathbb{N}$ (initialement $t = 0$), on considère l'agent $i = t \ mod \ N$ contraint à un rôle $\rho = ar(i)$. Pour chaque spécification déontique associé valide temporellement $d_i = (\rho,m_i,t_{c_i},p_i)$ (telles que $v_{m_i}(t) = t \in t_{c_i}$), l'agent est permis (si $p_i = 0$) ou obligé (si $p_i = 1$) de s'engager à la mission $m_i \in \mathcal{M}, \mathcal{G}_{m_i} = mo(m_i), n \in \mathbb{N}$.
 %
 D'abord, à partir de l'observation reçue $\omega_t$, l'agent doit choisir une action soit : dans l'ensemble des actions attendues du rôle $A_t$ si une valeur aléatoire est inférieur à la dureté de contrainte de role $ch_t$; soit dans l'ensemble de toutes les actions $A$ sinon. Si $ch_t = 1$ le rôle est fortement contraint à l'agent et faiblement sinon.
 %
 Ensuite, l'action est appliquée dans l'état courant $s_t$ pour passer à l'état suivant $s_{t+1}$, générer l'observation suivante $\omega_{t+1}$, et générer la récompense. La récompense est la somme de la récompense globale avec les pénalités et bonus obtenus par les spécifications organisationnelles: \quad i) la somme des bonus des objectifs associés à chaque mission associé (via les "Goal Reward Guide"), valide temporellement (via $v_m(t)$), pondérés par le poids associé ($\frac{1}{1-p+\epsilon}$) ; \quad ii) la pénalité associée au rôle (via les ""Role Reward Guide") pondérée par la dureté de contrainte au role.
 
-En considérant plusieurs agents respectivement contraints à des rôles et permis/autorisés à s'engager respectivement à une mission.
-
+Finalement, le calcul de la récompense cumulée se poursuit dans l'état suivant $s_{t+1} \in S$ avec le prochain agent $(i+1) \ mod \ N$.
 
 \subsection{Aperçu général}
 
@@ -330,7 +345,7 @@ Notre méthode, SAMMASD, s'articule autour de quatre phases principales : (1) la
 
 \subsection{Phase 1 : Modélisation}
 
-L'étape de modélisation vise à créer un modèle simulé qui capture fidèlement les dynamiques et les contraintes de l'environnement cible, définir des spécifications organisationnelles et des objectifs. Ce modèle servira de base pour entraîner les agents dans un environnement contrôlé. Cette étape est cruciale pour s'assurer que les agents apprennent dans une simulation fidèle à la réalité du système cible dans un cadre sécurisé et facilitant la recherche d'une solution. % Le processus de cette phase est décrit dans \autoref{alg:modeling}.
+L'étape de modélisation vise à créer un modèle simulé qui capture fidèlement les dynamiques et les contraintes de l'environnement cible, définir des spécifications organisationnelles et des objectifs. L'environnement réel cible doit nécéssairement dispose d'effecteurs où seront déployés dans emplacements des agents capables d'observer et agir dans l'environment. Ce modèle servira de base pour entraîner les agents dans un environnement contrôlé. Cette étape est cruciale pour s'assurer que les agents apprennent dans une simulation fidèle à la réalité du système cible dans un cadre sécurisé et facilitant la recherche d'une solution.
 
 Cette phase prend les éléments suivants en entrée :
 \begin{itemize}
@@ -352,21 +367,19 @@ Le tableau \ref{tab:comparaison-methodes} présente une comparaison des méthode
 \begin{table*}[h!]
 \centering
 \caption{Comparaison des méthodes de modélisation automatisée selon différents critères}
-\begin{tabular}{|p{5cm}|c|c|c|c|}
-\hline
+\begin{tabular}{p{4cm}cccc}
 \textbf{Critères}                   & \textbf{System Identification} & \textbf{Imitation Learning} & \textbf{Surrogate Modeling} & \textbf{Digital Twin} \\
 \hline
-Niveau d'Intervention Manuelle (NIM)    & Moyen                         & Bas                          & Moyen                       & Haut                 \\
-Niveau de Modélisation Mathématique (NMM) & Élevé                         & Faible                       & Élevé                       & Moyen                \\
-Applicabilité Générale (AG)             & Moyenne                       & Élevée                       & Moyenne                     & Moyenne              \\
-Requiert une Version Émulée (RVE)       & Non                           & Non                          & Non                         & Oui                  \\
-Mise à Jour Automatique (MUA)           & Moyenne                       & Élevée                       & Moyenne                     & Élevée               \\
-Automatisation Complète (AC)            & Moyenne                       & Moyenne                      & Moyenne                     & Variable             \\
-Adaptabilité en Temps Réel (ATR)        & Faible                        & Faible                       & Moyenne                     & Élevée               \\
-Niveau de Fidélité au Système Réel (NFS) & Moyen                         & Bas                          & Moyen                       & Élevé                \\
-Exigences en Données (ED)               & Élevées                       & Moyennes                     & Élevées                     & Élevées              \\
-Coût Computationnel (CC)                & Élevé                         & Moyen                        & Moyen                       & Élevé                \\
-\hline
+Intervention Manuelle    & Moyen                         & Bas                          & Moyen                       & Haut                 \\
+Modélisation Mathématique & Élevé                         & Faible                       & Élevé                       & Moyen                \\
+Applicabilité Générale             & Moyenne                       & Élevée                       & Moyenne                     & Moyenne              \\
+Requiert une Version Émulée       & Non                           & Non                          & Non                         & Oui                  \\
+Mise à Jour Automatique           & Moyenne                       & Élevée                       & Moyenne                     & Élevée               \\
+Automatisation Complète            & Moyenne                       & Moyenne                      & Moyenne                     & Variable             \\
+Adaptabilité en Temps Réel        & Faible                        & Faible                       & Moyenne                     & Élevée               \\
+Fidélité au Système Réel & Moyen                         & Bas                          & Moyen                       & Élevé                \\
+Exigences en Données               & Élevées                       & Moyennes                     & Élevées                     & Élevées              \\
+Coût Computationnel                & Élevé                         & Moyen                        & Moyen                       & Élevé                \\
 \end{tabular}
 \label{tab:comparaison-methodes}
 \end{table*}
@@ -377,57 +390,147 @@ D'autre part, la Modélisation Approximative et les Jumeaux Numériques sont des
 
 Dans notre méthode, nous favorisons les techniques de "Imitation Learning" car beaucoup de ces techniques ne requierent pas d'intervention humaine, sont applicables à une majorité d'environnements tout en permettant de capturer la complexité de l'environment après un entrainement suffisant. Bien que ces techniques peuvent présenter un manque de lisibilité en particulier pour ceux basés sur des architectures de réseaux de neuronne, nous ne considérons que la fidélité comme critère principal de notre méthode.
 
-Dans cette optique, la méthode suggère de procéder comme suit: des agents observateurs (possiblement humains) sont déployés pour collecter des traces de l'environnement réel ou d'une copie sécurisée. Ces traces sont rassemblées et utilisées pour entrainer un modèle basé sur un Recurrent Neural Networks (RNN). Cette architecture est particulierement adapté pour prédire la prochaine observation en étant optimisé pour apprendre à partir de séquence.
+Dans cette optique, la méthode suggère de procéder comme suit: des agents observateurs (possiblement humains) sont déployés dans les emplacements des effecteurs pour collecter des traces (aussi appelées trajectoires) en explorant l'environnement réel ou une copie sécurisée. Ces traces sont rassemblées et utilisées pour entrainer un modèle basé une architecture de réseaux de neuronne. L'architecture Recurrent Neural Networks (RNN) est particulierement adaptée pour prédire la prochaine observation en étant optimisé pour apprendre à partir de séquence.
 
 \paragraph{\textbf{2) Formulation de la fonction de récompense}} \quad
 
-\noindent Nous définissons la formulation de la fonction de récompense comme : \quad i) la recherche d'une description claire des différents états recherchés et sa description comme des (sous-)trajectoires plus généralement afin de caractériser au mieux l'objectif global ; \quad ii) la recherche d'un moyen de mesurer seulement la distance entre l'état courant et ces trajectoires voulus. L'utilisateur doit donc mettre en place la logique d'une fonction de récompense qu'il estime être la plus adaptée pour atteindre les objectifs fixés.
+\noindent Nous définissons la formulation de la fonction de récompense comme : \quad i) la recherche d'une description claire des différents états recherchés et leurs descriptions comme des (sous-)trajectoires plus généralement afin de caractériser au mieux l'objectif global ; \quad ii) la recherche d'un moyen de mesurer seulement la distance entre l'état courant et ces trajectoires voulus. L'utilisateur doit donc mettre en place la logique d'une fonction de récompense qu'il estime être la plus adaptée pour atteindre les objectifs fixés.
 
 La recherche d'une description claire des états recherchés n'est pas toujours trivial en fonction des environnements. Bien que consideré comme admise dans notre méthode, cette recherche peut être appuyée par des techniques d'Inverse Reinforcement Learning (IRL) consistant à s'inspirer des comportements observés des agents dans un environment réel pour en détérminer l'objectif final. D'autre part, nous préconisons la vision d'un objectif comme indépendant des agents. C'est pourquoi l'objectif ne doit pas chercher à influencer directement les agents afin qu'ils adoptent un comportement attendu (il s'agit plutôt de la vision d'un rôle). Une fois établies, ces différents états voulus peuvent être présentés comme un ensemble de (sous-)trajectoires.
 
-Concernant la recherche d'un moyen de mesurer la distance entre l'état courant et l'ensemble des trajctoires voulus, nous suggérons d'utiliser la séquence commune la plus longue entre la (sous-)trajectoire caractérisant l'objectif et l'historique courant des agents. Cette mesure a l'avantage d'être simple et pertinente lorsque la séquence associée à la trajectoire d'un objectif est continue (ce qui est le cas dans nos experimentations). Néanmoins, elle moins facilement applicable lorsque la séquence associée à l'objectif est discontinue. D'autres mesures issues des travaux sur les séries temporelles sont également envisageables.
+Concernant la recherche d'un moyen de mesurer la distance entre l'état courant et l'ensemble des trajctoires voulus, nous laissons à l'utilisateur le soin de définir la logique qu'il estime le mieux mesurer cette distance. Cependant, une approche générale que nous suggérons est d'utiliser une mesure de similarité basée la séquence commune la plus longue entre la (sous-)trajectoire caractérisant l'objectif et l'historique courant des agents. Cette mesure a l'avantage d'être simple et pertinente lorsque la séquence associée à la trajectoire d'un objectif est continue (ce qui est le cas dans nos experimentations). Néanmoins, elle moins facilement applicable lorsque la séquence associée à l'objectif est discontinue. D'autres mesures issues des travaux sur les séries temporelles sont également envisageables.
 
-\paragraph{\textbf{3) Formulation des spécifications $mathcal{M}OISE^+$MARL}} \quad
+\paragraph{\textbf{3) Formulation des spécifications MOISE+MARL}} \quad
 
-\noindent Nous définissons la formulation des spécifications organizationnelles comme l'établissement des relation : \quad i) $ar$, liant les agents à des rôles ; \quad ii) $rcg$
+\noindent Nous définissons la formulation des spécifications organizationnelles MOISE+MARL comme : \quad i) la définition de rôles ($\mathcal{R}$), objectifs ($\mathcal{G}$) et missions ($\mathcal{M}, mo$) ; ii) l'association de chacun des agents à un rôle respectif ($ar$) ; \quad ii) l'association de chacun des rôles aux "Constraint Guides" RAG et RGG définissant leur logique propre ; ii) l'association de chaque sous-objectif à leur "Constraint Guide" GCG définissant leur logique ($gcg$)
 
-Les contraintes organisationnelles et les sous-objectifs sont formalisés en utilisant le framework $mathcal{M}OISE^+$MARL. Les rôles et les missions sont définis pour guider les agents dans leur apprentissage.
+Considérant, les rôles, objectifs et missions comme de simple labels, leur définition est admise. La difficulté réside dans la définition des "Constraint Guide" correspondants.
+
+Définir une relation RAG, RRG ou GRG nécéssite de définir un nombre potentiellement importants d'historiques et possiblement partiellement redondants entre eux. Ainsi, une définition en extension d'un ensemble d'historique peut s'avérer fastidieux. Plus loin, l'idée sous-jacente des "Constraint Guides" est que lorsqu'un agent parcourt une trajectoire cette dernière peut être analysée comme faisant partie d'un ensemble prédéfini. Par exemple, la relation RAG peut être vue comme la détérmination de la prochaine action dépendament de si la trajectoire parcouru appartient à un ensemble donné et de la nouvelle observation reçu. Nous suggérons de définir ces relations en compréhension en laissant le soin aux concepteur de définir la logique permettant de de détérminer si un historique appartient à un ensemble prédéfini $H_g$ formalisé comme la relation $b_g: H \to \{0,1\}$.
+
+Nous proposons également un pattern d'historique inspiré des travaux en Natural Language Processing noté $p \in P$ comme un moyen de définir un ensemble d'historique en compréhension. Un pattern d'historique $p \in P$ est défini de la manière suivante: $p$ est : soit une "séquence feuille" noté comme un couple d'historique-cardinalité $s_l = (h, \{c_min,c_max\})$ (où $h \in H, c_{min} \in \mathbb{N}, c_{max} \in \mathbb{N} \cup "*")$ ; soit une "séquence noeud" noté comme un couple constitué d'un tuple de séquences concrètes et  d'une cardinalité $s_n = (\langle s_{l_1}, s_{l_1}\dots \rangle, \{c_min,c_max\})$. Par exemple, le pattern $p = \allowbreak "[o_1,a_1,[o_2,a_2](0,2)](1,*)"$ peut être formalisé comme la séquence noeud suivante $\allowbreak \langle ((o_1,a_1),(1,1)), ((o_2,a_2),(0,2))\rangle(1,"*")$ et indique l'ensemble des historiques $H_p$ présentant au minimum une fois la sous-séquence consistant en un premier couple $(o_1,a_1)$ puis au maximum deux fois à la réptition séquentielle du couple $(o_2,a_2)$.
+La relation $b_g$ devient alors $b_g(h) = m(p_g,h), \text{ avec } m: P \times H \to \{0,1\}$ indique si un historique $h \in H$ matche un pattern d'historique $p \in P$ décrivant un ensemble d'historique $H_g$.
 
 \
 
-Au terme de cette phase, la sortie comprend les éléments suivants:
+Au terme de cette phase, la sortie est le modèle MOISE+MARL comprenant les éléments suivants:
 \begin{itemize}
-    \item \textbf{Un modèle de l'environnement} sous forme d'une fonction d'approximation de la fonction d'observation ;
-    \item \textbf{Une fonction de récompense} indiquant objectivement aux agents à quel point ils se trouvent proche ou éloigné de l'objectif global ;
-    \item \textbf{Un ensemble de spécifications organisationnelles} décrites comme 
+    \item \textbf{Un modèle de l'environnement} en tant que fonction approximant la fonction d'observation de l'environment réel ;
+    \item \textbf{Une fonction de récompense} indiquant objectivement aux agents à quel point ils se trouvent proches ou éloignés de l'objectif global ;
+    \item \textbf{Un tuple MOISE+MARL} défini incluant des rôles, objectifs, missions et leurs "Constraint Guide" associées.
 \end{itemize}
 
 \subsection{Phase 2 : Résolution}
-Dans cette phase, nous utilisons des algorithmes \textbf{MARL} pour résoudre le problème formalisé dans l'environnement simulé. Les algorithmes comme \textbf{MADDPG} et \textbf{MAPPO} sont utilisés pour apprendre des politiques qui respectent à la fois les objectifs de performance et les contraintes organisationnelles définies par \textbf{$mathcal{M}OISE^+$}. L'intégration de \textbf{$mathcal{M}OISE^+$} dans le processus d'apprentissage permet de restreindre l'espace de recherche des politiques, rendant ainsi le processus plus efficace et garantissant la sûreté du système.
 
-\begin{itemize}
-  \item \textbf{Entrées :} Problème formalisé, contraintes organisationnelles.
-  \item \textbf{Sorties :} Politiques conjointes optimales pour les agents.
-  \item \textbf{Processus :} Utilisation de \textbf{MARL} pour apprendre des politiques tout en respectant les rôles et missions prédéfinis.
-\end{itemize}
+Nous considérons la résolution du problème MOISE+MARL précédement formulé comme la recherche d'une politique $\pi^s \in \Pi$: \quad i) atteignant une récompense cumulée au moins supérieure à un seuil donné $s \in \mathbb{R}$ tel que $V^{\pi^s} \geq s$ ; \quad ii) pour l'ensemble des récompenses collectés $R = \{r_1, r_2\dots\}$ la variance des récompense doit être inférieur à un seuil de stabilité donné $\sigma_{max}^2$ tel que $\sigma_{max}^2 \leq \sigma_{max}^2$. Le choix de $s$ et $\sigma_max$ est généralement détérminé empiriquement en fonction de l'environment, des objectifs et contraintes additionnelles. Bien que les rôles participent à définir partiellement les politiques de chacun des agents, un apprentissage en MARL est guidés par les objectifs afin de completer ces politiques optimalement.
+
+Bien qu'il n'existe aucune procédure permettant de trouver au moins une solution entièrement automatiquement, la méthode préconise l'essai de différents algorithmes MARL pour bénéficier de leurs différentes propriétés adaptées à l'environnement, à l'objectif global et aux contraintes additionnelles données.
+
+Les algorithmes \textbf{value-based} comme Deep Q-Network (DQN) ou Q-mix sont généralement adaptés à des scénarios d'\textbf{Independent Learning (IL)}, où chaque agent apprend individuellement et sans coordination explicite. Bien que cette approche soit simple à mettre en œuvre, elle peut entraîner des oscillations dans les valeurs estimées et donc une variabilité élevée, limitant la stabilité globale.
+
+Les algorithmes \textbf{policy-based} comme MAPPO (Multi-Agent Proximal Policy Optimization) tirent avantage de stratégies de \textbf{Centralized Learning Decentralized Execution (CLDE)}. Cette approche permet aux agents d'apprendre de manière coordonnée en utilisant des informations globales tout en assurant une exécution décentralisée pour une meilleure adaptabilité. Ainsi, ils conviennent bien pour réduire la variance, même si la convergence peut être plus lente en raison de la nécessité de respecter les contraintes de stabilité.
+
+Les algorithmes \textbf{actor-critic} comme MADDPG (Multi-Agent Deep Deterministic Policy Gradient) sont flexibles et compatibles avec des approches \textbf{centralisées ou décentralisées}, selon la coordination requise. En utilisant CLDE, MADDPG peut bénéficier de la centralisation lors de l'apprentissage tout en maintenant une indépendance durant l'exécution, ce qui permet de combiner des performances élevées et une stabilité accrue.
+
+Les algorithmes \textbf{model-based} comme DynaQ ou DynaQ+ peuvent être mis en œuvre de manière \textbf{centralisée} ou dans le cadre d'un apprentissage \textbf{CLDE}, en permettant une planification basée sur un modèle commun. Cela améliore la performance et la stabilité, mais l'efficacité dépend de la précision du modèle.
+
+D'après nos experimentations, l'algorithme MAPPO et MADDPG ou d'autres algorithmes "actor-critic" s'avèrent donner des résultats satisfaisant pour la plupart des environments, objectif et contraintes additionnelles avec assez peu d'intervention pour le choix des hyper-paramètres. Lorsque l'environment réel est suffisament simple et assez faiblement dynamique pour être capturé fidèlement par un modèle de l'environnement, la résolution conduite avec l'algorithme DynaQ+ s'avère également assez performant et stable.
+
+\
+
+Au terme de cette phase, la sortie est une \textbf{politique conjointe satisfaisant les exigences de résolution} en terme de performanc et de stabilité.
 
 \subsection{Phase 3 : Analyse}
-Une fois les politiques apprises, elles sont analysées à l'aide de \textbf{HEMM}, un algorithme qui infère les rôles et les missions des agents en se basant sur leurs comportements observés. L'analyse permet d'identifier les écarts entre les rôles inférés et les rôles prédéfinis dans \textbf{$mathcal{M}OISE^+$}, offrant ainsi une évaluation de l'adéquation organisationnelle du SMA. Les résultats de cette analyse sont ensuite traduits en plans détaillés, qui seront utilisés pour le développement final du système.
 
-\begin{itemize}
-  \item \textbf{Entrées :} Politiques conjointes des agents.
-  \item \textbf{Sorties :} Rôles et missions inférés, plan détaillé des comportements.
-  \item \textbf{Processus :} Utilisation de \textbf{HEMM} pour analyser les politiques apprises et générer des plans interprétables.
-\end{itemize}
+Nous considérons l'analyse de la politique conjointe précédement obtenue comme la détérmination de spécifications organisationnelles MOISE+MARL à partir de l'observation des comportements des agents obtenus avec cette dernière. Cette phase est formalisée comme la relation $e: \mathcal{P}(H^{j}) \to MM$ qui associe un ensemble d'historique conjoints à un ensemble de spécifications MOISE+MARL.
 
-\subsection{Phase 4 : Développement et déploiement}
-Dans la phase finale, les plans générés sont utilisés pour développer et déployer le SMA dans l'environnement réel. Nous utilisons l'outil \textbf{CybMASDE} pour faciliter l'intégration des politiques apprises dans les agents du système. Avant le déploiement réel, des tests sont effectués dans un environnement émulé pour vérifier que le SMA respecte bien les contraintes de sûreté et les objectifs de performance. Cette phase garantit que les agents fonctionnent comme prévu dans l'environnement réel tout en respectant les rôles et missions spécifiés.
+Dans notre méthode, nous proposons une méthode d'évaluation appelée \textbf{History-based Evaluation in MOISE+MARL} (HEMM). Cette méthode utilise des techniques d'apprentissage non supervisé pour généraliser des rôles et des missions à partir de l'ensemble des comportements observés au cours de plusieurs épisodes de test. En mesurant l'écart entre les spécifications organisationnelles abstraites inférées et les comportements réels, nous pouvons également quantifier dans quelle mesure une politique se conforme aux spécifications organisationnelles inférées.
+
+HEMM est basé sur des définitions proposées pour chaque spécification organisationnelle de $\mathcal{M}OISE^+$ concernant les historiques conjointes ou d'autres spécifications organisationnelles, en utilisant des techniques statistiques spécifiques d'apprentissage non supervisé pour les inférer progressivement.
+
+\paragraph{\textbf{1) Inférer les rôles et leur héritage}}
+
+Nous proposons qu'un rôle $\rho$ soit défini comme une politique dont les historiques associées des agents ayant adopté ce rôle contiennent toutes une séquence discontinue commune. Nous proposons qu'un rôle $\rho_2$ hérite de $\rho_1$ si la séquence discontinue commune des historiques associées à $\rho_2$ est également contenue dans celle de $\rho_1$.
+À partir de ces définitions, HEMM utilise une technique "hierarchical clustering" pour trouver les plus longues séquences discontinues communes parmi les historiques des agents. Les résultats peuvent être représentés sous forme de dendrogramme. Cela permet d'inférer les rôles et les relations d'héritage, leurs relations respectives avec les historiques, ainsi que les agents actuels.
+
+\paragraph{\textbf{2) Inférer les organisations possibles}}
+
+Nous proposons qu'une organisation soit liée à un ensemble unique de tous les rôles instanciables partageant des relations d'héritage étroitement similaires. En effet, en considérant deux politiques conjointes entraînées $H_{joint,i,s,1}$ et $H_{joint,i,s,2}$, bien que les deux atteignent un objectif en s'appuyant sur les rôles $\mathcal{R}_{ss,1}$ et $\mathcal{R}_{ss,2}$, ces rôles peuvent être très éloignés les uns des autres. Par exemple, leurs rôles peuvent ne pas utiliser la même distribution de responsabilités.
+HEMM utilise un algorithme de K-means pour obtenir les $q$ clusters des vecteurs $\mathcal{IR}_{i}$, considérés comme des organisations. Les rôles dans le même cluster partagent les relations d'héritage du centroïde de K-means $\mathcal{IR}_j$. En effet, ils représentent des rôles généraux adoptés par les agents d'une même organisation sur toutes les historiques conjointes similaires.
+Pour les étapes suivantes, seule une organisation choisie et ses historiques conjointes associées sont considérées.
+
+\paragraph{\textbf{3) Inférer les objectifs, plans et missions}}
+
+Nous proposons qu'un sous-objectif/objectif soit un ensemble d'états communs atteints en suivant les historiques des agents ayant réussi.
+Pour chaque historique conjointe, HEMM calcule le graphe de transition d'états qui est ensuite fusionné en un graphe général. En mesurant la distance entre deux états vectorisés avec K-means, on peut trouver des clusters de trajectoires que certains agents peuvent suivre. Ensuite, nous échantillonnons certains ensembles d'états pour chaque trajectoire en tant qu'objectifs. Par exemple, on peut choisir l'ensemble d'états le plus restreint dans lequel les agents semblent collectivement transiter à un moment donné pour atteindre leur objectif. Sinon, un échantillonnage équilibré sur des trajectoires à faible variance pourrait être réalisé. En connaissant à quelle trajectoire appartient un objectif, HEMM infère des plans basés sur des choix et des séquences uniquement.
+
+Cela permet d'obtenir des objectifs et des plans au niveau de l'état global, mais ces objectifs peuvent effectivement être répartis en objectifs spécifiques pour chaque sous-groupe et agent. Pour ce faire, HEMM suit le même processus en remplaçant les états par les observations des agents dans le même sous-groupe pour les sous-groupes, et les observations des agents pour les agents eux-mêmes.
+
+Nous proposons qu'une mission soit l'ensemble des sous-objectifs qu'un ou plusieurs agents sont en train d'accomplir.
+En connaissant les objectifs partagés atteints par les agents, HEMM détermine des ensembles d'objectifs représentatifs en tant que missions.
+
+\paragraph{\textbf{4) Inférer les obligations et permissions}}
+
+Nous proposons qu'une obligation soit lorsque qu'un agent jouant le rôle $\rho$ accomplit les objectifs d'une mission et aucun autre pendant certaines contraintes de temps, tandis qu'une permission est lorsque l'agent jouant le rôle $\rho$ peut accomplir d'autres objectifs pendant certaines contraintes de temps.
+HEMM détermine quels agents sont associés à quelle mission et s'ils sont restreints à certaines missions, ce qui en fait des obligations, ou s'ils disposent d'une permission.
+
+\
+
+Les techniques K-mean et hierarchical clustering nécéssitent une configuration manuelle pour obtenir des rôles et objectifs en évitant d'introduire des perturbations qui pourrait amener à détérminer de fausses spécifications organisationnelles. Malgré cela, la méthode recommande de comprendre attentivement les rôles et objectifs obtenus afin de détérminer manuellement les perturbations restantes et les supprimer. Les spécifications $MOISE+MARL$ affinées peuvent alors être utilisées comme des "blue prints".
+
+Pour chacun des rôles du "blueprint", on cherche à représenter la politique commune aux agents associés à ce role comme un ensemble d'arbres de décision. Pour cela, nous adaptons la relation $rag$ correspondante en détérminant un arbre de pattern d'historique où un noeud est un couple pattern-observation et les arêtes sont les actions attendues. Ces arbres décrivent la politique des agents en compréhension et rendent ainsi plus aisée l'affinage et ajustement des règles de comportement.
+
+\
+
+Au terme de cette phase la sortie est l'ensemble des spécifications MOISE+MARL affinées.
+
+\subsection{Phase 4 : Transfert}
+
+La phase finale vise à utiliser les "blue prints" générés pour développer et déployer un SMA sur l'environment réel cible. Le développement semi-manuel est conseillé pour garantir un niveau suffisant de compréhension de celui-ci afin de le controler et garantir les garanties de sûreté de fonctionnement.
+
+La méthode suggère une procédure pour automatiser partiellement le développement et déploiement du SMA à partir des "blue prints" de manière sécurisée en suivant les étapes suivantes:
+
+\paragraph{\textbf{1) Transfert sur environment émulé}}
+
+Avant le déploiement réel, des tests sont effectués dans un environnement émulé pour vérifier que le SMA respecte bien les contraintes de sûreté et les exigences de performance. Pour préparer le déploiement automatique, nous suggérons que les effecteurs disposent d'emplacements prévus au déploiement (bootstrap). Dans ces emplacements de déploiement, nous déployons des processus démons capables de recevoir différents types de politiques incluant les arbres de pattern d'historique. La copie de ces politiques dans les procesus démons peut être automatisée ou manuelle.
+
+Plus loin, un processus de copie automatisé peut trouver un avantage si l'ensemble des étapes de la méthode SAMMASD peut être pipeliné rendant ainsi les politiques des agents résultantes adaptatives aux modifications de l'environments, des exigences ou de l'objectif. La méthode SAMMASD devient alors un processus de création "online".
+
+\paragraph{\textbf{2) Evaluation sur environment émulé}}
+
+Après déploiement, cette étape vise à s'arrurer que les agents fonctionnent comme spécifié dans l'étape d'Analyse dans l'environnement émulé et que les agents parviennent bien à atteindre leur objectifs tout en respectant les exigences additionnelles. Si ce n'est pas le cas, la méthode demande de revoir les politiques des agents en changeant les arbres de décision de pattern d'historiques notamment.
+
+\paragraph{\textbf{3) Transfert sur environnement réel cible}}
+
+Une fois les tests sur environment émulé validé, les politiques vérifiées sont copiées dans les effecteurs de l'environment réel. La méthode recommande alors aux concepteurs de vérifier le bon fonctionnement des agents dans l'atteinte de l'objectif et le respect des exigences additionnelles, en particulier l'environment a subi des modifications après l'étape de la Modélisation, pouvant rendre les agents inadaptés. Sinon, il s'agit de recommencer la méthode à partir de la Modélisation ou changer manuellement les politiques directement.
 
 \section{Évaluation}
 \label{sec:evaluation}
 
+Nous avons développé un outil que nous avons proposé pour faciliter la mise en oeuvre de la méthode SAMMASD au travers d'un scénario de gestion de flux dans un entrepôt. Ensuite, nous présentons et discutons des résultats pour ce scénario.
+
 \subsection{CybMASDE : un environnement de développement pour l'approche}
-Pour évaluer notre méthode, nous avons développé un outil nommé \textbf{CybMASDE} qui soutient chaque phase du processus de conception. \textbf{CybMASDE} propose une interface pour modéliser des environnements complexes, définir des objectifs, et spécifier des contraintes organisationnelles. Il intègre également des algorithmes \textbf{MARL} pour l'apprentissage des politiques et des outils d'analyse pour l'inférence des rôles. CybMASDE permet de visualiser les rôles inférés et de faciliter le déploiement des SMA dans des environnements réels après une validation en simulation.
+
+Pour évaluer notre méthode, nous avons développé un outil nommé \textbf{Cyber Multi-Agent System Development Environnement} (CybMASDE) qui soutient chaque phase du processus de conception. \textbf{CybMASDE} propose une interface pour modéliser des environnements complexes, définir des objectifs, et spécifier des contraintes organisationnelles. Il intègre également des algorithmes \textbf{MARL} pour l'apprentissage des politiques et des outils d'analyse pour l'inférence des rôles. CybMASDE permet de visualiser les rôles inférés et de faciliter le déploiement des SMA dans des environnements réels après une validation en simulation.
+
+Pour évaluer notre méthode, nous proposons d'étudier un environnement de gestion de flux en entrepôt appelé "Warehouse Flow Management" (WFM). Nous choissons de considérer un environment WFM simulé comme s'il s'agissait de l'environment réel. Cet environment est representée dans la \autoref{fig:warehouse}.
+
+L'interêt d'utiliser une simulation est de simplifier et vérifier le principe de fonctionnement en réduisant la complexité de l'environment. A partir de cet environment donnée, nous utiliserons l'outil CybMASDE dans l'application des différentes phases de la méthode en les évaluant en particulier vis à vis des quatre critères suivants:
+
+\begin{itemize*}[label={},itemjoin={; }]
+  \item \textbf{Conformité des sorties} : La sortie de chacune des phases et étapes contenues dans les phases est bien conforme aux description en suivant les instructions spécifiées
+  \item \textbf{Aisance d'utilisation} : L'application de chacune des phases ne présente pas des difficultés particulières
+  \item \textbf{Automaticité} : L'application de chacune des phases ne nécéssite pas ou peu d'intervention manuelle
+  \item \textbf{Vérification} : Le SMA obtenu peut être vérifié comme répondant bien aux exigences de performance, explicabilité et sûreté
+  \item \textbf{Adaptation} : La méthode doit permettre d'adapter le SMA aux changements de l'environment, de l'objectif ou des contraintes additionnelles
+\end{itemize*}
+
+\begin{figure*}
+  \centering
+  \input{figures/warehouse.tex}
+  \caption{Une vue illustrative de l'environment "Warehouse Flow Management": les agents peuvent se déplacer en haut, bas, gauche et droite, prendre et déposer un produit dans une zone de pick/drop s'ils en sont assez proches. Les agents doivent se coordoner pour: i) prendre des produits primaires dans les zones de pick/drop des convoyeurs d'entrée (zone bleus) ; ii) les déposer dans les zones de pick/drop des machines de crafting (zone marron) qui transforment des produits primaires en un seul produit secondaire selon le schéma de crafting ; ii) récuperer les produtis secondaires crées pour les déposer dans les zones de pick/drop des convoyeurs de sortie (zone vertes)}
+  \label{fig:warehouse}
+\end{figure*}
 
 \subsection{Résultats expérimentaux}
 Nous avons appliqué SAMMASD à un scénario de gestion de flux de paquets dans un entrepôt, où des robots doivent collaborer pour organiser les flux de marchandises tout en respectant des contraintes de sécurité et d'efficacité. Les résultats montrent que la méthode permet de générer des politiques conjointes efficaces, avec une réduction significative du temps de conception et une amélioration de la robustesse des systèmes déployés.
@@ -438,10 +541,12 @@ Nous avons appliqué SAMMASD à un scénario de gestion de flux de paquets dans 
   \item \textbf{Métriques :} Temps de conception, robustesse des politiques, respect des contraintes organisationnelles.
 \end{itemize}
 
-Les résultats montrent que les agents entraînés via \textbf{$mathcal{M}OISE^+$MARL} respectent les contraintes organisationnelles définies et optimisent les objectifs de performance, tout en générant des comportements interprétables grâce à l'analyse par \textbf{HEMM}.
+Les résultats montrent que les agents entraînés via \textbf{MOISE+MARL} respectent les contraintes organisationnelles définies et optimisent les objectifs de performance, tout en générant des comportements interprétables grâce à l'analyse par \textbf{HEMM}.
 
-\section{Conclusion}
+
+\section{Discussion et Conclusion}
 \label{sec:conclusion}
+
 Cet article a présenté une nouvelle méthode, \textbf{SAMMASD}, qui permet de concevoir et déployer des systèmes multi-agents en combinant des spécifications organisationnelles avec des techniques d'apprentissage par renforcement. La méthode s'articule autour de quatre phases clés, allant de la modélisation de l'environnement à l'analyse des politiques apprises et au déploiement des systèmes réels. Les résultats expérimentaux montrent que cette approche réduit le temps de conception et améliore la robustesse des SMA tout en garantissant l'explicabilité des comportements des agents.
 
 Les travaux futurs porteront sur l'extension de \textbf{SAMMASD} à des environnements encore plus complexes, notamment dans des contextes critiques tels que la cybersécurité, et sur l'intégration de nouveaux algorithmes d'apprentissage pour améliorer l'efficacité des politiques apprises.
