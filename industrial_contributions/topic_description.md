@@ -1,7 +1,5 @@
 # About Cyberdefense Multi-Agent System Organization (Autonomous Intelligent Cyberdefense Agent - AICA)
 
-## TODO: CCGRID2025, CLOSER2025
-
 ## Topic description
 
 **Context**:
