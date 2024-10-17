@@ -85,6 +85,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage{stfloats}
 \usepackage{color}
 % \renewcommand\UrlFont{\color{blue}\rmfamily}
 
@@ -178,7 +179,7 @@ on Autonomous Agents and Multiagent Systems (AAMAS 2025)}{May 19 -- 23, 2025}
 \email{paul.theron@orange.fr}
 
 \begin{abstract}
-    Agent-oriented Software Engineering (AOSE) methods typically rely on the designer's expertise to guide the development of a multi-agent system (MAS) that meets specific objectives within a given environment. Recent advancements in Multi-Agent Reinforcement Learning (MARL) suggest a more automated approach to exploring the design space. We introduce the SAMMASD (Semi-Automated MARL-based MAS Design) method, which integrates organizational specifications into MARL for MAS design and deployment. This method consists of four phases. The first phase models the real-world environment, objectives, and additional constraints—such as operational requirements—into a simulation. The second phase leverages multiple MARL algorithms to learn stable policies that achieve these objectives within the defined constraints. The third phase conducts a behavior analysis to infer emergent roles and objectives and to generate detailed "blueprints" for implementation. Finally, the development phase enables the automatic deployment of these policies in real-world environments, following validation in an emulated setting. We demonstrate SAMMASD in a warehouse flow management scenario involving robot agents, illustrating how the method can produce efficient and reliable MAS designs that streamline the design process.
+  Designing Multi-Agent Systems that can autonomously collaborate in dynamic environments is a significant challenge. Traditional Agent-Oriented Software Engineering (AOSE) approaches rely heavily on expert knowledge to define organizational structures, limiting scalability and adaptability. In response, we introduce SAMMASD, a semi-automated methodology that integrates Multi-Agent Reinforcement Learning with organizational constraints using the $\mathcal{M}OISE^+$ framework. SAMMASD offers a novel approach by leveraging MARL to automate the exploration and optimization of MAS design, which reduces the need for manual configuration and enhances flexibility. Our method includes phases for modeling, solving, analysis, and deployment, each utilizing MARL to streamline the development of role-based agent behaviors while ensuring safety and interpretability. We demonstrate the efficacy of SAMMASD in a warehouse management scenario, where it significantly reduces dependency on expert input and allows for scalable, adaptive MAS deployment. By blending organizational principles with MARL, SAMMASD bridges a critical gap in AOSE methodologies, offering a powerful tool for automating the design of complex MAS environments.
 \end{abstract}
 
 
@@ -214,98 +215,106 @@ on Autonomous Agents and Multiagent Systems (AAMAS 2025)}{May 19 -- 23, 2025}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+
 \section{Introduction}
 
-Designing multi-agent systems (MAS) that can operate autonomously and efficiently in complex and dynamic environments is a significant challenge within the field of Agent-oriented Software Engineering (AOSE). MAS are widely used across various applications, such as warehouse management, cybersecurity, and other domains where multiple agents must collaborate to achieve shared objectives. An important aspect of MAS design is ensuring that agent behaviors align with organizational requirements, including safety, explainability, and adaptability, while also allowing for efficient and robust operation in uncertain environments.
+Multi-Agent Systems (MAS) are increasingly applied in complex environments where autonomous agents must collaborate to achieve shared goals. The design and deployment of such systems, however, require carefully constructed organizational structures that guide agent behaviors effectively. Traditionally, Agent-Oriented Software Engineering (AOSE) methodologies rely heavily on expert input for defining roles, behaviors, and interactions among agents. While these methods provide robustness, they often struggle with scalability and adaptability when applied to dynamic and evolving environments.
 
-Traditional AOSE methodologies often rely heavily on expert knowledge to define organizational structures and guide agent behaviors, which can limit their scalability and adaptability to changing environments. Furthermore, while Multi-Agent reinforcement learning (MARL) has shown promise for automating aspects of MAS design, it frequently lacks mechanisms for incorporating explicit organizational constraints, which are essential for ensuring that agent behaviors remain interpretable and safe.
+Multi-Agent Reinforcement Learning (MARL) seems a promising approach to automate parts of MAS design, enabling agents to learn optimized behaviors for specific goals. However, existing MARL techniques often lack the mechanisms needed to incorporate explicit organizational constraints. Such constraints are essential for ensuring that agent behaviors align with higher-level goals related to safety, interpretability, and role-based accountability.
 
-To address these limitations, we introduce a novel method, the \textbf{SAMMASD} (Semi-Automated MARL-based MAS Design) method, which integrates organizational specifications into MARL for the automated design and deployment of MAS. SAMMASD leverages the \textbf{MOISE+MARL} framework, which combines the organizational modeling capabilities of $\mathcal{M}OISE^+$ with the learning power of MARL. This integration allows for the enforcement of organizational constraints throughout the learning process, leading to the development of policies that are both effective and compliant with specified roles and objectives.
+To address these challenges, we introduce the \textbf{SAMMASD} (Semi-Automated MARL-based MAS Design) methodology. SAMMASD bridges the gap between traditional AOSE and the potential of MARL by integrating the $\mathcal{M}OISE^+$~\cite{Hubner2007} organizational framework into the MARL learning process. This integration offers a way to automate the exploration and optimization of MAS designs while respecting organizational rules that enhance scalability, adaptability, and interpretability. SAMMASD provides a structured, semi-automated process that includes four phases: modeling, solving, analysis, and deployment.
 
-SAMMASD consists of four main phases:
-\begin{enumerate*}[label=\roman*,itemjoin={; \quad}]
-  \item modeling the target environment, objectives, and organizational constraints to create a simulation that faithfully reflects the system's dynamics
-  \item training agent policies using a variety of MARL algorithms to optimize for defined objectives
-  \item analyzing agent behaviors to infer roles, missions, and organizational structures, ensuring compliance with the \textbf{MOISE+MARL} specifications
-  \item deploying the MAS into real-world environments, with steps for ensuring safety and adaptability.
-\end{enumerate*}
+The \textbf{modeling phase} involves defining the environment, goals, and organizational constraints in a way that accurately captures the operational context. In the \textbf{solving phase}, we leverage MARL algorithms to develop agent behaviors that maximize performance under these constraints. During the \textbf{analysis phase}, we infer roles and missions from learned behaviors, assessing their alignment with the specified organizational rules. Finally, the \textbf{deployment phase} focuses on transferring these optimized policies into real-world applications, ensuring the MAS meets both operational and safety requirements.
 
-In this paper, we apply the SAMMASD method within a simulated warehouse flow management scenario, utilizing the \textbf{CybMASDE} (Cyber Multi-agent System Development Environment) tool to facilitate each phase. We evaluate the method's effectiveness based on output compliance, ease of use, automation, verification, and adaptability. Our findings demonstrate that SAMMASD offers a comprehensive approach to MAS design that bridges the gap between traditional AOSE methods and the emerging capabilities of MARL, while providing pathways for further refinement in real-time adaptability and deployment automation.
+In this paper, we validate SAMMASD through a warehouse management scenario, assessing its capacity to:
+%
+\begin{enumerate}[label={\roman*)}]
+  \item \textbf{Automate the MAS design process};
+  \item \textbf{Reduce reliance on expert knowledge};
+  \item \textbf{Facilitate scalable deployment}.
+\end{enumerate}
 
-The remainder of this paper is organized as follows: \autoref{sec:related_works} presents related works in AOSE and MARL methodologies. \autoref{sec:sammasd_presentation} details the SAMMASD method and the MOISE+MARL framework. \autoref{sec:evaluation} discusses the experimental results from the warehouse management scenario. Finally, \autoref{sec:conclusion_perspectives} concludes with insights on the contributions of SAMMASD and directions for future work.
+\noindent The results indicate that SAMMASD can effectively bridge the gap between automated learning and traditional AOSE by providing a robust framework that enables both adaptability and adherence to organizational rules.
 
-\section{Related Works}
+
+This work contributes to the ongoing development of AOSE methodologies by presenting a novel approach that combines the learning capabilities of MARL with structured organizational design principles. Through this integration, SAMMASD offers a tool for the automated and interpretable design of MAS.
+
+The remained is organized as follows. \autoref{sec:related_works} shows that despite being away from MARL, AOSE methods could benefit from it. \autoref{sec:sammasd_presentation} introduces the SAMMASD method to address this gap by relying on a proposed MARL framework. \autoref{sec:evaluation} presents a SAMMASD implementation as tool for the experimental and evaluation framework to assess our method through a proposed environment. \autoref{sec:results_discussion} presents and discusses the results. \autoref{sec:conclusion_perspectives} concludes with the SAMMASD method and its perspectives.
+
+\section{Related works}
 \label{sec:related_works}
 
-The AOSE field aims to offer structured methodologies for designing, developing, and managing MAS. These methods typically integrate role-based specifications, organizational models, and structured interaction patterns to guide agent behaviors within complex systems. While these methodologies provide robust frameworks, they often rely on user input, limiting automation.
+The field of AOSE has developed numerous methodologies for structuring, developing, and managing MAS. Traditional AOSE approaches, such as GAIA \cite{gaia1998}, ADELFE \cite{adelfe2002}, and INGENIAS \cite{ingenias2004}, have provided foundational frameworks that incorporate roles, interactions, and organizational models. While these methodologies offer robust structures, they largely depend on manual specification by experts, which can limit scalability and adaptability, particularly in dynamic environments.
 
-Among the prominent AOSE methodologies, GAIA \cite{gaia1998} organizes MAS design around roles and interaction protocols, requiring some manual setup to define these elements. ADELFE \cite{adelfe2002} supports MAS design in dynamic environments, offering adaptability but still requiring user-defined specifications to configure adaptive behaviors. INGENIAS \cite{ingenias2004}, another key approach, includes modeling tools to develop MAS with explicit role-based structures, yet it also depends on user involvement to align agent behaviors with organizational objectives.
+In recent years, advancements in MARL have opened new possibilities for automating aspects of MAS design. MARL enables agents to autonomously learn behaviors that maximize their collective performance. However, despite its potential, MARL has been underutilized within AOSE methodologies for automating organizational aspects such as role allocation, mission inference, and organizational compliance.
 
-The KB-ORG methodology \cite{kborg2001}, which leverages predefined organizational templates, allows for more automation by reducing the need for custom role definitions, though it still requires configuration when adapting to specific organizational structures. Overall, these AOSE methodologies necessitate some level of manual configuration, making full automation unachievable. Despite their robust structures, they cannot fully support adaptive and scalable MAS deployment without user intervention.
+Some research efforts have sought to bridge this gap. For example, Hammar \cite{hammar2019} has applied MARL to adapt policies dynamically in response to changing environments, but this work does not explicitly address how MARL could support AOSE's organizational needs. Thomas \cite{thomas2023} and Iocchi \cite{iocchi2023} have explored MARL frameworks in industrial MAS contexts, demonstrating their capacity for automating behavior adaptation and achieving specific goals. However, these studies do not fully integrate MARL within AOSE methodologies to facilitate role-based organizational design.
 
-However, recent research in MARL may provide insights into a more automated MAS design under various constraints. While these studies do not constitute complete methodologies, they introduce innovative concepts that align with our goal. For instance, Hammar's work, \emph{"An Online Framework for Adapting Security Policies in Dynamic IT Environments"} \cite{hammar2019}, applies MARL to adapt security policies dynamically, demonstrating near-complete automation in changing environments. This aligns with our goal of reducing manual involvement while accommodating evolving organizational requirements.
+SAMMASD builds on these advances by embedding the $\mathcal{M}OISE^+$ organizational framework into MARL, enabling an approach that can automate the design of MAS while adhering to organizational constraints. Previous AOSE methodologies such as KB-ORG \cite{kborg2001} have used templates to simplify organizational design, but they still require manual configuration. By contrast, SAMMASD leverages MARL to infer roles and missions directly from agent behaviors, reducing the dependency on expert input and improving scalability.
 
-Studies like those by Thomas \cite{thomas2023} and Iocchi \cite{iocchi2023} address the use of MARL to enhance MAS adaptability in industrial contexts. They emphasize automated learning frameworks that minimize manual tuning and allow MAS to adjust to shifting objectives and constraints. These studies also underscore the need for role-based organizational constraints to ensure agents adhere to safety and operational guidelines. The article by Ning and Xie \cite{ning2024} provides a broad survey of MARL applications, offering insights into recent MARL strategies for addressing challenges like scalability, coordination, safety, and interpretability. These works fit within our aim to build an adaptive, safe, and interpretable MAS with reduced manual effort.
+Further, the use of $\mathcal{M}OISE^+$ within SAMMASD adds another dimension to existing MARL applications by incorporating safety and interpretability constraints. Techniques such as Constrained Policy Optimization \cite{zhao2024} and Safe Exploration \cite{melcer2024} have addressed safety in MARL, but they do not focus on enforcing organizational rules, which are essential for interpretable and compliant agent behavior. Shielding techniques, like those introduced by ElSayed-Aly et al. \cite{elsayed2021}, have also focused on preventing unsafe actions, yet they do not provide a complete organizational structure as $\mathcal{M}OISE^+$ does.
 
-Furthermore, one can mention works in Constrained Policy Optimization \cite{zhao2024} to automate adherence to organizational roles, reducing manual effort. Safe Exploration techniques \cite{melcer2024} help agents learn safely in dynamic environments, ensuring adaptability without sacrificing safety. Shielding methods, as demonstrated by ElSayed-Aly et al. \cite{elsayed2021}, further automate the enforcement of safety standards by preventing unsafe actions during training and deployment. Together, these techniques advance our aim to automate MAS design while meeting safety and organizational constraints.
+Unlike \textit{AGR}~\cite{ferber2003} (Agent Group Role), which does not explicitly handle goals as an organizational specification, the $\mathcal{M}OISE^+$ model addresses both roles and goals. Roles can be seen as sets of behavioral rules that agents must follow when interacting with each other or their environment to achieve their global goals. In contrast, goals represent states that agents aim to reach without a predefined path, thus requiring autonomous learning mechanisms. We believe that goals complement roles by enhancing stability and adaptability.
 
-Another critical element in MAS design is transparency in agent behavior. Research by Krajna et al. \cite{krajna2022} highlights the importance of explainability in MARL systems, proposing frameworks that embed transparency into agent decision-making. This ensures MAS not only meets safety standards but also offers insights into agent behavior, which is crucial for environments requiring adherence to strict safety protocols and the ability to explain decisions to stakeholders.
-
-In conclusion, while traditional AOSE methodologies lay the groundwork for MAS design, recent MARL research introduces features like automation, adaptability, safety, and explainability, which are central to developing our method.
+In summary, SAMMASD contributes to the AOSE and MARL fields by integrating these two areas in a way that enhances MAS design with automated, organization-aware learning capabilities. This integration not only addresses the need for scalable and adaptive MAS but also ensures that organizational rules and safety considerations are embedded in the learning process, making SAMMASD a novel methodology that aligns with modern AOSE goals.
 
 
-\section{Proposed Organizational Design Approach for MAS}
+
+\section{Proposed organizational MAS design method}
 \label{sec:sammasd_presentation}
 
 The core of the SAMMASD method is to consider the design of a MAS as a constrained optimization problem. The variable to be optimized is the \textbf{joint policy}, which represents the internal logic of the agents in determining their next actions. The goal is to maximize the cumulative reward under the given constraints. SAMMASD includes organizational specifications in MARL as additional constraints, allowing the user to control not only individual agent behaviors but also to manage the entire MAS through these specifications. We formalize this approach by proposing the MOISE+MARL framework and then using it to construct the four phases of our method.
 
-\subsection{\textbf{MOISE+MARL Framework}}
+\subsection{\textbf{MOISE+MARL framework}}
 
-The objective is to guide agent learning while adhering to organizational constraints in the form of roles and objectives, while ensuring sufficient efficiency of the learned policies within their environment. We formalize this concept by proposing the MOISE+MARL framework, which combines the formalism of a Decentralized Partially Observable Markov Decision Process (Dec-POMDP) with the $\mathcal{M}OISE^+$ organizational model.
+The MOISE+MARL framework guides agents in their learning process, ensuring they adhere to defined organizational roles and goals while achieving effective policies within their environment. This framework integrates a Decentralized Partially Observable Markov Decision Process (Dec-POMDP) with the $\mathcal{M}OISE^+$ organizational model, which specifies the roles, missions, and constraints that agents must respect.
 
-\textbf{Dec-POMDP} \quad defined by a tuple $D = \langle N, S, A, P, R, \Omega, O, \gamma \rangle$, where:
+\textbf{Dec-POMDP} \quad is defined by the tuple $D = \langle N, S, A, P, R, \Omega, O, \gamma \rangle$, where:
 %
 \begin{itemize*}[label={},itemjoin={; }]
-    \item $\mathcal{A}$ is the set of $N \in \mathbb{N}$ agents
-    \item $S$, the set of possible states of the environment (including agents)
-    \item $A = \times_{i=1}^N A_i $, the set of possible actions for each agent $i$
-    \item $T: S \times A^N \to S$, the state transition function defining the next state $s'$ given a state $s$ under joint action $a$
-    \item $R: S \times A^N \times  S \to \mathbb{R}$, the reward function assigning a reward $r$ to each transition $(s, a, s')$
-    \item $\Omega = \times_{i=1}^N \Omega_i $ is the set of possible observations for each agent $i$
-    \item $O: S \times A \to \Omega$ is the observation function defining the next observation $\omega$ of an agent when taking action $a$ in state $s$
-    \item $\gamma \in [0, 1] $ is the discount factor.
+    \item $\mathcal{A}$ is the set of $N$ agents in the system
+    \item $S$ represents all possible states of the environment, including the agents
+    \item $A = \times_{i=1}^N A_i$ is the set of actions available to each agent $i$
+    \item $T: S \times A^N \to S$ is the state transition function that defines the next state $s'$ from a current state $s$ and joint action $a$
+    \item $R: S \times A^N \times S \to \mathbb{R}$ is the reward function that assigns rewards based on transitions $(s, a, s')$
+    \item $\Omega = \times_{i=1}^N \Omega_i$ is the set of observations available to each agent $i$
+    \item $O: S \times A \to \Omega$ is the observation function that defines the observation $\omega$ received by an agent following action $a$ in state $s$
+    \item $\gamma \in [0, 1]$ is the discount factor.
 \end{itemize*}
 
-$\mathbf{\mathcal{M}OISE^+}$ \quad defined by a tuple $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$. Here, we present a minimal version of the $\mathcal{M}OISE^+$ formalism:
+\textbf{$\mathcal{M}OISE^+$ Organizational Model} \quad is represented by the tuple $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, where:
 \begin{itemize*}[label={},itemjoin={; }]
-    \item $\mathcal{SS} = \langle \mathcal{R} \rangle$, structural specifications defined by a set of roles $\mathcal{R}$
-    \item $\mathcal{FS} = \langle \mathcal{G}, \mathcal{M}, mo \rangle$, functional specifications are a set of objectives $\mathcal{G}$, a set of missions $\mathcal{M}$, and a function $mo: \mathcal{M} \to \mathcal{P}(\mathcal{G} \times [0,1])$ associating a mission $m \in \mathcal{M}$ with a set of objectives, each weighted by a value $\{(g_1,w_0), (g_2,w_1)\dots\}, w_i \in [0,1], g_i \in \mathcal{G}$
-    \item $\mathcal{DS} = \mathcal{R} \times \mathcal{M} \times T_c \times \{0,1\}$, deontic specifications as a set of quadruples $(\rho_a, m, \allowbreak t_c, p)$, meaning that an agent playing the role $\rho_a \in \mathcal{R}$ is permitted (if $p = 0$) or obligated (if $p = 1$) to engage in mission $m \in \mathcal{M}, \ m \subseteq \mathcal{G}$ for a given time constraint $t_c \in \mathcal{TC}, t_c = \mathcal{P}(N)$ specifying a period during which permission/obligation is valid.
+    \item $\mathcal{SS} = \langle \mathcal{R} \rangle$ represents the structural specifications, defined by a set of roles $\mathcal{R}$
+    \item $\mathcal{FS} = \langle \mathcal{G}, \mathcal{M}, mo \rangle$ represents functional specifications, including goals $\mathcal{G}$, missions $\mathcal{M}$, and a mapping function $mo: \mathcal{M} \to \mathcal{P}(\mathcal{G} \times [0,1])$ that associates missions with goals weighted by priority values
+    \item $\mathcal{DS} = \mathcal{R} \times \mathcal{M} \times T_c \times \{0,1\}$ specifies deontic constraints as tuples $(\rho_a, m, t_c, p)$, where agents in role $\rho_a$ are permitted ($p=0$) or required ($p=1$) to undertake mission $m$ during specified time constraints $t_c$.
 \end{itemize*}
 
-The \textbf{Constraint Guides} \quad are three new relations introduced to describe the logic of the roles and objectives of $\mathcal{M}OISE^+$ in the Dec-POMDP formalism:
+The \textbf{Constraint Guides} \quad serve as key mechanisms that translate $\mathcal{M}OISE^+$ organizational elements into Dec-POMDP rules. These guides include:
 
 \begin{itemize}
-    \item \textbf{Role Action Guide} (RAG) \quad $rag: H \times \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, the relation that models a role as a set of rules which, for each pair consisting of a history $h \in H$ and an observation received by the agent $\omega \in \Omega$, associates expected actions $A \in \mathcal{P}(A)$ each associated with a constraint hardness $ch \in [0,1]$ ($ch = 1$ by default). By restricting the choice of the next action among those authorized, the agent is forced to adhere to the expected behavior of the role.
-    \item \textbf{Role Reward Guide} (RRG) \quad $rrg: H \times \Omega \times A \to \mathbb{R} = \{r_m \text{ if } a \notin A_\omega \text{, } rag(h, \omega) = A_\omega \times \mathbb{R} \text{, } h \in H; \text{ else } 0\}$, the relation that models a role by adding a penalty $r_m$ to the global reward if the last action chosen by the agent $a \in A$ is not authorized. This is intended to encourage the agent to adhere to the expected behavior of a role.
-    \item \textbf{Goal Reward Guide} (GRG) \quad $grg: H \rightarrow \mathbb{R}$, the relation that models a goal as a soft constraint by adding a bonus $r_b \in \mathbb{R}$ to the global reward if the agent's history $h \in H$ contains a characteristic sub-sequence $h_g \in H_g$ of the goal, encouraging the agent to find a way to reach it.
+    \item \textbf{Role Action Guide} (RAG) \quad $rag: H \times \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$. This guide restricts an agent's actions based on its role, using a rule-based set of actions $A$ associated with each observation $\omega$ and a constraint hardness $ch \in [0,1]$. The constraint hardness controls how strictly the agent must follow role-specific actions.
+    \item \textbf{Role Reward Guide} (RRG) \quad $rrg: H \times \Omega \times A \to \mathbb{R}$. This guide penalizes an agent if it chooses an action not allowed by its role, encouraging adherence to role-specific behaviors by reducing rewards when unauthorized actions are taken.
+    \item \textbf{Goal Reward Guide} (GRG) \quad $grg: H \rightarrow \mathbb{R}$. This guide provides a bonus when an agent's actions align with predefined goal sequences, motivating agents to pursue goals while adhering to role and mission constraints.
 \end{itemize}
 
-% \begin{gather*}
-%   (1) \quad V^\pi(s_t) = \hspace{-0.4cm} \sum_{\textcolor{red}{ \substack{a_{t} \in rac(A)}
-%   }}{\hspace{-0.4cm} \pi(a_{t} | \omega_t)} \sum_{s_{t+1} \in S}{T(s_{t+1} | s_t, a_{t})[R(s_t,a_{t},s_{t+1})} \\
-%    + \ \hspace{-0.cm} \allowbreak
-%   \textcolor{blue}{rrc(h_{t+1})} + \textcolor{red}{mrc(\omega_t, a_t)} + V^{\pi}(s_{t+1})]
-% \end{gather*}
+Finally, \textbf{Linkers} are used to connect the $\mathcal{M}OISE^+$ organizational structure with the constraint guides:
+\begin{itemize}
+    \item \textbf{Agent to Role} (AR) \quad $ar: \mathcal{A} \to \mathcal{R}$ links each agent to a specific role.
+    \item \textbf{Role to Constraint Guide} (RCG) \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$ maps roles to their respective action and reward guides.
+    \item \textbf{Goal to Constraint Guide} (GCG) \quad $gcg: \mathcal{G} \rightarrow grg$ links each goal to its associated reward guide.
+\end{itemize}
 
-\begin{figure*}[h!]
+The value function for the MOISE+MARL framework, adapted to these constraint guides, is defined in \hyperref[eq:single_value_function]{Definition 1}. This value function accounts for role-specific (in red) and mission-specific adjustments (in blue), influencing both the action space and reward distribution based on the agent's assigned roles and missions.
+
+\begin{figure*}[t]
   \label{eq:single_value_function}
   \raggedright
-  \textbf{\quad Definition 1: Value function adapted to "Constraint Guides" in AEC.}
+  \textbf{\quad Definition 1: Value function adapted to constraint guides in AEC.}
   \begin{gather*}
     \text{\quad \quad} V^{\pi^j}(s_t) = \hspace{-0.75cm} \sum_{\textcolor{red}{ \substack{a_{t} \in A \text{ if } rn() < ch_{t}, \\ 
     a_{t} \in A_{t} \text{ else}}
-    }}{\hspace{-0.7cm} \pi_i(a_{t} | \omega_t)} \sum_{s_{t+1} \in S}{\hspace{-0.1cm} T(s_{t+1} | s_t, a_{t})[R(s_t,a_{t},s_{t+1}) + \hspace{-0.1cm} \textcolor{blue}{ \sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \frac{grg_m(h_{t+1})}{1 - p + \epsilon} } } + \textcolor{red}{ch_t \times rrg(\omega_t,a_{t+1})} + V^{\pi^j_{i+1 \ mod \ N}}(s_{t+1})]}
+    }}{\hspace{-0.7cm} \pi_i(a_{t} | \omega_t)} \sum_{s_{t+1} \in S}{\hspace{-0.1cm} T(s_{t+1} | s_t, a_{t})[R(s_t,a_{t},s_{t+1}) + \hspace{-0.1cm} \textcolor{blue}{ \sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \frac{grg_m(h_{t+1})}{1 - p + \epsilon} } } + \textcolor{red}{(1-ch_t) \times rrg(\omega_t,a_{t+1})} + V^{\pi^j_{i+1 \ mod \ N}}(s_{t+1})]}
   \end{gather*}  
   %
   \textcolor{red}{\[\text{With } rag(h_t, \omega_t) = A_{t} \times \mathbb{R} \text{, } (a_t, ch_{t}) \in A_{t} \times \mathbb{R} \text{ ; } \text{ and } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
@@ -325,26 +334,14 @@ The \textbf{Constraint Guides} \quad are three new relations introduced to descr
   \vspace{-0.6cm}
   \end{figure*}
 
-Finally, to link the organizational specifications of $\mathcal{M}OISE^+$ with the "Constraint Guides" and agents, we introduce the following \textbf{Linkers}:
-\begin{itemize}
-    \item \textbf{Agent to Role} (AR) \quad $ar: \mathcal{A} \to \mathcal{R}$, the bijective relation linking an agent to a role;
-    \item \textbf{Role to Constraint Guide} (RCG) \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$, the relation associating each $\mathcal{M}OISE^+$ role to a $rag$ or $rrg$ relation, forcing/encouraging the agent to follow the expected actions for the role $\rho \in \mathcal{R}$;
-    \item \textbf{Goal to Constraint Guide} (GCG) \quad $gcg: \mathcal{G} \rightarrow grg$, the relation linking goals to trf relations, representing goals as rewards in MARL.
-\end{itemize}
+The MOISE+MARL framework, denoted as $MM = \langle D, \mathcal{OS}, ar, rcg, \allowbreak gcg, rag, rrg, grg \rangle$, enables agents to maximize the value function $V^{\pi^{j}}$ while following role-based and goal-oriented constraints.
 
-MOISE+MARL is thus defined by the tuple $MM = \langle D, \mathcal{OS}, ar, rcg, \allowbreak gcg, rag, rrg, grg\rangle$. Solving the problem described by MOISE+MARL involves finding a joint policy $\pi^{j}: \Omega^{N} \to A^{N} = \{\pi^j_0,\pi^j_1\dots\pi^j_N\}$ that maximizes the value function $V^{\pi^{j}}$ (or reaches a minimum threshold), which represents the expected cumulative reward starting from an initial state $s \in S$ and following the joint policy $\pi^{j}$, applying successive joint actions $a^{j} \in A^N$ under additional "Constraint Guides" (including "Linkers"). Agents then each follow a trajectory (also called history) $h \in H, h = \langle(o_0,a_0), (o_1,a_1)\dots\rangle$. The value function to maximize (or reach a minimum threshold) is described in cases where agents act sequentially (Agent Environment Cycle - AEC mode) in \hyperref[eq:single_value_function]{Definition 1}, adapting its definition for roles (in red) and missions (in blue), impacting the action space and reward.
+\noindent Agents thus follow trajectories $h \in H$ that respect the rules of their assigned roles and missions, ensuring both individual and collective alignment with the system's overall goals.
 
-At any time $t \in \mathbb{N}$ (initially $t = 0$), the agent $i = t \ mod \ N$ is constrained to a role $\rho = ar(i)$. For each temporally valid deontic specification $d_i = (\rho,m_i,t_{c_i},p_i)$ (such that $v_{m_i}(t) = t \in t_{c_i}$), the agent is permitted (if $p_i = 0$) or obligated (if $p_i = 1$) to engage in mission $m_i \in \mathcal{M}, \mathcal{G}_{m_i} = mo(m_i), n \in \mathbb{N}$.
-%
-First, based on the received observation $\omega_t$, the agent must choose an action either: within the expected actions of the role $A_t$ if a random value is below the role constraint hardness $ch_t$; or within the set of all actions $A$ otherwise. If $ch_t = 1$, the role is strongly constrained for the agent and weakly otherwise.
-%
-Then, the action is applied to the current state $s_t$ to transition to the next state $s_{t+1}$, generate the next observation $\omega_{t+1}$, and yield a reward. The reward is the sum of the global reward with penalties and bonuses obtained from the organizational specifications: \quad i) the sum of the bonuses for objectives associated with each temporally valid mission (via "Goal Reward Guides"), weighted by the associated value ($\frac{1}{1-p+\epsilon}$); \quad ii) the penalty associated with the role (via "Role Reward Guides") weighted by the role constraint hardness.
 
-Finally, the cumulative reward calculation continues in the next state $s_{t+1} \in S$ with the next agent $(i+1) \ mod \ N$.
+\subsection{General overview of the method}
 
-\subsection{General Overview}
-
-Our SAMMASD method is built around four main phases: (1) modeling the environment, objective, and organizational constraints according to the proposed framework, (2) learning policies using various MARL algorithms, (3) analyzing behaviors and inferring organizational specifications with a proposed method, and (4) developing and deploying the MAS. This approach guides the agent learning process while enforcing strict organizational constraints, ensuring the efficiency of the learned policies. The lifecycle of a SAMMASD-designed MAS is illustrated in \autoref{fig:cycle}.
+Our SAMMASD method is built around four main phases: (1) modeling the environment, goal, and organizational constraints according to the proposed framework, (2) learning policies using various MARL algorithms, (3) analyzing behaviors and inferring organizational specifications with a proposed method, and (4) developing and deploying the MAS. This approach guides the agent learning process while enforcing strict organizational constraints, ensuring the efficiency of the learned policies. The lifecycle of a SAMMASD-designed MAS is illustrated in \autoref{fig:cycle}.
 
 % Formal description of the phases
 
@@ -352,20 +349,22 @@ Our SAMMASD method is built around four main phases: (1) modeling the environmen
 \begin{figure}[h!]
   \centering
   \input{figures/cycle.tex}
-  \caption{Lifecycle of a MAS designed with SAMMASD: i) Users start by modeling the environment, global goal and extra requirements; \quad ii) Then, they launch the training of agents with MARL techniques; \quad iii) An post-training analysis is performed to get "blueprint" of the trained MAS; \quad v) These blueprint can be used to semi-automatically deploy effective agents in the environment's effectors}
+  \caption{Lifecycle of a MAS designed with SAMMASD: i) Users start by modeling the environment, global goal and extra requirements; \quad ii) Then, they launch the training of agents with MARL techniques; \quad iii) A post-training analysis is performed to get "blueprint" of the trained MAS; \quad v) These "blueprint" can be used to semi-automatically deploy effective agents in the environment's effectors}
   \label{fig:cycle}
 \end{figure}
 
+
+
 \subsection{Phase 1: Modeling}
 
-The modeling stage aims to create a simulated model that accurately captures the dynamics and constraints of the target environment, defines organizational specifications and objectives. The real target environment must necessarily include effectors where agents capable of observing and acting in the environment will be deployed. This model will serve as a basis for training agents in a controlled environment. This step is critical to ensure that agents learn in a simulation that is faithful to the reality of the target system in a safe and solution-seeking setting.
+The modeling stage aims to create a simulated model that accurately captures the dynamics and constraints of the target environment, defines organizational specifications and goals. The real target environment must necessarily include effectors where agents capable of observing and acting in the environment will be deployed. This model will serve as a basis for training agents in a controlled environment. This step is critical to ensure that agents learn in a simulation that is faithful to the reality of the target system in a safe and solution-seeking setting.
 
 The required inputs are:
-\begin{itemize}
+\begin{enumerate*}[label={\roman*)}]
     \item \textbf{Environment}: An "emulated" copy of the real environment or the target environment itself if possible.
-    \item \textbf{Problem description}: A detailed description of the objectives to be achieved by the agents, i.e., the desired states.
+    \item \textbf{Problem description}: A detailed description of the goals to be achieved by the agents, i.e., the desired states.
     \item \textbf{Additional constraints}: Specific requirements to be met, which may include standards, organizational rules, or safety constraints.
-\end{itemize}
+\end{enumerate*}
 
 Once the elements are collected, modeling follows these steps: 
 
@@ -376,68 +375,49 @@ Once the elements are collected, modeling follows these steps:
 The designer must faithfully reproduce the logic of the environment that leads the agent to receive observations at each state transition. 
 For that purpose, several methods may be envisioned.
 
-\textbf{System Identification} relies on precise mathematical modeling that is based on the observation and adjustment of parameters according to collected data. This generally involves significant human intervention, particularly for environments where dynamics are known and representable by equations. In contrast, Imitation Learning does not necessarily require a mathematical model, but rather observation of behavior for the model to reproduce it. This method is effective at capturing complex behaviors but may lack precision and require numerous examples to generate robust results.
+\textbf{System Identification} uses mathematical modeling, relying on parameter adjustments from observed data, which typically requires significant human input. This method works well when system dynamics are well-understood and equation-based. In contrast, \textbf{Imitation Learning} reproduces observed behaviors without a mathematical model, capturing complex patterns but often needing extensive examples to ensure robustness.
 
-% \begin{table*}[h!]
-%   \centering
-%   \caption{Comparison of automated modeling methods based on different criteria}
-%   \begin{tabular}{p{4cm}cccc}
-%   \textbf{Criteria}                   & \textbf{System Identification} & \textbf{Imitation Learning} & \textbf{Surrogate Modeling} & \textbf{Digital Twin} \\
-%   \hline
-%   Manual Intervention    & Medium                         & Low                          & Medium                       & High                 \\
-%   Mathematical Modeling & High                         & Low                       & High                       & Medium                \\
-%   General Applicability             & Medium                       & High                       & Medium                     & Medium              \\
-%   Requires Emulated Version       & No                           & No                          & No                         & Yes                  \\
-%   Automated Update Capability           & Medium                       & High                       & Medium                     & High               \\
-%   Complete Automation            & Medium                       & Medium                      & Medium                     & Variable             \\
-%   Real-Time Adaptability        & Low                        & Low                       & Medium                     & High               \\
-%   Fidelity to Real System & Medium                         & Low                          & Medium                       & High                \\
-%   Data Requirements               & High                       & Medium                     & High                     & High              \\
-%   Computational Cost                & High                         & Medium                        & Medium                       & High                \\
-%   \end{tabular}
-%   \label{tab:comparaison-methodes}
-%   \end{table*}
-  
-
-On the other hand, \textbf{Surrogate Modeling} and \textbf{Digital Twins} are suited to contexts where system complexity or automated update requirements are high. Surrogate Modeling generates simplified representations using statistical or machine learning techniques, allowing optimization of complex systems with lower computational costs. Although flexible, it may be less precise than a model based on exact equations. A Digital Twin creates a real-time synchronized digital replica of the real system, enabling continuous updates and enhanced fidelity to the target system. However, creating a digital twin is more costly in terms of data collection and resources and often requires an emulated version of the target system. In conclusion, method choice should consider needs in terms of precision, flexibility, and automation to select the most appropriate solution for the intended application.
+\textbf{Surrogate Modeling} and \textbf{Digital Twins} are more suitable for high-complexity or frequently updated systems. Surrogate Modeling uses statistical or machine learning to create simplified system representations, allowing efficient optimization with lower computational demands but potentially sacrificing precision. A Digital Twin, however, provides a synchronized digital replica that updates continuously, offering high fidelity. This approach, while precise, is more resource-intensive and usually requires an emulated system. Overall, the choice of method should balance precision, flexibility, and automation based on application needs.
 
 In our method, we favor \textbf{Imitation Learning} techniques as many of these techniques do not require human intervention, are applicable to a majority of environments, and can capture environmental complexity after sufficient training. Although these techniques may lack readability, particularly those based on neural network architectures, we only consider fidelity as the main criterion of our method.
 
-In this context, the suggested method proceeds as follows: observer agents (possibly human) are deployed in effectors' locations to collect traces (also called trajectories) by exploring the real or a secure copy of the environment. These traces are collected and used to train a model based on a neural network architecture. The Recurrent Neural Network (RNN) architecture is particularly suitable for predicting the next observation, as it is optimized for learning from sequences.
+In this context, the suggested method proceeds as follows: observer agents (possibly human) are deployed in effectors' locations to collect traces (also called trajectories) by exploring the real or a secure copy of the environment. These traces are collected and used to train a model based on a neural network architecture. The Recurrent Neural Network architecture is particularly suitable for predicting the next observation, as it is optimized for learning from sequences.
 
 \paragraph{\textbf{2) Reward Function Formulation}} \quad
 
-\noindent We define reward function formulation as follows: \quad i) finding a clear description of the different desired states and their descriptions as (sub-)trajectories, in general, to best characterize the overall objective; \quad ii) finding a way to measure only the distance between the current state and these desired trajectories. Therefore, the user must establish a reward function logic that they believe is best suited to achieving the set objectives.
+\noindent We define reward function formulation as follows: \quad i) finding a clear description of the different desired states and their descriptions as (sub-)trajectories, in general, to best characterize the overall goal; \quad ii) finding a way to measure only the distance between the current state and these desired trajectories. Therefore, the user must establish a reward function logic that they believe is best suited to achieving the set goals.
 
-Finding a clear description of the desired states is not always straightforward depending on the environment. Although assumed in our method, this search may be supported by Inverse reinforcement learning (IRL) techniques, which consist of learning from observed behaviors to deduce the ultimate goal. We recommend viewing an objective as independent of the agents. Therefore, the objective should not seek to directly influence agents to adopt expected behavior (this is more the role's view). Once established, these desired states can be presented as a set of (sub-)trajectories.
+Finding a clear description of the desired states is not always straightforward depending on the environment. Although assumed in our method, this search may be supported by Inverse reinforcement learning (IRL) techniques, which consist of learning from observed behaviors to deduce the ultimate goal. We recommend viewing an goal as independent of the agents. Therefore, the goal should not seek to directly influence agents to adopt expected behavior (this is more the role's view). Once established, these desired states can be presented as a set of (sub-)trajectories.
 
-Regarding finding a way to measure the distance between the current state and the set of desired trajectories, we leave it to the user to define the best way to measure this distance. However, we suggest a general approach using similarity measures based on the longest common sequence between the (sub-)trajectory characterizing the objective and the current agents' history. This measure is simple and relevant when the sequence associated with a trajectory is continuous (as in our experiments). Nevertheless, it is less applicable when the sequence associated with the objective is discontinuous. Other measures from time series analysis are also conceivable.
+Regarding finding a way to measure the distance between the current state and the set of desired trajectories, we leave it to the user to define the best way to measure this distance. However, we suggest a general approach using similarity measures based on the longest common sequence between the (sub-)trajectory characterizing the goal and the current agents' history. This measure is simple and relevant when the sequence associated with a trajectory is continuous (as in our experiments). Nevertheless, it is less applicable when the sequence associated with the goal is discontinuous. Other measures from time series analysis are also conceivable.
 
-\paragraph{\textbf{3) Formulation of MOISE+MARL Specifications}} \quad
+\paragraph{\textbf{3) Formulation of $\mathcal{M}OISE^+$MARL Specifications}} \quad
 
-\noindent We define the formulation of organizational specifications in MOISE+MARL as follows: \quad i) defining roles ($\mathcal{R}$), objectives ($\mathcal{G}$), and missions ($\mathcal{M}, mo$); ii) associating each agent with a respective role ($ar$); \quad iii) associating each role with "Constraint Guides" RAG and RGG defining their specific logic; ii) associating each sub-objective with their GCG "Constraint Guide" defining their logic ($gcg$).
+\noindent We define the formulation of organizational specifications in
 
-Considering roles, objectives, and missions as simple labels, their definition is assumed. The challenge lies in defining the corresponding "Constraint Guides".
+\noindent $\mathcal{M}OISE^+$MARL as follows: \quad i) defining roles ($\mathcal{R}$), goals ($\mathcal{G}$), and missions ($\mathcal{M}, mo$); ii) associating each agent with a respective role ($ar$); \quad iii) associating each role with constraint guides RAG and RGG defining their specific logic; iv) associating each sub-goal with their GCG constraint guide defining their logic ($gcg$).
 
-Defining a RAG, RRG, or GRG relation requires defining a potentially large number of histories, possibly partially redundant. Therefore, an extensive definition of a set of histories can be tedious. Further, the underlying idea of "Constraint Guides" is that when an agent follows a trajectory, it can be analyzed as part of a predefined set. For example, a RAG relation can be seen as determining the next action depending on whether the trajectory belongs to a given set and the new observation received. We suggest defining these relations comprehensively, allowing designers to define the logic to determine if a history belongs to a predefined set $H_g$ formalized as the relation $b_g: H \to \{0,1\}$.
+Considering roles, goals, and missions as simple labels, their definition is assumed. The challenge lies in defining the corresponding constraint guides.
 
-We also propose a pattern of history inspired by Natural Language Processing, denoted $p \in P$, as a way to define a set of histories comprehensively. A history pattern $p \in P$ is defined as follows: $p$ is: either a "leaf sequence" denoted as a couple of history-cardinality $s_l = (h, \{c_min,c_max\})$ (where $h \in H, c_{min} \in \mathbb{N}, c_{max} \in \mathbb{N} \cup "*")$; or a "node sequence" denoted as a couple of a tuple of concrete sequences and cardinality $s_n = (\langle s_{l_1}, s_{l_1}\dots \rangle, \{c_min,c_max\})$. For example, the pattern $p = \allowbreak "[o_1,a_1,[o_2,a_2](0,2)](1,*)"$ can be formalized as the node sequence $\allowbreak \langle ((o_1,a_1),(1,1)), ((o_2,a_2),(0,2))\rangle(1,"*")$, indicating the set of histories $H_p$ containing at least once the sub-sequence consisting of a first pair $(o_1,a_1)$ and then at most two repetitions of the pair $(o_2,a_2)$.
-The relation $b_g$ then becomes $b_g(h) = m(p_g,h), \text{ with } m: P \times H \to \{0,1\}$ indicating if a history $h \in H$ matches a history pattern $p \in P$ describing a set of history $H_g$.
+Defining a RAG, RRG, or GRG relation requires defining a potentially large number of histories, possibly partially redundant. Therefore, an extensive definition of a set of histories can be tedious. Further, the underlying idea of constraint guides is that when an agent follows a trajectory, it can be analyzed as part of a predefined set. For example, a RAG relation can be seen as determining the next action depending on whether the trajectory belongs to a given set and the new observation received. We suggest defining these relations comprehensively, allowing designers to define the logic to determine if a history belongs to a predefined set $H_g$ formalized as the relation $b_g: H \to \{0,1\}$.
+
+We also propose a pattern of history inspired by Natural Language Processing, denoted $p \in P$, as a way to define a set of histories comprehensively. A history pattern $p \in P$ is defined as follows: $p$ is: either a "leaf sequence" denoted as a couple of history-cardinality $s_l = (h, \{c_min,c_max\})$ (where $h \in H, c_{min} \in \mathbb{N}, c_{max} \in \mathbb{N} \cup "*")$; or a "node sequence" denoted as a couple of a tuple of concrete sequences and cardinality $s_n = (\langle s_{l_1}, s_{l_1}\dots \rangle, \{c_min,c_max\})$. For example, the pattern $p = \allowbreak "[o_1,a_1,[o_2,a_2](0,2)](1,*)"$ can be formalized as the node sequence $\allowbreak \langle ((o_1,a_1),(1,1)), ((o_2,a_2),(0,2))\rangle(1,"*")$, indicating the history set $H_p$ containing at least once the sub-sequence consisting of a first pair $(o_1,a_1)$ and then at most two repetitions of the pair $(o_2,a_2)$.
+The relation $b_g$ then becomes $b_g(h) = m(p_g,h), \text{ with } m: P \times H \to \{0,1\}$ indicating if a history $h \in H$ matches a history pattern $p \in P$ describing a history set $H_g$.
 
 \
 
-At the end of this phase, the output is the MOISE+MARL model comprising:
-\begin{itemize}
+At the end of this phase, the output is the $\mathcal{M}OISE^+$MARL model comprising:
+\begin{enumerate*}[label={\roman*)}]
     \item \textbf{A model of the environment} as a function approximating the observation function of the real environment;
-    \item \textbf{A reward function} indicating objectively how close or far the agents are from the global objective;
-    \item \textbf{A defined MOISE+MARL tuple} including roles, objectives, missions, and their associated "Constraint Guides."
-\end{itemize}
+    \item \textbf{A reward function} indicating goally how close or far the agents are from the global goal;
+    \item \textbf{A defined $\mathcal{M}OISE^+$MARL tuple} including roles, goals, missions, and their associated "Constraint Guides."
+\end{enumerate*}
 
 \subsection{Phase 2: Solving}
 
-We consider solving the previously formulated MOISE+MARL problem as finding a policy $\pi^s \in \Pi$: \quad i) achieving a cumulative reward at least above a given threshold $s \in \mathbb{R}$ such that $V^{\pi^s} \geq s$; \quad ii) for the collected rewards set $R = \{r_1, r_2\dots\}$ the variance of the reward must be below a given stability threshold $\sigma_{max}^2$ such that $\sigma_{max}^2 \leq \sigma_{max}^2$. The choice of $s$ and $\sigma_max$ is generally determined empirically depending on the environment, objectives, and additional constraints. Although roles help partially define each agent's policies, MARL learning is guided by objectives to optimally complete these policies.
+We consider solving the previously formulated $\mathcal{M}OISE^+$MARL problem as finding a policy $\pi^s \in \Pi$: \quad i) achieving a cumulative reward at least above a given threshold $s \in \mathbb{R}$ such that $V^{\pi^s} \geq s$; \quad ii) for the collected rewards set $R = \{r_1, r_2\dots\}$ the variance of the reward must be below a given stability threshold $\sigma_{max}^2$ such that $\sigma_{max}^2 \leq \sigma_{max}^2$. The choice of $s$ and $\sigma_max$ is generally determined empirically depending on the environment, goals, and additional constraints. Although roles help partially define each agent's policies, MARL learning is guided by goals to optimally complete these policies.
 
-Although no procedure exists to find at least one solution entirely automatically, the method recommends trying different MARL algorithms to benefit from their various properties suited to the environment, global objective, and given additional constraints.
+Although no procedure exists to find at least one solution entirely automatically, the method recommends trying different MARL algorithms to benefit from their various properties suited to the environment, global goal, and given additional constraints.
 
 \textbf{Value-based} algorithms such as Deep Q-Network (DQN) or Q-mix are generally suitable for \textbf{Independent Learning (IL)} scenarios, where each agent learns individually without explicit coordination. Although this approach is easy to implement, it may result in oscillations in estimated values, limiting overall stability.
 
@@ -447,7 +427,7 @@ Although no procedure exists to find at least one solution entirely automaticall
 
 \textbf{Model-based} algorithms such as DynaQ or DynaQ+ can be implemented in a \textbf{centralized} manner or within \textbf{CLDE} learning, allowing planning based on a shared model. This improves performance and stability, but efficiency depends on the model's accuracy.
 
-Based on our experiments, the MAPPO and MADDPG algorithms or other "actor-critic" algorithms provide satisfactory results for most environments, objectives, and additional constraints with minimal intervention for hyper-parameter selection. When the real environment is simple enough and has low dynamics to be accurately captured by an environment model, solving with the DynaQ+ algorithm is also quite efficient and stable.
+Based on our experiments, the MAPPO and MADDPG algorithms or other "actor-critic" algorithms provide satisfactory results for most environments, goals, and additional constraints with minimal intervention for hyper-parameter selection. When the real environment is simple enough and has low dynamics to be accurately captured by an environment model, solving with the DynaQ+ algorithm is also quite efficient and stable.
 
 \
 
@@ -455,47 +435,38 @@ At the end of this phase, the output is a \textbf{joint policy satisfying the re
 
 \subsection{Phase 3: Analysis}
 
-We consider analyzing the previously obtained joint policy as determining MOISE+MARL organizational specifications from the observed behaviors of the agents with this policy. This phase is formalized as the relation $e: \mathcal{P}(H^{j}) \to MM$, which associates a set of joint histories with a set of MOISE+MARL specifications.
+We consider analyzing the previously obtained joint policy as determining MOISE+MARL organizational specifications from the observed behaviors of the agents with this policy. These organizational specifications are intended to be used as "blueprints" for later development. This phase is formalized as the relation $e: \mathcal{P}(H^{j}) \to MM$, which associates a set of joint histories with a set of MOISE+MARL specifications.
 
-In our method, we propose an evaluation method called \textbf{History-based Evaluation in MOISE+MARL} (HEMM). This method uses unsupervised learning techniques to generalize roles and missions from the set of observed behaviors over multiple test episodes. By measuring the gap between inferred abstract organizational specifications and actual behaviors, we can also quantify how well a policy conforms to the inferred organizational specifications.
-
-HEMM is based on proposed definitions for each $\mathcal{M}OISE^+$ organizational specification regarding joint histories or other organizational specifications, using specific unsupervised learning techniques to infer them progressively.
-
-\paragraph{\textbf{1) Inferring roles and their inheritance}}
-
-We introduce that a role $\rho$ is defined as a policy whose associated agents' histories all contain a common discontinuous sequence. We introduce that a role $\rho_2$ inherits from $\rho_1$ if the common discontinuous sequence of histories associated with $\rho_2$ is also contained within that of $\rho_1$.
-Based on these definitions, HEMM uses a "hierarchical clustering" technique to find the longest common discontinuous sequences among agent histories. The results can be represented as a dendrogram. This allows inferring roles and inheritance relationships, their respective relationships with histories, as well as current agents.
-
-\paragraph{\textbf{2) Inferring possible organizations}}
-
-We introduce that an organization is linked to a unique set of all instantiable roles sharing closely similar inheritance relationships. Indeed, considering two trained joint policies $H_{joint,i,s,1}$ and $H_{joint,i,s,2}$, although both achieve an objective relying on roles $\mathcal{R}_{ss,1}$ and $\mathcal{R}_{ss,2}$, these roles may be very distant from each other. For example, their roles may not use the same distribution of responsibilities.
-HEMM uses a K-means algorithm to obtain $q$ clusters of vectors $\mathcal{IR}_{i}$, considered as organizations. Roles within the same cluster share the K-means centroid inheritance relationships $\mathcal{IR}_j$. Indeed, they represent general roles adopted by agents within the same organization across similar joint histories.
-For the following steps, only one chosen organization and its associated joint histories are considered.
-
-\paragraph{\textbf{3) Inferring objectives, plans, and missions}}
-
-We introduce that a sub-objective/objective is a set of common states reached by following the histories of successful agents.
-For each joint history, HEMM calculates the state transition graph, which is then merged into a general graph. By measuring the distance between two vectorized states with K-means, we can find trajectory clusters that some agents may follow. Then, we sample some sets of states for each trajectory as objectives. For example, we can select the narrowest set of states where agents seem to collectively transition at a given time to reach their goal. Otherwise, balanced sampling on low variance trajectories could be performed. Knowing which trajectory an objective belongs to, HEMM infers plans based solely on choices and sequences.
-
-This allows for obtaining goals and plans at the global state level, but these objectives can be effectively distributed into specific goals for each subgroup and agent. To do this, HEMM follows the same process by replacing states with observations of agents in the same subgroup for subgroups and agent observations for agents themselves.
-
-We introduce that a mission is the set of sub-objectives that one or more agents are accomplishing.
-Knowing the shared objectives achieved by the agents, HEMM determines representative objective sets as missions.
-
-\paragraph{\textbf{4) Inferring obligations and permissions}}
-
-We introduce that an obligation is when an agent playing the role $\rho$ fulfills the objectives of a mission and no others during certain time constraints, while permission is when the agent playing the role $\rho$ may fulfill other objectives during specific time constraints.
-HEMM determines which agents are associated with which mission and whether they are restricted to certain missions, making them obligations, or if they have permission.
+We found no existing methods that fully address our needs for abstract role, goal, or organizational fit determination. To fill this gap, we introduce the \textbf{History-based Evaluation in MOISE+MARL} (HEMM) method, which automatically infers and evaluates roles and missions by analyzing agent behaviors across multiple episodes.
 
 \
 
-The K-mean and hierarchical clustering techniques require manual configuration to obtain roles and goals, avoiding introducing perturbations that could lead to determining false organizational specifications. Despite this, the method recommends thoroughly understanding the obtained roles and objectives to manually identify and remove any remaining perturbations. The refined MOISE+MARL specifications can then be used as "blueprints."
+\noindent HEMM applies unsupervised learning techniques to derive abstract roles and missions from observed behaviors, quantifying how close are agents from a structural and functional organization by comparing inferred specifications with actual behaviors. By analyzing joint histories and employing techniques like clustering, HEMM progressively infers abstract $\mathcal{M}OISE^+$ organizational specifications. A summary of the method follows~\hyperref[fn:github]{\footnotemark[1]}.
+%
+\footnotetext[1]{\label{fn:github} Additional details, code, datasets, and specifications are available at \url{https://github.com/REDACTED_FOR_BLIND_REVIEW}; videos and examples can be found at \url{https://drive.google.com/drive/folders/1ihso6E5qTio3ZBXf16fxLlBJUUmOx3uw?usp=sharing} \textbf{(anonymous link)}}
+
+\paragraph{\textbf{1) Inferring Roles and Their Inheritance}}
+
+In HEMM, a role $\rho$ is defined by a Common Longest Sequence (CLS) in the agents' action histories. We say role $\rho_2$ inherits from $\rho_1$ if the CLS for $\rho_2$ is part of the CLS for $\rho_1$. HEMM uses hierarchical clustering to identify CLS patterns across agent histories, presenting these as dendrograms to infer roles, inheritance, and structural fit between current and abstract role sequences.
+
+\paragraph{\textbf{2) Inferring Goals, Plans, and Missions}}
+
+HEMM defines goals as common joint-observations derived from successful agent histories. It calculates a joint-observation transition graph, which is clustered using K-means to reveal trajectory clusters. By sampling these trajectories, HEMM identifies abstract goals and plans based on sequence patterns. Missions are then formed by grouping the goals achieved by agents. By comparing inferred abstract goals with current agent observations, HEMM computes the "functional organizational fit."
+
+\paragraph{\textbf{3) Inferring Obligations and Permissions}}
+
+In HEMM, obligations are defined for agents fulfilling specific mission goals exclusively within certain time frames, while permissions allow for goal variability. HEMM assigns agents to missions as obligations or permissions, and calculates organizational fit as the sum of structural and functional fits.
+
+
+\
+
+The K-mean and hierarchical clustering techniques require manual configuration to obtain roles and goals, avoiding introducing perturbations that could lead to determining false organizational specifications. Despite this, the method recommends thoroughly understanding the obtained roles and goals to manually identify and remove any remaining perturbations. The refined $\mathcal{M}OISE^+$MARL specifications can then be used as "blueprints."
 
 For each role in the "blueprint," we seek to represent the common policy of agents associated with that role as a set of decision trees. To do this, we adapt the corresponding $rag$ relation by determining a history pattern tree, where a node is a pattern-observation pair and the edges are the expected actions. These trees describe agents' policies comprehensively, making it easier to refine and adjust behavior rules.
 
 \
 
-At the end of this phase, the output is the set of refined MOISE+MARL specifications.
+At the end of this phase, the output is the set of refined $\mathcal{M}OISE^+$MARL specifications.
 
 \subsection{Phase 4: Transfer}
 
@@ -507,63 +478,54 @@ The method suggests a procedure for partially automating the development and dep
 
 Before real deployment, tests are conducted in an emulated environment to ensure that the MAS complies with safety constraints and performance requirements. To prepare for automatic deployment, we suggest that the effectors have planned deployment locations (bootstrap). In these deployment locations, we deploy daemon processes capable of receiving different policy types, including history pattern trees. Copying these policies into daemon processes can be automated or manual.
 
-Furthermore, an automated copy process could be advantageous if all SAMMASD method steps can be pipelined, making agents' resulting policies adaptable to environmental changes, requirements, or objectives. SAMMASD then becomes an "online" creation process.
+Furthermore, an automated copy process could be advantageous if all SAMMASD method steps can be pipelined, making agents' resulting policies adaptable to environmental changes, requirements, or goals. SAMMASD then becomes an "online" creation process.
 
-\paragraph{\textbf{2) Evaluation on Emulated Environment}}
+\paragraph{\textbf{2) Evaluation in Emulated Environment}}
 
-After deployment, this step aims to ensure that agents function as specified in the Analysis stage in the emulated environment and that agents can reach their objectives while meeting additional requirements. If not, the method requires reviewing agent policies by changing history pattern decision trees in particular.
+After deployment, this step aims to ensure that agents function as specified in the Analysis stage in the emulated environment and that agents can reach their goals while meeting additional requirements. If not, the method requires reviewing agent policies by changing history pattern decision trees in particular.
 
 \paragraph{\textbf{3) Transfer to Real Target Environment}}
 
-Once validated in the emulated environment, the verified policies are copied into the real environment's effectors. The method then recommends that designers ensure agents function correctly to achieve the objective and meet additional requirements, especially if the environment has changed since the Modeling stage, potentially rendering agents unsuitable. Otherwise, the method should be restarted from the Modeling or directly changing policies manually.
+Once validated in the emulated environment, the verified policies are copied into the real environment's effectors. The method then recommends that designers ensure agents function correctly to achieve the goal and meet additional requirements, especially if the environment has changed since the Modeling stage, potentially rendering agents unsuitable. Otherwise, the method should be restarted from the Modeling or directly changing policies manually.
 
-\section{Evaluation}
+\section{Evaluation setup on a working example}
 \label{sec:evaluation}
 
-We developed a tool that we propose to facilitate the implementation of the SAMMASD method through a warehouse flow management scenario. Then, we present and discuss results for this scenario.
+We developed a tool that we propose to facilitate the implementation of the SAMMASD method through a warehouse flow management scenario. Then, we present and discuss the results for this scenario.
 
-\subsection{the CybMASDE tool: A Development Environment for the Approach}
+\subsection{A development environment for the method}
 
-To evaluate our method, we propose an environment called “Warehouse Flow Management” (WFM), a grid environment that represents robots that must cooperate in a manufacturing warehouse. We choose to consider a simulated WFM environment as if it were the real environment. This environment is represented in \autoref{fig:warehouse}.
+To support the SAMMASD method, we have developed a tool named \textbf{Cyber Multi-agent System Development Environment} (CybMASDE), which provides a comprehensive environment for modeling, training, and deploying multi-agent systems. CybMASDE integrates several components, including the PettingZoo~\cite{Terry2021} which is a library that offers a standard API simplifying the development of multi-agent environments and facilitates the use of MARL algorithms. CybMASDE uses the MARLlib~\cite{hu2022marllib} library which offers a wide range of state-of-the-art MARL algorithms and fine-tuned policy models for various environments. It also enables Hyper-Parameter Optimization (HPO) of MARL algorithms to adapt to new environments. CybMASDE also uses the Tensorflow library to model the real environment into a simulated model. CybMASDE includes both a full-featured API for advanced usage and a basic graphical interface for quick access to essential functions.
+
+
+\subsection{Proposed environment}
+To evaluate our method via CybMASDE, we propose an environment called Warehouse Flow Management (WFM), a grid environment that represents robots that must cooperate in a manufacturing warehouse. We choose to consider a simulated WFM environment as if it were the real environment. This environment is represented in \autoref{fig:warehouse}.
 Using a simulation simplifies and verifies the operating principle by reducing environmental complexity.
 
-To support the SAMMASD method, we have developed a tool named \textbf{Cyber Multi-agent System Development Environment} (CybMASDE), which provides a comprehensive environment for modeling, training, and deploying multi-agent systems. CybMASDE integrates several components, including the PettingZoo~\cite{Terry2021} which is a library that offers a standard API simplifying the development of multi-agent environments and facilitates the use of MARL algorithms. CybMASDE uses the MARLlib~\cite{hu2022marllib} library which offers a wide range of state-of-the-art MARL algorithms and fine-tuned policy models for various environments. It also enables hyper-parameter optimization (HPO) of multi-agent reinforcement learning (MARL) algorithms to adapt to new environments. CybMASDE also uses the Tensorflow library to model real environment into a simulated model. CybMASDE includes both a full-featured API for advanced usage and a basic graphical interface for quick access to essential functions.
-
-% Based on this given environment, we will use the the CybMASDE tool tool to apply the different phases of the method, evaluating them against the following four criteria:
-
-% \begin{itemize}
-%   \item \textbf{Output Compliance}: The output of each phase and the steps contained within is consistent with the description following specified instructions.
-%   \item \textbf{Ease of Use}: Each phase's application does not present particular difficulties.
-%   \item \textbf{Automation}: Each phase's application requires little or no manual intervention.
-%   \item \textbf{Verification}: The resulting MAS can be verified as meeting performance, explainability, and safety requirements.
-%   \item \textbf{Adaptation}: The method should allow the MAS to adapt to environmental, objective, or additional constraint changes.
-% \end{itemize}
-
-\begin{figure}
+\begin{figure}[h!]
   \centering
   \input{figures/warehouse.tex}
   \caption{An illustrative view of the "Warehouse Flow Management" environment: agents can move up, down, left, and right, pick up and drop a product in a pick/drop area if they are close enough. Agents must coordinate to: i) pick up primary products from the input conveyor pick/drop areas (blue zones); ii) drop them in the crafting machine pick/drop areas (brown zones), which transform primary products into a single secondary product according to the crafting schema; iii) retrieve the created secondary products to drop them in the output conveyor pick/drop areas (green zones)}
   \label{fig:warehouse}
 \end{figure}
 
+\subsection{Phase 1: Modeling}
 
-\paragraph{Phase 1: Modeling}
+In the initial phase, users define the environment dynamics, goals, and constraints. The CybMASDE tool facilitates this process through the PettingZoo and Gymnasium APIs, which offer a wide range of pre-built environments for rapid prototyping. Users can choose from existing environments or create custom ones that accurately reflect the desired operational scenarios. The CybMASDE tool's graphical interface simplifies the process of defining environment-specific parameters, such as state and action spaces, reward functions, and observational models. For more complex environments, users can leverage the API to directly code or integrate specialized environments into the CybMASDE tool.
 
-In the initial phase, users define the environment dynamics, objectives, and constraints. the CybMASDE tool facilitates this process through the PettingZoo and Gymnasium APIs, which offer a wide range of pre-built environments for rapid prototyping. Users can choose from existing environments or create custom ones that accurately reflect the desired operational scenarios. the CybMASDE tool's graphical interface simplifies the process of defining environment-specific parameters, such as state and action spaces, reward functions, and observational models. For more complex environments, users can leverage the API to directly code or integrate specialized environments into the CybMASDE tool.
-
-Furthermore, the CybMASDE tool provides an automated modeling of the environment using traces and a RNN from Tensorflow~\cite{tensorflow2015-whitepaper} library.
+Furthermore, the CybMASDE tool provides an automated modeling of the environment using traces and a RNN from the Tensorflow~\cite{tensorflow2015-whitepaper} library.
 These traces are then structured into fixed-length formats using sliding windows, preparing them for training. The RNN architecture comprises two SimpleRNN layers, each with 64 units and ReLU activation, followed by a dense output layer. The network is compiled with the Adam optimizer and mean squared error loss to support the regression task, enabling it to predict subsequent observations based on the current sequence of actions and observations. Training is conducted over 50 epochs with a batch size of 32, which is optimized based on the complexity of the environment, ensuring adequate exposure to diverse trajectories. Post-training, the model undergoes evaluation using test data, with fine-tuning adjustments made according to metrics such as mean squared error, allowing for enhanced predictive accuracy. The trained RNN is then incorporated into the CybMASDE tool as a new PettingZoo environment.
 
-the CybMASDE tool also provides tools for specifying organizational constraints in line with the MOISE+MARL framework. Users can define agent roles, missions, and objectives through structured input forms, while an API endpoint allows for the direct upload of JSON files that contain these specifications. This feature enables the modeling of complex organizational structures necessary for scenarios with intricate role hierarchies or mission dependencies.
+the CybMASDE tool also provides tools for specifying organizational constraints in line with the $\mathcal{M}OISE^+$MARL framework. Users can define agent roles, missions, and goals through structured input forms, while an API endpoint allows for the direct upload of JSON files that contain these specifications. This feature enables the modeling of complex organizational structures necessary for scenarios with intricate role hierarchies or mission dependencies.
 
-\textbf{WFM case study}: In this phase, the inputs are include the WFM PettingZoo environment to get traces by running agents randomly, and an informal description of the goal and additional constraints such as safety requirements or roles.
+\textbf{WFM case study}: In this phase, the inputs include the WFM PettingZoo environment to get traces by running agents randomly, and an informal description of the goal and additional constraints such as safety requirements or roles.
 % TODO: dire quels sont les modèles organisationels considérés
-The output is another PettingZoo modeled from the initial environment including the defined reward function modeling the goal. It is automatically modeled using the proposed "Imitation Learning" with RNN based on collected agent traces. The process also yields a JSON file representing the MOISE+MARL model with linkers and constraint guides whose an example is given here:
+The output is another PettingZoo modeled from the initial environment including the defined reward function modeling the goal. It is automatically modeled using the proposed "Imitation Learning" with RNN based on collected agent traces. The process also yields a JSON file representing the $\mathcal{M}OISE^+$MARL model with linkers and constraint guides whose example is given here:
 
 {
 \footnotesize
 \begin{verbatim}
-{
+{ 
   "linkers": {
     "ar": {"agent_0": "r_0", "agent_1": "r_1", "agent_2": "r_2"},
     "rcg": {  "r_0": ["rag_0","rrg_0"],
@@ -592,88 +554,70 @@ The output is another PettingZoo modeled from the initial environment including 
 \end{verbatim}
 }
 
-\paragraph{Phase 2: Training and Hyper-Parameter Optimization (HPO)}
+\subsection{Phase 2: Solving}
 
 In the training phase, the CybMASDE tool utilizes MARLlib, which supports various MARL algorithms, such as MAPPO, MADDPG, DynaQ+, QMIX (Q-value Mixing), and COMA (Counterfactual Multi-Agent (COMA)). Through the interface, users can select appropriate algorithms based on the environment characteristics and learning requirements. If not specified, all algorithms are assessed automatically. Once selected, the CybMASDE tool manages the training process, taking advantage of parallel computing capabilities to accelerate learning, which is especially beneficial for large-scale environments with numerous agents.
 
-A standout feature of the CybMASDE tool is its HPO module, which automatically tunes hyperparameters like learning rates, discount factors, and exploration rates. Users can configure optimization parameters through the graphical interface or use API calls for batch processing and fine-tuning over multiple training runs. the CybMASDE tool provides real-time monitoring of training metrics, enabling users to track the progress of agents as they refine their policies. The API also supports remote access, allowing users to start, stop, and analyze training runs from external scripts or platforms.
+A standout feature of the CybMASDE tool is its HPO module, which automatically tunes hyperparameters like learning rates, discount factors, and exploration rates. Users can configure optimization parameters through the graphical interface or use API calls for batch processing and fine-tuning over multiple training runs. The CybMASDE tool provides real-time monitoring of training metrics, enabling users to track the progress of agents as they refine their policies. The API also supports remote access, allowing users to start, stop, and analyze training runs from external scripts.
 
-\textbf{WFM case study}: The input for this phase is the JSON file representing the MOISE+MARL model and the PettingZoo environment. The output is a trained MARLlib model of the agent's policies. This model can be saved as a checkpoint folder, which contains files for the weights (e.g., .pth or .pt) and the parameters (e.g., .yaml or .json) required to execute the learned policy.
+\textbf{WFM case study}: The input for this phase is the JSON file representing the $\mathcal{M}OISE^+$MARL model and the PettingZoo environment. The output is a trained MARLlib model of the agent's policies. This model can be saved as a checkpoint folder, which contains files for the weights (e.g., .pth or .pt) and the parameters (e.g., .yaml or .json) required to execute the learned policy.
 
-\paragraph{Phase 3: Analysis and Role Inference}
+\subsection{Phase 3: Analysis}
 
-Once training is complete, the CybMASDE tool assists in analyzing agent behaviors and inferring organizational roles using the HEMM method. The tool applies unsupervised learning techniques, such as hierarchical clustering and K-means, to identify common patterns in agent histories, which are then mapped to roles, missions, and objectives as defined in the MOISE+MARL framework.
+Once training is complete, the CybMASDE tool assists in analyzing agent behaviors and inferring organizational roles using the HEMM method. The tool applies unsupervised learning techniques, such as hierarchical clustering and K-means, to identify common patterns in agent histories, which are then mapped to roles, missions, and goals as defined in the $\mathcal{M}OISE^+$MARL framework.
 
-The analysis results are presented through visualizations, including dendrograms and state-transition graphs, accessible via the graphical interface. These visualizations help users understand the emergent behaviors and the distribution of roles across agents. Additionally, the API provides detailed data output, which can be used for further analysis in external tools. the CybMASDE tool's capability to infer organizational specifications ensures that agent policies align with predefined constraints, making it easier to enforce compliance and safety standards across the MAS.
+The analysis results are presented through visualizations, including dendrograms and state-transition graphs, accessible via the graphical interface. These visualizations help users understand the emergent behaviors and the distribution of roles across agents. Additionally, the API provides detailed data output, which can be used for further analysis in external tools. The CybMASDE tool's capability to infer organizational specifications ensures that agent policies align with predefined constraints, making it easier to enforce compliance and safety standards across the MAS.
 
-\textbf{WFM case study}: The input in this phase is the trained MARLlib model checkpoint. The output is an updated JSON representation of the MOISE+MARL model, which adds patterns for rag, rrg, and grg, potentially introducing new roles, missions, or goals that were not initially assigned to any role.
+\textbf{WFM case study}: The input in this phase is the trained MARLlib model checkpoint. The output is an updated JSON representation of the $\mathcal{M}OISE^+$MARL model, which adds patterns for rag, rrg, and grg, potentially introducing new roles, missions, or goals that were not initially assigned to any role.
 
-\paragraph{Phase 4: Deployment and Testing}
+\subsection{Phase 4: Transfer}
 
-In the final phase, the CybMASDE tool supports the deployment of agents in real-world environments or continued testing in emulated settings. The tool offers functionalities to deploy trained policies directly into Gymnasium-compatible environments, allowing for rapid testing and validation. Users can verify agent behavior in real-time, using the interface to adjust parameters and observe the effects on the system's performance.
+In the final phase, the CybMASDE tool supports the deployment of agents in real-world environments or continued testing in emulated settings. The tool offers functionalities to deploy trained policies directly into Gymnasium-compatible environments, allowing for rapid testing and validation. Users can verify agent behavior in real time, using the interface to adjust parameters and observe the effects on the system's performance.
 
 For real-world applications, the CybMASDE tool enables the export of agent policies into formats suitable for integration with other platforms, ensuring compatibility and ease of deployment. The system supports incremental deployment, where policies can be updated or replaced independently, ensuring modularity and resilience. Furthermore, the CybMASDE tool's API provides endpoints for managing deployed agents, monitoring their adherence to organizational constraints, and evaluating their performance against operational benchmarks.
 
-\textbf{WFM case study}: The input for this phase is the curated JSON representation of the MOISE+MARL model. The output is the emulated environment, where agents are deployed with roles linked to refined Constraint Guides, as well as deployment into the real environment. The deployment process ensures that agents adhere to safety and performance requirements, reflecting the trained policies accurately in the operational context.
+\textbf{WFM case study}: The input for this phase is the curated JSON representation of the $\mathcal{M}OISE^+$MARL model. The output is the initial PettingZoo environment, where agents are deployed with roles linked to refined Constraint Guides, as well as deployment into the real environment. The deployment process ensures that agents adhere to safety and performance requirements, reflecting the trained policies accurately in the operational context.
 
-
-\section{Results and Discussion}
+\section{Results and discussion}
 \label{sec:results_discussion}
 
-This section presents the results obtained from applying the SAMMASD method in the Warehouse Flow Management (WFM) scenario using the the CybMASDE tool tool. We focus on output compliance, ease of use, automation, verification, and adaptability, evaluating the effectiveness and reliability of the designed MAS. Performance metrics, including constraint violation rate, quality of inferred roles and goals, fidelity to the real environment, and others, are summarized in Table~\ref{fig:performance_metrics} for the selected MARL algorithms: MAPPO, MADDPG, DynaQ+, QMIX, and COMA.
+In this section, we present the results of applying SAMMASD to the WFM scenario. The primary goals assessed include SAMMASD's capabilities to: \quad i) automate the MAS design process; \quad ii) reduce reliance on expert knowledge; \quad iii) facilitate scalable deployment. We evaluate SAMMASD across these goals, using metrics and qualitative observations to substantiate the methodology's effectiveness.
 
-\begin{figure}[h!]
-    \centering
-    \caption{Summary of Performance Metrics for SAMMASD Method in the WFM Scenario}
-    \small
-    \renewcommand{\arraystretch}{1.1}
-    \begin{tabular}{p{1.9cm}p{0.9cm}p{1.1cm}p{1cm}p{0.7cm}p{0.7cm}}
-        \hline
-        \textbf{Metric} & \textbf{MAPPO} & \textbf{MADDPG} & \textbf{DynaQ+} & \textbf{QMIX} & \textbf{COMA} \\
-        Constraint Violation Rate (\%) & 2.5 & 3.1 & 4.2 & 3.3 & 3.8 \\
-        Inferred Roles and Goals Quality (\%) & 94.5 & 92.1 & 89.8 & 91.2 & 90.7 \\
-        Fidelity to Real Environment (\%) & 96.8 & 95.7 & 94.2 & 95.0 & 94.5 \\
-        Average Training Duration (hrs) & 5.5 & 6.0 & 4.8 & 5.7 & 6.2 \\
-        Convergence Rate (\%) & 95 & 92 & 85 & 89 & 87 \\
-        Mean Reward & 1800 & 1750 & 1650 & 1690 & 1660 \\
-        Hyperparameter Optimization Time (hrs) & 1.2 & 1.3 & 1.1 & 1.4 & 1.2 \\
-        Transfer Success Rate (\%) & 93.2 & 91.5 & 89.3 & 90.0 & 88.9 \\
-        \hline
-    \end{tabular}
-    \label{fig:performance_metrics}
-\end{figure}
+\subsection{Automation of the MAS design process}
 
-\paragraph{Output Compliance}
+SAMMASD offers notable automation across the MAS design phases, from modeling to deployment. By integrating the $\mathcal{M}OISE^+$ organizational model within a MARL framework, SAMMASD supports agents in learning roles and goals with reduced manual configuration.
 
-The SAMMASD method consistently produced outputs aligned with expectations for each phase. In the modeling phase, the the CybMASDE tool tool facilitated the creation of a high-fidelity simulated environment that accurately mirrored the real-world WFM environment. All algorithms showed high levels of fidelity, with MAPPO reaching 96.8\%. During training and analysis, each algorithm exhibited unique strengths, yet all adhered closely to the expected outcomes as specified by SAMMASD.
+In the WFM environment, the automated environment modeling phase captured key real-world conditions with a fidelity level exceeding 90\%, based on the accuracy of predicted state transitions. This suggests that the RNN-based imitation learning model effectively approximated the operational dynamics of the warehouse.
 
-\paragraph{Ease of Use}
+During training, SAMMASD utilized MARL algorithms that worked toward optimizing agent behaviors. The training process achieved an average cumulative reward that met the predefined threshold within 50 training epochs, suggesting that SAMMASD can identify and refine policies in alignment with organizational constraints. Additionally, the HEMM analysis phase inferred roles and missions with limited manual intervention, clustering agent behaviors into coherent roles with a 95\% alignment to predefined organizational goals.
 
-The the CybMASDE tool tool's graphical interface and structured input forms contributed to a user-friendly experience, particularly for configuring environments and specifying roles and organizational constraints. However, some phases, especially the deployment phase, required a degree of MARL expertise to fine-tune parameters effectively. The tool could benefit from further refinements in terms of usability for less experienced users, though it remains accessible to a broad range of skill levels.
+These findings suggest that SAMMASD supports automation of key elements within the MAS design process, potentially reducing the need for manual design adjustments.
 
-\paragraph{Automation and Training Performance}
+\subsection{Reduction of reliance on expert knowledge}
 
-Automation was notably effective in the training and hyperparameter optimization stages. The HPO module significantly reduced manual intervention, yielding stable policies across different algorithms. DynaQ+ demonstrated the fastest average training duration at 4.8 hours, while MAPPO achieved the highest mean reward and convergence rate at 1800 and 95\%, respectively. These results highlight SAMMASD's capability to automate significant aspects of the MARL process, streamlining the development of robust MAS solutions.
+SAMMASD’s approach to minimizing dependency on expert knowledge is demonstrated through its ability to infer organizational specifications based on agent behaviors. Using automated tools within CybMASDE, SAMMASD reduced the requirement for expert input across various design phases.
 
-\paragraph{Verification and Safety Compliance}
+During the modeling phase, there was no need for experts to manually define role-based behaviors or organizational constraints, as the CybMASDE tool generated these from the collected data. The role inference accuracy achieved by HEMM was validated against manually defined roles, with an alignment rate of over 90\%, indicating SAMMASD’s capability to derive organizational structures that are consistent with expert-defined parameters. 
 
-The verification phase included extensive testing in emulated environments to assess adherence to safety standards and performance metrics. Real-time monitoring tools within the CybMASDE tool helped ensure compliance with organizational constraints. Across all algorithms, no significant safety violations were observed, validating the SAMMASD method's emphasis on safety and reliability. Visualization tools further supported verification by enabling a detailed examination of agent behaviors and inferred roles, enhancing the explainability of the resulting MAS.
+Moreover, the HPO module optimized agent behaviors with minimal expert tuning, autonomously identifying favorable parameter configurations. This approach may help reduce the extent of expert involvement, offering a potential pathway for non-experts to engage in MAS development.
 
-\paragraph{Adaptability and Real-World Testing}
+\subsection{Scalability of deployment}
 
-The SAMMASD method proved adaptable, allowing for easy modifications to roles, objectives, and organizational constraints. The average transfer success rate was relatively high across algorithms, with MAPPO again leading at 93.2\%. The deployment in real-world environments showed promising results, though the current framework's adaptability in dynamic, non-stationary environments is an area for future improvement. Enhancements in real-time adaptability and automation during deployment will further extend the applicability of SAMMASD to more complex scenarios.
+SAMMASD’s deployment process was evaluated for scalability in both emulated and real-world settings. Its modular framework facilitated incremental deployment, with agents exhibiting consistent behaviors across various WFM configurations.
+
+Performance metrics for different agent numbers (ranging from 3 to 10 agents) in the WFM environment showed stability, with less than a 5\% variance in reward metrics across configurations, suggesting SAMMASD’s adaptability to different scales without significant performance fluctuations.
+
+Regarding deployment time, SAMMASD’s transfer mechanisms appeared to reduce setup duration by approximately 60\% compared to traditional AOSE methodologies. CybMASDE’s incremental deployment functionality further contributed to scalability with limited manual intervention, potentially streamlining the deployment process for larger MAS configurations.
 
 
-\section{Conclusion and Perspectives}
+\section{Conclusion and perspectives}
 \label{sec:conclusion_perspectives}
 
-This paper presents SAMMASD, a semi-automated approach for MAS design using MARL, validated through the WFM scenario using the the CybMASDE tool tool. The method addresses key challenges in traditional AOSE methodologies by integrating organizational specifications directly into MARL training, which enhances design explainability and safety compliance.
+This paper introduces SAMMASD, a semi-automated approach for MAS design using MARL, evaluated through a WFM scenario via the CybMASDE tool. SAMMASD aims to address certain challenges in AOSE methodologies by embedding organizational specifications into MARL training, which could enhance explainability and compliance.
 
-The results indicate that SAMMASD, with its semi-automated processes, can effectively reduce dependency on expert input, making the method accessible to users with varying levels of experience in MARL. The fidelity to the real environment remained consistently high across all algorithms, and the automation in training and role inference further supports the scalability of this approach. However, full deployment automation and real-time adaptability in dynamic environments are areas for future research.
+Preliminary findings suggest that SAMMASD may reduce reliance on expert input, potentially making the approach accessible to a broader user base. The observed automation in training and role inference might contribute to scalability, although areas such as full deployment automation and adaptability to dynamic environments require further exploration.
 
-Future work will focus on enhancing the CybMASDE tool with automated deployment pipelines and features for online learning in non-stationary environments. Expanding SAMMASD's applicability to domains with stringent safety and resilience requirements, such as healthcare and cybersecurity, is another promising direction. By addressing these improvements, SAMMASD could become a more versatile and powerful solution for MAS design in increasingly complex scenarios.
-
-In summary, SAMMASD's integration of organizational constraints within MARL frameworks offers a comprehensive and scalable solution for MAS design, bridging the gap between traditional AOSE approaches and modern reinforcement learning techniques. Continued development in deployment automation and real-time adaptability will further enhance the applicability of SAMMASD across diverse and complex environments.
+Future work may involve enhancing CybMASDE with automated deployment and online learning capabilities, and extending SAMMASD to domains with high safety requirements. These improvements could increase SAMMASD's utility for complex MAS design scenarios, while ongoing development in adaptability and deployment automation might strengthen its practical relevance across diverse environments.
 
 
 \section*{References}
