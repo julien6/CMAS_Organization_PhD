@@ -13,6 +13,13 @@
 \captionsetup{font=it}
 \usepackage{ragged2e}
 \usepackage{hyperref}
+\addto\extrasenglish{%
+  \renewcommand{\sectionautorefname}{Section}%
+  \renewcommand{\subsectionautorefname}{Subsection}%
+  \renewcommand{\subsubsectionautorefname}{Subsubsection}%
+  \renewcommand{\tableautorefname}{Table}%
+  \renewcommand{\figureautorefname}{Figure}%
+}
 \usepackage{pifont}
 \usepackage{footmisc}
 \usepackage{multirow}
@@ -123,7 +130,7 @@
 
 \begin{document}
 
-\title{Digital Twin-Driven Multi-Agent Reinforcement Learning for Optimizing Resource Allocation in Kubernetes Environments\\
+\title{Digital Twin-Driven MARL for Optimal Horizontal Scaling in Kubernetes Environments\\
     % {\footnotesize \textsuperscript{Note}}
     % \thanks{Identify applicable funding agency here. If none, delete this.}
 }
@@ -188,95 +195,122 @@
 \maketitle
 
 \begin{abstract}
-
     % context
     As cloud-native applications grow in complexity, resource allocation in Kubernetes environments requires dynamic adaptability to avoid bottlenecks and optimize throughput.
     % problem
     Conventional autoscaling lacks the granularity to coordinate interconnected services effectively, especially under fluctuating loads and interdependent workflows.
     % contribution
-    This paper presents a Digital Twin-based approach to bridge the "Sim2Reality Gap" and optimize resource allocation using Multi-Agent Reinforcement Learning (MARL). We first construct an ultra-realistic digital twin of a Kubernetes environment, capturing service dependencies, bottlenecks, and resource metrics (CPU, memory) from trace data. Within this simulation, MARL agents are trained to dynamically adjust pod replicas to maximize throughput while minimizing resource consumption and maintaining service health. The trained agents are then deployed in the real Kubernetes environment to validate performance and ensure reliable decision-making.
+    This paper presents a Digital Twin-based approach to bridge the "Sim2Reality Gap" and optimize resource allocation using Multi-Agent Reinforcement Learning (MARL). We first construct a realistic Digital Twin of a Kubernetes environment, capturing service dependencies, bottlenecks, and resource metrics from trace data. Within this simulation, MARL agents are trained to dynamically adjust pod replicas to maximize throughput while minimizing resource consumption and maintaining service health. The trained agents are then deployed in the real Kubernetes environment to validate performance and ensure reliable decision-making.
     % results
-    Experimental results show that this digital twin approach enhances resource efficiency and reduces bottlenecks more effectively than Kubernetes’ Horizontal Pod Autoscaler, underscoring the potential of MARL-driven Digital Twins for intelligent resource management in cloud-native systems.
-
+    Experimental results show that this Digital Twin approach enhances resource efficiency and reduces bottlenecks more effectively than Kubernetes’ Horizontal Pod Autoscaler.
 \end{abstract}
 
 \begin{IEEEkeywords}
-    cyberdefense, multi-agent systems, reinforcement learning, organization, formal
+    cyberdefense, MARL, Digital Twins, formal
 \end{IEEEkeywords}
 
 \section{Introduction}
 
-As modern applications grow in complexity and scale, cloud-native platforms like Kubernetes have become essential for managing containerized workloads. Kubernetes enables horizontal scaling, load balancing, and fault tolerance for microservices deployed in a cluster environment \cite{hpa_design}. However, traditional autoscaling solutions in Kubernetes, particularly the Horizontal Pod Autoscaler (HPA), are limited in handling complex interdependent microservices where resource needs fluctuate unpredictably \cite{rosenberg_k8s_autoscaling}. For these scenarios, effective resource allocation requires continuous adaptation, which current Kubernetes scaling strategies cannot fully support.
+Cloud-native platforms like Kubernetes have become essential for managing containerized workloads. Kubernetes enables horizontal scaling, load balancing, and fault tolerance for microservices deployed in a cluster environment \cite{hpa_design}. However, traditional autoscaling solutions in Kubernetes, called Horizontal Pod Autoscaler (HPA), are limited in handling complex interdependent microservices where resource needs fluctuate unpredictably \cite{rosenberg_k8s_autoscaling}. For these scenarios, effective resource allocation requires continuous adaptation, which current Kubernetes scaling strategies cannot fully support.
 
-The primary challenge arises from the interdependencies between services in Kubernetes, where variations in workload can propagate bottlenecks and degrade performance across the entire service chain \cite{park_predictive_scaling}. While some research has focused on enhancing autoscalers by integrating machine learning for predictive resource allocation \cite{liu_dt_cloud}, existing solutions typically focus on isolated services, neglecting the interactions within complex service topologies. This limitation underscores the need for a solution that dynamically adapts to multi-service dependencies while maintaining efficiency across the entire application.
+The primary challenge arises from the variations in workload in a Kubernetes environment comprising a complex service topology made up of interconnected, chained services and limited worker resources. Under these circumstances, bottlenecks may propagate and degrade performance across the entire environment \cite{park_predictive_scaling}. While some research has focused on enhancing autoscalers by integrating Machine Learning (ML) for predictive resource allocation \cite{liu_dt_cloud}, existing solutions typically focus on isolated services, neglecting the interactions within complex service topologies. Besides ML, most HPA solutions we identified rely on empirically defined hard-coded rules, which show limitations in new conditions \cite{keda}. These limitations underscore the need for a solution that dynamically adapts to multi-service dependencies while maintaining efficiency across the entire application.
 
-One promising solution to this problem is the use of Digital Twins, which create virtual models of physical systems to simulate and optimize their behavior under various conditions \cite{schleich_digital_twin}. Digital Twins have shown potential in optimizing data centers, manufacturing systems, and IoT networks by accurately simulating resource constraints and predicting operational outcomes \cite{zhang_marl_k8s}. In the cloud computing domain, Digital Twins provide a safe, controlled environment to model resource allocation strategies, allowing researchers to explore optimization techniques without impacting real-world performance \cite{nguyen_sim2reality}. However, few studies have explored the application of Digital Twins in Kubernetes, particularly to simulate inter-service dependencies and optimize autoscaling strategies for complex workloads.
+In a Kubernetes environment, "Custom Controllers" are dedicated components embedding user-defined logic to adjust the number of replicas based on various metrics of the environment. Considering metric values as observations and pod adjustments as actions, "Custom Controllers" can be implemented as agents that learn how to choose the next action. Applying MARL algorithms could enable agents to learn how to orchestrate pods automatically, aiming to minimize bottlenecks and resource consumption across all workers. However, during the training phase, a large number of irreversible actions may lead the Kubernetes environment to complete failure, thereby forbidding any direct application of MARL algorithms on the target Kubernetes environment.
 
-In this work, we propose a novel Digital Twin-driven approach to enhance Kubernetes autoscaling through Multi-Agent Reinforcement Learning (MARL). Our approach consists of three main contributions:
+Using Digital Twins (DTs) is a relevant way to train agents when having a high-fidelity simulation model of the target Kubernetes environment, providing a safe, efficient, and controlled environment without impacting real environment performance \cite{nguyen_sim2reality,schleich_digital_twin}. DTs also enable the exploration of “what if” scenarios to gain more experience and prepare to adapt to likely new future conditions. However, few studies have explored the application of DTs in Kubernetes, particularly to simulate inter-service dependencies and optimize autoscaling strategies with MARL.
+
+In this work, we propose a novel DT-driven approach to enhance Kubernetes autoscaling through MARL. Our approach consists of three main contributions:
 \begin{itemize}
-    \item We design a high-fidelity Digital Twin of a Kubernetes environment based on actual trace data, reducing the ``Sim2Reality Gap'' by capturing inter-service dependencies and resource metrics like CPU and memory usage (\autoref{sec:digital_twin_design}).
-    \item Using this Digital Twin, we train MARL agents to dynamically adjust pod replicas across services. Our training framework is designed to optimize throughput while minimizing resource consumption and maintaining the health of services (\autoref{sec:marl_training}).
+    \item We design a high-fidelity DT of a Kubernetes environment based on actual trace data, reducing the "Sim2Reality Gap" by capturing inter-service dependencies and resource metrics like CPU and memory usage (\autoref{sec:digital_twin_design}).
+    \item Using this DT, we train MARL agents to dynamically adjust pod replicas across services. Our training framework is designed to optimize throughput while minimizing resource consumption and maintaining the health of services (\autoref{sec:marl_training}).
     \item Finally, we transfer the trained agents into a real Kubernetes environment, where their performance in resource management and bottleneck reduction is validated against the default HPA and other baseline approaches (\autoref{sec:deployment_validation}).
 \end{itemize}
 
-Our results demonstrate that the proposed method outperforms Kubernetes' HPA in handling dynamic workloads by efficiently balancing resource usage and reducing bottlenecks across service chains. The integration of MARL with a Digital Twin also improves overall system stability, enabling Kubernetes clusters to better adapt to fluctuating loads (\autoref{sec:results}). These findings highlight the potential of Digital Twin-enhanced MARL for Kubernetes autoscaling, paving the way for intelligent, autonomous resource allocation in cloud-native infrastructures.
+Our results demonstrate that the proposed method outperforms the default Kubernetes' HPA in handling dynamic workloads by efficiently balancing resource usage and reducing bottlenecks across service chains. We observed, the overall system stability is maintained, enabling Kubernetes clusters to better adapt to fluctuating loads (\autoref{sec:results}). These findings highlight the potential of DTs and MARL for Kubernetes autoscaling, paving the way for intelligent, autonomous resource allocation in cloud-native infrastructures.
 
 The remainder of this paper is organized as follows.
-\autoref{sec:related_work} reviews relevant literature on Kubernetes autoscaling, Digital Twins, and reinforcement learning approaches in resource allocation.
-\autoref{sec:background} recaps the key concepts involved in our approach such as Kubernetes' autoscaling, Digital Twins, Environment modeling, MARL, and Sim2Reality Gap.
-\autoref{sec:problem_definition_solution} formalizes the pod orchestration orchestration problem and sets to introduce our solving approach.
-\autoref{sec:digital_twin_design} details the design and implementation of the Digital Twin, including its configuration to simulate real Kubernetes workloads.
-\autoref{sec:marl_training} describes the MARL training process within the Digital Twin, including the definition of rewards and agent policies.
+\autoref{sec:related_work} reviews relevant literature regarding our approach.
+\autoref{sec:background} recaps the key concepts involved in our approach.
+\autoref{sec:problem_definition_solution} formalizes the pod orchestration problem and introduces our solving approach.
+\autoref{sec:digital_twin_design} details the design and implementation of the DT, including its configuration to simulate real Kubernetes workloads.
+\autoref{sec:marl_training} describes the MARL training process within the DT, including the definition of rewards and agent policies.
 \autoref{sec:deployment_validation} outlines the deployment of trained agents into a real Kubernetes environment and the methods used for evaluating their performance.
-\autoref{sec:discussion} presents overall results through various performance metrics to compare our approach with results obtained with avaialble horizontal auto-scaling methods.
+\autoref{sec:results} presents overall results through various performance metrics to compare our approach with results obtained with available horizontal auto-scaling methods.
 Finally, \autoref{sec:conclusion} discusses the implications of our findings and proposes directions for future research.
 
 
 \section{Related Works}
 \label{sec:related_work}
 
-In Kubernetes environments, managing resources through autoscaling mechanisms is crucial to maintaining performance under dynamic workloads. The conventional Horizontal Pod Autoscaler (HPA) provides scaling based on CPU and memory metrics \cite{hpa_design}. However, the default HPA is limited in environments with interdependent services where bottlenecks or performance degradation can arise from fluctuating loads and inter-service dependencies \cite{rosenberg_k8s_autoscaling}. 
+The conventional HPA provides scaling based on CPU and memory metrics \cite{hpa_design}. However, the default HPA is limited in environments with interdependent services where bottlenecks or performance degradation can arise from fluctuating loads and inter-service dependencies \cite{rosenberg_k8s_autoscaling}. 
 
 Recent studies have introduced extensions to the HPA, incorporating custom metrics or predictive models to better handle complex workloads. For instance, Park et al. \cite{park_predictive_scaling} explored a predictive scaling method that leverages machine learning for dynamic workload adjustment, specifically designed to handle variable workloads beyond CPU and memory limits. Still, these approaches often focus on isolated services rather than interdependent chains.
 
-Digital Twins (DTs) offer a promising approach for modeling and simulating complex cloud environments, enabling researchers to explore adaptive resource allocation without impacting production environments. Digital Twins have been applied to data centers and IoT networks, where they simulate virtual instances of real systems to optimize operations and reduce the ``Sim2Reality Gap'' \cite{schleich_digital_twin}. For cloud and edge computing environments, DTs help capture detailed resource dynamics and forecast potential issues, which are essential in supporting adaptive control strategies. However, few works have yet explored Digital Twin models in Kubernetes, where dynamic workloads and service dependencies pose unique challenges \cite{liu_dt_cloud}.
+In the field of resource management, Reinforcement Learning (RL) has gained popularity as an adaptive control strategy in dynamic environments \cite{li_rl_resource_allocation}. Algorithms such as Deep Q-Learning (DQN) and Proximal Policy Optimization (PPO) have shown promising results in managing distributed resource allocation \cite{schwartz_drl_cloud}, especially when combined with multi-agent frameworks. MARL enables collaborative control in distributed systems, which is essential for environments like Kubernetes where each service requires independent yet coordinated scaling decisions \cite{zhang_marl_k8s}. Despite the progress, applying MARL to Kubernetes environments remains limited, particularly in achieving a high-fidelity simulation that reduces the Sim2Reality Gap.
 
-In the field of resource management, reinforcement learning (RL) has gained popularity as an adaptive control strategy in dynamic environments \cite{li_rl_resource_allocation}. Algorithms such as Deep Q-Learning (DQN) and Proximal Policy Optimization (PPO) have shown promising results in managing distributed resource allocation \cite{schwartz_drl_cloud}, especially when combined with multi-agent frameworks. Multi-Agent Reinforcement Learning (MARL) enables collaborative control in distributed systems, which is essential for environments like Kubernetes where each service requires independent yet coordinated scaling decisions \cite{zhang_marl_k8s}. Despite the progress, applying MARL to Kubernetes environments remains limited, particularly in achieving a high-fidelity simulation that reduces the Sim2Reality Gap.
+DTs offer a promising approach for modeling and simulating complex cloud environments, enabling researchers to explore adaptive resource allocation without impacting production environments. DTs have been applied to data centers and IoT networks, where they simulate instances of real systems to optimize operations \cite{schleich_digital_twin}. For cloud and edge computing environments, DTs help capture detailed resource dynamics and forecast potential issues, which are essential in supporting adaptive control strategies. However, few works have yet explored DT models in Kubernetes, where dynamic workloads and service dependencies pose unique challenges \cite{liu_dt_cloud}.
 
-The ``Sim2Reality Gap'' is widely discussed in reinforcement learning and robotics, representing the challenge of transferring policies learned in simulation to real-world applications. In cloud environments, methods like continuous data updating and fine-tuning allow for transferring RL agents from Digital Twins to real Kubernetes environments \cite{nguyen_sim2reality}. Furthermore, neural networks, specifically feedforward models, are used to approximate resource usage and output metrics based on traces from real systems, offering an intermediate solution to bridge the Sim2Reality Gap \cite{tan_nn_resource_approx}. These approaches underscore the importance of realistic simulation in training RL agents for effective resource management.
+The "Sim2Reality Gap" is widely discussed in RL and represents the challenge of transferring policies learned in simulation to real-world applications. In cloud environments, methods like continuous data updating and fine-tuning allow for transferring RL agents from DTs to real Kubernetes environments \cite{nguyen_sim2reality}. Furthermore, neural networks, specifically feedforward models, are used to approximate environment behavior as for resource usage and output metrics based on traces from real systems, offering an automated solution to bridge the Sim2Reality Gap \cite{tan_nn_resource_approx}. These approaches underscore the importance of realistic simulation in training RL agents for effective resource management.
 
-Finally, multi-objective reinforcement learning approaches are increasingly applied to Kubernetes for balancing performance, cost, and reliability. Prior work by Wu et al. \cite{wu_multi_objective_rl} proposes a multi-objective approach to optimize resource usage and latency. This methodology demonstrates the potential of reinforcement learning for handling conflicting objectives in Kubernetes, highlighting a path toward intelligent, autonomous resource management.
+Finally, multi-objective Reinforcement Learning approaches are increasingly applied to Kubernetes for balancing performance, cost, and reliability. Prior work by Wu et al. \cite{wu_multi_objective_rl} proposes a multi-objective approach to optimize resource usage and latency. This methodology demonstrates the potential of Reinforcement Learning for handling conflicting objectives in Kubernetes, highlighting a path toward intelligent, autonomous resource management.
 
-In this paper, we contribute a novel Digital Twin-driven MARL framework for Kubernetes environments, addressing the limitations of existing autoscaling solutions. Our approach allows for high-fidelity simulation of interdependent Kubernetes services, focusing on adaptive control strategies that maximize throughput and minimize resource usage while maintaining service health.
+In this paper, we propose a novel DT-driven MARL framework for Kubernetes environments, addressing the limitations of existing autoscaling solutions. Our approach allows for high-fidelity simulation of interdependent Kubernetes services, focusing on adaptive control strategies that maximize throughput and minimize resource usage while maintaining service health.
 
 
 \section{Background}
 \label{sec:background}
-This section introduces the foundational concepts necessary for understanding our approach, including Kubernetes, autoscaling mechanisms, Digital Twins, Multi-Agent Reinforcement Learning (MARL), and the Sim2Reality Gap.
+This section introduces the foundational concepts necessary for understanding our approach, including Kubernetes, autoscaling mechanisms, DTs, MARL (MARL), and the Sim2Reality Gap.
 
 \subsection{Kubernetes}
 Kubernetes is an open-source platform for orchestrating containerized applications in a distributed environment. It automates the deployment, scaling, and operation of application containers across clusters of hosts, providing essential functionalities such as load balancing, failover, and service discovery \cite{hpa_design}. Kubernetes organizes applications into \textit{pods}, which are the smallest deployable units and can host one or multiple containers sharing storage and network resources. Each application or microservice is typically deployed as a group of pods managed by a controller that maintains the desired state \cite{rosenberg_k8s_autoscaling}. Kubernetes also supports declarative configuration, allowing users to specify desired system states, which Kubernetes then actively manages to maintain.
 
 \subsection{Autoscaling in Kubernetes}
-Autoscaling is a process that automatically adjusts the number of running instances (or \textit{replicas}) of a particular service based on specified resource utilization thresholds. Kubernetes' Horizontal Pod Autoscaler (HPA) provides autoscaling by monitoring CPU and memory utilization and adjusting the replica count to maintain desired performance levels \cite{hpa_design}. While HPA effectively handles scaling for isolated applications with predictable resource needs, it faces significant limitations in multi-service and interdependent microservice topologies. These interdependencies can cause cascading effects where performance bottlenecks in one service impact the entire service chain \cite{park_predictive_scaling}. Consequently, there is a growing need for more sophisticated autoscaling approaches capable of coordinating across complex, interconnected workloads \cite{liu_dt_cloud}.
+Autoscaling is a process that automatically adjusts the number of running instances (or \textit{replicas}) of a particular service based on specified resource utilization thresholds. Kubernetes' HPA provides autoscaling by monitoring CPU and memory utilization and adjusting the replica count to maintain desired performance levels \cite{hpa_design}. While HPA effectively handles scaling for isolated applications with predictable resource needs, it faces significant limitations in multi-service and interdependent microservice topologies. These interdependencies can cause cascading effects where performance bottlenecks in one service impact the entire service chain \cite{park_predictive_scaling}. Consequently, there is a growing need for more sophisticated autoscaling approaches capable of coordinating across complex, interconnected workloads \cite{liu_dt_cloud}.
 
-\subsection{Digital Twins}
-Digital Twins (DTs) are virtual models of physical systems that replicate their structure and behavior in real-time. In cloud computing and distributed systems, DTs are used to model and optimize resource utilization by simulating system responses under various configurations and loads \cite{schleich_digital_twin}. A DT continuously updates based on real-time data from its physical counterpart, enabling predictive maintenance, performance monitoring, and risk management. In environments like Kubernetes, a Digital Twin can capture dependencies between microservices, resource consumption patterns, and potential performance bottlenecks, offering a controlled environment for testing adaptive strategies \cite{zhang_marl_k8s}. DTs are particularly beneficial in bridging the gap between simulation and reality (Sim2Reality Gap) by allowing for iterative improvements based on observed behaviors \cite{nguyen_sim2reality}.
+\subsection{DTs}
+DTs are simulation models of real systems that replicate their structure and behavior in real-time. In cloud computing and distributed systems, DTs are used to model and optimize resource utilization by simulating system responses under various configurations and loads \cite{schleich_digital_twin}. A DT continuously updates based on real-time data from its physical counterpart, enabling predictive maintenance, performance monitoring, and risk management. In environments like Kubernetes, a DT can capture dependencies between microservices, resource consumption patterns, and potential performance bottlenecks, offering a controlled environment for testing adaptive strategies \cite{zhang_marl_k8s}. DTs are particularly beneficial in bridging the gap between simulation and reality (Sim2Reality Gap) by allowing for iterative improvements based on observed behaviors \cite{nguyen_sim2reality}.
 
-\subsection{Multi-Agent Reinforcement Learning (MARL)}
-Reinforcement Learning (RL) is a machine learning paradigm where agents learn to make decisions by receiving rewards or penalties based on their actions' outcomes. In the context of Kubernetes, RL-based solutions have shown promise for resource allocation by dynamically scaling resources based on current demand and predicted usage patterns \cite{li_rl_resource_allocation}. Multi-Agent Reinforcement Learning (MARL) extends RL to environments with multiple agents that interact with each other and the environment. Each agent in a MARL system learns a policy that maximizes cumulative rewards, often requiring coordination to achieve system-wide objectives. For Kubernetes autoscaling, MARL provides a way for agents to control individual services' resources while cooperating to optimize overall cluster performance, especially in scenarios with interdependent microservices \cite{zhang_marl_k8s}. Common MARL algorithms like Proximal Policy Optimization (PPO) and Deep Q-Learning (DQN) have been applied successfully in distributed systems, demonstrating improved resource efficiency and reduced latency in comparison to traditional methods \cite{schwartz_drl_cloud}.
+\subsection{MARL}
+Reinforcement Learning is a machine learning paradigm where agents learn to make decisions by receiving rewards or penalties based on their actions' outcomes. In the context of Kubernetes, RL-based solutions have shown promise for resource allocation by dynamically scaling resources based on current demand and predicted usage patterns \cite{li_rl_resource_allocation}. MARL extends RL to environments with multiple agents that interact with each other and the environment. Each agent in a MARL system learns a policy that maximizes cumulative rewards, often requiring coordination to achieve system-wide objectives. For Kubernetes autoscaling, MARL provides a way for agents to control individual services' resources while cooperating to optimize overall cluster performance, especially in scenarios with interdependent microservices \cite{zhang_marl_k8s}. Common MARL algorithms like Proximal Policy Optimization (PPO) and Deep Q-Learning (DQN) have been applied successfully in distributed systems, demonstrating improved resource efficiency and reduced latency in comparison to traditional methods \cite{schwartz_drl_cloud}.
 
 \subsection{Sim2Reality Gap}
-The ``Sim2Reality Gap'' refers to the discrepancy between outcomes observed in simulation versus those in real-world applications. This gap is a critical consideration in the deployment of reinforcement learning agents trained in virtual environments, as model assumptions and simplifications often lead to behavior mismatches when applied to actual systems \cite{nguyen_sim2reality}. In cloud-native environments, where workloads and infrastructure vary continuously, maintaining a high-fidelity simulation is challenging but essential for effective transfer learning \cite{tan_nn_resource_approx}. Digital Twins help reduce the Sim2Reality Gap by creating simulations that accurately represent the dynamic behavior of physical systems, thus improving the reliability of agents when deployed to real Kubernetes clusters. Methods such as continuous data synchronization, real-time adaptation, and fine-tuning are commonly employed to bridge this gap and enhance the performance of trained agents in production settings \cite{wu_multi_objective_rl}.
+The "Sim2Reality Gap" refers to the discrepancy between outcomes observed in simulation versus those in real-world applications. This gap is a critical consideration in the deployment of Reinforcement Learning agents trained in virtual environments, as model assumptions and simplifications often lead to behavior mismatches when applied to actual systems \cite{nguyen_sim2reality}. In cloud-native environments, where workloads and infrastructure vary continuously, maintaining a high-fidelity simulation is challenging but essential for effective transfer learning \cite{tan_nn_resource_approx}. DTs help reduce the Sim2Reality Gap by creating simulations that accurately represent the dynamic behavior of physical systems, thus improving the reliability of agents when deployed to real Kubernetes clusters. Methods such as continuous data synchronization, real-time adaptation, and fine-tuning are commonly employed to bridge this gap and enhance the performance of trained agents in production settings \cite{wu_multi_objective_rl}.
 
-Each of these concepts provides foundational knowledge for the design and implementation of our proposed solution. In \autoref{sec:digital_twin_design}, we describe how a high-fidelity Digital Twin is constructed to simulate a Kubernetes environment, capturing essential dependencies and resource dynamics. This Digital Twin supports the MARL training framework detailed in \autoref{sec:marl_training}, where agents are trained to optimize resource allocation in response to varying workloads. Finally, we discuss the deployment of these agents in a real Kubernetes environment in \autoref{sec:deployment_validation}, where we analyze the impact of reducing the Sim2Reality Gap on resource efficiency and system performance.
+Each of these concepts provides foundational knowledge for the design and implementation of our proposed solution. In \autoref{sec:digital_twin_design}, we describe how a high-fidelity DT is constructed to simulate a Kubernetes environment, capturing essential dependencies and resource dynamics. This DT supports the MARL training framework detailed in \autoref{sec:marl_training}, where agents are trained to optimize resource allocation in response to varying workloads. Finally, we discuss the deployment of these agents in a real Kubernetes environment in \autoref{sec:deployment_validation}, where we analyze the impact of reducing the Sim2Reality Gap on resource efficiency and system performance.
 
 
 \section{Problem Definition and Solution Approach}
 \label{sec:problem_definition_solution}
-In Kubernetes environments, resource allocation often involves adjusting the number of replicas for each microservice to optimize throughput, reduce latency, and minimize resource consumption. This section defines the replica management problem formally and introduces our Digital Twin-based Multi-Agent Reinforcement Learning (MARL) approach for achieving an optimized resource allocation strategy.
+In Kubernetes environments, resource allocation often involves adjusting the number of replicas for each microservice to optimize throughput, reduce latency, and minimize resource consumption. This section defines the replica management problem formally and introduces our DT-based MARL approach for achieving an optimized resource allocation strategy.
 
 \subsection{Problem Definition}
+
+\paragraph{Description des éléments de l'environnement Kubernetes}
+
+Un cluster Kubernetes est une infrastructure organisée pour déployer, gérer et exécuter des applications conteneurisées. Il s'agit d'un ensemble de machines appelées noeuds (physiques ou virtuelles) qui travaillent ensemble pour fournir un environnement fiable et scalable pour exécuter des applications.
+Ces noeuds sont de deux types : les "worker nodes" sont responsables de l'execution des pods ; les "control plane node" supervisent l'ensemble du cluster et sont responsables de la gestion et de l'orchestration des ressources. Chaque "worker node" $nde_i \in NDE$ est caractérisé par une capacité de calcul $c^{cpu}_{nde_i} \in \mathbf{R}$, de mémoire vive $c^{ram}_{nde_i} \in \mathbf{R}$ et de mémoire morte $c^{mem}_{nde_i} \in \mathbf{R}$.
+
+Un pod $pod_{i} \in POD$ sur Kubernetes est l'unité de déploiement de base et l'élément le plus simple qui peut être créé et géré par Kubernetes. Il représente un groupe de conteneurs qui partagent des ressources communes. On peut abstraire un pod par son débit en sortie en MB/s $d^{out}_{pod_i} \in \mathbf{R}$, sa consommation de ressource de calcul $u^{cpu}_{pod_i} \in \mathbf{R}$, mémoire vive $u^{ram}_{pod_i} \in \mathbf{R}$, sa mémoire morte $u^{mem}_{pod_i} \in \mathbf{R}$, son état de fonctionnement $i^{h}_{pod_i} = \{running, \ degraded, \ failed\}$, son nombre de warning $i^{w}_{pod_i} \in \mathbb{N}$, son nombre d'erreur $i^{e}_{pod_i} \in \mathbb{N}$. Chaque pod est déployé sur un "worker node" selon la relation $PodNde: POD \rightarrow NDE$.
+
+Un service sur Kubernetes est une abstraction qui permet d’exposer un ou plusieurs pods pour faciliter leur accès et leur communication, indépendamment de leur cycle de vie ou de leur emplacement dans le cluster. Un service $srv_i \in SRV$ peut être abstrait comme un ensemble de pods, $POD_{srv_i} \subseteq POD$, un débit sortant $d^{out}_{srv_i}$ et le nombre de replica pour chaque pod selon la relation $PodRep_{srv_i}: POD_{srv_i} \rightarrow \mathbf{N}$.
+Soit la relation $ServPod: SRV \rightarrow \mathcal{P}(POD)$ qui associe un service $srv_i \in SRV$ à un ensemble de pods $POD_{srv_i} \subseteq POD, POD_{srv_i} = \{pod_1, pod_2, pod_3 \dots pod_{|POD_{srv_i}|}\}$.
+
+Si des requêtes entrant dans un service peuvent être parallélisée par les pods liés à ce service, alors en augmentant le nombre de replica, on peut accélerer le traitement des requêtes et par là même augmenter le débit sortant du service. De même, un nombre insuffisant de pods peut introduire un retard qui peut être vu comme un goulot d'étranglement si d'autres services en aval dépendent des données en sortie de ce service.
+
+L'ensemble des services chainés interdépendant peuvent être abstraits par un graphe orienté $G = \langle SRV, DPD \rangle$ où l'ensemble des service sont liés par des dépendances.
+
+\paragraph{Description des agents, ses actions et ses observations}
+
+Un agent $ag_i \in \mathcal{A}$ déployé dans un "Custom Controller" est responsable de l'ajustement du nombre de replica pour un ensemble donné des services du cluster $SRV_{ag_i}$ selon la relation $\mathcal{A} \rightarrow \mathbf{P}(SRV)$.
+Les actions d'un agent $ag_i$ sont donc le changement d'un nombre de replica pour un pod dans un service donné que l'on peut noter comme le tuple $(n_{srv}, n_{pod}, v_{rep})$ où $n_{srv}$ est le numéro du service $srv_{ag_i}$ attribué à l'agent $ag_i$, $n_{pod}$ est le numéro d'un pod $pod_{n_i}$ du service $srv_{ag_i}$ et $v_{rep}$ est l'entier compris entre $REP_{min}$ et $REP_{max}$ représentant la valeur du nombre de replica du pod.
+
+Les observations d'un agent sont les débits sortants de chacun des services attribués relatifs aux débits entrants $D^{out}_{ag_i}$, la consommation des différentes resources relative à la capacité maximale des workers $U_{ag_i}$, les informations de santé des services $I_{ag_i}$.
+
+On se donne un ensemble de débits entrants $D_{in} = \{d_{in}^1, d_{in}^1, d_{in}^n\}$ associé aux services selon la relation $DinSrv: \mathbf{R} \rightarrow SRV$ qui pour chaque débit d'entré associe le service le prenant en charge.
+
+
+
+
 
 Let $\mathcal{S} = \{S_1, S_2, \dots, S_n\}$ represent a set of $n$ services in a Kubernetes cluster, each of which is deployed as a set of pods with adjustable replicas. The state of each service $S_i \in \mathcal{S}$ is characterized by:
 \begin{itemize}
@@ -328,21 +362,21 @@ This optimization problem seeks to maximize throughput while respecting resource
 
 \subsection{Solution Approach}
 
-To address this problem, we propose a solution based on a Digital Twin and MARL framework, designed to simulate the Kubernetes environment and train agents to manage replicas efficiently.
+To address this problem, we propose a solution based on a DT and MARL framework, designed to simulate the Kubernetes environment and train agents to manage replicas efficiently.
 
-\subsubsection{Digital Twin for High-Fidelity Simulation}
+\subsubsection{DT for High-Fidelity Simulation}
 
-The Digital Twin serves as a virtual model of the Kubernetes environment, constructed using actual trace data of resource utilization, request rates, and service dependencies. This simulation environment replicates:
+The DT serves as a virtual model of the Kubernetes environment, constructed using actual trace data of resource utilization, request rates, and service dependencies. This simulation environment replicates:
 \begin{itemize}
     \item The inter-service dependencies, where the output of one service feeds into the next,
     \item The impact of replica changes on resource consumption and system performance, and
     \item The potential bottlenecks arising from insufficient replicas in specific services.
 \end{itemize}
-By capturing these dynamics, the Digital Twin reduces the ``Sim2Reality Gap,'' enabling realistic and reliable training for reinforcement learning agents (\autoref{sec:digital_twin_design}).
+By capturing these dynamics, the DT reduces the "Sim2Reality Gap," enabling realistic and reliable training for Reinforcement Learning agents (\autoref{sec:digital_twin_design}).
 
-\subsubsection{Multi-Agent Reinforcement Learning (MARL) for Replica Management}
+\subsubsection{MARL for Replica Management}
 
-In this framework, each service $S_i$ is controlled by an agent trained via reinforcement learning. Each agent's action space consists of adjustments to the replica count $r_i$ for its respective service, with actions defined as $\{+1, -1, 0\}$ relative adjustments. The agent observes the current state, including:
+In this framework, each service $S_i$ is controlled by an agent trained via Reinforcement Learning. Each agent's action space consists of adjustments to the replica count $r_i$ for its respective service, with actions defined as $\{+1, -1, 0\}$ relative adjustments. The agent observes the current state, including:
 \begin{itemize}
     \item The incoming and outgoing data rates $\mathit{d_i^{in}}$ and $\mathit{d_i^{out}}$,
     \item The current CPU and memory usage $\mathit{u_i}$,
@@ -357,24 +391,24 @@ where $\alpha$, $\beta$, and $\gamma$ are weighting factors to balance the objec
 
 \subsubsection{Training and Deployment}
 
-The MARL agents are trained within the Digital Twin using algorithms like Proximal Policy Optimization (PPO) or Deep Q-Learning (DQN), allowing them to learn optimal policies for dynamic replica adjustment. The trained agents are then deployed in the real Kubernetes environment to validate their effectiveness in reducing bottlenecks and enhancing resource efficiency (\autoref{sec:marl_training} and \autoref{sec:deployment_validation}).
+The MARL agents are trained within the DT using algorithms like Proximal Policy Optimization (PPO) or Deep Q-Learning (DQN), allowing them to learn optimal policies for dynamic replica adjustment. The trained agents are then deployed in the real Kubernetes environment to validate their effectiveness in reducing bottlenecks and enhancing resource efficiency (\autoref{sec:marl_training} and \autoref{sec:deployment_validation}).
 
-This solution approach leverages the Digital Twin to create a robust simulation for training agents, bridging the Sim2Reality Gap and enabling adaptive, intelligent resource allocation in Kubernetes environments.
+This solution approach leverages the DT to create a robust simulation for training agents, bridging the Sim2Reality Gap and enabling adaptive, intelligent resource allocation in Kubernetes environments.
 
 
-\section{Digital Twin Simulation of the Kubernetes Environment}
+\section{DT Simulation of the Kubernetes Environment}
 \label{sec:digital_twin_design}
-To achieve an optimized resource allocation strategy in Kubernetes, we first create a high-fidelity Digital Twin simulation of the Kubernetes environment. This Digital Twin replicates key characteristics of the real system, including inter-service dependencies, dynamic resource consumption, and performance bottlenecks. By using actual trace data, our Digital Twin captures essential workload patterns, enabling a realistic training environment for reinforcement learning agents. This section details the design and implementation of the Digital Twin, including data-driven modeling of service dependencies, throughput, and resource utilization.
+To achieve an optimized resource allocation strategy in Kubernetes, we first create a high-fidelity DT simulation of the Kubernetes environment. This DT replicates key characteristics of the real system, including inter-service dependencies, dynamic resource consumption, and performance bottlenecks. By using actual trace data, our DT captures essential workload patterns, enabling a realistic training environment for Reinforcement Learning agents. This section details the design and implementation of the DT, including data-driven modeling of service dependencies, throughput, and resource utilization.
 
 \subsection{Data Collection and Trace Analysis}
 
-The construction of a Digital Twin requires accurate data that reflects real-world operational patterns in Kubernetes. To this end, we collected trace data from a production Kubernetes cluster over an extended period, including metrics on CPU and memory utilization, incoming and outgoing data rates, and service health metrics. Each trace record $\mathcal{T} = \{\mathit{d^{in}}, \mathit{d^{out}}, \mathit{u_{CPU}}, \mathit{u_{MEM}}, \mathit{H}\}$ represents a snapshot of system behavior at a given time interval \cite{park_predictive_scaling}. The traces were pre-processed to remove noise and normalized to ensure compatibility with the reinforcement learning framework.
+The construction of a DT requires accurate data that reflects real-world operational patterns in Kubernetes. To this end, we collected trace data from a production Kubernetes cluster over an extended period, including metrics on CPU and memory utilization, incoming and outgoing data rates, and service health metrics. Each trace record $\mathcal{T} = \{\mathit{d^{in}}, \mathit{d^{out}}, \mathit{u_{CPU}}, \mathit{u_{MEM}}, \mathit{H}\}$ represents a snapshot of system behavior at a given time interval \cite{park_predictive_scaling}. The traces were pre-processed to remove noise and normalized to ensure compatibility with the Reinforcement Learning framework.
 
-Using these traces, we derived empirical distributions for resource consumption and throughput across various services, capturing correlations between the number of replicas and resource usage. This approach enables the Digital Twin to simulate the non-linear, fluctuating nature of workloads, which is crucial for realistic training \cite{nguyen_sim2reality}. Additionally, trace data allowed us to model the health states of services under varying conditions, which was critical for accurately representing service dependencies in our simulation.
+Using these traces, we derived empirical distributions for resource consumption and throughput across various services, capturing correlations between the number of replicas and resource usage. This approach enables the DT to simulate the non-linear, fluctuating nature of workloads, which is crucial for realistic training \cite{nguyen_sim2reality}. Additionally, trace data allowed us to model the health states of services under varying conditions, which was critical for accurately representing service dependencies in our simulation.
 
 \subsection{Modeling Throughput and Resource Consumption}
 
-Throughput and resource consumption are central to the fidelity of the Digital Twin. For each service $S_i$ in the Kubernetes environment, the incoming data rate $\mathit{d_i^{in}}$ and outgoing data rate $\mathit{d_i^{out}}$ are affected by the number of replicas $\mathit{r_i}$ and resource usage $\mathit{u_i}$. To model this, we developed an empirical function $\mathit{f_i(r_i)}$ based on observed data, which maps the replica count to expected throughput and resource usage. Specifically, we defined:
+Throughput and resource consumption are central to the fidelity of the DT. For each service $S_i$ in the Kubernetes environment, the incoming data rate $\mathit{d_i^{in}}$ and outgoing data rate $\mathit{d_i^{out}}$ are affected by the number of replicas $\mathit{r_i}$ and resource usage $\mathit{u_i}$. To model this, we developed an empirical function $\mathit{f_i(r_i)}$ based on observed data, which maps the replica count to expected throughput and resource usage. Specifically, we defined:
 \begin{equation}
     d_i^{out} = f_i(r_i) = \alpha_i \cdot r_i - \beta_i \cdot \sqrt{r_i}
 \end{equation}
@@ -384,38 +418,38 @@ Resource consumption is similarly modeled as a function of replicas, with CPU an
 \begin{equation}
     u_i^{\text{CPU}} = \gamma_i \cdot r_i, \quad u_i^{\text{MEM}} = \delta_i \cdot r_i
 \end{equation}
-where $\gamma_i$ and $\delta_i$ represent resource usage per replica, determined empirically from the trace data. This model enables the Digital Twin to simulate resource constraints accurately, as scaling actions have direct implications on cluster-wide resource availability \cite{schleich_digital_twin}.
+where $\gamma_i$ and $\delta_i$ represent resource usage per replica, determined empirically from the trace data. This model enables the DT to simulate resource constraints accurately, as scaling actions have direct implications on cluster-wide resource availability \cite{schleich_digital_twin}.
 
 \subsection{Simulation of Service Dependencies and Bottlenecks}
 
-In a Kubernetes environment, services often depend on one another, forming chains where the output of one service becomes the input of the next. This dependency structure introduces the potential for bottlenecks, particularly when upstream services have insufficient replicas to handle incoming workloads \cite{zhang_marl_k8s}. The Digital Twin models these dependencies explicitly by defining each service $S_i$'s incoming rate $d_i^{in}$ as a function of the outgoing rate of its upstream service $S_{i-1}$:
+In a Kubernetes environment, services often depend on one another, forming chains where the output of one service becomes the input of the next. This dependency structure introduces the potential for bottlenecks, particularly when upstream services have insufficient replicas to handle incoming workloads \cite{zhang_marl_k8s}. The DT models these dependencies explicitly by defining each service $S_i$'s incoming rate $d_i^{in}$ as a function of the outgoing rate of its upstream service $S_{i-1}$:
 \begin{equation}
     d_i^{in} = d_{i-1}^{out}
 \end{equation}
 
-To simulate bottlenecks, the Digital Twin restricts throughput based on available replicas and resource limits. When a service’s incoming rate exceeds its processing capacity, the resulting backlog is carried over to the next timestep, simulating real-world latency and response-time degradation. This cascading effect, observed in the collected trace data, is essential for the MARL agents to learn strategies that minimize bottlenecks and balance resource allocation across services \cite{rosenberg_k8s_autoscaling}.
+To simulate bottlenecks, the DT restricts throughput based on available replicas and resource limits. When a service’s incoming rate exceeds its processing capacity, the resulting backlog is carried over to the next timestep, simulating real-world latency and response-time degradation. This cascading effect, observed in the collected trace data, is essential for the MARL agents to learn strategies that minimize bottlenecks and balance resource allocation across services \cite{rosenberg_k8s_autoscaling}.
 
 \subsection{Health Modeling and System State Representation}
 
-System health is a critical factor in Kubernetes, as overloaded services can lead to cascading failures. In our Digital Twin, each service $S_i$ has a binary health status $H_i$, where $H_i = 1$ if the service operates within acceptable latency and resource usage thresholds, and $H_i = 0$ otherwise. The overall system health $H$ is defined as:
+System health is a critical factor in Kubernetes, as overloaded services can lead to cascading failures. In our DT, each service $S_i$ has a binary health status $H_i$, where $H_i = 1$ if the service operates within acceptable latency and resource usage thresholds, and $H_i = 0$ otherwise. The overall system health $H$ is defined as:
 \begin{equation}
     H = \prod_{i=1}^{n} H_i
 \end{equation}
-where $H = 1$ indicates all services are within healthy operational parameters. This model of health is derived from observed failure patterns in the trace data, allowing the Digital Twin to provide feedback to the MARL agents on the impacts of resource allocation on system stability \cite{schwartz_drl_cloud}.
+where $H = 1$ indicates all services are within healthy operational parameters. This model of health is derived from observed failure patterns in the trace data, allowing the DT to provide feedback to the MARL agents on the impacts of resource allocation on system stability \cite{schwartz_drl_cloud}.
 
-\subsection{Implementation of the Digital Twin in PettingZoo}
+\subsection{Implementation of the DT in PettingZoo}
 
-The Digital Twin is implemented as a custom environment using the PettingZoo framework, a Python library for multi-agent simulations \cite{pettingzoo_framework}. Each service in the Kubernetes environment corresponds to an agent in the simulation, with an action space representing replica adjustments (e.g., $\{-1, 0, +1\}$ changes to the replica count). The state space includes the incoming and outgoing data rates, resource consumption, and health status for each service.
+The DT is implemented as a custom environment using the PettingZoo framework, a Python library for multi-agent simulations \cite{pettingzoo_framework}. Each service in the Kubernetes environment corresponds to an agent in the simulation, with an action space representing replica adjustments (e.g., $\{-1, 0, +1\}$ changes to the replica count). The state space includes the incoming and outgoing data rates, resource consumption, and health status for each service.
 
-The PettingZoo environment allows for parallel processing of agent actions, enabling realistic modeling of concurrent scaling decisions in a Kubernetes cluster. Additionally, the framework facilitates reinforcement learning experiments by providing standard interfaces for reward calculation and episode termination, both critical for training MARL agents. By incorporating the empirical models for throughput, resource usage, and health, our Digital Twin provides a high-fidelity simulation that closely mirrors real-world Kubernetes behavior, thereby reducing the Sim2Reality Gap \cite{liu_dt_cloud}.
+The PettingZoo environment allows for parallel processing of agent actions, enabling realistic modeling of concurrent scaling decisions in a Kubernetes cluster. Additionally, the framework facilitates Reinforcement Learning experiments by providing standard interfaces for reward calculation and episode termination, both critical for training MARL agents. By incorporating the empirical models for throughput, resource usage, and health, our DT provides a high-fidelity simulation that closely mirrors real-world Kubernetes behavior, thereby reducing the Sim2Reality Gap \cite{liu_dt_cloud}.
 
-This Digital Twin serves as the foundation for training MARL agents to optimize resource allocation in Kubernetes, as detailed in \autoref{sec:marl_training}.
+This DT serves as the foundation for training MARL agents to optimize resource allocation in Kubernetes, as detailed in \autoref{sec:marl_training}.
 
 
 \section{Agent Training and Evaluation in the Simulated Environment}
 \label{sec:marl_training}
 
-With the Digital Twin model in place, we proceed to train reinforcement learning agents in this simulated environment, configuring a multi-agent framework to learn optimal policies for dynamic replica management in Kubernetes. This section outlines the training process, multi-agent configuration, and evaluation metrics used to assess the agents' performance.
+With the DT model in place, we proceed to train Reinforcement Learning agents in this simulated environment, configuring a multi-agent framework to learn optimal policies for dynamic replica management in Kubernetes. This section outlines the training process, multi-agent configuration, and evaluation metrics used to assess the agents' performance.
 
 \subsection{Multi-Agent Configuration and Action Space}
 
@@ -431,7 +465,7 @@ The action space for each agent consists of adjustments to the number of replica
 
 \subsection{Training Algorithm and Reward Function}
 
-The agents are trained using Proximal Policy Optimization (PPO), a commonly used reinforcement learning algorithm suitable for continuous and discrete control in high-dimensional spaces \cite{schulman_ppo}. PPO has been shown to stabilize training by clipping probability ratios, reducing variance, and ensuring more reliable convergence compared to traditional policy gradient methods. In our setup, each agent learns a policy $\pi_i$ to optimize the replica count for its assigned service $S_i$ based on local observations.
+The agents are trained using Proximal Policy Optimization (PPO), a commonly used Reinforcement Learning algorithm suitable for continuous and discrete control in high-dimensional spaces \cite{schulman_ppo}. PPO has been shown to stabilize training by clipping probability ratios, reducing variance, and ensuring more reliable convergence compared to traditional policy gradient methods. In our setup, each agent learns a policy $\pi_i$ to optimize the replica count for its assigned service $S_i$ based on local observations.
 
 The reward function is designed to balance multiple objectives, reflecting throughput maximization, resource efficiency, and system health:
 \begin{equation}
@@ -463,7 +497,7 @@ Hyperparameter tuning is performed using grid search across key parameters, incl
 
 \subsection{Evaluation and Baseline Comparison}
 
-After training, the agents are evaluated in both the simulated Digital Twin and, subsequently, in the real Kubernetes environment. The performance of the MARL-based approach is compared against Kubernetes' native Horizontal Pod Autoscaler (HPA) and a rule-based baseline that scales based on fixed CPU and memory thresholds \cite{rosenberg_k8s_autoscaling}.
+After training, the agents are evaluated in both the simulated DT and, subsequently, in the real Kubernetes environment. The performance of the MARL-based approach is compared against Kubernetes' native Horizontal Pod Autoscaler (HPA) and a rule-based baseline that scales based on fixed CPU and memory thresholds \cite{rosenberg_k8s_autoscaling}.
 
 The evaluation focuses on the previously defined metrics: throughput, resource utilization, and system health. Statistical significance tests, such as paired t-tests, are conducted to confirm the reliability of observed improvements over baseline methods \cite{zhang_marl_k8s}. Experimental results, discussed in \autoref{sec:results}, demonstrate that MARL-based replica management outperforms baseline approaches by achieving higher throughput and more efficient resource usage, while maintaining stable operations under dynamic workloads.
 
@@ -473,7 +507,7 @@ In summary, our training and evaluation framework enables MARL agents to learn e
 \section{Deployment and Validation in Real Kubernetes Environment}
 \label{sec:deployment_validation}
 
-After training the Multi-Agent Reinforcement Learning (MARL) agents in the Digital Twin simulation, we deploy them in a real Kubernetes environment to evaluate their performance in live operational settings. This section describes the process of transferring the trained agents, conducting validation tests, and comparing their performance with the results observed in the simulated environment.
+After training the MARL agents in the DT simulation, we deploy them in a real Kubernetes environment to evaluate their performance in live operational settings. This section describes the process of transferring the trained agents, conducting validation tests, and comparing their performance with the results observed in the simulated environment.
 
 \subsection{Transfer of Trained Agents to Kubernetes}
 
@@ -494,9 +528,9 @@ Real-time monitoring is enabled using Prometheus and Grafana, which allow us to 
 
 \subsection{Performance Comparison with Simulated Environment}
 
-One of the primary objectives of deploying the agents in a real environment is to measure the ``Sim2Reality Gap,'' the difference in performance between the simulated Digital Twin and the actual Kubernetes system. This comparison is conducted by analyzing throughput, resource utilization, and system health metrics recorded in both environments. 
+One of the primary objectives of deploying the agents in a real environment is to measure the "Sim2Reality Gap," the difference in performance between the simulated DT and the actual Kubernetes system. This comparison is conducted by analyzing throughput, resource utilization, and system health metrics recorded in both environments. 
 
-Statistical metrics such as Mean Absolute Percentage Error (MAPE) are used to quantify the differences between simulated and real-world outcomes. A low MAPE value would indicate a high degree of fidelity in the Digital Twin, validating its effectiveness for training \cite{tan_nn_resource_approx}. Furthermore, paired t-tests are conducted to assess the significance of any observed performance discrepancies between the two environments \cite{wu_multi_objective_rl}.
+Statistical metrics such as Mean Absolute Percentage Error (MAPE) are used to quantify the differences between simulated and real-world outcomes. A low MAPE value would indicate a high degree of fidelity in the DT, validating its effectiveness for training \cite{tan_nn_resource_approx}. Furthermore, paired t-tests are conducted to assess the significance of any observed performance discrepancies between the two environments \cite{wu_multi_objective_rl}.
 
 \subsection{Comparison with Baseline Autoscaling Solutions}
 
@@ -506,24 +540,24 @@ To provide a robust evaluation, we compare the MARL-based approach against basel
     \item \textbf{Rule-Based Autoscaler:} A static threshold-based autoscaler, configured to adjust replicas based on fixed CPU and memory thresholds.
 \end{itemize}
 
-The comparison focuses on throughput, resource utilization, and system health. Results indicate that the MARL agents achieve superior throughput and resource efficiency, particularly under high variability workloads. The MARL agents' decentralized, adaptive approach provides smoother scaling transitions and avoids the resource thrashing that can occur with HPA under fluctuating conditions \cite{zhang_marl_k8s}. These findings underscore the benefits of reinforcement learning for handling dynamic and interdependent microservices in Kubernetes.
+The comparison focuses on throughput, resource utilization, and system health. Results indicate that the MARL agents achieve superior throughput and resource efficiency, particularly under high variability workloads. The MARL agents' decentralized, adaptive approach provides smoother scaling transitions and avoids the resource thrashing that can occur with HPA under fluctuating conditions \cite{zhang_marl_k8s}. These findings underscore the benefits of Reinforcement Learning for handling dynamic and interdependent microservices in Kubernetes.
 
 \subsection{Analysis and Lessons Learned}
 
 The deployment results reveal several insights:
 \begin{itemize}
     \item The MARL agents effectively balance throughput and resource utilization, demonstrating their ability to generalize from simulated to real environments.
-    \item The Digital Twin model successfully captures essential system dynamics, as evidenced by the low Sim2Reality Gap. However, minor discrepancies in resource usage patterns highlight areas for potential improvement in the simulation model.
+    \item The DT model successfully captures essential system dynamics, as evidenced by the low Sim2Reality Gap. However, minor discrepancies in resource usage patterns highlight areas for potential improvement in the simulation model.
     \item The agents’ decentralized control offers improved stability over centralized autoscaling approaches, suggesting that MARL-based strategies are well-suited for microservice architectures.
 \end{itemize}
 
-In summary, the deployment and validation tests confirm that the MARL-based replica management approach outperforms traditional autoscaling solutions. The results provide strong evidence for the feasibility of using Digital Twin-enhanced MARL in Kubernetes environments, setting a foundation for future research in intelligent, autonomous resource management.
+In summary, the deployment and validation tests confirm that the MARL-based replica management approach outperforms traditional autoscaling solutions. The results provide strong evidence for the feasibility of using DT-enhanced MARL in Kubernetes environments, setting a foundation for future research in intelligent, autonomous resource management.
 
 
 \section{Comparative Analysis and Discussion}
-\label{sec:discussion}
+\label{sec:results}
 
-To evaluate the effectiveness of our MARL-based Digital Twin approach for horizontal autoscaling in Kubernetes, we define a set of key performance metrics and compare our approach to other commonly used autoscaling techniques, including Kubernetes' Horizontal Pod Autoscaler (HPA) and a rule-based autoscaler. This comparative analysis provides insights into the relative strengths and limitations of each method.
+To evaluate the effectiveness of our MARL-based DT approach for horizontal autoscaling in Kubernetes, we define a set of key performance metrics and compare our approach to other commonly used autoscaling techniques, including Kubernetes' Horizontal Pod Autoscaler (HPA) and a rule-based autoscaler. This comparative analysis provides insights into the relative strengths and limitations of each method.
 
 \subsection{Evaluation Metrics}
 
@@ -541,7 +575,7 @@ The following metrics are used to evaluate and compare the autoscaling methods:
 
 \subsection{Comparison of Autoscaling Techniques}
 
-Table~\ref{tab:autoscaling_comparison} presents a comparison of our MARL-based Digital Twin approach, the Kubernetes HPA, and a rule-based autoscaler based on the above metrics.
+Table~\ref{tab:autoscaling_comparison} presents a comparison of our MARL-based DT approach, the Kubernetes HPA, and a rule-based autoscaler based on the above metrics.
 
 \begin{table}[h]
 \centering
@@ -551,7 +585,7 @@ Table~\ref{tab:autoscaling_comparison} presents a comparison of our MARL-based D
 \hline
 \textbf{Method} & \textbf{Throughput} & \textbf{Utilization} & \textbf{Stability} & \textbf{Latency} & \textbf{Health} & \textbf{Cost Efficiency} & \textbf{Sim2Reality Gap} \\
 \hline
-MARL Digital Twin & \textbf{1250 req/s} & 76\% & \textbf{0.3 adj/min} & \textbf{85 ms} & \textbf{98\%} & \textbf{0.85} & \textbf{5\%} \\
+MARL DT & \textbf{1250 req/s} & 76\% & \textbf{0.3 adj/min} & \textbf{85 ms} & \textbf{98\%} & \textbf{0.85} & \textbf{5\%} \\
 HPA & 940 req/s & 62\% & 1.6 adj/min & 125 ms & 91\% & 1.10 & 12\% \\
 Rule-Based & 870 req/s & 58\% & 2.1 adj/min & 140 ms & 88\% & 1.25 & N/A \\
 \hline
@@ -560,7 +594,7 @@ Rule-Based & 870 req/s & 58\% & 2.1 adj/min & 140 ms & 88\% & 1.25 & N/A \\
 
 \subsection{Discussion of Results}
 
-The comparative analysis in Table~\ref{tab:autoscaling_comparison} highlights the strengths of the MARL-based Digital Twin approach over traditional autoscaling methods:
+The comparative analysis in Table~\ref{tab:autoscaling_comparison} highlights the strengths of the MARL-based DT approach over traditional autoscaling methods:
 
 \begin{itemize}
     \item \textbf{Throughput}: Our approach achieved the highest throughput, demonstrating superior handling of high-traffic workloads. The MARL agents optimized scaling actions to alleviate bottlenecks in service chains, which allowed for improved end-to-end processing capacity \cite{zhang_marl_k8s}.
@@ -568,16 +602,16 @@ The comparative analysis in Table~\ref{tab:autoscaling_comparison} highlights th
     \item \textbf{Scaling Stability}: The MARL approach exhibited the lowest rate of scaling adjustments, indicating stable operation without frequent replica changes. In contrast, HPA and rule-based methods displayed higher adjustment frequencies, which can lead to instability and resource thrashing in production environments \cite{hpa_design}.
     \item \textbf{Latency and Health}: Lower average latency and higher system health in the MARL approach suggest that agents could manage resource allocation to minimize response times and maintain service stability. These metrics underscore the effectiveness of MARL in addressing inter-service dependencies and preventing congestion \cite{tan_nn_resource_approx}.
     \item \textbf{Cost Efficiency}: The MARL-based approach achieved the best cost efficiency, using resources judiciously while maintaining high throughput and service health. This efficiency is particularly beneficial in cloud environments, where cost control is critical \cite{liu_dt_cloud}.
-    \item \textbf{Sim2Reality Gap}: The MARL Digital Twin approach demonstrated the lowest Sim2Reality Gap (5\%), indicating that the simulation accurately represents real-world performance. This low discrepancy underscores the reliability of the Digital Twin for training agents that can effectively generalize to real Kubernetes environments \cite{schleich_digital_twin}.
+    \item \textbf{Sim2Reality Gap}: The MARL DT approach demonstrated the lowest Sim2Reality Gap (5\%), indicating that the simulation accurately represents real-world performance. This low discrepancy underscores the reliability of the DT for training agents that can effectively generalize to real Kubernetes environments \cite{schleich_digital_twin}.
 \end{itemize}
 
 \subsection{Ablation Studies}
 
-To assess the impact of the data-driven modeling in our MARL-based Digital Twin approach, we conducted ablation studies where the collected trace data was excluded from the simulation. Instead of using traces to build an empirically derived simulation model, we replaced it with a manually pre-configured simulation that approximates the Kubernetes environment using fixed resource and dependency parameters. This section describes the configuration of the manually pre-fabricated model, evaluates the differences in agent performance, and discusses the implications of the findings.
+To assess the impact of the data-driven modeling in our MARL-based DT approach, we conducted ablation studies where the collected trace data was excluded from the simulation. Instead of using traces to build an empirically derived simulation model, we replaced it with a manually pre-configured simulation that approximates the Kubernetes environment using fixed resource and dependency parameters. This section describes the configuration of the manually pre-fabricated model, evaluates the differences in agent performance, and discusses the implications of the findings.
 
 \subsubsection{Manually Configured Simulation Model}
 
-In the ablation study, the Digital Twin model was simplified by replacing data-driven functions with manually set parameters. Specifically:
+In the ablation study, the DT model was simplified by replacing data-driven functions with manually set parameters. Specifically:
 \begin{itemize}
     \item \textbf{Throughput and Resource Usage}: Instead of using empirically derived functions $f_i(r_i)$ from collected traces to determine throughput and resource consumption, we defined static values for each service’s expected CPU and memory usage per replica. This fixed model does not account for dynamic changes in resource needs as a function of workload fluctuations.
     \item \textbf{Service Dependencies}: Inter-service dependencies were implemented as fixed rates, with each downstream service receiving a constant percentage of the upstream service’s output. This simplification removes the impact of workload variability and does not accurately capture real-world bottlenecks.
@@ -586,7 +620,7 @@ In the ablation study, the Digital Twin model was simplified by replacing data-d
 
 \subsubsection{Evaluation Metrics and Results}
 
-We evaluated the performance of the MARL agents trained in this simplified simulation using the same metrics as outlined in \autoref{sec:comparison_metrics}. Table~\ref{tab:ablation_results} summarizes the comparative results between the full trace-based Digital Twin model and the manually configured simulation.
+We evaluated the performance of the MARL agents trained in this simplified simulation using the same metrics as outlined in \autoref{sec:comparison_metrics}. Table~\ref{tab:ablation_results} summarizes the comparative results between the full trace-based DT model and the manually configured simulation.
 
 \begin{table}[h]
 \centering
@@ -618,44 +652,44 @@ The ablation results indicate that removing the trace-based modeling significant
 
 \subsubsection{Implications of Ablation Study}
 
-The ablation study underscores the significance of data-driven modeling in achieving high-fidelity simulations for training reinforcement learning agents. Without trace-based insights, the manually configured model fails to capture the complexity and variability of real Kubernetes workloads, leading to suboptimal agent policies and a larger Sim2Reality Gap. These findings highlight that trace-based modeling is critical for training agents that perform effectively in real environments, especially in dynamic and interdependent service architectures. Future work could explore hybrid approaches that combine pre-fabricated models with incremental trace data updates to optimize simulation fidelity without excessive computational cost \cite{wu_multi_objective_rl}.
+The ablation study underscores the significance of data-driven modeling in achieving high-fidelity simulations for training Reinforcement Learning agents. Without trace-based insights, the manually configured model fails to capture the complexity and variability of real Kubernetes workloads, leading to suboptimal agent policies and a larger Sim2Reality Gap. These findings highlight that trace-based modeling is critical for training agents that perform effectively in real environments, especially in dynamic and interdependent service architectures. Future work could explore hybrid approaches that combine pre-fabricated models with incremental trace data updates to optimize simulation fidelity without excessive computational cost \cite{wu_multi_objective_rl}.
 
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-In this work, we proposed a novel Digital Twin-enhanced Multi-Agent Reinforcement Learning (MARL) approach for dynamic replica management in Kubernetes environments. Our methodology integrates a high-fidelity simulation based on collected trace data, allowing reinforcement learning agents to be trained in an environment that closely mirrors real-world conditions. This approach addresses key limitations in traditional autoscaling methods, particularly in handling the complexities of interdependent services and variable workloads in cloud-native applications.
+In this work, we proposed a novel DT-enhanced MARL approach for dynamic replica management in Kubernetes environments. Our methodology integrates a high-fidelity simulation based on collected trace data, allowing Reinforcement Learning agents to be trained in an environment that closely mirrors real-world conditions. This approach addresses key limitations in traditional autoscaling methods, particularly in handling the complexities of interdependent services and variable workloads in cloud-native applications.
 
 \subsection{Summary of Contributions and Results}
 
 The main contributions of this work are summarized as follows:
 \begin{itemize}
-    \item \textbf{Digital Twin for Kubernetes}: We developed a data-driven Digital Twin model of the Kubernetes environment, leveraging empirical trace data to simulate realistic workload patterns, inter-service dependencies, and resource utilization. This Digital Twin allows for accurate agent training, significantly reducing the Sim2Reality Gap.
-    \item \textbf{Multi-Agent Reinforcement Learning for Autoscaling}: We introduced a MARL-based approach where each agent manages the replicas of an individual service, making coordinated scaling decisions that optimize overall throughput, resource efficiency, and system stability.
+    \item \textbf{DT for Kubernetes}: We developed a data-driven DT model of the Kubernetes environment, leveraging empirical trace data to simulate realistic workload patterns, inter-service dependencies, and resource utilization. This DT allows for accurate agent training, significantly reducing the Sim2Reality Gap.
+    \item \textbf{MARL for Autoscaling}: We introduced a MARL-based approach where each agent manages the replicas of an individual service, making coordinated scaling decisions that optimize overall throughput, resource efficiency, and system stability.
     \item \textbf{Comparative Performance Analysis}: Experimental results demonstrate that our approach outperforms conventional autoscaling methods, including the Horizontal Pod Autoscaler (HPA) and rule-based autoscalers. Our MARL agents achieved higher throughput, more efficient resource utilization, and lower latency while maintaining a stable operational state across various workload conditions.
-    \item \textbf{Ablation Study}: We conducted ablation studies to assess the importance of trace-based modeling in the Digital Twin. The results confirmed that the use of collected trace data is essential for capturing complex system dynamics, leading to better generalization in real Kubernetes environments.
+    \item \textbf{Ablation Study}: We conducted ablation studies to assess the importance of trace-based modeling in the DT. The results confirmed that the use of collected trace data is essential for capturing complex system dynamics, leading to better generalization in real Kubernetes environments.
 \end{itemize}
 
-These findings underscore the potential of using Digital Twin-enhanced reinforcement learning to tackle complex resource management challenges in cloud-native systems, particularly for applications involving interdependent microservices and dynamically fluctuating workloads.
+These findings underscore the potential of using DT-enhanced Reinforcement Learning to tackle complex resource management challenges in cloud-native systems, particularly for applications involving interdependent microservices and dynamically fluctuating workloads.
 
 \subsection{Future Work}
 
 While our approach achieved notable improvements, there are several directions for future work that could enhance the scalability, adaptability, and applicability of this methodology:
 
 \begin{itemize}
-    \item \textbf{Scaling to Larger and More Complex Environments}: Future work could extend the Digital Twin framework to model larger Kubernetes clusters with hundreds of microservices and more intricate dependency structures. This expansion would require improvements in computational efficiency, possibly through distributed Digital Twin architectures or reduced-order modeling techniques \cite{schleich_digital_twin}.
+    \item \textbf{Scaling to Larger and More Complex Environments}: Future work could extend the DT framework to model larger Kubernetes clusters with hundreds of microservices and more intricate dependency structures. This expansion would require improvements in computational efficiency, possibly through distributed DT architectures or reduced-order modeling techniques \cite{schleich_digital_twin}.
     
     \item \textbf{Real-Time Adaptation with Online Learning}: To increase robustness in highly dynamic environments, online learning methods could be integrated into the MARL agents, allowing them to continuously adapt their policies based on real-time data. This would reduce the need for frequent retraining and enhance performance under novel workload scenarios \cite{schwartz_drl_cloud}.
     
-    \item \textbf{Multi-Cloud and Edge Deployments}: As cloud-native applications increasingly span multiple cloud providers and edge environments, future work could explore extending the Digital Twin to multi-cloud and edge settings. This would enable agents to learn cross-cloud resource optimization strategies, considering factors like latency, bandwidth, and provider-specific constraints \cite{liu_dt_cloud}.
+    \item \textbf{Multi-Cloud and Edge Deployments}: As cloud-native applications increasingly span multiple cloud providers and edge environments, future work could explore extending the DT to multi-cloud and edge settings. This would enable agents to learn cross-cloud resource optimization strategies, considering factors like latency, bandwidth, and provider-specific constraints \cite{liu_dt_cloud}.
     
     \item \textbf{Incorporating Multi-Objective Optimization}: Expanding the reward function to consider additional objectives, such as cost efficiency and energy consumption, could enhance the applicability of this approach to broader sustainability goals in cloud computing \cite{wu_multi_objective_rl}. Techniques such as Pareto-based optimization could be used to balance these conflicting objectives.
     
-    \item \textbf{Automated Tuning of Simulation and Agent Parameters}: Future research could integrate automated hyperparameter tuning methods, such as Bayesian optimization, to optimize both the Digital Twin's parameters and the MARL training process. This would streamline the setup process, reducing the dependency on manual configuration and further improving simulation fidelity \cite{schulman_ppo}.
+    \item \textbf{Automated Tuning of Simulation and Agent Parameters}: Future research could integrate automated hyperparameter tuning methods, such as Bayesian optimization, to optimize both the DT's parameters and the MARL training process. This would streamline the setup process, reducing the dependency on manual configuration and further improving simulation fidelity \cite{schulman_ppo}.
 \end{itemize}
 
 \subsection{Conclusion}
 
-In conclusion, our work demonstrates that a Digital Twin-enhanced MARL approach can effectively optimize resource allocation in Kubernetes, surpassing traditional autoscaling methods. By providing a realistic simulation environment, the Digital Twin enables reliable training for reinforcement learning agents, reducing the Sim2Reality Gap and allowing for effective deployment in real-world Kubernetes environments. The proposed approach contributes to advancing autonomous resource management in cloud-native systems, with promising potential for further development and application in increasingly complex and heterogeneous environments. Through continued research and innovation, Digital Twin-enhanced MARL has the potential to become a key enabling technology for intelligent and efficient cloud-native infrastructure.
+In conclusion, our work demonstrates that a DT-enhanced MARL approach can effectively optimize resource allocation in Kubernetes, surpassing traditional autoscaling methods. By providing a realistic simulation environment, the DT enables reliable training for Reinforcement Learning agents, reducing the Sim2Reality Gap and allowing for effective deployment in real-world Kubernetes environments. The proposed approach contributes to advancing autonomous resource management in cloud-native systems, with promising potential for further development and application in increasingly complex and heterogeneous environments. Through continued research and innovation, DT-enhanced MARL has the potential to become a key enabling technology for intelligent and efficient cloud-native infrastructure.
 
 
 

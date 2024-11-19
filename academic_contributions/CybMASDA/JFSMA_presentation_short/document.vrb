@@ -1,26 +1,21 @@
-\frametitle{AOMEA: Assisted MAS Organization Engineering Approach}\framesubtitle {Engineering tool}
+\frametitle{Annexes}\framesubtitle {Exemple utilisation de PettingZoo}
+    \begin{itemize}
+        \item Exemple : Création et interaction avec un environnement.
+        \item Chargement de l'environnement, réinitialisation et étapes d'interaction pour un agent.
+    \end{itemize}
+    \vspace{0.3cm}
+    \begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+from pettingzoo.butterfly import pistonball_v6
 
-    \begin{block}{\emph{PRAHOM PettingZoo Wrapper}\label{PettingZoo-wrapper}}
-        \begin{itemize}
-            \item Uses \textbf{PettingZoo}: a standardized API for applying MARL algorithms;
-            \item Proposed as a tool to help the application of \emph{PRAHOM} for a given PettingZoo environment.
-        \end{itemize}
-    \end{block}
+# Creer et reinitialiser l'environnement
+env = pistonball_v6.env()
+env.reset()
 
-    \begin{lstlisting}[language=Python,basicstyle=\scriptsize]
-    from prahom_wrapper import prahom_wrapper
-    pz_env = raw_pz_env() ; pz_env = prahom_wrapper(pz_env)
-
-    pz_env.train_under_constraints(
-        obs_act_to_labels=oal,
-        constraint_integration_mode="CORRECT",algorithm_configuration="default_MAPPO"
-        osh_model_constraint=osh_model(
-
-            structural_specifications=ss(roles={"role_0": history_subset(pattern="[o0,a1](1,4),[o1,a2](1,2)")},role_inheritance_relations=None, root_groups=None),
-
-            functional_specifications=fs(social_scheme=sch(goals={"goal_0": history_subset(pattern="[#Any](0,*),[obs_goal_0]")},missions=["mission_0"], goals_structure=None,mission_to_goals={"mission_0": ["goal_0"]},mission_to_agent_cardinality=None),social_preferences=None),
-
-            deontic_specifications={"role_0": {("mission_0", "Any"): ["agent_0", "agent_4"]}}))
-
-    pz_env.generate_organizational_specifications(use_kosia=False, use_gosia=True,gosia_configuration={"generate_figures": True})\end{lstlisting}
-
+# Boucle principale d'interaction
+for agent in env.agent_iter():
+    obs, reward, done, info = env.last()
+    action = env.action_space(agent).sample()  # Action aleatoire
+    env.step(action)
+    if done:
+        env.reset()  # Reinitialiser si l'episode est termine
+\end{lstlisting}

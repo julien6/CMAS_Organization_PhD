@@ -30,6 +30,10 @@ label_to_obs = {
     "empty_corridor_0": [0,1,0,0,1,0,0,1,0],
     "empty_corridor_1": [0,1,0,0,2,0,0,1,0],
     "empty_corridor_2": [0,1,0,0,3,0,0,1,0],
+    "obs_goal_0": [0,1,0,0,2,0,0,5,1]
+    ...
+    "go_down": 1,
+    "go_up": 2,
 }
 \end{lstlisting}
     
@@ -52,7 +56,7 @@ label_to_obs = {
 \begin{frame}
 
     % Boucle pour afficher toutes les images de frame000.png à frame099.png
-    \foreach \i in {00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20} {
+    \foreach \i in {01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22} {
     
         \begin{onlyenv}<\i>
         % \begin{frame}[plain]
@@ -77,15 +81,15 @@ label_to_obs = {
             \textbf{Phase 1 : Modélisation}
     
             \begin{itemize}
-                \item Développer manuellement un environnement simulé ($1.1$) où les agents doivent coopérer pour atteindre un objectif ($1.2$);
-                \item Peut définir le comportement attendu des rôles sous forme d'historiques;
-                \item Peut contraindre les agents à des rôles ($1.3$).
+                \item Modèle simulé de l'environnement ($1.1$) incluant les objectifs des agents ($1.2$);
+                \item Définir les comportements attendus des rôles, objectifs comme ensemble d'historiques;
+                \item Contraindre les agents à des rôles (et missions) ($1.3$).
             \end{itemize}
-    
+
             \begin{lstlisting}[language=Python,basicstyle=\scriptsize]
 org_model = organizational_model(
     structural_specifications=ss(
-        roles={ "role_0": history_subset(pattern="[o0,a1](1,4),[o1,a2](1,2)")},
+        roles={ "role_0": history_subset(pattern="[empty_corridor_1,go_up](1,7),[empty_corridor_3,go_down](1,8)")},
         role_inheritance_relations=None, root_groups=None),
     
     functional_specifications=fs(
@@ -94,7 +98,7 @@ org_model = organizational_model(
         social_preferences=None),
 
     deontic_specifications={
-        "role_0": {("mission_0", "Any"): ["agent_0", "agent_2"]}})\end{lstlisting}
+        "role_0": {("mission_0", "Any"): ["agent_0"]}})\end{lstlisting}
 
         \end{column}
     
@@ -120,16 +124,16 @@ org_model = organizational_model(
             \textbf{Phase 2 : Résolution}
     
             \begin{itemize}
-                \item Algorithme MARL orienté organisation (OMARL) : processus MARL enrichi avec le modèle organisationnel;
+                \item Algorithme MARL orienté organisation (OMARL) : processus MARL + $\mathcal{M}OISE^+$;
                 \item Résoudre en respectant les historiques contraints des rôles ($2.1$);
-                \item Obtient l'OS associé ($2.2$)
+                \item Obtient la politique conjointe entrainée ($2.1$)
             \end{itemize}
 
             \begin{lstlisting}[language=Python,basicstyle=\scriptsize]
 pz_env.train_under_constraints(
-    obs_act_to_labels=oal,
+    label_to_obs=label_to_obs,
     constraint_integration_mode="CORRECT",algorithm_configuration="default_MAPPO"
-    osh_model_constraint=osh_model)
+    org_model_constraint=org_model)
             \end{lstlisting}
 
         \end{column}
@@ -154,9 +158,9 @@ pz_env.train_under_constraints(
             \textbf{Phase 3 : Analyse}
     
             \begin{itemize}
-                \item Les concepteurs observent les politiques des agents entraînés ($3.2$);
-                \item Les concepteurs observent les SO calculés ($3.1$) : comprendre comment ils atteignent l'objectif;
-                \item Les concepteurs obtiennent des indications de conception pour un SMA atteignant l'objectif : OS corrigé ($3.3$).
+                \item Pattern-matching (KOSIA) ou Apprentissage Non-Supervisé (GOSIA) pour determiner SO ($3.1$);
+                \item Informations pour comprendre rôles/ objectifs permettant d'atteindre l'objectif final ($3.1 \ \& \ 3.2$);
+                \item Correction et ajustement des SO corrigés ($3.3$).
             \end{itemize}
 
             \begin{lstlisting}[language=Python,basicstyle=\scriptsize]
@@ -167,7 +171,7 @@ pz_env.generate_organizational_specifications(use_kosia=False, use_gosia=True,go
     
         \begin{column}{0.4\textwidth}
             \centering
-            \adjustbox{trim={0.\width} {0.35\height} {0.\width} {0.188\height}, clip}{%
+            \adjustbox{trim={0.\width} {0.35\height} {0.\width} {0.110\height}, clip}{%
                 \includegraphics[width=1.2\linewidth]{figures/AOMEA_illustrative_view}
             }
         \end{column}
@@ -193,13 +197,24 @@ pz_env.generate_organizational_specifications(use_kosia=False, use_gosia=True,go
         \begin{column}{0.6\textwidth}
     
             \textbf{Phase 4 : Développement}
-    
+
             \begin{itemize}
-                \item Les concepteurs observent l'OS corrigé pour implémenter un SMA;
-                \item Développement d'un SMA régulier, traitant ainsi les questions de sécurité;
-                \item Évaluation du SMA implémenté dans des simulations.
+                \item Peu automatisé car difficultés : \textit{Simulation-to-reality gap}, sûreté de fonctionnement, \textit{transfer learning}\dots
+
+                \item Preconisation $\rightarrow$ Approche manuelle:
+                \begin{enumerate}
+                    \item Implémenter les politiques selon les SO corrigées :
+                    \item Explicitement (arbre de décision\dots) ;
+                    \item En simulation $\rightarrow$ émulation $\rightarrow$ réel\dots ;
+                \end{enumerate}
             \end{itemize}
-    
+
+            \
+
+            \begin{itemize}
+                \item Travail en cours\dots
+            \end{itemize}
+
         \end{column}
     
         \begin{column}{0.4\textwidth}

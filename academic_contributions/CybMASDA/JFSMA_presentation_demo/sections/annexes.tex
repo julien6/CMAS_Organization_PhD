@@ -93,6 +93,18 @@
     
 \end{frame}
 
+\begin{frame}{Annexes}{Aperçu de \textit{PRAHOM}}
+    \begin{figure}
+        \includegraphics[width=0.6\linewidth]{figures/mm_simple_representation.png}
+    \end{figure}
+\end{frame}
+    
+\begin{frame}{Annexes}{Aperçu de PRAHOM}
+    \begin{figure}
+        \includegraphics[width=\linewidth]{figures/modified_state_value_function.png}
+    \end{figure}
+\end{frame}
+    
 \begin{frame}[allowframebreaks]{Annexes}{Approche AOMEA : Fondement théorique}
     \textbf{Contraindre l'espace des politiques} pendant l'entraînement
 
@@ -118,7 +130,37 @@
     
     \end{columns}
 \end{frame}
+
+\begin{frame}{Annexes}{Constrained Reinforcement Learning (Constrained-RL)}
     
+    \begin{itemize}
+        \item Apprendre une politique optimisant la récompense tout en respectant des \textbf{contraintes de sécurité} ou de \textbf{performance}.
+        
+        \item \textbf{Contraintes dures} : doivent toujours être respectées (Shielding).
+        \item \textbf{Contraintes douces} : respectées en moyenne ou sous forme de pénalités.
+        
+        \item \textbf{Méthodes :}
+            \begin{itemize}
+                \item \textbf{Reward Shaping} : ajout de pénalités pour violation de contraintes.
+                \item \textbf{Policy Projection} : ajustement des actions pour rester dans les limites.
+                \item \textbf{Dual Variables} : intégration de multiplicateurs de Lagrange pour gérer les contraintes.
+            \end{itemize}
+            
+    \end{itemize}    
+\end{frame}
+
+\begin{frame}{Annexes}{Safe Exploration et Shielding en Reinforcement Learning}
+    
+    \begin{itemize}
+        \item \textbf{Safe Exploration} $\rightarrow$ garantir la sécurité lors de la phase d'exploration en limitant les risques de comportements dangereux.
+        \item Principalement modifier la fonction de récompense (Langragien) pour integrer contraintes mais aussi\dots
+        \item \textbf{Shielding} intervenir en temps réel pour bloquer les actions susceptibles de violer ces contraintes, permettant une exploration sécurisée.
+    \end{itemize}
+    
+    \textbf{Référence :} \\
+    \textit{Akifumi Wachi, Wataru Hashimoto, Xun Shen, \& Kazumune Hashimoto (2023). Safe Exploration in Reinforcement Learning: A Generalized Formulation and Algorithms. In Thirty-seventh Conference on Neural Information Processing Systems.}
+
+\end{frame}
 
 \begin{frame}[allowframebreaks]{Annexes}{Approche AOMEA: Fondement théorique}
 
@@ -145,5 +187,156 @@
         \end{column}
 
     \end{columns}
+
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%
+
+% Slide 2: Exemple d'utilisation
+\begin{frame}[fragile]{Annexes}{Exemple d'utilisation d'Optuna}
+    \begin{itemize}
+        \item \textbf{Optuna} est une bibliothèque open-source pour l'optimisation des hyperparamètres (HPO), utile en apprentissage automatique.
+        \item Exemples d'hyper-paramètre : taux d'apprentissage, fonction activation, nb couche, taille couches, seuil de ressemblance pour Hierarchical Clustering\dots
+        \item \textbf{Étapes pour utiliser Optuna :}
+        \begin{itemize}
+            \item \texttt{1.} Définir une fonction d'objectif.
+            \item \texttt{2.} Lancer une étude avec Optuna.
+            \item \texttt{3.} Utiliser le meilleur résultat pour entraîner le modèle.
+        \end{itemize}
+    \end{itemize}
+
+    \begin{lstlisting}[language=Python, basicstyle=\small\ttfamily, frame=single, caption=Exemple d'Optuna en Python]
+import optuna
+
+def objective(trial):
+    x = trial.suggest_float("x", -10, 10)
+    return (x - 2) ** 2 # Mock : fonction "etat-valeur"
+
+study = optuna.create_study(direction="minimize")
+study.optimize(objective, n_trials=100)
+
+print(study.best_params)  # Affiche les meilleurs parametres
+    \end{lstlisting}
+\end{frame}
+
+
+\begin{frame}{Annexes}{Aperçu PettingZoo}
+    \begin{itemize}
+        \item Bibliothèque Python pour environnements multi-agents.
+        \item Simplifier l'entraînement et l'évaluation des agents dans divers environnements.
+        \item \textbf{Caractéristiques principales} :
+        \begin{itemize}
+            \item Supporte plusieurs types d'environnements multi-agents (tour par tour, simultané, etc.).
+            \item Intégration facile avec des frameworks de reinforcement learning comme RLlib.
+            \item Compatible avec les API de Gym, permettant une utilisation intuitive.
+        \end{itemize}
+        \item \textbf{Exemples d'environnements inclus} :
+        \begin{itemize}
+            \item Jeux : \textit{TicTacToe}, \textit{ConnectFour}.
+            \item Scénarios de collaboration et de compétition : \textit{Pistonball}, \textit{Prisoner's Dilemma}.
+            \item Intégration avec la suite d'environnements Atari pour le multi-agent.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Annexes}{Exemple utilisation de PettingZoo}
+    \begin{itemize}
+        \item Exemple : Création et interaction avec un environnement.
+        \item Chargement de l'environnement, réinitialisation et étapes d'interaction pour un agent.
+    \end{itemize}
+    \vspace{0.3cm}
+    \begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+from pettingzoo.butterfly import pistonball_v6
+
+# Creer et reinitialiser l'environnement
+env = pistonball_v6.env()
+env.reset()
+
+# Boucle principale d'interaction
+for agent in env.agent_iter():
+    obs, reward, done, info = env.last()
+    action = env.action_space(agent).sample()  # Action aleatoire
+    env.step(action)
+    if done:
+        env.reset()  # Reinitialiser si l'episode est termine
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}{Annexes}{KB-Org}
+    \frametitle{Organization-based multi-agent systems: From modeling to implementation}
+    
+    \begin{itemize}
+        \item Modélisation et mise en œuvre des SMA basés sur organisation ;
+        \item Intègre les concepts d'organisation pour structurer les interactions et le comportement des agents ;
+        \item Banque d'organisations disponibles prêtes à être utilisé ;
+        \item Explicabilité et à la coordination.
+    \end{itemize}
+    
+    \
+
+    Sims, V. (2008). Automated organization design for multi-agent systems. Autonomous Agents and Multi-Agent Systems, 16(2), 151-185.
+
+\end{frame}
+
+\begin{frame}{Annexes}{Présentation de la bibliothèque MARLlib}
+
+    \begin{itemize}
+        \item Bibliothèque Python pour MARL
+        \item Supporte plusieurs environnements MARL comme PettingZoo, StarCraft II, MPE (Multi-Agent Particle Environment), etc.
+        \item Implémente divers algorithmes MARL, incluant MADDPG, MAPPO, etc.
+        \item Fournit une interface pour comparaison d’algorithmes, l’entraînement et l’évaluation.
+        \item Offre des configurations \textit{fine-tunés} pour de nombreux environnements
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}[allowframebreaks]{Annexes}{Présentation de la bibliothèque MARLlib}
+
+    \begin{itemize}
+        \item \textbf{Algorithmes Basés sur les Valeurs}  
+        \begin{itemize}
+            \item \textbf{Multi-Agent Q-Learning} : Une extension multi-agent fondamentale de Q-learning.  
+            \textit{Description} : Simple à implémenter, mais avec des difficultés de scalabilité et de non-stationnarité.
+            \item \textbf{MADDPG} : Une adaptation de DDPG pour les environnements multi-agents.  
+            \textit{Description} : Gère bien les espaces d'actions continues, mais requiert beaucoup de données et est complexe.
+        \end{itemize}
+    
+        \
+
+        \item \textbf{Algorithmes Basés sur les Politiques}  
+        \begin{itemize}
+            \item \textbf{REINFORCE} : Une méthode de gradient de politique basique pour l'apprentissage direct de la politique.  
+            \textit{Description} : Adaptable aux environnements stochastiques mais souffre de variances élevées des gradients.
+            \item \textbf{Multi-Agent PPO (MAPPO)} : Une extension de PPO conçue pour les configurations multi-agents.  
+            \textit{Description} : Stabilise les mises à jour, mais nécessite un ajustement minutieux et un coût de calcul élevé.
+        \end{itemize}
+    
+        \item \textbf{Algorithmes Hybrides}  
+        \begin{itemize}
+            \item \textbf{A3C (Asynchronous Advantage Actor-Critic)} : Combine l'apprentissage des politiques et des valeurs pour un équilibre exploration/exploitation.  
+            \textit{Description} : Accélère l'entraînement mais nécessite une synchronisation complexe.
+            \item \textbf{MAPPO} : Un hybride intégrant PPO avec un entraînement centralisé.  
+            \textit{Description} : Efficace pour les tâches coopératives, mais difficile dans les environnements compétitifs et exigeant en ressources.
+        \end{itemize}
+    
+        \item \textbf{Algorithmes Théoriques et Coopératifs Basés sur le Jeu}  
+        \begin{itemize}
+            \item \textbf{Independent Q-Learning (IQL)} : Une version indépendante de Q-learning pour chaque agent.  
+            \textit{Description} : Simple à implémenter mais avec de sérieux problèmes de non-stationnarité en multi-agent.
+            \item \textbf{COMA (Counterfactual Multi-Agent Policy Gradients)} : Utilise des baselines contrefactuelles pour évaluer les contributions des agents.  
+            \textit{Description} : Réduit la variance et améliore la coopération, mais demande des calculs lourds.
+        \end{itemize}
+    
+        \item \textbf{Entraînement Centralisé avec Exécution Décentralisée}  
+        \begin{itemize}
+            \item \textbf{QMIX} : Décompose les valeurs Q pour améliorer la coordination multi-agent.  
+            \textit{Description} : Équilibre l'entraînement centralisé et l'action décentralisée, mais moins efficace en environnements très compétitifs.
+            \item \textbf{VDN (Value Decomposition Networks)} : Simplifie la coordination multi-agent avec la décomposition des valeurs.  
+            \textit{Description} : Efficace mais limité dans la gestion d'interactions complexes.
+        \end{itemize}
+    \end{itemize}
+    
 
 \end{frame}
