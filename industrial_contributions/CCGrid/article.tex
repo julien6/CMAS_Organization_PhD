@@ -197,9 +197,9 @@
 \maketitle
 
 \begin{abstract}
-    In cloud-native critical systems relying on complex Kubernetes clusters composed of interdependent services, poor workload management can compromise cluster availability through various failures such as resource blocking, bottlenecks, or continuous pod crashes. Conventional Horizontal Pod Autoscaling (HPA) approaches often fall short in such dynamic environments, while reinforcement learning-based ones, though more adaptable, typically focus on a single latency or resource minimization objective without explicitly addressing all of the known failures.
-    A Multi-Agent System (MAS) enables resilient Kubernetes HPA by decomposing the availability maximization objective into failure-related sub-objectives delegated to agents. We streamline the generation of such MASs through an online automated cycle in four phases: (1) modeling the cluster as a simulation from collected real cluster traces; (2) training agents in simulation, partially guided by roles and missions incorporating knowledge of failures; (3) optionally validating the trained agents' behaviors and extracting design insights; and (4) transferring the learned behaviors to the real cluster.
-    Experimental results show that the generated MASs are original and outperform four cutting-edge HPA approaches in two different scenarios.
+  In cloud-native critical systems relying on complex Kubernetes clusters with interdependent services, poor workload management can jeopardize cluster availability, creating failures possibly exploitable by attackers. Such failures include resource blocking, bottlenecks, and continuous pod crashes. Conventional Horizontal Pod Autoscaling (HPA) approaches often fall short in such dynamic environments, while reinforcement learning-based ones, though more adaptable, typically focus on a single latency or resource minimization objective without explicitly addressing all known failures.
+  A Multi-Agent System (MAS) enables resilient Kubernetes HPA by decomposing the availability maximization objective into failure-related sub-objectives delegated to agents. We streamline the generation of such MASs through an online automated framework in four phases: (1) modeling the cluster as a simulation from collected real cluster traces; (2) training agents in simulation, partially guided by roles and missions incorporating knowledge of failures; (3) optionally analyzing the trained agents' behaviors; and (4) transferring the learned behaviors to the real cluster.
+  Experimental results show that the generated MASs are original and outperform eight HPA systems as for availability under two clusters with adversarial scenarios.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -209,29 +209,151 @@
 \section{Introduction}
 \label{sec:introduction}
 
-% Contexte and Motivation : Présenter les systèmes critiques cloud-native, Kubernetes, et les défis de l'autoscaling
+% Contexte
+Cloud-native critical systems are increasingly reliant on Kubernetes to orchestrate and manage interdependent services. Horizontal Pod Autoscaling (HPA) is a widely adopted mechanism to dynamically adjust the number of pods based on resource usage, enabling systems to handle highly dynamic workloads. However, failures such as pod crashes, resource contention, and bottlenecks can severely jeopardize cluster availability. Worse, these failures may be exploited by attackers to degrade performance or induce outages, as seen in adversarial contexts like Distributed Denial-of-Service (DDoS) attacks~\cite{KubernetesChallenges, AutoscalingLimitations}.
 
-% Problème : pourquoi il est crucial de traiter les échecs spécifiques connus.
+In such adversarial scenarios, malicious actors often exploit scaling mechanisms, exposing the limitations of conventional HPA systems. Modern approaches have sought to address these gaps using Reinforcement Learning (RL), where an agent optimizes a single global objective such as minimizing latency or resource usage~\cite{SingleObjectiveScaling, RLAutoscalingSurvey}. While these methods demonstrate adaptability, they often fall short in handling diverse failure scenarios. For example, prioritizing responses to cascading pod crashes during an attack may be far more critical than reducing latency under normal conditions. These challenges highlight the need for an autoscaling system capable of dynamically balancing multiple sub-objectives to maximize availability.
 
-% Contribution : Résumé des contributions principales.
+Achieving this shift from single-objective optimization to a multi-objective approach is complex, particularly in distributed and dynamic Kubernetes environments. A single-agent RL system struggles to address such complexity due to the difficulty of coordinating responses to diverse and context-dependent failures. In contrast, Multi-Agent Systems (MASs) offer a promising paradigm by decomposing the overarching availability maximization goal into sub-objectives handled by specialized agents~\cite{MultiObjectiveMAS}. Each agent can collaboratively contribute to complementary scaling actions, enabling more resilient and context-specific responses. Our approach builds upon the cyberdefense framework of Autonomous Intelligent Cybersecurity Agents (AICAs)~\cite{kott2018autonomous}, where agents with specialized roles and missions collaboratively defend systems against adversarial threats.
 
-% Organisation du papier
+% Problématique
+However, designing MASs tailored to Kubernetes clusters presents significant challenges. These include the need for detailed cluster knowledge, the time-consuming nature of manual design processes, and the difficulty of ensuring optimal agent behavior. Additionally, significant cluster changes often necessitate repeating the design process, increasing operational costs and complexity.
 
-\section{Background and Related Work}
+% Contribution
+Among methdological works, we inspired from the Assisted MAS Organization Engineering Approach (AOMEA)~\cite{soule2024aomea} that shows to align the most with automation and safety challenges. Based on AOMEA, we address these limitations proposing the \textit{Kubernetes Autoscaling with Resilient Multi-Agent systems} (KARMA). This framework automates the design and implementation process through four sequential phases:
+\begin{enumerate}
+    \item \textbf{Modeling}: Creating a digital twin of the cluster from real-world traces to simulate workload dynamics and failure scenarios.
+    \item \textbf{Training}: Training agents in simulation using roles and missions that integrate explicit rule-based strategies.
+    \item \textbf{Analyzing}: Validating trained agents' behaviors and extracting design insights through empirical analysis.
+    \item \textbf{Transferring}: Deploying trained agents to the real cluster, where they apply their learned behaviors via the Kubernetes API.
+\end{enumerate}
+
+This iterative framework continuously updates the simulation model with newly collected traces, enabling adaptation to cluster changes. We validated our approach on two Kubernetes-based environments, "Online Boutique" and "Chained Service," under both normal and adversarial scenarios. The MASs were generated with minimal manual intervention, demonstrating originality and robustness. They consistently outperformed state-of-the-art HPA systems, including AWARE~\cite{AWARE}, Gym-HPA~\cite{GymHPA}, IMAM~\cite{IMAM}, and Libra~\cite{Libra}, in maximizing availability across all evaluated scenarios.
+
+% Organisation
+The remainder of this paper is structured as follows:
+\autoref{sec:related_work} reviews existing HPA techniques and their limitations in dynamic environments.
+\autoref{sec:proposed_approach} details our framework leveraging related concepts for each phase.
+\autoref{sec:experiments} describes the experimental setup.
+\autoref{sec:results} presents and discusses results.
+\autoref{sec:discussion} concludes and provides future directions.
+
+\section{Related Work}
 \label{sec:related_work}
-\subsection{Kubernetes Autoscaling and Its Challenges}
-% Présentez le fonctionnement de l'HPA et ses limites.
-\subsection{Reinforcement Learning-Based Approaches}
-% Discutez des méthodes d’apprentissage par renforcement.
-\subsection{Multi-Agent Systems in Distributed Environments}
-% Introduisez les travaux liés aux systèmes multi-agents.
-\subsection{Our Contribution vs State-of-the-Art}
-% Comparez votre approche avec l'état de l'art.
+
+\begin{table*}[h!]
+  \centering
+  \caption{Comparative Study of Autoscaling Systems for Kubernetes HPA}
+  \label{tab:autoscaling_criteria}
+  \renewcommand{\arraystretch}{1}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{>{\raggedright\arraybackslash}m{2.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}}
+  \hline
+  \textbf{Criterion} & \textbf{Gym-HPA~\cite{GymHPA}} & \textbf{AWARE~\cite{AWARE}} & \textbf{IMAM~\cite{IMAM}} & \textbf{Libra~\cite{Libra}} & \textbf{QoS-Aware RL~\cite{QoSRL}} & \textbf{AHPA~\cite{AHPA}} & \textbf{KOSMOS~\cite{KOSMOS}} & \textbf{COPA~\cite{COPA}} & \textbf{Our Contribution} \\
+  \hline
+  \hline
+  Adversarial Scenarios Considered & No & Partial & No & No & No & No & No & Partial & Yes \\
+  \hline
+  Multi-objective Support & No & Yes & Partial & Indirect & Yes & No & Yes & No & Yes \\
+  \hline
+  Global Automation Level & High & Middle & Middle & Middle & High & Middle & Middle & Middle & High \\
+  \hline
+  Learning & Yes & Yes & Yes & Yes & Yes & No & No & No & Yes \\
+  \hline
+  Multi-Agent System Considered & No & No & Yes & No & No & No & No & No & Yes \\
+  \hline
+  Simulated Environment & Yes & No & Yes & Yes & Yes & No & No & No & Yes \\
+  \hline
+  Real Environment & No & Yes & Yes & Yes & Yes & Yes & Yes & Yes & Yes \\
+  \hline
+  Explainability Considered & No & No & No & No & No & No & No & No & Yes \\
+  \hline
+  Adaptation Level & High & Middle & High & Middle & Middle & High & High & Middle & High \\
+  \hline
+  Safety Guarantees & No & No & No & No & No & No & No & No & Yes \\
+  \hline
+  \end{tabular}%
+  }
+\end{table*}
+
+Autoscaling in Kubernetes has traditionally relied on metrics-based approaches, such as the default Horizontal Pod Autoscaler (HPA), which adjusts the number of pods based on CPU and memory utilization~\cite{KubernetesChallenges}. While effective for basic scaling, such methods fail to address dynamic or adversarial workloads, as they rely on reactive, threshold-based rules~\cite{AutoscalingLimitations}. To overcome these limitations, recent research has turned to machine learning (ML) and reinforcement learning (RL).
+
+\subsection*{Reinforcement Learning-Based Systems}
+Among RL-based approaches, four systems stand out due to their innovation, applicability, and relevance:
+
+\begin{itemize}
+    \item \textbf{Gym-HPA}~\cite{GymHPA} serves as a benchmark RL environment, enabling experimentation with various RL algorithms. It excels in adaptability to simulated workloads with a high degree of automation but lacks multi-objective support, explainability, and real-world applicability.
+    \item \textbf{AWARE}~\cite{AWARE} incorporates RL to optimize autoscaling decisions while balancing quality-of-service (QoS) objectives, such as response time and throughput. It partially considers adversarial scenarios but struggles with high automation levels and multi-agent coordination.
+    \item \textbf{IMAM}~\cite{IMAM} integrates RL with a multi-agent framework, making it highly adaptive in microservice-based architectures. However, it lacks safety guarantees and explainability, limiting its effectiveness in adversarial contexts.
+    \item \textbf{Libra}~\cite{Libra} introduces traffic-aware scaling in edge environments. While it provides valuable insights into traffic optimization, it lacks consideration for multi-objective trade-offs or safety-critical guarantees.
+\end{itemize}
+
+These systems highlight significant progress in RL-based autoscaling but share common limitations: a lack of comprehensive adversarial adaptability, limited support for multi-agent systems, and no explicit focus on explainability or safety guarantees.
+
+\subsection*{Hybrid and Rule-Based Approaches}
+Other notable systems combine ML or rule-based strategies with traditional autoscaling:
+
+\begin{itemize}
+    \item \textbf{QoS-Aware RL}~\cite{QoSRL} focuses on maintaining QoS under dynamic workloads but does not integrate seamlessly with Kubernetes-native features or consider adversarial scenarios.
+    \item \textbf{AHPA}~\cite{AHPA} and \textbf{KOSMOS}~\cite{KOSMOS} explore adaptive and combined vertical-horizontal scaling strategies, offering high adaptability but lacking learning capabilities.
+    \item \textbf{COPA}~\cite{COPA} emphasizes combined metrics-based autoscaling but remains reactive and limited in adversarial scenarios.
+\end{itemize}
+
+\subsection*{Positioning Our Contribution}
+Our proposed approach addresses the gaps identified in existing work by introducing an automated multi-agent system (MAS) framework for Kubernetes HPA, specifically designed to handle adversarial scenarios. \autoref{tab:autoscaling_criteria} provides a comparative overview of key Kubernetes HPA systems with our contribution. Key strengths of our contribution include:
+\begin{itemize}
+    \item \textbf{Adversarial Scenarios}: Explicit focus on handling attacks like Distributed Denial-of-Service (DDoS) and resource contention, where traditional autoscaling systems fail.
+    \item \textbf{Multi-Objective Support}: Decomposition of complex objectives (e.g., availability maximization) into sub-objectives with failure-specific prioritization.
+    \item \textbf{Global Automation}: High automation through digital twin modeling and automated MAS generation.
+    \item \textbf{Explainability and Safety}: Integration of explainability mechanisms to validate agent behavior and ensure safety guarantees through roles, which are absent in all existing systems.
+    \item \textbf{Adaptability}: Continuous adaptation to workload variations through iterative updates of the digital twin, ensuring high flexibility in both simulated and real-world environments.
+\end{itemize}
 
 \section{Proposed Approach: Multi-Agent System for Resilient HPA}
 \label{sec:proposed_approach}
+
+KARMA (\textit{Kubernetes Autoscaling with Resilient Multi-Agent Systems}) is an automated framework designed to address the limitations of traditional Horizontal Pod Autoscaling (HPA). It leverages a Multi-Agent System (MAS) to improve resilience, adaptability, and explainability in autoscaling decisions, particularly under adversarial scenarios.
+
 \subsection{Overview of the System}
-% Description générale de votre approche et de son architecture.
+
+The KARMA framework is structured into four iterative phases for training, analysis, and transfer. Figure~\ref{fig:karma_architecture} provides an overview of the architecture, highlighting its components and their interactions.
+
+\paragraph{Architecture Overview}
+The framework consists of the following components:
+\begin{itemize}
+    \item \textbf{Digital Twin Module}: A simulation environment replicating the Kubernetes cluster using real-world traces. It models workload dynamics, failure scenarios, and system behaviors.
+    \item \textbf{Multi-Agent Training Engine}: A training environment for MARL agents, equipped with reward mechanisms tailored to specific sub-objectives, such as failure mitigation and resource optimization.
+    \item \textbf{Explainability and Validation Module}: A component that analyzes agent behaviors using explainability techniques (e.g., policy extraction, trajectory visualization) to ensure alignment with desired objectives.
+    \item \textbf{Deployment Module}: An integration layer for transferring learned policies to the real Kubernetes cluster, interacting with the Kubernetes API to execute scaling decisions.
+\end{itemize}
+
+\paragraph{Iterative Process}
+The iterative workflow of KARMA includes:
+\begin{enumerate}
+    \item \textbf{Modeling}: Real-world traces are used to create a digital twin of the cluster. This twin serves as a safe environment for experimentation and training.
+    \item \textbf{Training}: MARL agents are trained in the simulated environment. Roles and missions guide agents to focus on sub-objectives related to availability, resource usage, and failure scenarios.
+    \item \textbf{Analysis}: Explainability techniques validate agent behaviors, ensuring robustness and providing insights for refinement.
+    \item \textbf{Deployment}: Trained policies are deployed to the real cluster, where they are monitored and iteratively refined using updated traces.
+\end{enumerate}
+
+\paragraph{Advantages of KARMA}
+KARMA introduces several innovations:
+\begin{itemize}
+    \item \textbf{Resilience}: Agents are trained to handle adversarial conditions, such as Distributed Denial-of-Service (DDoS) attacks and cascading failures.
+    \item \textbf{Adaptability}: Continuous updates to the digital twin enable dynamic adaptation to evolving workloads.
+    \item \textbf{Explainability}: By integrating explainability mechanisms, KARMA ensures transparent decision-making, improving trust and facilitating debugging.
+    \item \textbf{Automation}: High automation reduces manual intervention, enabling efficient scaling in complex environments.
+\end{itemize}
+
+KARMA's architecture and iterative workflow ensure that scaling policies are not only robust but also aligned with the dynamic nature of Kubernetes clusters, making it suitable for critical cloud-native systems.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\linewidth]{karma_architecture_placeholder.png}
+    \caption{Overview of the KARMA framework architecture. The iterative process integrates simulation, training, analysis, and transfer to achieve resilient autoscaling.}
+    \label{fig:karma_architecture}
+\end{figure}
+
 \subsection{Phase 1: Cluster Simulation (Digital Twin)}
 % Comment le jumeau numérique est modélisé à partir des traces.
 \subsection{Phase 2: Agent Training with Failure Knowledge}
