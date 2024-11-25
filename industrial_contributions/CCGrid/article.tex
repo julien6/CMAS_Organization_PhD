@@ -249,7 +249,7 @@ The remainder of this paper is structured as follows:
   \resizebox{\textwidth}{!}{%
   \begin{tabular}{>{\raggedright\arraybackslash}m{2.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}>{\centering\arraybackslash}m{1.5cm}}
   \hline
-  \textbf{Criterion} & \textbf{Gym-HPA~\cite{GymHPA}} & \textbf{AWARE~\cite{AWARE}} & \textbf{IMAM~\cite{IMAM}} & \textbf{Libra~\cite{Libra}} & \textbf{QoS-Aware RL~\cite{QoSRL}} & \textbf{AHPA~\cite{AHPA}} & \textbf{KOSMOS~\cite{KOSMOS}} & \textbf{COPA~\cite{COPA}} & \textbf{Our Contribution} \\
+  \textbf{Criterion} & \textbf{Gym-HPA~\cite{GymHPA}} & \textbf{AWARE~\cite{AWARE}} & \textbf{IMAM~\cite{IMAM}} & \textbf{Libra~\cite{Libra}} & \textbf{QoS-Aware RL~\cite{QoSRL}} & \textbf{AHPA~\cite{AHPA}} & \textbf{KOSMOS~\cite{KOSMOS}} & \textbf{COPA~\cite{COPA}} & \textbf{KARMA} \\
   \hline
   \hline
   Adversarial Scenarios Considered & No & Partial & No & No & No & No & No & Partial & Yes \\
@@ -309,51 +309,57 @@ Our proposed approach addresses the gaps identified in existing work by introduc
     \item \textbf{Adaptability}: Continuous adaptation to workload variations through iterative updates of the digital twin, ensuring high flexibility in both simulated and real-world environments.
 \end{itemize}
 
-\section{Proposed Approach: Multi-Agent System for Resilient HPA}
+
+\section{KARMA: A Framework for Kubernetes }
 \label{sec:proposed_approach}
 
 This section introduces the KARMA framework as for its global functionning and architectural components.
 
-\subsection{Overview of the System}
+\subsection{KARMA Overview}
 
-The KARMA framework is structured into four iterative phases for training, analysis, and transfer. \autoref{fig:karma_architecture} provides an overview of the KARMA's architecture.
-
-\paragraph{Architecture Overview}
-The framework consists of the following components:
-\begin{itemize}
-    \item \textbf{Digital Twin Module}: A simulation environment replicating the Kubernetes cluster using real-world traces. It models workload dynamics, failure scenarios, and system behaviors.
-    \item \textbf{Multi-Agent Training Engine}: A training environment for MARL agents, equipped with reward mechanisms tailored to specific sub-objectives, such as failure mitigation and resource optimization.
-    \item \textbf{Explainability and Validation Module}: A component that analyzes agent behaviors using explainability techniques (e.g., policy extraction, trajectory visualization) to ensure alignment with desired objectives.
-    \item \textbf{Deployment Module}: An integration layer for transferring learned policies to the real Kubernetes cluster, interacting with the Kubernetes API to execute scaling decisions.
-\end{itemize}
-
-\paragraph{Iterative Process}
-The iterative workflow of KARMA includes:
-\begin{enumerate}
-    \item \textbf{Modeling}: Real-world traces are used to create a digital twin of the cluster. This twin serves as a safe environment for experimentation and training.
-    \item \textbf{Training}: MARL agents are trained in the simulated environment. Roles and missions guide agents to focus on sub-objectives related to availability, resource usage, and failure scenarios.
-    \item \textbf{Analysis}: Explainability techniques validate agent behaviors, ensuring robustness and providing insights for refinement.
-    \item \textbf{Deployment}: Trained policies are deployed to the real cluster, where they are monitored and iteratively refined using updated traces.
-\end{enumerate}
-
-\paragraph{Advantages of KARMA}
-KARMA introduces several innovations:
-\begin{itemize}
-    \item \textbf{Resilience}: Agents are trained to handle adversarial conditions, such as Distributed Denial-of-Service (DDoS) attacks and cascading failures.
-    \item \textbf{Adaptability}: Continuous updates to the digital twin enable dynamic adaptation to evolving workloads.
-    \item \textbf{Explainability}: By integrating explainability mechanisms, KARMA ensures transparent decision-making, improving trust and facilitating debugging.
-    \item \textbf{Automation}: High automation reduces manual intervention, enabling efficient scaling in complex environments.
-\end{itemize}
-
-KARMA's architecture and iterative workflow ensure that scaling policies are not only robust but also aligned with the dynamic nature of Kubernetes clusters, making it suitable for critical cloud-native systems.
+The KARMA framework is designed to address the limitations of conventional HPA by leveraging MARL and modular architectural components. Its goal is to provide robust, explainable, and adaptive scaling decisions for cloud-native critical systems, particularly under adversarial scenarios.
 
 \begin{figure}[h!]
     \centering
     % \includegraphics[width=\linewidth]{karma_architecture_placeholder.png}
     \input{figures/karma_architecture/karma_architecture.tex}
-    \caption{Overview of the KARMA framework architecture. The iterative process integrates simulation, training, analysis, and transfer to achieve resilient autoscaling.}
+    \caption{Overview of the KARMA framework in use with a Kubernetes cluster}
     \label{fig:karma_architecture}
 \end{figure}
+
+% TODO: expliquer plus en détail ce qu'est Kubernetes en partant d'une vue haut niveau, puis en expliquant l'architecture Kubernetes, la terminologie de chacun des composants, leur relations, pourquoi est-ce qu'on a besoin de changer le nombre de replica lorsque le flux entrant varie (spoiler: parce que plusieurs pods peuvent gérer plus de données entrantes en parallèle), expliquer comment on peut techniquement changer le nombre de replica via l'API (et donc le chemin à suivre dans l'architecture de Kubernetes depuis l'API jusqu'aux pods...)
+As illustrated in \autoref{fig:karma_architecture}, the KARMA framework is runned along the Kubernetes cluser. The Kubernetes cluster is composed of worker nodes hosting pods, deployments, and services, with metrics server collecting resource metrics and providing them to the KARMA framework.
+
+% TODO: dire que le framework est lancé sur un noeud connecté à la fois à l'API Kubernetes et l'API Prometheus, qu'il se compose de 4 composants utilisés dans un processus de conception automatisé reposant sur ...
+The KARMA framework, implemented as a software process, includes four key components: Modeling, Training, Analyzing, and Transfer. These components are interconnected and operate in a loop to iteratively improve the system’s scalability and adaptability.
+
+Here, we picture a global view of the underlying interactions occuring between the Kubernetes cluster and the KARMA framework proceeding as follows:\\
+
+\textbf{1)} \quad Metrics such as CPU, memory usage, or latency from the Kubernetes cluster, as well as custom metrics exposed by the pods, are continuously collected by Prometheus~\cite{prometheus} that is the most common monitoring system and time-series metrics database. Stored states can be queried and sent to the Modeling Component.\\
+
+\textbf{2)} \quad The \textbf{Modeling Component} generates a simulated transition function based on a representative sample of collected states, leveraging a Deep Learning (DL) model (TODO: LSTM or MLP + VAE?) to predict transition from applied scaling actions to states and . This modeled transition function is coupled with the proposed availability maximization reward function to produce an environment with PettingZoo~\cite{Terry2021}, that is the de facto standard library to implement an environment with applicable MARL techniques.\\
+
+\textbf{3)} \quad The \textbf{Training Component}, leveraging the modeled PettingZoo environment, trains the agents policies to maximize the cumulative reward function. As suggested in AOMEA, agents can be optionally associated to roles and missions. A role is a rule-based mapping between a state and the expected set of actions an agent can choose in, aiming to restrict the policy exploration to a relevant or required policy sub-space. Again, to better help agents explore their policy space, a mission can be associated to them as a set of intermediary objectives that agents try to reach as incremental sub-steps to help them reaching the final goal.\\
+
+\textbf{4)} \quad The \textbf{Analyzing Component} evaluates the trained agents behavior from their trajectories using non-supervised machine learning techniques. Hierarchical Clustering is used with  trajectory visualization and explainability analysis to ensure their effectiveness and alignment with the system's objectives.\\
+
+\textbf{5)} \quad The \textbf{Transfer Component} prepares trained agents' policies to be runned in the real Kubernetes cluster by applying chosen scaling actions remotely via the Kubernetes API when receiving the current state from the real cluster.\\
+
+\textbf{6)} \quad Scaling actions that adjust the number of replicas in a deployment, are applied via the Kubernetes API, completing the loop.
+
+\
+
+In the next sub-sections, we will detail each of the phase as for the involved theoretical concepts and their technical implementation.
+
+\subsection{Phase 1: Cluster Simulation (Digital Twin)}
+% Comment le jumeau numérique est modélisé à partir des traces.
+\subsection{Phase 2: Agent Training with Failure Knowledge}
+% Méthodologie d'entraînement des agents guidés par des missions.
+\subsection{Phase 3: Agent Validation and Design Insights}
+% Validation et interprétation des comportements des agents.
+\subsection{Phase 4: Behavior Transfer to Real Cluster}
+% Processus de transfert des comportements appris au cluster réel.
+
 
 \subsection{Phase 1: Cluster Simulation (Digital Twin)}
 % Comment le jumeau numérique est modélisé à partir des traces.
