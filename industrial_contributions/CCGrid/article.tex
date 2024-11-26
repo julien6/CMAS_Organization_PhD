@@ -344,77 +344,103 @@ In the next sub-sections, we will detail each phase of the KARMA framework, incl
 
 % TODO :
 %  - il faut aussi introduire les actions, transitions d'état pour des "attaquants" (on considère qu'il y en a qu'un seul)
+
 \subsection{Phase 1: Modeling}
 
-The modeling phase in the KARMA framework constructs a digital twin of the Kubernetes cluster by leveraging real-world traces. This phase provides a simulation environment where policies can be safely tested and optimized before deployment in the real system. Inspired by the Gym-HPA framework~\cite{GymHPA}, the modeling component employs a state transition model for which we propose to add a deep learning-based approximation of cluster dynamics.
+% Description haut niveau
+The modeling phase in the KARMA framework constructs a digital twin of the Kubernetes cluster by leveraging real-world set of state transitions refered to as trajectories, histories, or traces. We envision the environment considering an attacker trying to leverage actions related to data alteration and sheer amount of data to provoke various failures in the cluster, while three to four defender agents would try to manage pod replica in order to minimize the attacker's impact.
 
-This modeled environment is formalized as a Markov Decision Process (MDP)~\cite{Puterman2014}, characterized by:
-$$
-\mathcal{M} = (S, A, T, R, \gamma),
-$$
-where \( S \) is the state space, \( A \) is the action space, \( T: S \times A \to S \) is the transition function, \( R: S \times A \times S \to \mathbb{R} \) is the reward function, and \( \gamma \in [0, 1) \) is the discount factor for future rewards. The following paragraphs detail each component of the MDP.
+This phase uses collected traces to provide a near-realistic simulation environment where the defender agents' policies and the attacker policy can be safely tested and optimized before transfering in the real system. Inspired by the Gym-HPA framework~\cite{GymHPA}, the modeling component employs a state transition model for which we propose to add a deep learning-based approximation of cluster dynamics.
 
-\
+% Formalisation
+Even though AOMEA suggests using \textbf{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP) to formalize the environment, it is over-dimmensioned since the environment is fully observable. Therefore, we formalize the environment as a zero-sum \textbf{Stochastic Game (SG)}~\cite{shapley1953stochastic}, which is an extension of the \textbf{Markov Decision Process} (MDP) to multi-agent interactions. The SG is characterized by the tuple $\mathcal{SG} = (\mathcal{A}, S, A, T, R, \gamma)$, where:
 
-\noindent \textbf{State Representation:} The state of the Kubernetes cluster at time \( t \), denoted as \( s_t \in S \), consists of metrics critical to characterizing system performance:
+\begin{itemize}
+  \item $\mathcal{A} = \{\mathcal{A}_d, \mathcal{A}_a\}$ is the agents set comprising $n = |\mathcal{A}_d|$ defender agents and one single attacker agent in $\mathcal{A}_a$;
+  \item $S$ is the shared state space characterized by metrics values for both attacker and defender agents;
+  \item $A = A_d^n \times A_a$ is the action space with $A_d$ and $A_a$ are the action spaces for a defender and the attacker agents respectively;
+  \item $T: S \times A \rightarrow S = S \times A_d^n \times A_a \to S$ is the state transition function dictating the next state when the joint actions of the defender agents and the attacker's one are applied in the environment;
+  \item $R = \{R_d, R_a\}$, where $R_d: S \times A_d^n \to \mathbb{R}$ and $R_a: S \times A_a \to \mathbb{R} = - R_d$ are the reward functions for the defender agents and the attacker one respectively;
+  \item $\gamma \in [0, 1)$ is the discount factor for future rewards.
+\end{itemize}
+
+The following paragraphs detail each component of this formalisation.\\
+
+\noindent \textbf{State Representation:} The state of the Kubernetes cluster at time $t$, denoted as $s_t \in S$, consists of metrics critical to characterizing system performance:
 \begin{itemize}
     \item \textbf{Latency:} End-to-end response time for service requests (in milliseconds);
     \item \textbf{Resource Consumption:} Metrics such as CPU and memory utilization (in percentages);
     \item \textbf{Cluster Availability:} The proportion of requests successfully handled by the cluster.
 \end{itemize}
-These metrics are continuously collected using Prometheus~\cite{prometheus}, a widely adopted monitoring and metrics database system, enabling the capture of time-series data for each pod, deployment, and the cluster as a whole.
+These metrics are continuously collected using Prometheus~\cite{prometheus}, a widely adopted monitoring and metrics database system, enabling the capture of time-series data for each pod, deployment, and the cluster as a whole. 
 
 \
 
-\noindent \textbf{Action Representation:} Each action \( a \in A \) is a pair that defines scaling decisions impacting the Kubernetes cluster:
-$$
-a_t = (\text{service\_id}, \text{replica\_change}),
-$$
-where \( \text{service\_id} \) identifies the target deployment, and \( \text{replica\_change} \) indicates the change in replicas, bounded within \( [-\alpha, +\alpha] \) (e.g., \( \alpha = 3 \)). This enables fine-grained, controlled adjustments to the cluster.
+\noindent \textbf{Action Representation:} The action spaces for the defender and the attacker are distinct:
+\begin{itemize}
+    \item \textbf{Defender's Actions (\(A_d\)):} 
+    $$
+    a_d = (\text{service\_id}, \text{replica\_change}),
+    $$
+    where $\text{service\_id}$ identifies the target deployment, and $\text{replica\_change}$ indicates the change in replicas, bounded within $[-\alpha, +\alpha]$ (e.g., $\alpha = 3$).
+    \item \textbf{Attacker's Actions (\(A_a\)):} 
+    $$
+    a_a = (\text{entry\_point\_id}, \text{rate\_modification}, \text{data\_modification}),
+    $$
+    where $\text{entry\_point\_id}$ specifies the point of entry for the attack, $\text{rate\_modification}$ modifies the incoming traffic rate (\(\text{high\_decrease}, \text{low\_decrease}, \text{no\_change}, \text{low\_increase}, \text{high\_increase}\)), and $\text{data\_modification}$ specifies the degree of data alteration (\(\text{no\_alteration}, \text{low\_alteration}, \text{high\_alteration}\)).
+\end{itemize}
 
 \
 
-\noindent \textbf{Transition Function:} The real transition function \( T: S \times A \to S \) maps state-action pairs to new states, describing how the cluster evolves:
+\noindent \textbf{Transition Function:} The state transition function $T: S \times A_d \times A_a \to S$ captures the effects of both defender and attacker actions:
 $$
-T(s_t, a_t) = s_{t+1}.
+T(s_t, a_d, a_a) = s_{t+1}.
 $$
-Observed transitions \( (s_t, a_t, s_{t+1}) \) form a partial state transition graph. To address missing transitions, we introduce an approximator-based transition function \( \hat{T}_a \) using a Multilayer Perceptron (MLP).
+For example:
+\begin{itemize}
+    \item Defender actions $a_d$ adjust the number of replicas for specific services, impacting resource consumption and availability.
+    \item Attacker actions $a_a$ modify traffic rates and data properties at entry points, affecting latency and resource demands.
+\end{itemize}
+Observed transitions $(s_t, a_d, a_a, s_{t+1})$ form a partial state transition graph, enriched using an MLP-based approximator for unobserved transitions.
 
 \
 
-\noindent \textbf{Reward Function:} To guide agent learning, transitions are associated with a reward \( r_t \in \mathbb{R} \) derived from the reward function \( R \):
-$$
-r_t = -w_1 \cdot \text{latency}_t - w_2 \cdot \text{resource\_usage}_t + w_3 \cdot \text{availability}_t,
-$$
-where \( w_1, w_2, w_3 \) are weights reflecting the relative importance of each metric. This reward structure prioritizes availability while penalizing resource overuse and latency, drawing from principles in RL-based resource management~\cite{Mao2019RL4RM}.
+\noindent \textbf{Reward Functions:} The reward functions $R_d$ and $R_a$ reflect the conflicting objectives of the defender and the attacker:
+\begin{itemize}
+    \item \textbf{Defender's Reward ($R_d$):}
+    $$
+    r_d = -w_1 \cdot \text{latency}_t - w_2 \cdot \text{resource\_usage}_t + w_3 \cdot \text{availability}_t,
+    $$
+    where $w_1, w_2, w_3$ prioritize availability while penalizing resource overuse and latency.
+    \item \textbf{Attacker's Reward ($R_a$):}
+    $$
+    r_a = -R_d(s_t, a_d, a_a),
+    $$
+    incentivizing actions that degrade the cluster's performance and availability.
+\end{itemize}
 
 \
 
-\noindent \textbf{Transition Modeling:} The approximator-based transition function \( \hat{T}_a \) extends the observed transition graph \( \hat{T}_t \) by predicting transitions for unobserved state-action pairs. The complete modeled transition function is defined as:
+\noindent \textbf{Transition Modeling:} The approximator-based transition function $\hat{T}_a$ extends the observed transition graph $\hat{T}_t$ by predicting transitions for unobserved state-action pairs. The complete modeled transition function is defined as:
 $$
-\hat{T}(s, a) = 
+\hat{T}(s, a_d, a_a) = 
 \begin{cases} 
-\hat{T}_t(s, a) & \text{if } (s, a) \in \text{Domain}(\hat{T}_t), \\
-\hat{T}_a(s, a) & \text{otherwise}.
+\hat{T}_t(s, a_d, a_a) & \text{if } (s, a_d, a_a) \in \text{Domain}(\hat{T}_t), \\
+\hat{T}_a(s, a_d, a_a) & \text{otherwise}.
 \end{cases}
 $$
-The MLP approximates \( \hat{T}_a \) by minimizing the Mean Squared Error (MSE):
+The MLP approximates $\hat{T}_a$ by minimizing the Mean Squared Error (MSE):
 $$
-\mathcal{L} = \frac{1}{N} \sum_{i=1}^N \|T(s_t^i, a_t^i) - s_{t+1}^i\|^2,
+\mathcal{L} = \frac{1}{N} \sum_{i=1}^N \|T(s_t^i, a_d^i, a_a^i) - s_{t+1}^i\|^2,
 $$
-where \( N \) is the number of training samples. The MLP architecture includes:
-\begin{itemize}
-    \item \textbf{Input:} A concatenated vector of state metrics \( s_t \) and a one-hot encoded action \( a_t \);
-    \item \textbf{Hidden Layers:} 2--3 fully connected layers with 128--256 neurons each, using ReLU activation;
-    \item \textbf{Output:} Predicted next state metrics \( s_{t+1} \) and associated reward \( r_t \).
-\end{itemize}
-Regularization techniques, such as dropout~\cite{Srivastava2014Dropout} and L2 regularization, prevent overfitting.
+where $N$ is the number of training samples.
 
 \
 
-\noindent \textbf{Digital Twin Environment:} The approximated transition function \( \hat{T} \) and the reward function \( R \) are combined using the PettingZoo MARL library~\cite{Terry2021}. This environment simulates the Kubernetes cluster as an MDP, allowing agents to safely explore and optimize policies in a virtual setting.
+\noindent \textbf{Digital Twin Environment:} The approximated transition function $\hat{T}$, combined with the reward functions $R_d$ and $R_a$, forms the basis of the digital twin environment implemented using the PettingZoo MARL library~\cite{Terry2021}. This environment models the Kubernetes cluster as an SG, enabling safe exploration of defender and attacker strategies.
 
-By integrating observed transitions and neural network approximations, the modeling phase provides a robust foundation for training MARL agents, ensuring efficient policy optimization under diverse scenarios.
+By capturing the interactions between defenders and attackers, the modeling phase sets the stage for robust and adversary-aware policy optimization in Phase 2.
+
 
 \subsection{Phase 2: Training}
 
@@ -427,35 +453,35 @@ By integrating observed transitions and neural network approximations, the model
 The training phase in the KARMA framework optimizes agents’ policies for adaptive and resilient scaling in a Kubernetes cluster. Leveraging the digital twin modeled in Phase 1, this phase applies Multi-Agent Reinforcement Learning (MARL) techniques, emphasizing convergence to stable, role-aligned, and efficient behaviors under organizational constraints.
 
 \noindent\textbf{Formulation of the Training Problem:} 
-The MARL environment is formalized as a Markov Decision Process (MDP), defined by the tuple \( M = \langle S, A, T, R, \gamma \rangle \):
+The MARL environment is formalized as a Markov Decision Process (MDP), defined by the tuple $M = \langle S, A, T, R, \gamma \rangle$:
 \begin{itemize}
-    \item \( S \): The set of states representing cluster performance metrics, as described in Phase 1.
-    \item \( A \): The action space comprising scaling decisions for Kubernetes deployments.
-    \item \( T: S \times A \rightarrow S \): The transition function approximated through the digital twin.
-    \item \( R: S \times A \rightarrow \mathbb{R} \): The reward function guiding agents toward desired behaviors, balancing latency, resource efficiency, and availability.
-    \item \( \gamma \): The discount factor prioritizing immediate over long-term rewards.
+    \item $S$: The set of states representing cluster performance metrics, as described in Phase 1.
+    \item $A$: The action space comprising scaling decisions for Kubernetes deployments.
+    \item $T: S \times A \rightarrow S$: The transition function approximated through the digital twin.
+    \item $R: S \times A \rightarrow \mathbb{R}$: The reward function guiding agents toward desired behaviors, balancing latency, resource efficiency, and availability.
+    \item $\gamma$: The discount factor prioritizing immediate over long-term rewards.
 \end{itemize}
-Agents iteratively improve their policies \( \pi(a|s) \) to maximize the cumulative discounted reward:
+Agents iteratively improve their policies $\pi(a|s)$ to maximize the cumulative discounted reward:
 \[
 J(\pi) = \mathbb{E} \left[ \sum_{t=0}^{\infty} \gamma^t R(s_t, a_t) \right],
 \]
-where \( \pi \) denotes the joint policy across all agents.
+where $\pi$ denotes the joint policy across all agents.
 
 \
 
 \noindent\textbf{Role and Mission-Based Training:} 
 Inspired by MOISE+MARL~\cite{MOISEMARL2025}, KARMA integrates role-based constraints and mission-oriented incentives into the training process:
 \begin{itemize}
-    \item \textbf{Role Constraints:} Agents are assigned roles dictating their permissible actions, defined by a Role Action Guide (\( RAG \)):
+    \item \textbf{Role Constraints:} Agents are assigned roles dictating their permissible actions, defined by a Role Action Guide ($RAG$):
     \[
     RAG(h, \omega) = \{(a, \text{ch}) \;|\; a \in A, \; \text{ch} \in [0,1]\},
     \]
-    where \( h \) is the trajectory history, \( \omega \) the observation, and \( \text{ch} \) the constraint hardness. Hard constraints enforce strict role adherence, while soft constraints allow for exploratory actions.
+    where $h$ is the trajectory history, $\omega$ the observation, and $\text{ch}$ the constraint hardness. Hard constraints enforce strict role adherence, while soft constraints allow for exploratory actions.
     \item \textbf{Mission Incentives:} Missions are defined as collections of goals linked to rewards. Agents accrue bonuses for completing intermediate objectives, aligning their trajectories with predefined missions:
     \[
     GRG(h) = \sum_{m \in M} w_m \cdot \mathbf{1}[h \supseteq h_m],
     \]
-    where \( w_m \) is the weight for mission \( m \), and \( h_m \) represents a characteristic sub-sequence of \( h \).
+    where $w_m$ is the weight for mission $m$, and $h_m$ represents a characteristic sub-sequence of $h$.
 \end{itemize}
 These role and mission structures reduce the policy search space, accelerating convergence and improving explainability.
 
@@ -475,7 +501,7 @@ These algorithms are augmented with the digital twin, enabling agents to explore
 \noindent\textbf{Training Pipeline:} 
 The training phase follows a structured pipeline:
 \begin{enumerate}
-    \item \textbf{Initialization:} Initialize agent policies \( \pi_i \) and reward structures. Embed role constraints (\( RAG \)) and mission guides (\( GRG \)) into the environment.
+    \item \textbf{Initialization:} Initialize agent policies $\pi_i$ and reward structures. Embed role constraints ($RAG$) and mission guides ($GRG$) into the environment.
     \item \textbf{Simulation Runs:} Run simulations in the digital twin environment to collect trajectories. Update policies using MARL algorithms.
     \item \textbf{Reward Shaping:} Incorporate mission bonuses and role penalties into the reward function to steer learning toward organizational objectives.
     \item \textbf{Evaluation:} Assess policy performance using metrics such as cumulative reward, convergence rate, and robustness to adversarial scenarios.
@@ -511,17 +537,17 @@ The analysis phase in the KARMA framework validates and interprets the behaviors
 \
 
 \noindent\textbf{Trajectory Analysis:} 
-Agent trajectories, defined as sequences of state-action pairs over episodes, provide a granular view of decision-making processes. Formally, the trajectory of an agent \( i \) over an episode \( e \) is represented as:
+Agent trajectories, defined as sequences of state-action pairs over episodes, provide a granular view of decision-making processes. Formally, the trajectory of an agent $i$ over an episode $e$ is represented as:
 \[
 \tau_i^e = \{(s_t, a_t, r_t)\}_{t=0}^{T},
 \]
-where \( s_t \) is the state at time \( t \), \( a_t \) the action taken, \( r_t \) the reward obtained, and \( T \) the episode length.
+where $s_t$ is the state at time $t$, $a_t$ the action taken, $r_t$ the reward obtained, and $T$ the episode length.
 
 Key metrics extracted from trajectories include:
 \begin{itemize}
-    \item \textbf{Action Frequency:} \( f(a_t) \): Frequency distribution of actions to detect patterns or biases in scaling decisions.
-    \item \textbf{Reward Distribution:} \( \mathbb{E}[r_t] \): Expected reward across episodes to evaluate policy performance.
-    \item \textbf{Divergence from Roles:} \( \delta_R(\tau_i^e) \): Degree of deviation from predefined roles, calculated as:
+    \item \textbf{Action Frequency:} $f(a_t)$: Frequency distribution of actions to detect patterns or biases in scaling decisions.
+    \item \textbf{Reward Distribution:} $\mathbb{E}[r_t]$: Expected reward across episodes to evaluate policy performance.
+    \item \textbf{Divergence from Roles:} $\delta_R(\tau_i^e)$: Degree of deviation from predefined roles, calculated as:
     \[
     \delta_R(\tau_i^e) = \frac{1}{T} \sum_{t=0}^T \mathbf{1}[a_t \notin RAG(h_t, \omega_t)].
     \]
@@ -532,23 +558,23 @@ Trajectory visualization techniques, such as t-SNE or PCA, reduce high-dimension
 \
 
 \noindent\textbf{Clustering for Behavior Validation:}
-Hierarchical clustering techniques are applied to group similar trajectories based on distance metrics, such as Dynamic Time Warping (DTW). For a set of trajectories \( \{\tau_i^e\} \), the clustering process involves:
+Hierarchical clustering techniques are applied to group similar trajectories based on distance metrics, such as Dynamic Time Warping (DTW). For a set of trajectories $\{\tau_i^e\}$, the clustering process involves:
 \begin{enumerate}
-    \item \textbf{Distance Matrix Calculation:} Compute pairwise distances \( d(\tau_i, \tau_j) \) using DTW:
+    \item \textbf{Distance Matrix Calculation:} Compute pairwise distances $d(\tau_i, \tau_j)$ using DTW:
     \[
     d(\tau_i, \tau_j) = \min_{\pi} \sum_{k=1}^{|\pi|} \|s_{t_k}^i - s_{t_k}^j\|_2,
     \]
-    where \( \pi \) is the optimal alignment path.
+    where $\pi$ is the optimal alignment path.
     \item \textbf{Clustering Algorithm:} Apply agglomerative clustering to the distance matrix:
     \[
     \mathcal{C} = \text{AgglomerativeClustering}(d(\tau_i, \tau_j), k),
     \]
-    where \( k \) is the number of desired clusters.
+    where $k$ is the number of desired clusters.
     \item \textbf{Cluster Validation:} Evaluate clustering quality using silhouette scores or Davies-Bouldin indices:
     \[
     S = \frac{1}{n} \sum_{i=1}^n \frac{b(i) - a(i)}{\max(a(i), b(i))},
     \]
-    where \( a(i) \) is intra-cluster distance and \( b(i) \) is inter-cluster distance.
+    where $a(i)$ is intra-cluster distance and $b(i)$ is inter-cluster distance.
 \end{enumerate}
 
 Clusters are annotated with common trajectory characteristics, such as frequent actions or reward trends, enabling targeted analysis of agent behaviors.
@@ -580,7 +606,7 @@ These techniques allow human operators to validate policy decisions, ensuring al
 \noindent\textbf{Safety Guarantees:} 
 The analysis phase also verifies adherence to safety constraints and organizational guidelines:
 \begin{itemize}
-    \item \textbf{Constraint Validation:} Ensure that all actions \( a_t \) taken during training comply with role-based constraints:
+    \item \textbf{Constraint Validation:} Ensure that all actions $a_t$ taken during training comply with role-based constraints:
     \[
     \mathbf{1}[a_t \notin RAG(h_t, \omega_t)] = 0, \quad \forall t.
     \]
@@ -588,12 +614,12 @@ The analysis phase also verifies adherence to safety constraints and organizatio
     \[
     R_{\text{adv}} = \sum_{t=0}^T \mathbf{1}[r_t < \epsilon],
     \]
-    where \( \epsilon \) is a minimum acceptable reward threshold.
+    where $\epsilon$ is a minimum acceptable reward threshold.
     \item \textbf{Fairness Metrics:} Quantify fairness across agents to ensure balanced resource allocation:
     \[
     F = 1 - \frac{\sigma^2(R_{\text{agents}})}{\mu(R_{\text{agents}})},
     \]
-    where \( \sigma^2 \) is the variance and \( \mu \) the mean of agent rewards.
+    where $\sigma^2$ is the variance and $\mu$ the mean of agent rewards.
 \end{itemize}
 
 \
