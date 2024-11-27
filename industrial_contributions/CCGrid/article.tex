@@ -228,7 +228,7 @@ Among methdological works, we inspired from the Assisted MAS Organization Engine
     \item \textbf{Transferring}: Deploying trained agents to the real cluster, where they apply their learned behaviors via the Kubernetes API.
 \end{enumerate}
 
-This iterative framework continuously updates the simulation model with newly collected traces, enabling adaptation to cluster changes. We validated our approach on two Kubernetes-based environments, "Online Boutique" and "Chained Service," under both normal and adversarial scenarios. The MASs were generated with minimal manual intervention, demonstrating originality and robustness. They consistently outperformed state-of-the-art HPA systems, including AWARE~\cite{AWARE}, Gym-HPA~\cite{GymHPA}, IMAM~\cite{IMAM}, and Libra~\cite{Libra}, in maximizing availability across all evaluated scenarios.
+This iterative framework continuously updates the simulation model with newly collected traces, enabling adaptation to cluster changes. We validated our approach on two Kubernetes-based environments, "Online Boutique" and "Chained Service," under adversarial scenarios. The MASs were generated with minimal manual intervention, and demonstrate originality and robustness. They consistently outperformed state-of-the-art HPA systems, including AWARE~\cite{AWARE}, Gym-HPA~\cite{GymHPA}, IMAM~\cite{IMAM}, and Libra~\cite{Libra}, in maximizing availability across all evaluated scenarios.
 
 % Organisation
 The remainder of this paper is structured as follows:
@@ -276,7 +276,7 @@ The remainder of this paper is structured as follows:
   }
 \end{table*}
 
-Autoscaling in Kubernetes has traditionally relied on metrics-based approaches, such as the default Horizontal Pod Autoscaler (HPA), which adjusts the number of pods based on CPU and memory utilization~\cite{KubernetesChallenges}. While effective for basic scaling, such methods fail to address dynamic or adversarial workloads, as they rely on reactive, threshold-based rules~\cite{AutoscalingLimitations}. To overcome these limitations, recent research has turned to machine learning (ML) and reinforcement learning (RL).
+Autoscaling in Kubernetes has traditionally relied on metrics-based approaches, such as the default Kubernetes Horizontal Pod Autoscaler (KHPA), which adjusts the number of pods based on CPU and memory utilization~\cite{KubernetesChallenges}. While effective for basic scaling, such methods fail to address dynamic or adversarial workloads, as they rely on reactive, threshold-based rules~\cite{AutoscalingLimitations}. To overcome these limitations, recent research has turned to Machine Learning (ML) and RL.
 
 \subsection*{Reinforcement Learning-Based Systems}
 Among RL-based approaches, four systems stand out due to their innovation, applicability, and relevance:
@@ -300,13 +300,14 @@ Other notable systems combine ML or rule-based strategies with traditional autos
 \end{itemize}
 
 \subsection*{Positioning Our Contribution}
-Our proposed approach addresses the gaps identified in existing work by introducing an automated multi-agent system (MAS) framework for Kubernetes HPA, specifically designed to handle adversarial scenarios. \autoref{tab:autoscaling_criteria} provides a comparative overview of key Kubernetes HPA systems with our contribution. Key strengths of our contribution include:
+Our proposed approach addresses the gaps identified in existing work by introducing an automated MAS framework for Kubernetes HPA, specifically designed to handle adversarial scenarios. \autoref{tab:autoscaling_criteria} provides a comparative overview of key Kubernetes HPA systems with our contribution. Key strengths of our contribution include:
 \begin{itemize}
-    \item \textbf{Adversarial Scenarios}: Explicit focus on handling attacks like Distributed Denial-of-Service (DDoS) and resource contention, where traditional autoscaling systems fail.
-    \item \textbf{Multi-Objective Support}: Decomposition of complex objectives (e.g., availability maximization) into sub-objectives with failure-specific prioritization.
-    \item \textbf{Global Automation}: High automation through digital twin modeling and automated MAS generation.
-    \item \textbf{Explainability and Safety}: Integration of explainability mechanisms to validate agent behavior and ensure safety guarantees through roles, which are absent in all existing systems.
-    \item \textbf{Adaptability}: Continuous adaptation to workload variations through iterative updates of the digital twin, ensuring high flexibility in both simulated and real-world environments.
+    \item \textbf{Adversarial Scenarios}: Explicit focus on handling attacks like  where conventional autoscaling systems is poorly suited.
+    \item \textbf{Multi-Objective Support}: Decomposition of complex objectives (e.g., availability maximization) into agents' missions enabling flexible failure-specific handling.
+    \item \textbf{Engineering Automation}: High automation through digital twin modeling and automated MAS generation.
+    \item \textbf{Explainability}: Integration of explainability mechanisms to validate agent behavior.
+    \item \textbf{Constraint Satisfaction}: Soft and hard constraints can be incorporated in agents through roles, possibly enabling safety guarantees.
+    \item \textbf{Adaptability}: Continuous adaptation to workload variations through iterative updates of the digital twin.
 \end{itemize}
 
 
@@ -317,7 +318,9 @@ This section introduces the KARMA framework as for its global functionning and a
 
 \subsection{KARMA Overview}
 
-The KARMA framework is designed to address the limitations of conventional HPA by leveraging Multi-Agent Reinforcement Learning (MARL) and modular architectural components. Its goal is to provide robust, explainable, and adaptive scaling decisions for cloud-native critical systems, particularly under adversarial scenarios.
+The KARMA framework is designed to address the limitations of conventional HPA by leveraging Multi-Agent Reinforcement Learning (MARL) in a digital twin. Its goal is to provide resilient, explainable, and safe MAS for HPA under adversarial scenarios within an automated development process.
+
+We define resilience through availability maximization which can be defined, in Kubernetes, as the capability of a cluster to efficiently handle user requests at all times while meeting predefined Quality of Service (QoS) contracts~\cite{varghese2019challenges}. We define explainability in a MAS, as the ability of the agents to make decisions at individual or organizational levels that can be understood or expected by humans~\cite{Chakraborti2019Explicability}. We define constraint satisfaction in a MAS as the probability that sequences of actions made by agents do not lead to undesired states which is zero for hard constraints and non-zero for soft ones~\cite{wooldridge2009introduction}. We define engineering automation as  systematic use of methodological tools to autonomously design, implement, validate, and deploy MASs with minimal human intervention~\cite{weyns2020engineering}.
 
 \begin{figure}[h!]
     \centering
@@ -329,12 +332,12 @@ The KARMA framework is designed to address the limitations of conventional HPA b
 As illustrated in \autoref{fig:karma_architecture}, the KARMA framework operates alongside the Kubernetes cluster, which comprises \textbf{worker nodes} hosting \textbf{pods} that are the atomic unit of work in Kubernetes containing \textbf{containers} that run the actual processes. Pods are labeled into \textbf{services} and managed by \textbf{deployments}.
 % TODO: est-ce que ce paragraphe est correct ?
 %
-Metrics, such as CPU, memory usage, and failed pod number, are collected using \textit{Prometheus}~\cite{prometheus}, a widely adopted time-series metrics database. These metrics provide essential insights into the cluster's operational state and are key to determining the reward associated with each state transition, a fundamental aspect of agent training and policy optimization.
+The KARMA framework is deployed as an aside software process connected to both the Kubernetes API and Prometheus'one. It consists of four primary components which operate iteratively to optimize the system's scaling policies. The interaction between the Kubernetes cluster and the KARMA framework is overviewed below:
 
-The KARMA framework is deployed as an aside software process connected to both the Kubernetes API and Prometheus'one. It consists of four primary components (Modeling, Training, Analyzing, and Transfer) which operate iteratively to optimize the system's scaling policies. The interaction between the Kubernetes cluster and the KARMA framework is detailed as follows:
+\textbf{1)} \textbf{Metrics Collection:} Metrics related to availability (such as CPU, memory usage, or failed pod number) are continuously collected as states by \textit{Prometheus}~\cite{prometheus}, a widely adopted time-series metrics database, and sent to KARMA's \textbf{Modeling Component}.
 
-\textbf{1)} \textbf{Metrics Collection and Modeling:} Resource metrics (e.g., CPU, memory), latency, and cluster availability metrics are continuously collected by Prometheus and sent to KARMA's \textbf{Modeling Component}. These metrics are used to construct a \textit{digital twin} of the cluster. A Multilayer Perceptron (MLP) is trained to approximate the transition function, modeling how scaling actions impact cluster states. Each state transition is also associated with a reward value for either availability or resource consumption or latency. The reward function is integrated with the transition model to create a MARL-compatible environment using the PettingZoo library~\cite{Terry2021}.
-    
+\textbf{2)} \textbf{Modeling:} These state are used to construct a \textit{digital twin} of the cluster as a near-realistic state transition function. The reward function is defined as a linear combination of reward sub-function each targeting a known Quality of Service (QoS). Then, we couple the defined reward function for availability to the modeled transition function within a MARL-compatible environment using the PettingZoo library~\cite{Terry2021}.
+
 \textbf{2)} \textbf{Agent Training:} The \textbf{Training Component} uses the modeled environment to train MARL agents, which aim to maximize the cumulative rewards. The reward function encourages scaling policies that improve availability while minimizing resource consumption and latency. Agents are optionally assigned \textit{roles} (rule-based constraints to guide policy exploration) and \textit{missions} (incremental objectives to aid policy convergence), following the methodology proposed by AOMEA~\cite{soule2024aomea}.
     
 \textbf{3)} \textbf{Policy Analysis and Explainability:} The \textbf{Analyzing Component} evaluates the behavior of trained agents using trajectory clustering and hierarchical visualization techniques. This ensures that the learned policies are interpretable, aligned with system objectives, and resilient under dynamic workloads or adversarial conditions.
@@ -420,7 +423,6 @@ $\text{\textbf{rate\_change}} \in \{\text{high\_decrease}, \text{low\_decrease},
 \noindent \textbf{Reward Functions:} The reward functions $R_d$ and $R_a$ reflect the conflicting objectives of the defender and the attacker to maximize or minimize the cluster's availability:
 \begin{itemize}
     \item \textbf{Defender's Reward:}
-    The availability in Kubernetes can be defined as the capability of a cluster to efficiently handle user requests while meeting predefined Quality of Service (QoS) contracts.
     $$
     R_d = -w_1 \cdot \text{latency}_t - w_2 \cdot \text{resource\_usage}_t + w_3 \cdot \text{availability}_t,
     $$
@@ -463,7 +465,7 @@ By capturing the interactions between defenders and attackers, the modeling phas
 % - Montrer que l'on peut combiner chacun des agents spécialiser de façon flexible pour prendre en charge les différentes failles de façon plus réactif et ciblé qu'avec un seul agent qui doit tout faire en même temps et pourrait diluer chacune des demandes en une seule action innéfficace -> montrer que cela est vrai sur un exemple au moins dans la partie experimentale.
 % - Décrire les algos de RL utilisé pour chacun des agents et comment ils sont combinés entre eux dans l'esprit d'un SMA classique en fonction des priorités établies par les concepteurs et/ou en laissant un algo MARL custom composite déterminer quel serait le meilleur ordre d'execution des agents pour maximiser la disponibilité (on aura donc un genre d'orchestrateur qui pour un état associe un ordre de passage en essayant de reproduire des liens sociaux entre agents -> cet ensemble de liens sociaux peut être appris -> il forme le coeur du SMA nouvellement appris que l'on pourra expliciter plus tard) => en fait l'organisation entre agent est à explorer pour maximiser la récompense (qui est basée sur la disponibilité)
 
-The training phase in the KARMA framework optimizes agents’ policies for adaptive and resilient scaling in a Kubernetes cluster. Leveraging the digital twin modeled in Phase 1, this phase applies Multi-Agent Reinforcement Learning (MARL) techniques, emphasizing convergence to stable, role-aligned, and efficient behaviors under organizational constraints.
+The training phase in the KARMA framework optimizes agents’ policies for adaptive and resilient scaling in a Kubernetes cluster. Leveraging the digital twin modeled in Phase 1, this phase applies MARL techniques, emphasizing convergence to stable, role-aligned, and efficient behaviors under organizational constraints.
 
 \noindent\textbf{Formulation of the Training Problem:} 
 The MARL environment is formalized as a Markov Decision Process (MDP), defined by the tuple $M = \langle S, A, T, R, \gamma \rangle$:
