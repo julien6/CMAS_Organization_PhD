@@ -326,9 +326,12 @@ The KARMA framework is designed to address the limitations of conventional HPA b
     \label{fig:karma_architecture}
 \end{figure}
 
-As illustrated in \autoref{fig:karma_architecture}, the KARMA framework operates alongside the Kubernetes cluster, which comprises worker nodes hosting pods, deployments, and services. Metrics, such as CPU and memory usage, latency, and cluster availability, are collected using Prometheus~\cite{prometheus}, a widely adopted time-series metrics database. These metrics provide essential insights into the cluster's operational state and are key to determining the reward associated with each state transition, a fundamental aspect of agent training and policy optimization.
+As illustrated in \autoref{fig:karma_architecture}, the KARMA framework operates alongside the Kubernetes cluster, which comprises \textbf{worker nodes} hosting \textbf{pods} that are the atomic unit of work in Kubernetes containing \textbf{containers} that run the actual processes. Pods are labeled into \textbf{services} and managed by \textbf{deployments}.
+% TODO: est-ce que ce paragraphe est correct ?
+%
+Metrics, such as CPU, memory usage, and failed pod number, are collected using \textit{Prometheus}~\cite{prometheus}, a widely adopted time-series metrics database. These metrics provide essential insights into the cluster's operational state and are key to determining the reward associated with each state transition, a fundamental aspect of agent training and policy optimization.
 
-The KARMA framework is deployed as a software process connected to both the Kubernetes API and Prometheus. It consists of four primary components—Modeling, Training, Analyzing, and Transfer—which operate iteratively to optimize the system's scaling policies. The interaction between the Kubernetes cluster and the KARMA framework is detailed as follows:
+The KARMA framework is deployed as an aside software process connected to both the Kubernetes API and Prometheus'one. It consists of four primary components (Modeling, Training, Analyzing, and Transfer) which operate iteratively to optimize the system's scaling policies. The interaction between the Kubernetes cluster and the KARMA framework is detailed as follows:
 
 \textbf{1)} \textbf{Metrics Collection and Modeling:} Resource metrics (e.g., CPU, memory), latency, and cluster availability metrics are continuously collected by Prometheus and sent to KARMA's \textbf{Modeling Component}. These metrics are used to construct a \textit{digital twin} of the cluster. A Multilayer Perceptron (MLP) is trained to approximate the transition function, modeling how scaling actions impact cluster states. Each state transition is also associated with a reward value for either availability or resource consumption or latency. The reward function is integrated with the transition model to create a MARL-compatible environment using the PettingZoo library~\cite{Terry2021}.
     
@@ -341,9 +344,6 @@ The KARMA framework is deployed as a software process connected to both the Kube
 By combining these components, KARMA seamlessly integrates simulation-based learning with real-world Kubernetes operations. Metrics from the cluster inform the policy refinement in the \textbf{Modeling Component}, while scaling decisions derived from trained agents are applied back to the cluster. This closed-loop process ensures continuous improvement, adaptability to workload variations, and robustness against adversarial scenarios.
 
 In the next sub-sections, we will detail each phase of the KARMA framework, including the underlying theoretical concepts and their technical implementation.
-
-% TODO :
-%  - il faut aussi introduire les actions, transitions d'état pour des "attaquants" (on considère qu'il y en a qu'un seul)
 
 \subsection{Phase 1: Modeling}
 
@@ -366,62 +366,75 @@ Even though AOMEA suggests using \textbf{Decentralized Partially Observable Mark
 
 The following paragraphs detail each component of this formalisation.\\
 
-\noindent \textbf{State Representation:} The state of the Kubernetes cluster at time $t$, denoted as $s_t \in S$, consists of metrics critical to characterizing system performance:
-\begin{itemize}
-    \item \textbf{Latency:} End-to-end response time for service requests (in milliseconds);
-    \item \textbf{Resource Consumption:} Metrics such as CPU and memory utilization (in percentages);
-    \item \textbf{Cluster Availability:} The proportion of requests successfully handled by the cluster.
-\end{itemize}
+\noindent \textbf{State Space:} The state of the Kubernetes cluster at time $t$, denoted as $s_t \in S$, consists of metrics critical to characterizing system performance for each of the $d = |D|$ micro-service deployments:
+$$
+s_t = (n_{id}, d_{dep}, d_{des}, d_{err}, d_{rem}, r_{cpu}, r_{ram}, t_{in}, t_{out})^d
+$$
+$n_{id} \in \mathbb{N}$: the number of the deployment; \quad
+$d_{dep} \in \mathbb{N}$: the number of deployed pods; \quad 
+$d_{des} \in \mathbb{N}$: the number of desired pods; \quad
+$d_{err} \in \mathbb{N}$: the number of failed pods; \quad
+$d_{rem} \in \mathbb{N}$: the number of remaining requests to be processed in the queue; \quad
+$r_{cpu} \in \mathbb{R}$: the total aggregated CPU (in m) of the pods; \quad
+$r_{ram} \in \mathbb{R}$: the total aggregated memory (in Mi) of the pods; \quad
+$t_{in} \in \mathbb{R}$: the average received traffic (in Kbps); \quad
+$t_{out} \in \mathbb{R}$: the average transmitted traffic (in Kbps).
+% TODO: ajouter les métriques spécifiques pour pouvoir vérifier s'il y a des goulots d'étranglement, 
+
 These metrics are continuously collected using Prometheus~\cite{prometheus}, a widely adopted monitoring and metrics database system, enabling the capture of time-series data for each pod, deployment, and the cluster as a whole. 
 
 \
 
-\noindent \textbf{Action Representation:} The action spaces for the defender and the attacker are distinct:
+\noindent \textbf{Action Space:} The action spaces for the defender and the attacker are distinct:\\
 \begin{itemize}
-    \item \textbf{Defender's Actions (\(A_d\)):} 
-    $$
-    a_d = (\text{service\_id}, \text{replica\_change}),
-    $$
-    where $\text{service\_id}$ identifies the target deployment, and $\text{replica\_change}$ indicates the change in replicas, bounded within $[-\alpha, +\alpha]$ (e.g., $\alpha = 3$).
-    \item \textbf{Attacker's Actions (\(A_a\)):} 
-    $$
-    a_a = (\text{entry\_point\_id}, \text{rate\_modification}, \text{data\_modification}),
-    $$
-    where $\text{entry\_point\_id}$ specifies the point of entry for the attack, $\text{rate\_modification}$ modifies the incoming traffic rate (\(\text{high\_decrease}, \text{low\_decrease}, \text{no\_change}, \text{low\_increase}, \text{high\_increase}\)), and $\text{data\_modification}$ specifies the degree of data alteration (\(\text{no\_alteration}, \text{low\_alteration}, \text{high\_alteration}\)).
+    \item \textbf{Defender's Actions:} 
 \end{itemize}
+$$
+a_d \in A_d = (\text{service\_id}, \text{replica\_change}) \text{, with}
+$$
+$\text{\textbf{service\_id}} \in \mathbb{N}$ identifies the target service (through deployment), and $\text{\textbf{replica\_change}} \in [-\alpha, +\alpha]$ indicates the change in replicas (by default $\alpha = 3$). Actions from this space are one-hot encoded as a Box Gym Space~\cite{openAIGymActionSpaces}: for example, the defender actions $(2,1)$, $(0,-2), (1,0)$ mean the services with id numbers equal to $2$, $0$, and $1$ have their respective replica numbers changed by adding $1$, $-2$, $0$.\\
+
+\begin{itemize}
+    \item \textbf{Attacker's Actions:} 
+\end{itemize}
+$$
+a_a \in A_a = (\text{entry\_point\_id}, \text{rate\_change}, \text{data\_change}) \text{, with}
+$$
+$\text{\textbf{entry\_point\_id}} \in \mathbb{N}$ specifies the service entry point;
+$\text{\textbf{rate\_change}} \in \{\text{high\_decrease}, \text{low\_decrease}, \text{no\_change}, \allowbreak \text{low\_increase}, \allowbreak \text{high\_increase}\}$ changes the incoming traffic based on a factor $\kappa$ (by default $\kappa = 1$); and $\text{\textbf{data\_change}} \in \{\text{no\_alteration}, \allowbreak \text{low\_alteration}, \allowbreak \text{high\_alteration}\}$ specifies the degree of data alteration based on factor $\sigma \in [2,\infty[$ (by default $\sigma = 10$). Actions from this space are one-hot encoded as a Box Gym space: for example, the attacker actions $(0,1,2), (2,-1,0), (1,2,1)$ mean that entrypoint services id number 0, 2, and 1 would have their respective traffic-in rates increased by $1 \times \kappa, -1 \times \kappa, 2 \times \kappa$, and respective probabilities to crash due to data alteration are changed by $\frac{2}{\sigma}, \frac{0}{\sigma}, \frac{1}{\sigma}$.
+
+% \
+
+% \noindent \textbf{Transition Function:} The state transition function $T: S \times A_d^n \times A_a \to S$ captures the effects of both defender and attacker actions:
+% $$
+% T(s_t, a_d^n, a_a) = s_{t+1}.
+% $$
+% For example:
+% \begin{itemize}
+%     \item Defender actions $a_d^n$ adjust the number of replicas for specific services.
+%     \item Attacker actions $a_a$ modify traffic rates and data properties at entry points, affecting latency and resource demands.
+% \end{itemize}
 
 \
 
-\noindent \textbf{Transition Function:} The state transition function $T: S \times A_d \times A_a \to S$ captures the effects of both defender and attacker actions:
-$$
-T(s_t, a_d, a_a) = s_{t+1}.
-$$
-For example:
+\noindent \textbf{Reward Functions:} The reward functions $R_d$ and $R_a$ reflect the conflicting objectives of the defender and the attacker to maximize or minimize the cluster's availability:
 \begin{itemize}
-    \item Defender actions $a_d$ adjust the number of replicas for specific services, impacting resource consumption and availability.
-    \item Attacker actions $a_a$ modify traffic rates and data properties at entry points, affecting latency and resource demands.
-\end{itemize}
-Observed transitions $(s_t, a_d, a_a, s_{t+1})$ form a partial state transition graph, enriched using an MLP-based approximator for unobserved transitions.
-
-\
-
-\noindent \textbf{Reward Functions:} The reward functions $R_d$ and $R_a$ reflect the conflicting objectives of the defender and the attacker:
-\begin{itemize}
-    \item \textbf{Defender's Reward ($R_d$):}
+    \item \textbf{Defender's Reward:}
+    The availability in Kubernetes can be defined as the capability of a cluster to efficiently handle user requests while meeting predefined Quality of Service (QoS) contracts.
     $$
-    r_d = -w_1 \cdot \text{latency}_t - w_2 \cdot \text{resource\_usage}_t + w_3 \cdot \text{availability}_t,
+    R_d = -w_1 \cdot \text{latency}_t - w_2 \cdot \text{resource\_usage}_t + w_3 \cdot \text{availability}_t,
     $$
     where $w_1, w_2, w_3$ prioritize availability while penalizing resource overuse and latency.
-    \item \textbf{Attacker's Reward ($R_a$):}
+    \item \textbf{Attacker's Reward:}
     $$
-    r_a = -R_d(s_t, a_d, a_a),
+    R_a = -R_d(s_t, a_d, a_a),
     $$
-    incentivizing actions that degrade the cluster's performance and availability.
+    incentivizing actions that degrade the cluster's availability.
 \end{itemize}
 
 \
 
-\noindent \textbf{Transition Modeling:} The approximator-based transition function $\hat{T}_a$ extends the observed transition graph $\hat{T}_t$ by predicting transitions for unobserved state-action pairs. The complete modeled transition function is defined as:
+\noindent \textbf{Transition Modeling:} Relying a representative set of collected transitions $\langle(s_t, a_d^n, a_a, s_{t+1})_{t\in \mathbb{N}}\rangle$, we can form a partial state transition function $\hat{T}_t$. We introduce a MLP-based approximator $\hat{T}_a$ to learn from collected transitions for predicted next likely state from non-covered state-action pairs. Formally, the complete modeled transition function $\hat{T}$ is defined as:
 $$
 \hat{T}(s, a_d, a_a) = 
 \begin{cases} 
