@@ -316,11 +316,7 @@ specifically designed to handle adversarial scenarios. \autoref{tab:autoscaling_
 \section{KARMA: A Framework for MAS-based Kubernetes HPA}
 \label{sec:proposed_approach}
 
-This section introduces the concept of an HPA MAS and the KARMA framework to help in its design.
-
-\subsection{HPA MAS}
-
-
+This section introduces the KARMA framework to help in designing a HPA MAS.
 
 \subsection{KARMA Overview}
 
@@ -371,9 +367,9 @@ Even though AOMEA suggests using \textbf{Decentralized Partially Observable Mark
 
 The following paragraphs detail each component of this formalisation.\\
 
-\noindent \textbf{State Space:} The state of the Kubernetes cluster at time $t$, denoted as $s_t \in S$, consists of metrics critical to characterizing system performance for each of the $d = |D|$ micro-service deployments:
+\noindent \paragraph{\textbf{State Space}} The state of the Kubernetes cluster at time $t$, denoted as $s \in S$, consists of metrics critical to characterizing system performance for each of the $d = |D|$ micro-service deployments:
 $$
-s_t = (n_{id}, d_{dep}, d_{des}, d_{err}, d_{rem}, r_{cpu}, r_{ram}, t_{in}, t_{out})^d
+s = (n_{id}, d_{dep}, d_{des}, d_{err}, d_{rem}, r_{cpu}, r_{ram}, t_{in}, t_{out})^d
 $$
 $n_{id} \in \mathbb{N}$: the number of the deployment; \quad
 $d_{dep} \in \mathbb{N}$: the number of deployed pods; \quad 
@@ -390,7 +386,7 @@ These metrics are continuously collected using Prometheus~\cite{prometheus}, a w
 
 \
 
-\noindent \textbf{Action Space:} The action spaces for the defender and the attacker are distinct:\\
+\noindent \paragraph{\textbf{Action Space}} The action spaces for the defender and the attacker are distinct:\\
 \begin{itemize}
     \item \textbf{Defender's Actions:} 
 \end{itemize}
@@ -408,37 +404,75 @@ $$
 $\text{\textbf{entry\_point\_id}} \in \mathbb{N}$ specifies the service entry point;
 $\text{\textbf{rate\_change}} \in \{\text{high\_decrease}, \text{low\_decrease}, \text{no\_change}, \allowbreak \text{low\_increase}, \allowbreak \text{high\_increase}\}$ changes the incoming traffic based on a factor $\kappa$ (by default $\kappa = 1$); and $\text{\textbf{data\_change}} \in \{\text{no\_alteration}, \allowbreak \text{low\_alteration}, \allowbreak \text{high\_alteration}\}$ specifies the degree of data alteration based on factor $\sigma \in [2,\infty[$ (by default $\sigma = 10$). Actions from this space are one-hot encoded as a Box Gym space: for example, the attacker actions $(0,1,2), (2,-1,0), (1,2,1)$ mean that entrypoint services id number 0, 2, and 1 would have their respective traffic-in rates increased by $1 \times \kappa, -1 \times \kappa, 2 \times \kappa$, and respective probabilities to crash due to data alteration are changed by $\frac{2}{\sigma}, \frac{0}{\sigma}, \frac{1}{\sigma}$.
 
-% \
+\
 
-% \noindent \textbf{Transition Function:} The state transition function $T: S \times A_d^n \times A_a \to S$ captures the effects of both defender and attacker actions:
-% $$
-% T(s_t, a_d^n, a_a) = s_{t+1}.
-% $$
-% For example:
-% \begin{itemize}
-%     \item Defender actions $a_d^n$ adjust the number of replicas for specific services.
-%     \item Attacker actions $a_a$ modify traffic rates and data properties at entry points, affecting latency and resource demands.
-% \end{itemize}
+\noindent \paragraph{\textbf{Reward Functions}} The availability of a Kubernetes cluster can be defined as the proportion of user requests successfully processed within an acceptable time frame relative to the total number of received requests. This definition relies on specific metrics collected in the Kubernetes environment and can be expressed mathematically.
+To measure availability, we use the following metrics:\\
+
+\noindent $
+\text{Success Rate} = \frac{\text{Number of Successful Requests (2xx)}}{\text{Total Number of Received Requests}}
+$
+
+\noindent $
+\text{Pod Failure Rate} = \frac{\text{Number of Failed Pods}}{\text{Total Number of Deployed Pods}}
+$
+
+\noindent $
+\text{Latency Ratio} = \frac{\text{Measured Latency}}{\text{Maximum Acceptable Latency}}
+$
+
+\noindent $
+\text{Entry Point Availability} = \frac{\text{Number of Available Entry Points}}{\text{Total Number of Entry Points}}
+$
+
+\noindent $
+\text{Traffic Capacity Ratio} = \min\left(1, \frac{\text{Outgoing Traffic}}{\text{Expected Traffic}}\right)
+$
 
 \
 
-\noindent \textbf{Reward Functions:} The reward functions $R_d$ and $R_a$ reflect the conflicting objectives of the defender and the attacker to maximize or minimize the cluster's availability:
+\noindent Then, the $R_d$ defender reward function relies on the overall availability while $R_a$ reward function is opposed:
 \begin{itemize}
-    \item \textbf{Defender's Reward:}
-    $$
-    R_d = -w_1 \cdot \text{latency}_t - w_2 \cdot \text{resource\_usage}_t + w_3 \cdot \text{availability}_t,
-    $$
-    where $w_1, w_2, w_3$ prioritize availability while penalizing resource overuse and latency.
+    \item \textbf{Defenders' Reward:}
+    \begin{align*}
+        R_d & = w_1 \cdot \text{Success Rate} \\
+            & \ + w_2 \cdot (1 - \text{Pod Failure Rate}) \\
+            & \ + w_3 \cdot (1 - \text{Latency Ratio}) \\
+            & \ + w_4 \cdot \text{Entry Point Availability} \\
+            & \ + w_5 \cdot \text{Traffic Capacity Ratio}
+    \end{align*}
+    where \(w_1, w_2, w_3, w_4, w_5\) are relative weights.
     \item \textbf{Attacker's Reward:}
     $$
-    R_a = -R_d(s_t, a_d, a_a),
+    R_a = -R_d(s, a_d, a_a),
     $$
     incentivizing actions that degrade the cluster's availability.
 \end{itemize}
 
 \
 
-\noindent \textbf{Transition Modeling:} Relying a representative set of collected transitions $\langle(s_t, a_d^n, a_a, s_{t+1})_{t\in \mathbb{N}}\rangle$, we can form a partial state transition function $\hat{T}_t$. We introduce a MLP-based approximator $\hat{T}_a$ to learn from collected transitions for predicted next likely state from non-covered state-action pairs. Formally, the complete modeled transition function $\hat{T}$ is defined as:
+\noindent \paragraph{\textbf{Transition Modeling}} Relying a representative set of collected transitions $\mathcal{T} = \langle(s, a_d^n, a_a, s')_{t\in \mathbb{N}, t \leq w}\rangle$ over a $w$ time window, we can form a partial state transition function $\hat{T}_t$ simply defined as:
+
+$$
+\hat{T}_t(s, a_d^n, a_a) =
+\begin{cases}
+s' & \text{if } (s, a_d^n, a_a, s') \in \mathcal{T}, \\
+\emptyset & \text{otherwise}
+\end{cases}
+$$
+
+To cover no recorded transition, we introduce a MLP-based approximator $\hat{T}_a$ to learn from collected transitions to predict the next likely state.
+% TODO: ajouter les informations sur les hyper-paramètres : nombre de couche, dimmensions, fonction d'activation...
+% TODO: justifier du choix d'un MLP pour approcher une fonction de transition d'état dans un cluster K8 -> explication: l'état suivant d'un cluster ne dépend que de l'état précédent et des actions choisies (l'état "porte" déjà en lui l'historique des agents)
+%
+The MLP approximates $\hat{T}_a$ by minimizing the Mean Squared Error (MSE):
+
+$$
+\mathcal{L} = \frac{1}{N} \sum_{i=1}^N \|T(s_i, a_{d,i}, a_{a,i}) - s'_i\|^2,
+$$
+where $N$ is the number of training samples.
+
+Formally, the complete modeled transition function $\hat{T}$ is defined as:
 $$
 \hat{T}(s, a_d, a_a) = 
 \begin{cases} 
@@ -446,15 +480,11 @@ $$
 \hat{T}_a(s, a_d, a_a) & \text{otherwise}.
 \end{cases}
 $$
-The MLP approximates $\hat{T}_a$ by minimizing the Mean Squared Error (MSE):
-$$
-\mathcal{L} = \frac{1}{N} \sum_{i=1}^N \|T(s_t^i, a_d^i, a_a^i) - s_{t+1}^i\|^2,
-$$
-where $N$ is the number of training samples.
+
 
 \
 
-\noindent \textbf{Digital Twin Environment:} The approximated transition function $\hat{T}$, combined with the reward functions $R_d$ and $R_a$, forms the basis of the digital twin environment implemented using the PettingZoo MARL library~\cite{Terry2021}. This environment models the Kubernetes cluster as an SG, enabling safe exploration of defender and attacker strategies.
+\noindent \paragraph{\textbf{Digital Twin Environment}} The approximated transition function $\hat{T}$, combined with the reward functions $R_d$ and $R_a$, forms the basis of the digital twin environment implemented using the PettingZoo MARL library~\cite{Terry2021}. This environment models the Kubernetes cluster as an SG, enabling safe exploration of defender and attacker strategies.
 
 By capturing the interactions between defenders and attackers, the modeling phase sets the stage for robust and adversary-aware policy optimization in Phase 2.
 
@@ -464,28 +494,20 @@ By capturing the interactions between defenders and attackers, the modeling phas
 % TODO: 
 % - Revenir sur l'exemple de goulot d'étranglement que l'on pourra noter comme un graphe (à mettre dans la partie KARMA Overview).
 % - Montrer comment on peut décomposer le problème de maximiser la disponibilité en plusieurs sous-objectifs (detection et résoudre goulot d'étranglement, detection et résoudre pod crash, detection et résoudre priorisation des pods...) que l'on définira formelement. Ces sous-objectifs peuvent être compris comme des missions associées aux agents auquels on donne aussi des rôles
-% - Montrer que l'on peut combiner chacun des agents spécialiser de façon flexible pour prendre en charge les différentes failles de façon plus réactif et ciblé qu'avec un seul agent qui doit tout faire en même temps et pourrait diluer chacune des demandes en une seule action innéfficace -> montrer que cela est vrai sur un exemple au moins dans la partie experimentale.
+% - Montrer que l'on peut combiner chacun des agents spécialisé de façon flexible pour prendre en charge les différentes failles de façon plus réactif et ciblé qu'avec un seul agent qui doit tout faire en même temps et pourrait diluer chacune des demandes en une seule action innéfficace -> montrer que cela est vrai sur un exemple au moins dans la partie experimentale.
 % - Décrire les algos de RL utilisé pour chacun des agents et comment ils sont combinés entre eux dans l'esprit d'un SMA classique en fonction des priorités établies par les concepteurs et/ou en laissant un algo MARL custom composite déterminer quel serait le meilleur ordre d'execution des agents pour maximiser la disponibilité (on aura donc un genre d'orchestrateur qui pour un état associe un ordre de passage en essayant de reproduire des liens sociaux entre agents -> cet ensemble de liens sociaux peut être appris -> il forme le coeur du SMA nouvellement appris que l'on pourra expliciter plus tard) => en fait l'organisation entre agent est à explorer pour maximiser la récompense (qui est basée sur la disponibilité)
 
-The training phase in the KARMA framework optimizes agents’ policies for adaptive and resilient scaling in a Kubernetes cluster. Leveraging the digital twin modeled in Phase 1, this phase applies MARL techniques, emphasizing convergence to stable, role-aligned, and efficient behaviors under organizational constraints.
+Leveraging the digital twin modeled, this phase applies MARL techniques, emphasizing convergence to stable, role-aligned, and efficient behaviors under organizational constraints.
 
-\noindent\textbf{Formulation of the Training Problem:} 
-The MARL environment is formalized as a Markov Decision Process (MDP), defined by the tuple $M = \langle S, A, T, R, \gamma \rangle$:
-\begin{itemize}
-    \item $S$: The set of states representing cluster performance metrics, as described in Phase 1.
-    \item $A$: The action space comprising scaling decisions for Kubernetes deployments.
-    \item $T: S \times A \rightarrow S$: The transition function approximated through the digital twin.
-    \item $R: S \times A \rightarrow \mathbb{R}$: The reward function guiding agents toward desired behaviors, balancing latency, resource efficiency, and availability.
-    \item $\gamma$: The discount factor prioritizing immediate over long-term rewards.
-\end{itemize}
-Agents iteratively improve their policies $\pi(a|s)$ to maximize the cumulative discounted reward:
-\[
-J(\pi) = \mathbb{E} \left[ \sum_{t=0}^{\infty} \gamma^t R(s_t, a_t) \right],
-\]
-where $\pi$ denotes the joint policy across all agents.
 
 \
-
+% TODO: introduire brièvement MOISE+MARL puis donner les spécifications organisationnelles pour chacun des agents -> proposer des modèles applicables pour Chained Services:
+% - 1 agent pour prioriser les pods (killer les pods qui prennent trop de temps)
+% - 1 agent pour supprimer les goulots d'étanglement
+% - 1 agent pour supprimer les pods qui crash continuellement
+% - 1 agent pour detecter et réagir aux attaques DDoS / montées de charge subites
+% ...
+% TODO: Lister tous les problèmes à prendre en compte
 \noindent\textbf{Role and Mission-Based Training:} 
 Inspired by MOISE+MARL~\cite{MOISEMARL2025}, KARMA integrates role-based constraints and mission-oriented incentives into the training process:
 \begin{itemize}
@@ -556,9 +578,9 @@ The analysis phase in the KARMA framework validates and interprets the behaviors
 \noindent\textbf{Trajectory Analysis:} 
 Agent trajectories, defined as sequences of state-action pairs over episodes, provide a granular view of decision-making processes. Formally, the trajectory of an agent $i$ over an episode $e$ is represented as:
 \[
-\tau_i^e = \{(s_t, a_t, r_t)\}_{t=0}^{T},
+\tau_i^e = \{(s, a_t, r_t)\}_{t=0}^{T},
 \]
-where $s_t$ is the state at time $t$, $a_t$ the action taken, $r_t$ the reward obtained, and $T$ the episode length.
+where $s$ is the state at time $t$, $a_t$ the action taken, $r_t$ the reward obtained, and $T$ the episode length.
 
 Key metrics extracted from trajectories include:
 \begin{itemize}
@@ -603,7 +625,7 @@ Explainable Multi-Agent Reinforcement Learning (XMARL) techniques enhance the in
 \begin{itemize}
     \item \textbf{Feature Attribution:} Techniques like SHAP~\cite{SHAP2020} quantify the contribution of each state feature to action decisions:
     \[
-    \phi_{s_t}(a) = \mathbb{E}_{s' \sim S \setminus s_t} \left[ Q(s', a) - Q(s, a) \right].
+    \phi_{s}(a) = \mathbb{E}_{s' \sim S \setminus s} \left[ Q(s', a) - Q(s, a) \right].
     \]
     \item \textbf{Policy Simplification:} Extract interpretable rules from policies using Decision Trees:
     \[
@@ -612,7 +634,7 @@ Explainable Multi-Agent Reinforcement Learning (XMARL) techniques enhance the in
     where the tree splits on state metrics to mimic agent decision-making.
     \item \textbf{Causal Analysis:} Use causal inference frameworks to evaluate the impact of specific actions on long-term rewards:
     \[
-    C(s_t, a_t) = \mathbb{E}[r_{t+T}|a_t, s_t] - \mathbb{E}[r_{t+T}|s_t].
+    C(s, a_t) = \mathbb{E}[r_{t+T}|a_t, s] - \mathbb{E}[r_{t+T}|s].
     \]
 \end{itemize}
 
