@@ -346,10 +346,17 @@ KARMA seamlessly integrates simulation-based learning with real-world Kubernetes
 
 In the next sub-sections, we will detail each phase of the KARMA framework, including the underlying theoretical concepts and their technical implementation.
 
+
+
 \subsection{Phase 1: Modeling}
+% Modeling:
+%  - observation
+%  - actions
+%  - rewards -> Faire une récompense qui englobe toutes les QoS ayant pour père la QoS (ne pas faire encore référence aux fonctions de récompense pour l'instant) "availability"
+%  - transition -> Transition modeling + MLP -> donner détails des paramètres
 
 % Description haut niveau
-The modeling phase in the KARMA framework constructs a digital twin of the Kubernetes cluster by leveraging real-world set of state transitions refered to as trajectories, histories, or traces. We envision the environment considering an attacker trying to leverage actions related to data alteration and sheer amount of data to provoke various failures in the cluster, while three to four defender agents would try to manage pod replica in order to minimize the attacker's impact.
+% The modeling phase in the KARMA framework constructs a digital twin of the Kubernetes cluster by leveraging real-world set of state transitions refered to as trajectories, histories, or traces. We envision the environment considering an attacker trying to leverage actions related to data alteration and sheer amount of data to provoke various failures in the cluster, while three to four defender agents would try to manage pod replica in order to minimize the attacker's impact.
 
 This phase uses collected traces to provide a near-realistic simulation environment where the defender agents' policies and the attacker policy can be safely tested and optimized before transfering in the real system. Inspired by the Gym-HPA framework~\cite{GymHPA}, the modeling component employs a state transition model for which we propose to add a deep learning-based approximation of cluster dynamics.
 
@@ -405,62 +412,6 @@ $\text{\textbf{entry\_point\_id}} \in \mathbb{N}$ specifies the service entry po
 $\text{\textbf{rate\_change}} \in \{\text{high\_decrease}, \text{low\_decrease}, \text{no\_change}, \allowbreak \text{low\_increase}, \allowbreak \text{high\_increase}\}$ changes the incoming traffic based on a factor $\kappa$ (by default $\kappa = 1$); and $\text{\textbf{data\_change}} \in \{\text{no\_alteration}, \allowbreak \text{low\_alteration}, \allowbreak \text{high\_alteration}\}$ specifies the degree of data alteration based on factor $\sigma \in [2,\infty[$ (by default $\sigma = 10$). Actions from this space are one-hot encoded as a Box Gym space: for example, the attacker actions $(0,1,2), (2,-1,0), (1,2,1)$ mean that entrypoint services id number 0, 2, and 1 would have their respective traffic-in rates increased by $1 \times \kappa, -1 \times \kappa, 2 \times \kappa$, and respective probabilities to crash due to data alteration are changed by $\frac{2}{\sigma}, \frac{0}{\sigma}, \frac{1}{\sigma}$.
 
 \
-
-% TODO:
-%   - QoS
-%   - reward
-%   - roles
-%   - goals (missions)
-%   - HPA MAS (produits durant la phase d'entrainement) + introduire le concept de HPA MAS durant l'introduction
-%   - Trouver une fonction de récompense qui évalue la disponibilité pour inclure tous les QoS
-%   - Faire que chaque QoS devienne un un objectif associé à un fonction de récompense spécifique
-%   - Trouver des règles d'action pour constituer des rôles pour chacun des objectifs
-
-
-Modeling:
- - observation
- - actions
- - rewards -> Faire une récompense qui englobe toutes les QoS ayant pour père la QoS (ne pas faire encore référence aux fonctions de récompense pour l'instant) "availability"
- - transition -> Transition modeling + MLP -> donner détails des paramètres
-
-Training:
- - introduire MOISE+MARL brièvement
- - goals -> 1 objectif pour chaque QoS -> 1 fonction de récompense
- - roles -> 1 rôle pour chaque QoS -> 1 ensemble de règles
- - algorithms -> panel des algos proposés + fonctionnement de l'entrainement en MOISE+MARL
-
-Analyzing:
- - hierarchical clustering pour détérminer roles pour les agents entrainés
- - trajectory clustering pour déterminer objectifs intermediaires
-
-Transfering:
- - récupérer les politiques entrainés dans un sous-module
- - lancer les politiques entrainés avec l'état courant collecté
- - appliquer les actions choisies par ces politiques via l'API K8s
-
-
-Experimental setup:
- - Présenter "Chained Services" (enlever Online boutique)
- - CybMASDE: présenter comme un moyen d'implémenter KARMA et présenter la configuration logicielle
- - Configuration matérielle (pour entrainement et analyse)
- - Protocole d'experimentation et d'analyse (prend en compte un espèce d'étude d'ablation dans les baselines)
- - Métriques d'évaluation
- - Baselines: MA x (Spec. Org.)
-    - modèle sans specifications organisationnelles avec 1 seul agent (état de l'art)
-    - modèle avec spécifications organisationnelles du modèle "fort" avec 1 seul agent (état de l'art?)
-    - modèle sans spécifications organisationnelles avec plusieurs agents (état de l'art?)
-    - modèle avec spécifications organisationnelles du modèle "faible" avec plusieurs agents
-    - modèle avec spécifications organisationnelles du modèle "fort" avec plusieurs agents
-
-Results and Discussion:
- - Résultats et comparaison sous forme de table
- - Discussion des résultats : des points forts et points faibles (par rapport aux promesses initiales)
-
-Conclusion
- - Résumé
- - Résumé des Points faibles et Perspectives
-
-
 
 \noindent \paragraph{\textbf{Reward Functions}} The availability of a Kubernetes cluster can be defined as the proportion of user requests successfully processed within an acceptable time frame relative to the total number of received requests. This definition relies on specific metrics collected in the Kubernetes environment and can be expressed mathematically.
 To measure availability, we use the following metrics:\\
@@ -546,8 +497,20 @@ By capturing the interactions between defenders and attackers, the modeling phas
 
 
 \subsection{Phase 2: Training}
-
-% TODO: 
+% Training:
+%  - introduire MOISE+MARL brièvement
+%  - goals -> 1 objectif pour chaque QoS -> 1 fonction de récompense
+%  - roles -> 1 rôle pour chaque QoS -> 1 ensemble de règles
+%  - algorithms -> panel des algos proposés + fonctionnement de l'entrainement en MOISE+MARL
+% ======================
+% TODO: introduire brièvement MOISE+MARL puis donner les spécifications organisationnelles pour chacun des agents -> proposer des modèles applicables pour Chained Services:
+% - 1 agent pour prioriser les pods (killer les pods qui prennent trop de temps)
+% - 1 agent pour supprimer les goulots d'étanglement
+% - 1 agent pour supprimer les pods qui crash continuellement
+% - 1 agent pour detecter et réagir aux attaques DDoS / montées de charge subites
+% ...
+% TODO: Lister tous les problèmes à prendre en compte
+% ======================
 % - Revenir sur l'exemple de goulot d'étranglement que l'on pourra noter comme un graphe (à mettre dans la partie KARMA Overview).
 % - Montrer comment on peut décomposer le problème de maximiser la disponibilité en plusieurs sous-objectifs (detection et résoudre goulot d'étranglement, detection et résoudre pod crash, detection et résoudre priorisation des pods...) que l'on définira formelement. Ces sous-objectifs peuvent être compris comme des missions associées aux agents auquels on donne aussi des rôles
 % - Montrer que l'on peut combiner chacun des agents spécialisé de façon flexible pour prendre en charge les différentes failles de façon plus réactif et ciblé qu'avec un seul agent qui doit tout faire en même temps et pourrait diluer chacune des demandes en une seule action innéfficace -> montrer que cela est vrai sur un exemple au moins dans la partie experimentale.
@@ -557,14 +520,9 @@ Leveraging the digital twin modeled, this phase applies MARL techniques, emphasi
 
 
 \
-% TODO: introduire brièvement MOISE+MARL puis donner les spécifications organisationnelles pour chacun des agents -> proposer des modèles applicables pour Chained Services:
-% - 1 agent pour prioriser les pods (killer les pods qui prennent trop de temps)
-% - 1 agent pour supprimer les goulots d'étanglement
-% - 1 agent pour supprimer les pods qui crash continuellement
-% - 1 agent pour detecter et réagir aux attaques DDoS / montées de charge subites
-% ...
-% TODO: Lister tous les problèmes à prendre en compte
+
 \noindent\textbf{Role and Mission-Based Training:} 
+
 Inspired by MOISE+MARL~\cite{MOISEMARL2025}, KARMA integrates role-based constraints and mission-oriented incentives into the training process:
 \begin{itemize}
     \item \textbf{Role Constraints:} Agents are assigned roles dictating their permissible actions, defined by a Role Action Guide ($RAG$):
@@ -618,14 +576,16 @@ Convergence is achieved when cumulative reward variance across episodes falls be
 
 The training phase bridges the digital twin and real-world implementation, ensuring that policies are not only effective but also robust, explainable, and aligned with organizational goals.
 
-% TODO:
+
+\subsection{Phase 3: Analysis}
+% Analyzing:
+%  - hierarchical clustering pour détérminer roles pour les agents entrainés
+%  - trajectory clustering pour déterminer objectifs intermediaires
 %  - On s'interesse à expliciter les rôles, misisons (+ liens de acquointance, communication, autorité...) établies au cours de l'apprentissage entre agents
 %  - On regarde si des agents peu contraints au niveau des rôles (ou pas de rôles) font émérger / partagent ou pas un ou des rôles communs nouveaux (par inférence)
 %  - On regarde si des agents peu guidés par des misisons (ou pas) font emerger / partagent des missions nouvelles (par inférence)
 %  - On peut déduire une bonne partie du reste du modèle MOISE+ une fois ces informations obtenues
 %  - Dans les experimentations, on devra montrer que les modèles de SMA obtenus sont bien originaux et trouvés automatiquement et qu'ils sont efficace
-
-\subsection{Phase 3: Analysis}
 
 The analysis phase in the KARMA framework validates and interprets the behaviors of trained agents to ensure alignment with organizational objectives and robustness in dynamic and adversarial environments. This phase leverages trajectory visualization, clustering techniques, and explainability tools to evaluate the efficiency, effectiveness, and safety of the learned policies.
 
@@ -733,10 +693,26 @@ The analysis phase is critical to ensuring that the trained policies are not onl
 
 
 \subsection{Phase 4: Transfer}
-% Processus de transfert des comportements appris au cluster réel.
+% Transfering: Processus de transfert des comportements appris au cluster réel.
+%  - récupérer les politiques entrainés dans un sous-module
+%  - lancer les politiques entrainés avec l'état courant collecté
+%  - appliquer les actions choisies par ces politiques via l'API K8s
+
 
 \section{Experimental Setup}
 \label{sec:experiments}
+% Experimental setup:
+%  - Présenter "Chained Services" (enlever Online boutique)
+%  - CybMASDE: présenter comme un moyen d'implémenter KARMA et présenter la configuration logicielle
+%  - Configuration matérielle (pour entrainement et analyse)
+%  - Protocole d'experimentation et d'analyse (prend en compte un espèce d'étude d'ablation dans les baselines)
+%  - Métriques d'évaluation
+%  - Baselines: MA x (Spec. Org.)
+%     - modèle sans specifications organisationnelles avec 1 seul agent (état de l'art)
+%     - modèle avec spécifications organisationnelles du modèle "fort" avec 1 seul agent (état de l'art?)
+%     - modèle sans spécifications organisationnelles avec plusieurs agents (état de l'art?)
+%     - modèle avec spécifications organisationnelles du modèle "faible" avec plusieurs agents
+%     - modèle avec spécifications organisationnelles du modèle "fort" avec plusieurs agents
 \subsection{Experimental Configuration}
 % Environnement expérimental et outils utilisés.
 \subsection{Test Scenarios}
@@ -745,22 +721,27 @@ The analysis phase is critical to ensuring that the trained policies are not onl
 % Protocole d'experimentation reproductible
 \subsection{Experimental Protocol}
 
+
+
 \section{Results and Discussion}
 \label{sec:results}
+% Results and Discussion:
+%  - Résultats et comparaison sous forme de table
+%  - Discussion des résultats : des points forts et points faibles (par rapport aux promesses initiales)
+
 % Explication des métriques utilisées (ex : disponibilité, latence).
 \subsection{Results and Comparisons}
 % Résultats obtenus et comparaison avec les approches existantes.
 \subsection{Discussion of Results}
 % Analyse des performances et des points clés des résultats.
 
+
+
 \section{Discussion}
 \label{sec:discussion}
-\subsection{Practical Implications}
-% Comment votre approche peut être utilisée dans des environnements réels.
-\subsection{Limitations}
-% Limites actuelles de votre méthode.
-\subsection{Future Directions}
-% Perspectives pour des travaux futurs.
+% Conclusion
+%  - Résumé
+%  - Résumé des Points faibles et Perspectives
 
 \section*{References}
 
