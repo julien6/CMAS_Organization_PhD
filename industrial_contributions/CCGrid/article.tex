@@ -148,58 +148,58 @@
 
 \author{
 
-    \IEEEauthorblockN{Julien Soulé}
-    \IEEEauthorblockA{\textit{Thales Land and Air Systems, BU IAS}}
-    %Rennes, France \\
-    \IEEEauthorblockA{\textit{Univ. Grenoble Alpes,} \\
-        \textit{Grenoble INP, LCIS, 26000,}\\
-        Valence, France \\
-        julien.soule@lcis.grenoble-inp.fr}
-
-    \and
-
-    \IEEEauthorblockN{Jean-Paul Jamont\IEEEauthorrefmark{1}, Michel Occello\IEEEauthorrefmark{2}}
-    \IEEEauthorblockA{\textit{Univ. Grenoble Alpes,} \\
-        \textit{Grenoble INP, LCIS, 26000,}\\
-        Valence, France \\
-        \{\IEEEauthorrefmark{1}jean-paul.jamont,\IEEEauthorrefmark{2}michel.occello\}@lcis.grenoble-inp.fr
-    }
-
-    % \and
-
-    % \IEEEauthorblockN{Michel Occello}
+    % \IEEEauthorblockN{Julien Soulé}
+    % \IEEEauthorblockA{\textit{Thales Land and Air Systems, BU IAS}}
+    % %Rennes, France \\
     % \IEEEauthorblockA{\textit{Univ. Grenoble Alpes,} \\
-    % \textit{Grenoble INP, LCIS, 26000,}\\
-    % Valence, France \\
-    % michel.occello@lcis.grenoble-inp.fr}
+    %     \textit{Grenoble INP, LCIS, 26000,}\\
+    %     Valence, France \\
+    %     julien.soule@lcis.grenoble-inp.fr}
 
     % \and
 
-    \linebreakand
+    % \IEEEauthorblockN{Jean-Paul Jamont\IEEEauthorrefmark{1}, Michel Occello\IEEEauthorrefmark{2}}
+    % \IEEEauthorblockA{\textit{Univ. Grenoble Alpes,} \\
+    %     \textit{Grenoble INP, LCIS, 26000,}\\
+    %     Valence, France \\
+    %     \{\IEEEauthorrefmark{1}jean-paul.jamont,\IEEEauthorrefmark{2}michel.occello\}@lcis.grenoble-inp.fr
+    % }
 
-    \hspace{-0.5cm}
-    \IEEEauthorblockN{Paul Théron}
-    \IEEEauthorblockA{
-        \hspace{-0.5cm}
-        \textit{AICA IWG} \\
-        \hspace{-0.5cm}
-        La Guillermie, France \\
-        \hspace{-0.5cm}
-        %lieu-dit Le Bourg, France \\
-        paul.theron@orange.fr}
+    % % \and
 
-    \and
+    % % \IEEEauthorblockN{Michel Occello}
+    % % \IEEEauthorblockA{\textit{Univ. Grenoble Alpes,} \\
+    % % \textit{Grenoble INP, LCIS, 26000,}\\
+    % % Valence, France \\
+    % % michel.occello@lcis.grenoble-inp.fr}
 
-    \hspace{0.5cm}
-    \IEEEauthorblockN{Louis-Marie Traonouez}
-    \IEEEauthorblockA{
-        \hspace{0.5cm}
-        \textit{Thales Land and Air Systems, BU IAS} \\
-        \hspace{0.5cm}
-        Rennes, France \\
-        \hspace{0.5cm}
-        louis-marie.traonouez@thalesgroup.com}}
+    % % \and
 
+    % \linebreakand
+
+    % \hspace{0.5cm}
+    % \IEEEauthorblockN{Louis-Marie Traonouez}
+    % \IEEEauthorblockA{
+    %     \hspace{0.5cm}
+    %     \textit{Thales Land and Air Systems, BU IAS} \\
+    %     \hspace{0.5cm}
+    %     Rennes, France \\
+    %     \hspace{0.5cm}
+    %     louis-marie.traonouez@thalesgroup.com}
+
+    % \and
+
+    % \hspace{-0.5cm}
+    % \IEEEauthorblockN{Paul Théron}
+    % \IEEEauthorblockA{
+    %     \hspace{-0.5cm}
+    %     \textit{AICA IWG} \\
+    %     \hspace{-0.5cm}
+    %     La Guillermie, France \\
+    %     \hspace{-0.5cm}
+    %     %lieu-dit Le Bourg, France \\
+    %     paul.theron@orange.fr}
+}
 
 \maketitle
 
@@ -536,13 +536,16 @@ To visualize these relations, a directed graph can be constructed where nodes re
 %  - lancer les politiques entrainés avec l'état courant collecté
 %  - appliquer les actions choisies par ces politiques via l'API K8s
 
-The final phase in the KARMA framework deploys trained and validated agent policies into the live Kubernetes cluster operating as a continuous loop:
+In this phase, policies interact with the real cluster:
 \begin{enumerate}
     \item \textbf{State Collection:} Real-time metrics such as CPU usage, memory consumption, pod status, and network traffic are collected from the Prometheus server~\cite{prometheus}.
     \item \textbf{Policy Execution:} Each agent's policy $\pi_i$ computes an action $a_t^i$ based on the current state $s_t$, selecting adjustments such as scaling pod replicas for a deployment.
     \item \textbf{Action Application:} The computed actions are sent as API requests, directly modifying deployment.
 \end{enumerate}
-This loop ensures agents continuously respond to changes in workload and system conditions.
+
+Agents in the transfer component continuously interact with the Kubernetes API, generating states that are stored in the modeling component's database. Initially, a large time window is used to collect representative traces for creating a near-realistic digital twin of the Kubernetes cluster. Subsequently, at shorter regular intervals, the modeling component updates the digital twin using the latest trace data. This iterative process ensures agents dynamically adapt to workload.
+
+
 %
 % The agents interact seamlessly with Kubernetes:
 % \begin{enumerate*}[label={}, itemjoin={;\quad }]
@@ -854,9 +857,11 @@ The efficiency of generating a Multi-Agent System (MAS) is evaluated in terms of
     \end{tabular}
 \end{table}
 
-As for \textit{Convergence Time} KARMA reduces convergence time by roughly 50\% compared to the baseline without organizational specifications. Additionally, the process requires about 35\% less \textit{Training Overhead} with KARMA, due to restricted policy search space and contributing to enhance scalability.
-
 The role-guided learning narrows the search space for optimal policies, enabling faster convergence and reduced computational costs. These efficiency gains are particularly important for scaling MAS solutions to complex environments.
+
+The learning curves in Figure~\ref{fig:learning_curves} demonstrate that KARMA achieves stable convergence significantly faster than the baseline without organizational specifications. By episode 950, KARMA exhibits minimal variance in cumulative rewards, whereas the baseline requires nearly double the episodes (1800) to reach comparable performance. This highlights the role of organizational constraints in guiding agents toward effective policies, thereby reducing exploration overhead.
+
+\autoref{tab:mas_generation_efficiency}, shows reduced \textit{Convergence Time} by approximately 47\% compared to Multi-Agent w/o Org. Spec., showcasing the efficiency of role-guided learning in minimizing unnecessary exploration. Moreover, \textit{Training Overhead} is reduced by 62.5\%, showing a better practicality for large-scale systems where computational resources are a limiting factor.
 
 \begin{figure}[h!]
     \centering
@@ -951,12 +956,12 @@ The experimental results demonstrate that KARMA effectively addresses several cr
 % \
 
 However, some aspects need to be further explored:
-\begin{enumerate*}[label=\textbf{\arabic*)}, itemjoin={;\quad }]
+\begin{itemize}
     \item \textbf{Dependence on Domain Expertise:} Defining roles, missions, and reward structures relies heavily on domain-specific knowledge, which may limit the framework's generalizability to other domains.
     \item \textbf{Computational Overhead:} The training process, particularly with multi-agent configurations and organizational constraints, requires substantial computational resources, posing challenges for large-scale clusters.
     % \item \textbf{Sensitivity to Workload Shifts:} While KARMA demonstrates adaptability, abrupt changes in workload patterns or cluster configurations may require retraining or fine-tuning of agent policies.
     % \item \textbf{Evaluation Scope:} Although the framework was tested under diverse scenarios, including adversarial conditions, its performance on larger and more heterogeneous clusters remains to be validated.
-\end{enumerate*}
+\end{itemize}
 
 Building on these initial results, several future research directions can be pursued to enhance KARMA's capabilities:
 \begin{itemize}
