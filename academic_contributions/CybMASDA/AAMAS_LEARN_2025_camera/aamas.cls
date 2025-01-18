@@ -1626,7 +1626,7 @@
    \AtBeginDocument{\acmPrice{}}%
    \fi
    \ifnum\acm@copyrightmode=15\relax % ifaamas
-    \@printpermissionfalse
+    %\@printpermissionfalse
     \@acmownedfalse
   \fi}
 \def\setcopyright#1{\setkeys{ACM@}{acmcopyrightmode=#1}}
@@ -1669,7 +1669,7 @@
   under Creative Commons CC-BY-NC-ND~4.0 License.
   \or % ifaamas
   International Foundation for Autonomous Agents and Multiagent Systems
-  (www.ifaamas.org). This work is licenced under the Creative Commons Attribution 4.0 International (CC-BY~4.0) licence.
+  (www.ifaamas.org). %This work is licensed under the Creative Commons Attribution 4.0 International (CC-BY~4.0) license.
   \fi}
 \def\@formatdoi#1{\url{https://doi.org/#1}}
 \def\@copyrightpermission{%
