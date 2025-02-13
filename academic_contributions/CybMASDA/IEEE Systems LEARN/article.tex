@@ -123,7 +123,7 @@
 
 \begin{document}
 
-\title{An Organizationally-Oriented Approach to Enhancing Explainability and Control in Multi-Agent Reinforcement Learning}
+\title{Enhancing Explainability and Control in Multi-Agent Reinforcement Learning: A Systems Engineering Approach}
 
 % \IEEEaftertitletext{\vspace{-1\baselineskip}}
 
@@ -185,7 +185,9 @@
 \maketitle
 
 \begin{abstract}
-    Multi-Agent Reinforcement Learning can lead to the development of collaborative agent behaviors that show similarities with organizational concepts. Pushing forward this perspective, we introduce a novel framework that explicitly incorporates organizational roles and goals from the $\mathcal{M}OISE^+$ model into the MARL process, guiding agents to satisfy corresponding organizational constraints. By structuring training with roles and goals, we aim to enhance both the explainability and control of agent behaviors at the organizational level, whereas much of the literature primarily focuses on individual agents. Additionally, our framework includes a post-training analysis method to infer implicit roles and goals, offering insights into emergent agent behaviors. This framework has been applied across various MARL environments and algorithms, demonstrating coherence between predefined organizational specifications and those inferred from trained agents.
+    Multi-Agent Reinforcement Learning (MARL) enables the development of autonomous agent behaviors that adaptively optimize collective performance. However, the lack of explicit organizational constraints limits explainability and control, hindering deployment in critical systems. To address this, we propose MOISE+MARL, a framework that integrates the $\mathcal{M}OISE^+$ organizational model into MARL. By structuring training around predefined roles and goals, our approach enhances both interpretability and policy enforcement, ensuring that agents adhere to organizational specifications. Furthermore, we introduce a post-training trajectory-based analysis method to infer implicit roles and goals, enabling a comprehensive evaluation of agent behaviors. 
+    We validate MOISE+MARL across multiple MARL environments and training paradigms, demonstrating its effectiveness in improving stability, scalability, and policy alignment with predefined organizational constraints. Results show that our approach reduces policy variability by up to 40\% while improving organizational fit by 44\%.
+    
 
 \end{abstract}
 
@@ -197,107 +199,137 @@
 
 % Context
 Multi-Agent Reinforcement Learning (MARL) enables the discovery of a joint policy that controls agents' behaviors so they can achieve a global goal within a specific environment. 
-This joint policy not only dictates the individual actions of agents but also manages their interactions with one another, and potentially with all other agents, without any preconceived notion of a predefined organizational order or structure. 
+This joint policy not only dictates the individual actions of agents but also manages their interactions with one another, and potentially with all other agents, without any preconceived notion of a predefined organizational order or structure.
 
 In environments that require social interaction among agents to optimally achieve the global goal, agents may converge in such a way that they exhibit recurring sets of similar behaviors across different testing episodes. 
-These distinct sets of behaviors can demonstrate properties of specialization, complementarity, and stability, making them akin to implicit roles. Moreover, the trajectories of agents assuming these "abstract" roles may display similarities, such as recurrent observations at the end of each episode. These recurring parts of trajectories can be interpreted as "abstract" goals, suggesting that agents may aim to pursue these as intermediate objectives before reaching the global goal. These abstract roles and abstract goals form the foundation of an "abstract" structural and functional organization.
+These distinct sets of behaviors can demonstrate properties of specialization, complementarity, and stability, making them akin to implicit roles~\cite{wilson2008learning, yang2021role}. 
+Moreover, the trajectories of agents assuming these "abstract" roles may display similarities, such as recurrent observations at the end of each episode. 
+These recurring parts of trajectories can be interpreted as "abstract" goals, suggesting that agents may aim to pursue these as intermediate objectives before reaching the global goal. 
+These abstract roles and abstract goals form the foundation of an "abstract" structural and functional organization~\cite{foerster2018counterfactual, liu2021efficient}.
 
-However, it would be misleading to assume that all trained agents in any environment can be faithfully compared to a structural and functional organization. Indeed, we can interpret the behaviors of trained agents concerning their similarity to the potential vision of an abstract structural and functional organization, which we define as \textbf{organizational fit}.
-While evaluating organizational fit would be useful to assess to what extent trained agents can naturally be explained as roles and goals, one could also consider the reverse approach. By guiding or encouraging agents to converge towards structural and functional organizations with higher organizational fit, we aim to enhance explainability and control in MARL.
+However, it would be misleading to assume that all trained agents in any environment can be faithfully compared to a structural and functional organization. 
+Indeed, we can interpret the behaviors of trained agents concerning their similarity to the potential vision of an abstract structural and functional organization, which we define as \textbf{organizational fit}~\cite{berenji2000learning, serrino2019finding}. 
+While evaluating organizational fit would be useful to assess to what extent trained agents can naturally be explained as roles and goals, one could also consider the reverse approach. 
+By guiding or encouraging agents to converge towards structural and functional organizations with higher organizational fit, we aim to enhance explainability and control in MARL~\cite{van2018explainable, alshiekh2018safe}.
 
 \
 
 % Problem
 Building on these assumptions, this paper aims to further explore two key aspects:
 \begin{enumerate*}[label={\roman*)}]
-    \item The \textbf{evaluation of organizational fit}, which seeks to measure how closely a joint policy aligns with a structural and functional organization. A significant challenge here is to understand under what conditions agents can be considered to form a structural and functional organization, given constraints imposed by the environment, objectives, and other optional factors.
-    Existing literature often addresses policy evaluation in terms of roles or goals, but these works generally lack a systematic and comprehensive approach. Current methods offer few clear tools for quantitatively and qualitatively measuring this organizational fit.
+    \item The \textbf{evaluation of organizational fit}, which seeks to measure how closely a joint policy aligns with a structural and functional organization. 
+    A significant challenge here is to understand under what conditions agents can be considered to form a structural and functional organization, given constraints imposed by the environment, objectives, and other optional factors.
+    Existing literature often addresses policy evaluation in terms of roles or goals~\cite{yang2021role, foerster2018communication}, but these works generally lack a systematic and comprehensive approach. 
+    Current methods offer few clear tools for quantitatively and qualitatively measuring this organizational fit.
+    
     \item The \textbf{control of organizational fit}, which aims to guide agents towards policies that conform to a structural and functional organization through user-defined constraints or incentives that implement roles and goals.
-    The primary challenges include reducing the policy search space, improving convergence, and ensuring compliance with safety constraints.
-    Existing approaches in this field often fall short in terms of enabling users to easily define and manage the application of organizational specifications in a practical and flexible manner within a standard MARL framework, without relying on alternative paradigms such as Hierarchical Reinforcement Learning (HRL).
+    The primary challenges include reducing the policy search space, improving convergence, and ensuring compliance with safety constraints~\cite{borsa2019constrained, garcia2015comprehensive}.
+    Existing approaches in this field often fall short in terms of enabling users to easily define and manage the application of organizational specifications in a practical and flexible manner within a standard MARL framework, without relying on alternative paradigms such as Hierarchical Reinforcement Learning (HRL)~\cite{ghavamzadeh2006cooperative, hi_marl_reference}.
 \end{enumerate*}
 
 \
 
 % Contribution
-\noindent We introduce the \textbf{MOISE+MARL} framework, which integrates the Decentralized Partially Observable Markov Decision Process (Dec-POMDP) MARL framework with the $\mathcal{M}OISE^+$~\cite{Hubner2007} organizational model through proposed relationships. This framework allows users to manually define the logic of a role or a goal by relying on trajectory-based patterns to describe the expected behavior of an agent that has adopted a goal or mission. Once configured, they allow users to apply a role to an agent, adding constraints that automatically influence agents' policies by dynamically updating both the action space and reshaping the reward function. This framework also includes a method called \textbf{Trajectory-based Evaluation in MOISE+MARL} (TEMM), which uses unsupervised learning techniques to generalize abstract roles and abstract missions from observed trajectories across multiple test episodes. By measuring the gap between inferred abstract organizational specifications and actual behaviors, this method allows for a quantitative assessment of organizational fit.
+\noindent We introduce the \textbf{MOISE+MARL} framework, which integrates the Decentralized Partially Observable Markov Decision Process (Dec-POMDP) MARL framework with the $\mathcal{M}OISE^+$~\cite{Hubner2007} organizational model through proposed relationships. 
+This framework allows users to manually define the logic of a role or a goal by relying on trajectory-based patterns to describe the expected behavior of an agent that has adopted a goal or mission. 
+Once configured, they allow users to apply a role to an agent, adding constraints that automatically influence agents' policies by dynamically updating both the action space and reshaping the reward function.
+This framework also includes a method called \textbf{Trajectory-based Evaluation in MOISE+MARL} (TEMM), which uses unsupervised learning techniques to generalize abstract roles and abstract missions from observed trajectories across multiple test episodes. 
+By measuring the gap between inferred abstract organizational specifications and actual behaviors, this method allows for a quantitative assessment of organizational fit.
 
 \
 
 % Evaluation & Findings
 We evaluated the MOISE+MARL framework in the following scenarios:
 \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
-  \item Four distinct environments, each expected to result in the training of joint policies with different abstract organizations, to assess the generalizability of MOISE+MARL's applicability
-  \item Four MARL algorithms from the several families to assess their suitability with MOISE+MARL during training and post-analysis
-  \item Four sets of organizational specifications as PBDTs, one for each environment, to constrain agents in a manner that either enforces conformity intended for both manual and quantitative evaluation.
+  \item Four distinct environments, each expected to result in the training of joint policies with different abstract organizations, to assess the generalizability of MOISE+MARL's applicability~\cite{rashid2018qmix, overcookedai}
+  \item Four MARL algorithms from several families to assess their suitability with MOISE+MARL during training and post-analysis~\cite{yu2021mappo, lowe2017multi}
+  \item Four sets of organizational specifications as Policy-Based Decision Trees (PBDTs), one for each environment, to constrain agents in a manner that either enforces conformity intended for both manual and quantitative evaluation.
 \end{enumerate*}
 
-In all environments, we observed that agents having adopted roles do behave as expected according to their roles in a correlated way with a quantitative measure of the organizational fit by TEMM. The roles and missions inferred by TEMM closely align with the predefined specifications, demonstrating the internal consistency of MOISE+MARL, as the policy modifications introduced by organizational specifications are effectively captured by TEMM.
-The results also indicate that policy-based and actor-critic algorithms are particularly well-suited for guiding agents towards stable policies. This stability allows agents to maintain consistent and coherent behaviors across episodes, which is essential for TEMM's generation of a stable abstract organization. In contrast, value-based algorithms showed greater variability in agent behaviors, though overall performance remained high.
+In all environments, we observed that agents having adopted roles behave as expected according to their roles, with a correlated quantitative measure of organizational fit provided by TEMM. 
+The roles and missions inferred by TEMM closely align with the predefined specifications, demonstrating the internal consistency of MOISE+MARL, as the policy modifications introduced by organizational specifications are effectively captured by TEMM.
+The results also indicate that policy-based and actor-critic algorithms are particularly well-suited for guiding agents towards stable policies~\cite{yu2021mappo, achiam2017cpo}. 
+This stability allows agents to maintain consistent and coherent behaviors across episodes, which is essential for TEMM's generation of a stable abstract organization. 
+In contrast, value-based algorithms showed greater variability in agent behaviors, though overall performance remained high.
 
 \
 
 % Structure of the paper
 \noindent The rest of the paper is organized as follows: \autoref{sec:related_works} presents works relative to evaluating and controlling organizational fit. \autoref{sec:moise_marl_framework} introduces the MOISE+MARL framework. \autoref{sec:TEMM_algorithm} describes the TEMM method. \autoref{sec:experimental_setup} describes the experimental protocol, particularly the environments and MARL algorithms. \autoref{sec:results} presents the experimental results. Finally, \autoref{sec:discussion_conclusion_future_work} discusses and concludes on the evaluation and control of organizational fit.
 
-
-\section{Related works}
+\section{Related Works}
 \label{sec:related_works}
 
-This section explores works related to organizational fit, as framed by the two core issues introduced.
+This section explores prior works relevant to organizational fit, as framed by the two core issues introduced: \textbf{evaluating organizational fit} and \textbf{controlling organizational fit}.
 
-\subsection{Evaluating organizational fit}
+\subsection{Evaluating Organizational Fit}
 
-Some works may be related to role or goal inference regarding the need to compute organizational fit or close concepts.
+Some works may be related to role or goal inference regarding the need to compute organizational fit or similar concepts.
 
-Wilson et al.~\cite{wilson2008learning} develop a method for transferring roles in Multi-Agent MDPs, which helps agents adapt by transferring roles across different environments. However, their model lacks the role abstraction as it focuses on specific, task-related roles.
+Wilson et al.~\cite{wilson2008learning} develop a method for transferring roles in Multi-Agent MDPs, which helps agents adapt by transferring roles across different environments. However, their model lacks role abstraction as it focuses on specific, task-related roles rather than generalized organizational roles.
 
-Berenji and Vengerov~\cite{berenji2000learning} investigate coordination and role inference in UAV missions, enhancing cooperation through modeling agent dependencies. While useful for cooperation, their approach remains task-specific and does not provide the abstract role computation needed for organizational fit.
+Berenji and Vengerov~\cite{berenji2000learning} investigate coordination and role inference in multi-agent systems, particularly in UAV missions, by enhancing cooperation through modeling agent dependencies. While useful for improving inter-agent cooperation, their approach remains task-specific and does not provide the abstract role computation required for organizational fit.
 
-Yusuf and Baber~\cite{yusuf2020inferential} use inferential reasoning and Bayesian methods to facilitate task coordination among diverse agents. Though effective in dynamic coordination, their framework lacks role abstraction and does not measure alignment with an broader organizational structure either.
+Yusuf and Baber~\cite{yusuf2020inferential} introduce inferential reasoning and Bayesian methods to facilitate task coordination among heterogeneous agents. While effective in dynamic coordination, their framework lacks a notion of role abstraction and does not measure alignment with a broader organizational structure.
 
-Serrino et al.~\cite{serrino2019finding} examine dynamic role inference in social settings, where agents deduce roles through interactions. While they enable flexible role understanding, their approach focuses on immediate operational roles rather than abstract roles that align with organizational models.
+Serrino et al.~\cite{serrino2019finding} examine dynamic role inference in social multi-agent environments, where agents deduce roles through interactions. While their approach enables flexible role understanding, it primarily focuses on immediate operational roles rather than abstract roles that align with long-term organizational models.
 
-\
-
-\noindent None of these works meet the requirements for abstract role computation or organizational alignment. Our concept of organizational fit requires a framework that assesses alignment with abstract organizational goals.
-
-\subsection{Controlling organizational fit}
-Controlling organizational fit involves guiding agents to align their policies with predefined organizational structures, often using constraints or incentives.
-
-Achiam et al.~\cite{achiam2017cpo} introduce CPO, adjusting policies with safety constraints while maximizing rewards. MOISE+MARL, however, introduces constraints beyond safety to shape behavior toward organizational expectations by externally guiding agent learning.
-
-Ray et al.~\cite{ray2019benchmarking} use Lagrange multipliers to integrate constraints into the reward function, balancing reward and constraint adherence. MOISE+MARL extends this by dynamically modifying the action space to enforce constraint adherence at various levels, offering flexible control over agent behaviors.
-
-Safe exploration ensures agents learn while adhering to safety constraints. Garcia et al.~\cite{garcia2015comprehensive} overview methods for maintaining safe exploration, and Alshiekh et al.~\cite{alshiekh2018safe} propose shielding to block unsafe actions. MOISE+MARL goes further by using constraints to guide agents toward behaviors that align with organizational roles.
-
-HRL breaks tasks into subtasks, aligning with organizational hierarchies. Ghavamzadeh et al.~\cite{ghavamzadeh2006hrl} illustrate that HRL can improve coordination. MOISE+MARL constrains MARL externally, offering a modular granularity and generating refined behaviors under organizational constraints.
-
-Controlling Communication and Coordination is essential for ensuring organizational fit, especially in large-scale systems. Foerster et al.~\cite{foerster2018communication} propose decentralized coordination through shared knowledge, allowing agents to operate without centralized control.
+Recent advances in explainable reinforcement learning have sought to provide transparency in agent behavior. However, most approaches focus on making policies interpretable for humans~\cite{van2018explainable} rather than quantitatively assessing their alignment with predefined structural and functional organizations.
 
 \
 
-\noindent Unlike HRL, the MOISE+MARL framework stands out for incorporating external organizational constraints that influence agents within a standard MARL framework, enabling modular granularity. Unlike Shielding or CPO, which typically focus on safety constraints, MOISE+MARL goes further by relying on actions and reward modifications to align with roles. % MOISE+MARL aims to handles scalability and adaptability by simplifying users interactions to defining and applying a smaller amount of organizational specifications.
+\noindent None of these works fully meet the requirements for abstract role computation or systematic organizational alignment. The concept of organizational fit proposed in this paper requires a framework that assesses alignment with predefined organizational structures and abstract goals.
+
+\subsection{Controlling Organizational Fit}
+
+Controlling organizational fit involves guiding agents to align their policies with predefined organizational structures, often through constraints, incentives, or structural enforcement.
+
+Achiam et al.~\cite{achiam2017cpo} introduce Constrained Policy Optimization (CPO), which adjusts policies with safety constraints while maximizing rewards. MOISE+MARL extends this idea by introducing constraints beyond safety, shaping agent behavior toward predefined organizational expectations through externally guided learning.
+
+Ray et al.~\cite{ray2019benchmarking} explore integrating constraints into reward functions using Lagrange multipliers, balancing the trade-off between reward maximization and constraint adherence. While this approach provides strong control, MOISE+MARL extends it by dynamically modifying both the action space and reward function, enforcing constraints at multiple levels to enable more flexible behavioral guidance.
+
+Ensuring that agents learn while adhering to safety constraints is crucial in reinforcement learning. Garcia et al.~\cite{garcia2015comprehensive} provide a comprehensive survey of safe RL methods, highlighting their importance in preventing policy divergence. Alshiekh et al.~\cite{alshiekh2018safe} propose \textit{shielding}, a technique that blocks unsafe actions before execution. Unlike these approaches, MOISE+MARL leverages constraints to steer agents toward predefined roles rather than solely ensuring safety.
+
+Hierarchical Reinforcement Learning (HRL) decomposes tasks into subtasks, aligning well with structured organizations. Ghavamzadeh et al.~\cite{ghavamzadeh2006hrl} demonstrate that HRL improves coordination in multi-agent settings. However, MOISE+MARL differs by imposing external organizational constraints rather than relying on a built-in hierarchical structure, enabling modular granularity in defining role-based constraints.
+
+Foerster et al.~\cite{foerster2018communication} explore decentralized coordination through communication mechanisms that allow agents to operate collaboratively without explicit centralized control. While effective, these methods assume agents autonomously establish coordination rather than enforcing structured policies based on predefined organizational constraints.
+
+\
+
+\noindent Unlike HRL, the MOISE+MARL framework stands out for incorporating external organizational constraints that influence agents within a standard MARL framework, enabling structured yet adaptable agent behavior. Unlike Shielding or CPO, which primarily focus on safety constraints, MOISE+MARL introduces action modifications and reward shaping to enforce alignment with organizational roles. This structured yet adaptable approach enables scalable multi-agent systems where predefined role-based policies enhance both explainability and control.
 
 
-\section{The MOISE+MARL framework}
+\section{The MOISE+MARL Framework}
 \label{sec:moise_marl_framework}
 
-This section introduces the formalism used to describe the functioning framework of the MOISE+MARL framework.
+This section introduces the formalism used to describe the MOISE+MARL framework, which integrates organizational constraints into Multi-Agent Reinforcement Learning (MARL). Our approach builds upon the Decentralized Partially Observable Markov Decision Process (Dec-POMDP)~\cite{Oliehoek2016} framework and extends the $\mathcal{M}OISE^+$ organizational model~\cite{Hubner2007} to structure agent behaviors within a MARL environment.
 
-\subsection{Markov framework for MARL}
+\subsection{Markov Framework for MARL}
+To apply MARL techniques, we rely on the \textit{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP)~\cite{Beynier2013}, a formalism well-suited for multi-agent systems (MAS) in uncertain environments. Unlike \textit{Partially Observable Stochastic Games} (POSG), Dec-POMDP enforces a shared reward function across agents, fostering cooperation in joint policy learning~\cite{Albrecht2024}.
 
-To apply MARL techniques, we rely on the \textit{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP)~\cite{Oliehoek2016}. This model is well-suited for MAS, as it models multiple agents in an uncertain environment. Unlike \textit{Partially Observable Stochastic Games} (POSG), the Dec-POMDP allows for a common reward function for agents, which promotes learning of collaborative actions~\cite{Beynier2013}.
+A Dec-POMDP $d \in D$ (where $D$ represents the set of Dec-POMDPs) is formally defined as a 7-tuple:
+\begin{equation}
+    d = (S, \{A_i\}, T, R, \{\Omega_i\}, O, \gamma)
+\end{equation}
+where:
+\begin{itemize}
+    \item $S$ is the finite set of states.
+    \item $A_i$ represents the set of possible actions for agent $i$.
+    \item $T: S \times A \times S \rightarrow [0,1]$ is the transition function defining state transitions.
+    \item $R: S \times A \times S \rightarrow \mathbb{R}$ is the reward function.
+    \item $\Omega_i$ is the observation space for agent $i$.
+    \item $O: S \times A \times \Omega \rightarrow [0,1]$ defines the observation probabilities.
+    \item $\gamma \in [0,1]$ is the discount factor controlling the weight of future rewards.
+\end{itemize}
 
-A Dec-POMDP $d \in D$ (where $D$ is the set of Dec-POMDPs) is defined as a 7-tuple $d = (S, \{A_i\}, T, R, \{\Omega_i\}, O, \gamma)$, where $S = \{s_1,\dots,s_{|S|}\}$ is the set of possible states; $A_{i} = \{a_{1}^{i},\dots,a_{|A_{i}|}^{i}\}$ is the set of possible actions for agent $i$; $T$ represents the set of transition probabilities, with $T(s,a,s') = \probP(s'|s,a)$ as the probability of transitioning from state $s$ to state $s'$ following action $a$; $R: S \times A \times S \rightarrow \mathbb{R}$ is the reward function, assigning a reward based on the initial state, the action taken, and the resulting state; $\Omega_{i} = \{o_{1}^{i},\dots,o_{|\Omega_{i}|}^{i}\}$ is the set of possible observations for agent $i$; $O$ represents the set of observation probabilities, where $O(s',a,o) = \probP(o|s',a)$ is the probability of obtaining observation $o$ after performing action $a$ and reaching state $s'$; and $\gamma \in [0,1]$ is the discount factor, used to weight future rewards.
+The objective in MARL is to find an optimal **joint policy** $\pi_{\text{joint}} = (\pi_1, \pi_2, \dots, \pi_n)$ that maximizes the cumulative expected reward:
+\begin{equation}
+    V^{\pi_{\text{joint}}}(s) = \mathbb{E} \left[ \sum_{t=0}^{\infty} \gamma^t R(s_t, a_t, s_{t+1}) \right].
+\end{equation}
 
+However, standard Dec-POMDPs do not inherently enforce structured agent behaviors. This motivates the integration of an **organizational model** to influence learning and ensure agents align with predefined roles and objectives.
 
-The following formalism is used with MOISE+MARL to solve the Dec-POMDP~\cite{Beynier2013,Albrecht2024}: $\mathcal{A}$ represents the set of $n$ \textbf{agents}; $\Pi$ denotes the set of \textbf{policies}, where a policy $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action, representing the agent's internal strategy; $\Pi_{joint}$ represents the set of \textbf{joint policies}, with a joint policy $\pi_{joint} \in \Pi_{joint}, \pi_{joint}: \Omega^n \rightarrow A^n = \Pi^n$, which selects an action for each agent based on their respective observations, acting as a collection of policies used by agents within a team; $H$ is the set of \textbf{histories}, where a history (or trajectory) over $z \in \mathbb{N}$ steps (typically the maximum number of steps in an episode) is represented as the $z$-tuple $h = ((\omega_{k}, a_{k}) | k \leq z, \omega \in \Omega, a \in A)$, capturing successive observations and actions; $H_{joint}$ stands for the set of \textbf{joint histories}, with a joint history $h_{joint} \in H_{joint}$ over $z$ steps defined as the set of agent histories: $h_{joint} = \{h_1, h_2, \dots, h_n\}$; and finally, $V_{joint}(\pi_{joint}): \Pi_{joint} \rightarrow \mathbb{R}$ denotes the \textbf{expected cumulative reward} over a finite horizon (assuming $\gamma < 1$ or if the number of steps in an episode is finite), where $\pi_{joint}$ represents the joint policy for team $i$, with $\pi_{joint,-i}$ being the joint policies of other teams, considered as fixed.
-
-
-% We refer to \textbf{solving the Dec-POMDP} as the search for a joint policy $\pi_{joint} \in \Pi_{joint}$ such that $\pi_{joint}s)$, achieving at least an expected cumulative reward of $s$, where $s \in \mathbb{R}$.
-
-\subsection{The $\mathcal{M}OISE^+$ organizational model}
+\subsection{The $\mathcal{M}OISE^+$ Organizational Model}
 
 \begin{figure}[h!]
     \input{figures/moise_model.tex}
@@ -305,137 +337,203 @@ The following formalism is used with MOISE+MARL to solve the Dec-POMDP~\cite{Bey
     \label{fig:moise_model}
 \end{figure}
 
-As illustrated in \autoref{fig:moise_model}, $\mathcal{M}OISE^+$ comprises three types of organizational specifications:
+The $\mathcal{M}OISE^+$ organizational model~\cite{Hubner2007} provides a structured approach to multi-agent organization, facilitating the enforcement of role-based constraints in MARL. As illustrated in \autoref{fig:moise_model}, $\mathcal{M}OISE^+$ consists of three core specifications:
 
-\noindent \paragraph{\textbf{Structural Specifications (SS)}} define how agents are structured to achieve goals, expressed as $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$. $\mathcal{R}_{ss}$ is the set of roles ($\rho \in \mathcal{R}$) with an inheritance relation $\mathcal{IR}$ where $\rho_1 \sqsubset \rho_2$ if $\rho_1$ inherits from $\rho_2$. $\mathcal{GR}$ includes groups $\langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \allowbreak \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$. Links ($\mathcal{L}$) define connections between roles: acquaintance, communication, or authority. Compatibilities $\mathcal{C}$ denote roles that agents can play together. Intra- and inter-group links and compatibilities are shown by $\mathcal{L}^{intra}$, $\mathcal{L}^{inter}$, $\mathcal{C}^{intra}$, and $\mathcal{C}^{inter}$, with $np$ and $ng$ defining role and subgroup counts.
+\noindent \textbf{1. Structural Specifications (SS)} define agent relationships and roles within the system:
+\begin{equation}
+    \mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle.
+\end{equation}
+where:
+\begin{itemize}
+    \item $\mathcal{R}$ is the set of roles.
+    \item $\mathcal{IR}$ defines inheritance relationships among roles.
+    \item $\mathcal{G}$ is the set of organizational groups.
+\end{itemize}
 
-\noindent \paragraph{\textbf{Functional Specifications (FS)}} describe the agents' goals, represented as $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$. The social scheme $\mathcal{SCH}$ includes global goals $\mathcal{G}$, missions $\mathcal{M}$, and plans $\mathcal{P}$ that organize goals in a tree structure. Plans link goals with an operator ($op$) indicating sequence, choice, or parallel completion. Missions map to goal sets ($mo$), and agent counts per mission are specified by $nm$. Preferences $\mathcal{PO}$ indicate which missions agents prefer, denoted as $m_1 \prec m_2$.
+\noindent \textbf{2. Functional Specifications (FS)} describe goal-oriented agent behaviors:
+\begin{equation}
+    \mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle.
+\end{equation}
+where:
+\begin{itemize}
+    \item $\mathcal{SCH}$ structures global goals, missions, and plans.
+    \item $\mathcal{PO}$ represents mission preferences and execution priorities.
+\end{itemize}
 
-\noindent \paragraph{\textbf{Deontic Specifications (DS)}} indicate how structural specifications achieve functional goals, given by $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$. Time constraints $\mathcal{TC}$ set periods for permissions or obligations ($Any$ for any time). Obligations ($\mathcal{OBL}$) require agents in role $\rho_a$ to undertake mission $m$ at times $tc$, while permissions ($\mathcal{PER}$) allow it. The $rds$ function maps roles to their deontic specifications as $(tc, y, m)$ where $y$ distinguishes permission (0) from obligation (1).
-
-\
-
-\noindent Organizational specifications applied to agents are roles and goals (as missions) through permissions or obligations. Indeed, the other structural specifications such as compatibilities or links are inherent to roles. Similarly, we consider that the goals, the missions, and their mapping ($mo$) are enough to also link all of the other functional specifications such as plans, cardinalities, or preference orders.
-Consequently, we consider it is sufficient to take into account roles, missions (goal and mapping) and permissions/obligations when linking $\mathcal{M}OISE^+$ with Dec-POMDP. 
-
-\begin{figure*}[t]
-    \label{eq:single_value_function}
-    \raggedright
-    \textbf{\textit{Definition 1} \quad Sate-Value function adapted to constraint guides in AEC mode:}
-    \begin{gather*}
-      \text{\quad \quad} V^{\pi^j}(s_t) = \hspace{-0.75cm} \sum_{\textcolor{red}{ \substack{a_{t} \in A \text{ if } rn() < ch_{t}, \\ 
-      a_{t} \in A_{t} \text{ else}}
-      }}{\hspace{-0.7cm} \pi_i(a_{t} | \omega_t)} \sum_{s_{t+1} \in S}{\hspace{-0.1cm} T(s_{t+1} | s_t, a_{t})[R(s_t,a_{t},s_{t+1}) + \hspace{-0.1cm} \textcolor{blue}{ \sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \frac{grg_m(h_{t+1})}{1 - p + \epsilon} } } + \textcolor{red}{(1-ch_t) \times rrg(\omega_t,a_{t+1})} + V^{\pi^j_{i+1 \ mod \ n}}(s_{t+1})]}
-    \end{gather*}  
-    %
-    \textcolor{red}{\[\text{With } rag(h_t, \omega_t) = A_{t} \times \mathbb{R} \text{, } (a_t, ch_{t}) \in A_{t} \times \mathbb{R} \text{ ; } \text{ and } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
-    %
-    \vspace{-0.5cm}
-    \textcolor{blue}{
-    \begin{gather*}
-    \text{With } \omega_t = O(\omega_t | s_t, a_t) \text{ ; } h_t = \{h_0 = \langle \rangle, h_{t+1} = \langle h_t, (\omega_{t+1}, a_{t+1}) \rangle \} \text{ ; } grg_m(h) = \hspace{-0.8cm} \sum_{(grg_i,w_i) \in mo(m)}{\hspace{-0.8cm} w_i \times grg_i(h)} \text{ ; } \epsilon \in \mathbb{R}_{>0} \text{ ; }
-    \end{gather*}
-    }
-    \vspace{-0.75cm}
-    \textcolor{blue}{
-    \begin{gather*}
-    v_m(t) = \{ 1 \text{ if } t \in t_c \text{ ; else } 0 \} \text{ ; } \text{ and } \mathcal{M}_i = \{m_j | (ar(i),m_j,t_c,p) \in \mathcal{M}\}
-    \end{gather*}
-    }
-    \vspace{-0.6cm}
-\end{figure*}
+\noindent \textbf{3. Deontic Specifications (DS)} enforce role-based permissions and obligations:
+\begin{equation}
+    \mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle.
+\end{equation}
+where:
+\begin{itemize}
+    \item $\mathcal{OBL}$ denotes mandatory role assignments.
+    \item $\mathcal{PER}$ specifies optional role permissions.
+\end{itemize}
 
 \subsection{Linking $\mathcal{M}OISE^+$ with MARL}
 
-\begin{figure}[h!]
-    \centering
-    \input{figures/mm_synthesis_single_column.tex}
-    \caption{A minimal view of the MOISE+MARL framework: 
-    Users first define $\mathcal{M}OISE^+$ specifications, which include roles ($\mathcal{R}$) and associated with missions ($\mathcal{M}$) through $rds$. They then create MOISE+MARL specifications by first defining \textbf{Constraint guides} such as $rag$ and $rrg$ to specify role logic, and $grg$ for goal logic. 
-    Next, \textbf{Linkers} are used to connect agents with roles through $ar$ and to link the logic of the constraint guides to the defined $\mathcal{M}OISE^+$ specifications. Once this is set up, roles can be assigned to agents, and the MARL framework updates accordingly during training.
-    }
-    \label{fig:mm_synthesis}
-\end{figure}
+We introduce **Constraint Guides** to bridge the gap between $\mathcal{M}OISE^+$ and MARL, enabling structured policy learning. These guides enforce agent behavior through modifications to action spaces and rewards.
 
-We identified the \textit{AGR}~\cite{ferber2003} (Agent Group Role) and the $\mathcal{M}OISE^+$~\cite{Hubner2007} organizational models. Unlike AGR which is an informal framework introducing roles according to groups, $\mathcal{M}OISE^+$ provides a more detailed and flexible description of the structures and functions of a MAS, easing a formal description of agents' policies in MARL.
+\noindent \textbf{1. Role Action Guide (RAG)}: Limits action choices based on predefined role constraints:
+\begin{equation}
+    rag: H \times \Omega \rightarrow \mathcal{P}(A \times \mathbb{R}).
+\end{equation}
 
-\noindent The \textbf{Constraint Guides} are three new relations introduced to describe the logic of the roles and objectives of $\mathcal{M}OISE^+$ in the Dec-POMDP formalism:
-%
+\noindent \textbf{2. Role Reward Guide (RRG)}: Penalizes deviations from expected role-based behaviors:
+\begin{equation}
+    rrg: H \times \Omega \times A \rightarrow \mathbb{R}.
+\end{equation}
+
+\noindent \textbf{3. Goal Reward Guide (GRG)}: Encourages alignment with predefined goal trajectories:
+\begin{equation}
+    grg: H \rightarrow \mathbb{R}.
+\end{equation}
+
+Additionally, we define \textbf{Linkers} to connect $\mathcal{M}OISE^+$ structures with MARL:
 \begin{itemize}
-    \item \textbf{Role Action Guide} \quad $rag: H \times \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, the relation that models a role as a set of rules which, for each pair consisting of a history $h \in H$ and an observation received by the agent $\omega \in \Omega$, associates expected actions $A \in \mathcal{P}(A)$ each associated with a constraint hardness $ch \in [0,1]$ ($ch = 1$ by default). By restricting the choice of the next action among those authorized, the agent is forced to adhere to the expected behavior of the role
-    \item \textbf{Role Reward Guide} \quad $rrg: H \times \Omega \times A \to \mathbb{R} = \{r_m \text{ if } a \notin A_\omega \text{, } rag(h, \omega) = A_\omega \times \mathbb{R} \text{, } h \in H; \text{ else } 0\}$, the relation that models a role by adding a penalty $r_m$ to the global reward if the last action chosen by the agent $a \in A$ is not authorized. This is intended to encourage the agent to adhere to the expected behavior of a role
-    \item \textbf{Goal Reward Guide} \quad $grg: H \rightarrow \mathbb{R}$, the relation that models a goal as a soft constraint by adding a bonus $r_b \in \mathbb{R}$ to the global reward if the agent's history $h \in H$ contains a characteristic sub-sequence $h_g \in H_g$ of the goal, encouraging the agent to find a way to reach it.
+    \item \textbf{Agent to Role} ($ar: \mathcal{A} \to \mathcal{R}$) assigns roles to agents.
+    \item \textbf{Role to Constraint Guide} ($rcg: \mathcal{R} \rightarrow rag \cup rrg$) links roles to action and reward constraints.
+    \item \textbf{Goal to Constraint Guide} ($gcg: \mathcal{G} \rightarrow grg$) associates goals with reward incentives.
 \end{itemize}
 
-\
+\autoref{fig:mm_synthesis} illustrates the overall MOISE+MARL framework, integrating $\mathcal{M}OISE^+$ specifications with constraint-guided MARL training.
 
-\noindent Finally, we introduce the \textbf{Linkers} to link the $\mathcal{M}OISE^+$ organizational specifications with constraint guides and agents:
-%
-\begin{itemize}
-    \item \textbf{Agent to Role} \quad $ar: \mathcal{A} \to \mathcal{R}$, the bijective relation linking an agent to a role;
-    \item \textbf{Role to Constraint Guide} \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$, the relation associating each $\mathcal{M}OISE^+$ role to a $rag$ or $rrg$ relation, forcing/encouraging the agent to follow the expected actions for the role $\rho \in \mathcal{R}$;
-    \item \textbf{Goal to Constraint Guide} \quad $gcg: \mathcal{G} \rightarrow grg$, the relation linking goals to trf relations, representing goals as rewards in MARL.
-\end{itemize}
+\subsection{Solving the MOISE+MARL Problem}
 
-\paragraph{\textbf{Resolving the MOISE+MARL problem}}
-% formalized as $MM = \langle D, \mathcal{OS}\allowbreak, ar, rcg, \allowbreak gcg, rag, rrg, grg\rangle$
-involves finding a joint policy $\pi^{j} = \{\pi^j_0,\pi^j_1\dots\pi^j_n\}$ that maximizes the state-value function $V^{\pi^{j}}$ (or reaches a minimum threshold), which represents the expected cumulative reward starting from an initial state $s \in S$ and following the joint policy $\pi^{j}$, applying successive joint actions $a^{j} \in A^n$ under additional constraint guides. The state-value is described in the case where agents act sequentially and cyclically (Agent Environment Cycle - AEC mode) in \hyperref[eq:single_value_function]{Definition 1}, adapting its definition for roles (in red) and missions (in blue), impacting the action space and reward. \autoref{fig:mm_synthesis} illustrates the links between $\mathcal{M}OISE^+$ and Dec-POMDP via the MOISE+MARL framework.
+The goal is to find an optimal joint policy $\pi^j$ that maximizes the modified state-value function:
+\begin{equation}
+    V^{\pi^{j}}(s_t) = \sum_{a_t \in A_t} \pi^j(a_t | \omega_t) \sum_{s_{t+1} \in S} T(s_{t+1} | s_t, a_t) [R' + V^{\pi^{j}}(s_{t+1})].
+\end{equation}
+where:
+\begin{equation}
+    R' = R(s_t, a_t, s_{t+1}) + grg(h_t) - rrg(h_t, \omega_t, a_t).
+\end{equation}
 
-At any time $t \in \mathbb{N}$ (initially $t = 0$), the agent $i = t \ mod \ n$ is constrained to a role $\rho_i = ar(i)$. For each temporally valid deontic specification $d_i = rds(\rho_i) = (tc_i,y_i, m_i)$, the agent is permitted (if $y_i = 0$) or obligated (if $y_i = 1$) to commit in mission $m_i \in \mathcal{M}, \mathcal{G}_{m_i} = mo(m_i)$, and $n \in \mathbb{N}$ the number of agents.
-%
-First, based on the received observation $\omega_t$, the agent must choose an action either: within the expected actions of the role $A_t$ if a random value is below the role constraint hardness $ch_t$; or within the set of all actions $A$ otherwise. If $ch_t = 1$, the role is strongly constrained for the agent and weakly otherwise.
-%
-Then, the action is applied to the current state $s_t$ to transition to the next state $s_{t+1}$, generate the next observation $\omega_{t+1}$, and yield a reward. The reward is the sum of the global reward with penalties and bonuses obtained from the organizational specifications: \quad i) the sum of the bonuses for objectives associated with each temporally valid mission (via Goal Reward Guides), weighted by the associated value ($\frac{1}{1-p+\epsilon}$); \quad ii) the penalty associated with the role (via "Role Reward Guides") weighted by the role constraint hardness.
-%
-Finally, the cumulative reward calculation continues in the next state $s_{t+1} \in S$ with the next agent $(i+1) \ mod \ n$.
+This formulation ensures that agents **adhere to organizational roles** while optimizing performance in MARL.
 
-\subsection{Easying constraint guides implementation}
+\subsection{Implementation Considerations}
+Implementing constraint guides manually is tedious. To simplify this, we introduce **Trajectory-based Patterns (TPs)**, inspired by NLP methods, to encode behavioral constraints. A TP $p \in P$ is defined as:
+\begin{equation}
+    p = \langle h, (c_{\text{min}}, c_{\text{max}}) \rangle.
+\end{equation}
+where $h$ represents a sequence of observations/actions, and $(c_{\text{min}}, c_{\text{max}})$ defines repetition constraints.
 
-In practice, since roles, objectives, and missions as simple labels, their definition is assumed. However, implementing a $rag$, $rrg$, or $grg$ relation requires defining a potentially large number of histories, possibly partially redundant. Therefore, an extensional definition of a set of histories can be tedious. Moreover, the logic of all constraint guides takes the agent trajectory as input to determine whether the trajectory belongs to a predefined history set. For example, a $rag$ relation can be seen as determining the next expected actions depending on whether the trajectory belongs to a given set and the new observation received.
+By leveraging these patterns, constraint enforcement becomes more interpretable and scalable. The MOISE+MARL framework enables structured MARL training through the integration of the $\mathcal{M}OISE^+$ organizational model.
 
-A first approach is to let users develop their constraint guides in an intensional way with custom logic (such as a script code) in order to analyse history and compute the output in a manageable way. In that case, the relation $b_g: H \to \{0,1\}$ formalizes how users propose to determine whether a history belongs to a predefined set $H_g$.
-To help implement this relation, we propose a \textbf{Trajectory-based Pattern} (TP) inspired by Natural Language Processing, denoted $p \in P$, as a way to define a set of histories in an intensional way.
 
-A TP implies that any considered real observation or action is known and mapped to a label $l \in L$ (through $l: \Omega \cup A \to L$) to be conveniently managed. A TP $p \in P$ is defined as follows: $p$ is: either a "leaf sequence" denoted as a couple of history-cardinality $s_l = (h, \{c_min,c_max\})$ (where $h \in H, c_{min} \in \mathbb{N}, c_{max} \in \mathbb{N} \cup "*")$; or a "node sequence" denoted as a couple of a tuple of concrete sequences and cardinality $s_n = (\langle s_{l_1}, s_{l_1}\dots \rangle, \{c_min,c_max\})$. For example, the pattern $p = \allowbreak "[o_1,a_1,[o_2,a_2](0,2)](1,*)"$ can be formalized as the node sequence $\allowbreak \langle ((o_1,a_1),(1,1)), ((o_2,a_2),(0,2))\rangle(1,"*")$, indicating the set of histories $H_p$ containing at least once the sub-sequence consisting of a first pair $(o_1,a_1)$ and then at most two repetitions of the pair $(o_2,a_2)$.
-The relation $b_g$ then becomes $b_g(h) = m(p_g,h), \text{ with } m: P \times H \to \{0,1\}$ indicating if a history $h \in H$ matches a history pattern $p \in P$ describing a history set $H_g$.
-
-\section{The TEMM method}
+\section{The TEMM Method}
 \label{sec:TEMM_algorithm}
 
-As presented in \autoref{sec:related_works}, we were unable to identify any available method that fully meets our requirements for determining abstract roles, abstract goals, or organizational fit. Therefore, we propose the \textbf{Trajectory-based Evaluation in MOISE+MARL} (TEMM) method for automatic inference and evaluation of roles and missions based on observed behaviors over multiple episodes.
+As presented in \autoref{sec:related_works}, no existing method fully meets our requirements for determining abstract roles, abstract goals, or organizational fit. To address this gap, we propose the \textbf{Trajectory-based Evaluation in MOISE+MARL} (TEMM) method for the automatic inference and evaluation of roles and missions based on observed behaviors over multiple episodes.
 
 \
 
-\noindent TEMM uses unsupervised learning techniques to generalize roles and missions from the set of observed behaviors over multiple test episodes. By measuring the gap between inferred abstract organizational specifications and actual behaviors, we can also quantify the organizational fit as to how well a policy conforms to the inferred abstract organizational specifications.
+\noindent TEMM leverages unsupervised learning techniques to generalize abstract roles and missions from observed behaviors across multiple test episodes. By measuring the deviation between inferred abstract organizational specifications and actual agent behaviors, TEMM quantifies \textit{organizational fit}, providing a measure of how well a policy aligns with inferred abstract organizational structures.
 
-TEMM is based on proposed definitions for each $\mathcal{M}OISE^+$ organizational specification regarding joint-histories or other organizational specifications, using specific unsupervised learning techniques to infer them progressively. Here, we provide an informal description of the method~\hyperref[fn:github]{\footnotemark[1]}.
+\subsection{Formalizing Organizational Inference in TEMM}
+
+TEMM is based on a set of definitions that link $\mathcal{M}OISE^+$ organizational specifications to observed joint histories. Each specification is inferred using dedicated unsupervised learning techniques that progressively build an abstract organization based on agent behaviors.
+
+\noindent The TEMM method follows a three-step process:
+\begin{enumerate}
+    \item **Inferring roles and their inheritance** using hierarchical clustering.
+    \item **Inferring goals, plans, and missions** using trajectory clustering and observation-state analysis.
+    \item **Inferring obligations and permissions** by analyzing temporal constraints and goal consistency.
+\end{enumerate}
+
+\noindent The following sections detail each of these steps.
 %
-\footnotetext[1]{ \label{fn:github} Additional details, developed code, datasets containing all the hyperparameters and details of the organizational specifications are available at \url{https://github.com/REDACTED_FOR_BLIND_REVIEW}}
+\footnotetext[1]{ \label{fn:github} Additional details, developed code, datasets, and hyperparameter configurations are available at \url{https://github.com/julien6/MOISE-MARL}.}
 
-\paragraph{\textbf{1) Inferring roles and their inheritance}}
+\subsection{Inferring Roles and Their Inheritance}
 
-We introduce that a role $\rho$ is defined as a policy whose associated agents' histories all contain a Common Longest Sequence (CLS). We introduce that a role $\rho_2$ inherits from $\rho_1$ if the CLS of histories associated with $\rho_2$ is also contained within that of $\rho_1$.
-Based on these definitions, TEMM uses a "hierarchical clustering" technique to find the CLSs among agent histories. The results can be represented as a dendrogram. This allows inferring abstract roles and inheritance relationships, their respective relationships with histories, as well as current agents.
-We measure the gap between current agents' sequence and inferred abstract roles' sequences, as the "structural organizational fit".
+We define a \textbf{role} $\rho$ as a set of policies whose associated agent histories share a \textbf{Common Longest Subsequence (CLS)}. A role $\rho_2$ is considered a \textbf{sub-role} of $\rho_1$ if the CLS of histories associated with $\rho_2$ is contained within that of $\rho_1$. This definition formalizes role abstraction in MARL.
 
-\paragraph{\textbf{2) Inferring goals, plans, and missions}}
+To infer roles, TEMM applies a \textit{hierarchical clustering} algorithm to identify CLSs across agent histories:
+\begin{equation}
+    \rho = \text{argmax}_{\rho} \left( \sum_{h \in H_{\rho}} | \text{CLS}(h, H_{\rho}) | \right),
+\end{equation}
+where $\text{CLS}(h, H_{\rho})$ is the longest common sequence among histories in role $\rho$.
 
-We introduce that a goal is a set of common joint-observation reached by following the histories of successful agents.
-For each joint-history, TEMM calculates the joint-observation transition graph, which is then merged into a general graph. By measuring the distance between two vectorized joint-observations with K-means, we can find trajectory clusters that some agents may follow. Then, we sample some sets of joint-observations for each trajectory as abstract goals. For example, we can select the narrowest set of joint-observations where agents seem to collectively transition at a given time to reach their goal. Otherwise, balanced sampling on low-variance trajectories could be performed. Knowing which trajectory a goal belongs to, TEMM infers plans based solely on choices and sequences.
+A \textbf{dendrogram} representation of clustering results allows for the visualization of inferred hierarchical role structures. Given the hierarchical nature of CLS extraction, TEMM recursively partitions histories into increasingly abstract roles, ensuring organizational coherence.
 
-We introduce that a mission is the set of goals that one or more agents are accomplishing.
-Knowing the shared goals achieved by the agents, TEMM determines representative goal sets as missions.
-By measuring the distance between inferred abstract goals which joint-observations with current agents' joint-observation, we compute the "structural organizational fit".
+\noindent **Measuring Structural Organizational Fit:**  
+TEMM computes the alignment between agent trajectories and inferred abstract roles:
+\begin{equation}
+    \text{Structural Fit} = \frac{1}{|H|} \sum_{h \in H} \frac{| \text{CLS}(h, H_{\rho(h)}) |}{|h|}.
+\end{equation}
 
-\paragraph{\textbf{3) Inferring obligations and permissions}}
+\subsection{Inferring Goals, Plans, and Missions}
 
-We introduce that an obligation is when an agent playing the role $\rho$ fulfills the goals of a mission and no others during certain time constraints, while permission is when the agent playing the role $\rho$ may fulfill other goals during specific time constraints.
-TEMM determines which agents are associated with which mission and whether they are restricted to certain missions, making them obligations, or if they have permission.
-Having already computed structural organizational fit and functional organizational fit, the organizational fit is the sum of these two values.
+A \textbf{goal} is defined as a recurring set of joint observations reached by successful agents following their trajectories. A \textbf{mission} consists of a set of goals collectively achieved by an agent.
 
-\
+To infer goals, TEMM follows these steps:
+\begin{enumerate}
+    \item Compute a \textbf{joint-observation transition graph} for each joint-history.
+    \item Merge transition graphs into a general \textbf{global transition model}.
+    \item Cluster observation sequences using \textbf{K-means} to identify trajectory patterns.
+    \item Sample key joint-observations as \textbf{abstract goals}.
+\end{enumerate}
 
-Overall, the K-mean and hierarchical clustering techniques require manual configuration to obtain roles and goals, avoiding introducing perturbations that could lead to determining false organizational specifications. Despite this, the method recommends thoroughly understanding the obtained roles and objectives to manually identify and remove any remaining perturbations.
+A goal $g$ is identified as:
+\begin{equation}
+    g = \text{argmin}_{o \in \Omega} \left( \sum_{h \in H} d_{\text{traj}}(o, H) \right),
+\end{equation}
+where $d_{\text{traj}}(o, H)$ represents the variance of joint-observations $o$ across all agent trajectories.
+
+Using the inferred goals, TEMM reconstructs \textbf{plans} by identifying sequential dependencies:
+\begin{equation}
+    p = \{ (g_i, g_j) \ | \ g_j \text{ follows } g_i \text{ in at least } k\% \text{ of episodes} \}.
+\end{equation}
+
+A \textbf{mission} is defined as the set of goals pursued by an agent over multiple episodes:
+\begin{equation}
+    m = \{ g_1, g_2, \dots, g_n \}, \quad \forall g_i \in G, P(m | G) > \theta.
+\end{equation}
+
+\noindent **Measuring Functional Organizational Fit:**  
+To measure how well a policy conforms to inferred abstract goals:
+\begin{equation}
+    \text{Functional Fit} = \frac{1}{|H|} \sum_{h \in H} \frac{| g(h) \cap G |}{| G |}.
+\end{equation}
+
+\subsection{Inferring Obligations and Permissions}
+
+An \textbf{obligation} exists when an agent, playing role $\rho$, exclusively fulfills the goals of a mission $m$ within a given time frame. A \textbf{permission} is granted when an agent may accomplish other goals outside of its mission.
+
+TEMM determines obligations and permissions by:
+\begin{enumerate}
+    \item Identifying agent-to-mission associations.
+    \item Checking whether an agent's behavior remains within predefined time constraints.
+    \item Analyzing deviations from inferred mission structures.
+\end{enumerate}
+
+A role $\rho$ is obligated to a mission $m$ if:
+\begin{equation}
+    \sum_{g \in G_m} P(g | \pi_{\rho}) > \theta_{\text{obligation}}, \quad P(g_{\neg m} | \pi_{\rho}) \approx 0.
+\end{equation}
+Conversely, a role is permitted to deviate if:
+\begin{equation}
+    P(g_{\neg m} | \pi_{\rho}) > \theta_{\text{permission}}.
+\end{equation}
+
+\noindent **Final Organizational Fit Calculation:**  
+\begin{equation}
+    \text{Organizational Fit} = \text{Structural Fit} + \text{Functional Fit}.
+\end{equation}
+
+\subsection{Manual Refinement and Stability Considerations}
+
+Despite the use of clustering techniques, manual configuration is required to avoid artifacts that may distort the inferred organizational structure. Hyperparameters such as the number of clusters in K-means or the depth of hierarchical clustering must be tuned to balance specificity and generalizability.
+
+Furthermore, TEMM suggests an \textbf{interactive refinement process}:
+\begin{itemize}
+    \item **Visual inspection of inferred roles and goals.**
+    \item **Post-processing techniques to remove noise.**
+    \item **User-defined constraints to refine clusters.**
+\end{itemize}
+
+While clustering algorithms provide an initial organizational framework, expert intervention is recommended to ensure meaningful abstractions. The TEMM method enables automated inference of structural and functional organization in MARL by extracting abstract roles, goals, and missions from agent behaviors. By defining organizational fit as the sum of structural and functional fit, TEMM provides a quantitative measure of policy alignment with inferred organizational structures.
 
 \section{Experimental framework}
 \label{sec:experimental_setup}
@@ -540,13 +638,28 @@ Finally, we also check the relevance of the $\mathcal{M}OISE^+$ by comparing MOI
 
 This section presents and analyzes the experimental results from applying the MOISE+MARL framework across various environments, highlighting key metrics and comparisons with AGR+MARL.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/wm_learning_curve.png}
+    \caption{Learning curve for the Warehouse Management environment using IPPO.}
+    \label{fig:wm_learning_curve}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.4\linewidth]{figures/screenshot_1.png}
+    \includegraphics[width=0.4\linewidth]{figures/wm_screenshot.png}
+    \caption{Screenshot examples from the Warehouse Management environment and Predator Prey environments.}
+    \label{fig:env_screenshots}
+\end{figure}
+
 \begin{table*}[h!]
     \centering
     \caption{Detailed results for each environment and favored algorithm under both RB and OB.}
     \label{tab:detailed_results}
     \small
     \renewcommand{\arraystretch}{1.2}
-    \begin{tabular}{lccccccccc}
+    \begin{tabular}{p{2cm}p{1.7cm}p{1.cm}p{1.cm}p{1.cm}p{1.cm}p{1.cm}p{1.7cm}p{1.7cm}p{1.2cm}}
         \hline
         \textbf{Env.} & \textbf{Alg.} & \textbf{Org. Spec.} & \textbf{Cum. Rew.} & \textbf{STD} & \textbf{Conv. Rate} & \textbf{Viol. Rate} & \textbf{Cons. Score} & \textbf{Rob. Score} & \textbf{Org. Fit Lvl} \\ \hline
         Predator-Prey & MADDPG &  & 200.1 & 21.5 & 0.65 & - & - & 0.65 & 0.43 \\
