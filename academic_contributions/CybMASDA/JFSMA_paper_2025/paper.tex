@@ -362,11 +362,11 @@ Cette section détaille le cadre expérimental utilisé pour évaluer le cadre M
 
 \subsection{Implémentation de MOISE+MARL}
 
-Nous avons développé une API Python, \textquote{MMA}~\hyperref[fn:github]{\footnotemark[1]}, pour implémenter MOISE+MARL. Basée sur une approche orientée objet, cette API structure le modèle \(\mathcal{M}OISE^+\) en classes de données imbriquées (la classe « Moise » étant à la racine) afin de définir les spécifications organisationnelles (rôles, objectifs, permissions).
+Nous avons développé une API Python, \textquote{MMA}~\hyperref[fn:github]{\footnotemark[1]}, pour implémenter MOISE+MARL. Cette API structure le modèle \(\mathcal{M}OISE^+\) en classes de données imbriquées (la classe « Moise » étant à la racine) afin de définir les spécifications organisationnelles (rôles, objectifs, permissions).
 
-Pour les environnements Dec-POMDP, nous utilisons la bibliothèque \textit{PettingZoo}~\cite{terry2020pettingzoo} – similaire à Gymnasium~\cite{kwiatkowski2024} – et intégrons un dictionnaire personnalisable pour le mappage des étiquettes d'observation/action (\(l\)), ainsi que le support des Trajectory Patterns (TP) pour définir et faire correspondre les motifs.
+Nus utilisons la bibliothèque \textit{PettingZoo}~\cite{terry2020pettingzoo} (similaire à Gymnasium~\cite{kwiatkowski2024}) pour la gestion des environnements en y intégrant un dictionnaire personnalisable pour le mappage des étiquettes d'observation/action (\(l\)), ainsi que le support des TPs pour définir et faire correspondre les motifs.
 
-Chaque \textbf{Guide de Contrainte} (\(rag\), \(rrg\) et \(grg\)) est implémenté en tant que classe distincte. Les utilisateurs peuvent les définir via des fonctions personnalisées ou des règles JSON (par exemple, \(rag\) associe un couple \(\langle\)TP, dernière observation\(\rangle\) à des actions attendues, et \(grg\) applique des bonus selon des TP spécifiques). La classe globale MMA intègre ces guides et relie les agents aux rôles via des relations telles que \(ar\), intégrant ainsi les spécifications de \(\mathcal{M}OISE^+\).
+Chaque \textbf{Guide de Contrainte} (\(rag\), \(rrg\) et \(grg\)) est implémenté comme une classe distincte. Les utilisateurs peuvent les définir via des fonctions personnalisées ou des règles JSON (par exemple, \(rag\) associe un couple \(\langle\)TP, dernière observation\(\rangle\) à des actions attendues, et \(grg\) applique des bonus selon des TP spécifiques). La classe globale MMA intègre ces guides et relie les agents aux rôles via des relations telles que \(ar\), intégrant ainsi les spécifications de \(\mathcal{M}OISE^+\).
 
 Une fois configuré, MMA encapsule l'environnement avec un wrapper \textit{PettingZoo} qui applique des masques d'actions et ajuste les récompenses pour garantir le respect des spécifications durant l'entraînement. Il intègre également \textit{MARLlib}~\cite{hu2021marlib} pour accéder aux algorithmes MARL de pointe sur un cluster haute performance.
 
@@ -374,7 +374,7 @@ Enfin, la méthode TEMM, avec des hyperparamètres optimisés manuellement, est 
 
 \subsection{Environnements utilisés}
 
-Nous testons MOISE+MARL dans quatre environnements MARL, modélisés comme des scénarios Dec-POMDP et choisis pour leur diversité en collaboration et gestion des ressources :
+Nous testons MOISE+MARL dans quatre environnements MARL, modélisés comme des scénarios Dec-POMDP et chacune présentant des défis distincts en termes d'organisations requises pour atteindre au mieux l'objectif global :
 
 i) \textbf{Predator-Prey} : Plusieurs prédateurs coopèrent pour capturer une proie, testant la coordination pour atteindre un objectif collectif~\cite{lowe2017multi}
  ; \quad
@@ -411,12 +411,12 @@ iv) \textbf{Cyber-Defense Simulation} : Les agents occupent des rôles de défen
 
 \subsection{Configuration matérielle}
 
-Toutes les expériences ont été menées sur un cluster académique haute performance, avec des nœuds GPU (NVIDIA A100, V100 et AMD MI210). Chaque paire algorithme-environnement a été exécutée 5 fois en parallèle pour assurer des résultats fiables.
+Toutes les expériences ont été menées sur un cluster académique haute performance, avec des nœuds GPU (NVIDIA A100, V100 et AMD MI210). Chaque configuration algorithme-environnement a été exécutée 5 fois en parallèle pour assurer des résultats fiables.
 Les hyperparamètres~\hyperref[fn:github]{\footnotemark[1]} (taux d'apprentissage, facteurs d'actualisation, taux d'exploration) proviennent soit des banques de MARLlib, soit d’une recherche sur grille réalisée via \textit{Optuna}~\cite{akiba2019optuna}.
 
 \subsection{Métriques d'évaluation et protocole}
 
-Pour mesurer l'efficacité des politiques et l'impact des spécifications organisationnelles, nous avons défini les métriques suivantes :
+L'évaluation prend en compte l'efficacité des politiques et l'impact des spécifications organisationnelles en reposant sur les métriques suivantes :
 %
 i) \textbf{Récompense Cumulative} : Mesure l'efficacité de la politique dans l'atteinte des objectifs de l'environnement
  ; \quad
@@ -526,14 +526,16 @@ Enfin, l’augmentation du nombre de contraintes organisationnelles accroît qua
 
 Le cadre MOISE+MARL proposé améliore le contrôle et l'explicabilité en MARL en intégrant des modèles organisationnels définissant des rôles et des missions explicites. Nos résultats montrent que ce cadre facilite la convergence des politiques en réduisant l'espace de recherche, et que les comportements des agents s'alignent étroitement avec les spécifications attendues.
 
-Cependant, reposant sur des spécifications prédéfinies, MOISE+MARL peut peiner à prendre en compte le surcoût computationnel (notamment lié à TEMM), posant des problèmes de scalabilité.
+Cependant, reposant sur des spécifications prédéfinies, MOISE+MARL peut peiner à prendre en compte le surcoût computationnel (notamment lié à TEMM).
 %
-Nous poursuivons trois axes de recherche :
+Trois axes de recherche émergent donc :
 i) Développer des mécanismes adaptatifs pour faire évoluer dynamiquement rôles et missions
 ; \quad
 ii) Explorer des méthodes automatisées (\textit{Large Language Models}) pour générer des spécifications organisationnelles à partir des trajectoires
  ; \quad
 iii) Améliorer la scalabilité de TEMM et proposer d'autres approches.
+%
+Ces perspectives ouvriront la voie à une meilleure intégration de modèles organisationels dans le MARL, renforçant notamment la robustesse et l'explicabilité des agents pour des sytèmes réels.
 
 \section*{Remerciements}
 
