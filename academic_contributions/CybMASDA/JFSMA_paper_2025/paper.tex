@@ -79,19 +79,19 @@
 \maketitle
 
 \begin{resume}
-  L'apprentissage par renforcement multi-agent (MARL) peut faire émérger des comportements collaboratifs s'apparentant à une organisation. Nous proposons le cadre MOISE+MARL pour faire évoluer explicitement les agents de façon organisationelle. En attribuant des rôles et des objectifs aux agents, MOISE+MARL contrôle l'apprentissage en ajustant les actions et les récompenses. De plus, il propose une analyse post-entraînement pour inférer des spécifications organisationnelles implicites.
-  MOISE+MARL est appliqué dans divers environnements et d'algorithmes, montrant un alignement des agents aux spécifications organisationnelles prédéfinies, lesquelles correspondent à celles déduites.
+  Des agents entrainés peuvent montrer des comportements collectifs, d’où l’on peut extrapoler des rôles et objectifs implicites par analogie d'une organisation structurée et fonctionnelle. Nous proposons MOISE+MARL, un cadre qui contraint les agents à évoluer selon une telle organisation pour améliorer le contrôle et l’explicabilité, peu explorés en apprentissage par renforcement.
+  MOISE+MARL guide les agents vers des rôles et missions en ajustant dynamiquement leurs actions et récompenses. Il inclut une analyse post-entraînement pour inférer des spécifications organisationnelles implicites. Expérimenté sur divers environnements, il démontre un alignement entre les comportements des agents, les spécifications définies et celles inférées.
 \end{resume}
 
-\motscles{Apprentissage par renforcement multi-agent, Explicabilité organisationnelle, Contrôle organisationnel}
+\motscles{Apprentissage par renforcement multi-agent, Explicabilité, Contrôle}
 
 % \bigskip
 
 \begin{abstract}
-  Multi-Agent Reinforcement Learning (MARL) can give rise to collaborative behaviors resembling an organization. We introduce the MOISE+MARL framework to explicitly make agents evolve in an organizational manner. By assigning roles and objectives to agents, MOISE+MARL controls the learning process by adjusting actions and rewards. Moreover, it includes a post-training analysis to infer implicit organizational specifications.
-  MOISE+MARL has been applied to various environments and algorithms, demonstrating an alignment between trained agents and predefined organizational specifications, which match the inferred ones.
+  Trained agents can exhibit collective behaviors, from which roles and implicit objectives can be extrapolated by analogy with a structured and functional organization. We propose MOISE+MARL, a framework that constrains agents to evolve within such an organization to enhance control and explainability, underexplored in Reinforcement Learning.
+  MOISE+MARL guides agents toward roles and missions by dynamically adjusting their actions and rewards. It also includes a post-training analysis to infer implicit organizational specifications. Tested across various environments, it demonstrates alignment between agent behaviors, predefined specifications, and inferred ones.
 \end{abstract}
-\keywords{Multi-Agent Reinforcement Learning, Organizational Explainability, Organizational Control}
+\keywords{Multi-Agent Reinforcement Learning, Explainability, Control}
 
 
 \section{Introduction}
@@ -100,15 +100,15 @@
 L'apprentissage par renforcement multi-agent (MARL) permet de trouver une politique conjointe qui régit à la fois les actions individuelles et les interactions entre agents pour atteindre un objectif sans gérer leur coordination explicitement. Dans des environnements nécéssitant des interactions sociales, les agents peuvent parfois aboutir à des comportements semblables à des rôles et objectifs implicites, qui les rapprochent, dans une certaine mesure, d'une organisation structurelle et fonctionnelle théorique, telle que décrite dans $\mathcal{M}OISE^+$~\cite{Hubner2007}.
 
 
-% Problématique  
-Nous définissons l'\textbf{adéquation organisationnelle} comme la mesure de la similitude entre les comportements réels des agents et une organisation structurelle et fonctionnelle. Deux aspects clés sont alors à explorer :
-i) \textbf{L'évaluation de l'adéquation organisationnelle} consiste à mesurer l'alignement d'une politique conjointe avec une organisation idéale, en tenant compte des contraintes environnementales et des objectifs. La littérature, souvent centrée sur les rôles ou objectifs~\cite{Isakov2024, Wen2024, Xie2024}, manque d'approches systématiques dotées de moyens quantitatifs ou qualitatifs
+% Problématique
+Toutefois, ces rôles et objectifs émergents peuvent apparaitre \textquote{bruités} ou irréguliers. Pour évaluer la ressemblance de ces comportements avec une organisation, nous introduisons l'\textbf{adéquation organisationnelle}. Ce concept permet une vision nouvelle pour envisager deux problèmes encore peu explorés que sont le controle et l'explicabilité dans le MARL au travers de:
+i) \textbf{L'évaluation de l'adéquation organisationnelle} consiste à mesurer l'alignement d'une politique conjointe avec une organisation théorique où les comportements des agents sont réguliers et cohérents avec leur rôles et objectifs. La littérature, souvent centrée sur les rôles~\cite{Isakov2024, Wen2024, Xie2024}, manque d'approches systématiques dotées de moyens quantitatifs
  ; \quad
-ii) \textbf{Le contrôle de l'adéquation organisationnelle} consiste à orienter les agents vers des politiques conformes à une organisation via des contraintes ou incitations définies par l'utilisateur. Ce contrôle induit la réduction de l'espace de recherche, l'amélioration de la convergence et le respect des contraintes de sécurité, sans recourir à l'apprentissage par renforcement hiérarchique (HRL).
+ii) \textbf{Le contrôle de l'adéquation organisationnelle} consiste à orienter les agents vers des politiques conformes à une organisation via des contraintes ou incitations définies. Ce contrôle induit la réduction de l'espace de recherche, l'amélioration de la convergence et le respect des contraintes de sécurité, sans recourir à l'apprentissage par renforcement hiérarchique (HRL).
 
 
 % Contribution  
-\noindent Cet article présente le cadre \textbf{MOISE+MARL} que nous avons introduit dans \cite{soule2025moisemarl}. MOISE+MARL apporte une contribution synthétique en simplfiant la complexité des premiers travaux sur l'intégration d'un modèle organisationnel dans le MARL~\cite{soule2024paper-jfsma, soule2024aomea} en se recentrant sur la notion de rôles et objectifs, permettant une meilleure utilisabilité et scalabilité. Il combine le Dec-POMDP et le modèle organisationnel $\mathcal{M}OISE^+$~\cite{Hubner2007} via des relations définies, permettant aux utilisateurs de spécifier la logique des rôles et objectifs à partir de motifs de trajectoires. Une fois configuré, le cadre attribue des rôles aux agents en imposant des contraintes qui ajustent dynamiquement l'espace d'actions et la fonction de récompense. Il intègre également la méthode \textit{Trajectory-based Evaluation in MOISE+MARL} (TEMM), qui, par apprentissage non supervisé, infère les rôles et missions implicites à partir de trajectoires observées, offrant ainsi une évaluation quantitative de l'adéquation organisationnelle. Contrairement au HRL, qui décompose les tâches~\cite{Qi2024, Matsuyama2025, SaoMai2024}, notre approche guide les agents par des rôles et des missions explicites.
+\noindent Cet article présente le cadre \textbf{MOISE+MARL} que nous avons introduit dans \cite{soule2025moisemarl}. MOISE+MARL apporte une contribution synthétique en simplfiant la complexité des premiers travaux sur l'intégration d'un modèle organisationnel dans le MARL~\cite{soule2024paper-jfsma, soule2024aomea} en se recentrant sur la notion de rôles et objectifs, permettant une meilleure utilisabilité et scalabilité. Il combine le Dec-POMDP et le modèle organisationnel $\mathcal{M}OISE^+$~\cite{Hubner2007} pour permettre de spécifier la logique des rôles et objectifs. Une fois configuré, le cadre permet d'attribuer des rôles aux agents en imposant des contraintes qui ajustent dynamiquement les actions et la récompense. Il intègre également la méthode \textit{Trajectory-based Evaluation in MOISE+MARL} (TEMM), qui, par apprentissage non supervisé, infère des rôles et missions implicites à partir de trajectoires, évaluant ainsi quantitativement l'adéquation organisationnelle. Contrairement au HRL, qui décompose les tâche~\cite{Qi2024, Matsuyama2025, SaoMai2024}, MOISE+MARL guide les agents par des rôles et des missions de façon externe.
 
 % Évaluation et résultats  
 Nous avons évalué MOISE+MARL avec :
