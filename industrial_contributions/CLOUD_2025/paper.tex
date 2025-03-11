@@ -218,7 +218,7 @@ Cloud-native critical systems are increasingly reliant on Kubernetes to orchestr
 
 In such adversarial scenarios, malicious actors can exploit scaling mechanisms, exposing the limitations of conventional HPA systems. Modern approaches have sought to address these gaps using Reinforcement Learning (RL), where an agent optimizes a single global goal such as minimizing latency or resource usage~\cite{Gari2021}. While these methods demonstrate adaptability, they often fall short in handling diverse failure scenarios to maintain \textit{Quality of Service} (QoS)~\cite{Liu2024}. For example, prioritizing responses to cascading pod crashes during an attack may be far more critical than reducing latency. These challenges highlight the need for an autoscaling system capable of dynamically balancing multiple sub-goals to maintain all of the QoS to maximize operational resilience.
 
-Achieving this shift from single-goal optimization to a multi-goal approach is complex~\cite{Shoham2009MAS}. A single-agent RL system struggles to address such complexity due to the difficulty of coordinating responses to diverse and context-dependent failures~\cite{Jennings1998}. In contrast, MASs offer a promising paradigm by decomposing the overarching operational resilience maximization goal into sub-goals handled by specialized agents~\cite{Shoham2009MAS}. Considering an adversarial scenario, each defender agent can collaboratively contribute to complementary scaling actions towards reaching its own sub-goal, enabling more resilient and context-specific responses face to an attacker agent~\cite{Jennings1998}. We refer to the set of these collaborative agents as an HPA MAS. An HPA MAS actually builds upon the cyberdefense framework of Autonomous Intelligent Cybersecurity Agents (AICAs), which can be viewed as agents with specialized roles and missions collaboratively defending systems against attackers~\cite{Kott2018}.
+Achieving this shift from single-goal optimization to a multi-goal approach is complex~\cite{Shoham2009MAS}. A single-agent RL system struggles to address such complexity due to the difficulty of coordinating responses to diverse and context-dependent failures~\cite{Jennings1998}. In contrast, MASs offer a promising paradigm by decomposing the overarching operational resilience maximization goal into sub-goals handled by specialized agents~\cite{Shoham2009MAS}. Considering an adversarial scenario, each defender agent can collaboratively contribute to complementary scaling actions to reach its own sub-goal, enabling more resilient and context-specific responses face to an attacker agent~\cite{Jennings1998}. We refer to the set of these collaborative agents as an HPA MAS. An HPA MAS actually builds upon the cyberdefense framework of Autonomous Intelligent Cybersecurity Agents (AICAs), which can be viewed as agents with specialized roles and missions collaboratively defending systems against attackers~\cite{Kott2018}.
 
 % Problématique
 However, designing HPA MASs tailored to a cluster presents significant challenges such as the need for detailed cluster knowledge, the time-consuming nature of manual design processes, and the difficulty of ensuring optimal agent behavior. Moreover, cluster changes require repeating the design process, increasing operational costs and complexity.
@@ -508,11 +508,11 @@ Convergence is deemed successful when the standard deviation of cumulative rewar
 \subsection{Analysis}
 \label{sec:analysis}
 
-The analysis phase in the KARMA framework aims to validate and interpret the behaviors of trained agents, ensuring their alignment with operational goals and their robustness in dynamic or adversarial environments. \textbf{Explainability} is essential for verifying that agents' collective behaviors align with system goals and for building trust with human operators~\cite{biran2017explanation, guidotti2018survey}. Complex and unexpected behaviors may emerge when agents have no defined roles and missions or only loosely restrictive ones, allowing them to freely converge within a minimally constrained behavior space. Moreover, complexity increases when agents must coordinate in dynamic scenarios. For instance, during a DDoS attack, an agent may take precedence to ensure that other agents' actions are not applied in vain. This requires understanding how agents implicitly or explicitly negotiate priorities and coordinate~\cite{Shoham2009MAS}.
+This phase aims to interpret agent behaviors as understandable roles and goals, particularly in dynamic, unstructured environments where loosely defined roles and goals lead to broad policy convergence. More complexity arises when agents must coordinate, as in DDoS scenarios, where prioritization emerges implicitly. Understanding these interactions can help ensuring structured coordination and optimal policy convergence~\cite{Shoham2009MAS}.
 
 We propose a manual post-training method to analyze the trajectories of trained agents (comparable to sequences of actions) using unsupervised learning techniques to identify roles, missions, and inter-agent interactions based on a general definition of each, derived from their trajectories.
 
-This method mitigates reliance on domain-specific knowledge in defining roles and goals by reframing their design as an optimization problem. Agent policies evolve to maximize cumulative rewards within a policy space, which is initially unconstrained due to loosely defined roles and goals. The analysis phase enables the identification of abstract roles and goals, which progressively refine the policy space by eliminating irrelevant behaviors. Through an iterative process of training, empirical analysis, refinement, and retraining, the search space is incrementally restricted, facilitating convergence toward optimal, domain-agnostic roles and goals with minimal manual intervention. This adaptive approach enhances the KARMA generalizability.
+We also envisioned this method to reduce reliance on domain-specific knowledge by framing role and goal design as an optimization problem, where agent policies evolve within a policy space that is iteratively refined. Training begins with minimal constraints, allowing efficient behaviors to emerge, revealing abstract roles and goals that progressively narrow the search space. With each iteration, newly identified roles and goals further restrict the space, improving precision. Through repeated training, analysis, and refinement, this process aims to design relevant, domain-agnostic roles and goals with minimal manual intervention, enhancing KARMA's generalizability.
 
 \paragraph*{\textbf{Identifying Roles}}
 
@@ -534,11 +534,11 @@ Here, $\mathbb{P}(s)$ represents the probability of visiting a state $s$ within 
 \paragraph*{\textbf{Identifying Inter-Agent Interactions}}
 
 Explainability in KARMA also requires an understanding of how agents coordinate their actions in different contexts. This is achieved by analyzing inter-agent relationships using the concepts of $\mathcal{M}OISE^+$~\cite{hubner2002moise}, which formalizes relations such as:
-\begin{itemize}
+\begin{enumerate*}[label=\textbf{\arabic*)}, itemjoin={;\quad }]
     \item \textbf{Acquaintance Relations}: Derived from shared observations or reward signals during training, these relations represent which agents are aware of each other's actions.
     \item \textbf{Authority Relations}: Captured through dependency patterns, authority relations prioritize one agent's decisions over another's in specific scenarios. For instance, an specific agent may hold authority during a DDoS attack.
     \item \textbf{Communication Relations}: Inferred from synchronized actions or information-sharing events. For example, agents sharing traffic load data to coordinate replica adjustments during surges.
-\end{itemize}
+\end{enumerate*}
 
 To visualize these relations, a directed graph can be constructed where nodes represent agents and edges represent relations, annotated with interaction type on a time window.
 %Considering a time window, we can generate a graph based on detected relations and may evolves dynamically on the next time window, highlighting changes in interaction patterns.
@@ -582,7 +582,7 @@ Agents in the transfer component continuously interact with the Kubernetes API, 
 %     \item Refined policies are redeployed to the cluster, maintaining high adaptability and resilience.
 % \end{enumerate*}
 
-\footnotetext[1]{\label{lnk:footnote_1}Source code available with extra details and Jupyter Notebook at: \url{https://anonymous.4open.science/r/KARMA-040B/README.md}}
+\footnotetext[1]{\label{lnk:footnote_1}Source code available with extra details at: \url{https://anonymous.4open.science/r/KARMA-040B/README.md}}
 
 % =======================================
 \section{Experimental Setup}
@@ -715,7 +715,11 @@ Agents are rewarded for prioritizing services while maintaining efficient resour
 
 \subsection{Experimental Protocol}
 
-\noindent To evaluate the performance of KARMA in addressing the six identified gaps, we propose comparing baselines assessed through the same scenarios.
+\noindent To evaluate KARMA's performance in addressing the six gaps, we propose comparing baselines accross scenarios.
+
+\paragraph{\textbf{Real-Cluster Integration \& Evaluation}}
+
+KARMA couples simulation with real-cluster interaction by building a digital twin from real Kubernetes traces. Trained policies are deployed via the Kubernetes API, influencing the real cluster, while new traces refine the simulation. This ensures real-world applicability with agent training in a safe environment.
 
 \paragraph{\textbf{Experimental Scenarios}}
 
@@ -731,7 +735,7 @@ Agents are rewarded for prioritizing services while maintaining efficient resour
 
 \paragraph{\textbf{Baselines from the literature}}
 %
-\noindent We selected three HPA systems as baselines for comparison:
+\noindent We selected three HPA systems as baselines:
 \begin{enumerate*}[label=\textbf{\arabic*)}, itemjoin={;\quad }]
     \item \textbf{AWARE:} An RL-based system that balances response time and throughput~\cite{aware2023}
     \item \textbf{Gym-HPA:} An RL environment for experimentation with various RL algorithms in simulation~\cite{gymhpa2022}
@@ -767,15 +771,6 @@ These baselines have been tested under the same five scenarios using source code
     \item \textbf{Explainability:} Based on alignment of behaviors with roles/missions when given (\%), and qualitative evaluation of clustering of trajectories.
 \end{enumerate*}
 
-% \paragraph{\textbf{Analysis and Comparison}}
-
-% \begin{enumerate}
-%     \item \textbf{Baseline Comparisons:} Compare KARMA's performance to the state-of-the-art baselines across all metrics and scenarios.
-%     \item \textbf{Gap Validation:} Verify that KARMA addresses the gaps effectively by demonstrating superior performance on associated metrics.
-%     \item \textbf{Ablation Studies:} Analyze the impact of removing key components (MLP, organizational specifications, etc.) to quantify their contributions.
-% \end{enumerate}
-
-% \paragraph{Expected Outcome.} KARMA is expected to outperform existing baselines in operational resilience, adversarial robustness, adaptability, and explainability, while demonstrating the unique advantages of its digital twin modeling and automated MAS generation.
 
 
 \section{Results and Discussion}
@@ -783,9 +778,9 @@ These baselines have been tested under the same five scenarios using source code
 
 This section analyzes the performance of KARMA in addressing the six identified gaps.
 
+
 \subsection{Gap 1: Operational Resilience}
-Operational resilience evaluates the ability of the system to handle failures and maintain high QoS. Metrics such as success rate, latency compliance, and pending requests ratio were analyzed across all scenarios. Table~\ref{tab:operational_resilience} presents a comparison of KARMA against most baselines.
-%
+Operational resilience evaluates the ability of the system to handle failures and maintain high QoS.
 \begin{table}[h]
     \centering
     \caption{Operational resilience metrics across all scenarios.}
@@ -794,33 +789,34 @@ Operational resilience evaluates the ability of the system to handle failures an
         \hline
         \textbf{Baseline} & \textbf{Success Rate (\%)} & \textbf{Latency Compliance (\%)} & \textbf{Pending Requests (\%)} \\
         \hline
-        KHPA & 65.4 & 58.7 & 21.3 \\
-        Gym-HPA & 70.8 & 63.4 & 18.5 \\
-        Rlad-core & 76.2 & 68.9 & 14.7 \\
-        AWARE & 80.1 & 73.3 & 12.8 \\
-        \textit{Single-Agent w/o Org. Spec.} & 74.3 & 67.1 & 18.7 \\
-        \textit{Single-Agent w/ Hard Org. Spec.} & 83.9 & 75.6 & 12.3 \\
-        \textit{Multi-Agent w/o Org. Spec.} & 86.5 & 79.2 & 10.5 \\
-        \textit{Multi-Agent w/ Soft Org. Spec.} & 90.3 & 84.1 & 6.7 \\
-        \textbf{Multi-Agent w/ Hard Org. Spec. (KARMA)} & \textbf{93.7} & \textbf{88.5} & \textbf{3.1} \\
+        KHPA & 64.8 & 58.1 & 20.7 \\
+        Gym-HPA & 73.1 & 65.7 & 20.8 \\
+        Rlad-core & 77.4 & 70.1 & 15.9 \\
+        AWARE & 80.6 & 73.8 & 13.3 \\
+        Single-Agent w/o Org. Spec. & 72.6 & 65.4 & 17.0 \\
+        Single-Agent w/ Hard Org. Spec. & 80.8 & 72.5 & 15.4 \\
+        Multi-Agent w/o Org. Spec. & 87.7 & 81.5 & 9.3 \\
+        Multi-Agent w/ Soft Org. Spec. & 82.0 & 74.7 & 15.0 \\
+        \textbf{Multi-Agent w/ Hard Org. Spec. (KARMA)} & \textbf{90.9} & \textbf{85.7} & \textbf{5.9} \\
         \hline
     \end{tabular}}
 \end{table}
 
-KARMA achieves the highest success rate (93.7\%) and latency compliance (88.5\%), while minimizing pending requests to just 3.1\%, significantly outperforming all baselines. In the \textit{Bottleneck Resolution} scenario, KARMA reduces pending requests to 2.8\%, enabling higher throughput compared to AWARE (12.3\%). In the \textit{Resource Contention} scenario, KARMA prioritizes critical services, achieving a latency compliance of 90.3\%, compared to 82.1\% for Rlad-core.
+\autoref{tab:operational_resilience} presents a comparison of KARMA against existing baselines. The results show that KARMA achieves the highest success rate (\textbf{90.9\%}), surpassing all baselines including AWARE (80.6\%) and Rlad-core (\textbf{77.4\%}). Similarly, the latency compliance of KARMA is the highest at \textbf{85.7\%}, while the lowest pending requests ratio (\textbf{5.9\%}) suggests efficient handling of workload variations.
 
-The better performance of Hard Org. Spec. compared to Soft Org. Spec. can be explained by:
-\begin{enumerate*}[label=\textbf{\arabic*)}, itemjoin={;\quad }]
-    \item \textbf{Stronger coordination}: Agents with hard constraints converge faster because they avoid conflicting actions
-    \item \textbf{Reduced exploration overhead}: Soft constraints allow for more exploratory actions, but in adversarial scenarios, this can lead to suboptimal scaling decisions
-    \item \textbf{Stability in adversarial settings}: As seen in Table~\ref{tab:adversarial_conditions}, recovery time is 20\% faster under Hard Org. Spec., suggesting more effective agent responses.
-\end{enumerate*}
+KARMA's performance stems from its structured multi-agent coordination, which optimally distributes resources based on failure contexts, avoiding redundant or conflicting scaling actions—issues common in single-agent RL-based autoscalers.
+%
+Reactive, threshold-based autoscalers like KHPA and Gym-HPA struggle with dynamic workloads, leading to higher pending requests and lower success rates. AWARE and Rlad-core improve response time and throughput but lack multi-agent coordination, resulting in slower reactions in adversarial scenarios. Single-Agent w/o Organizational Specifications suffers from inefficient resource allocation, while Single-Agent w/ Hard Organizational Specifications benefits from structured decision-making but still lacks distributed coordination.
 
-KHPA struggles with dynamic workloads due to its reactive, threshold-based rules, resulting in lower success rates and higher pending requests. AWARE and Rlad-core provide moderate improvements but lack the explicit multi-agent coordination and organizational constraints of KARMA. The addition of organizational specifications in KARMA ensures well-aligned actions among agents, reducing latency and maximizing QoS across diverse conditions.
+KARMA's role-based coordination minimizes inefficiencies and enhances decision stability. Its hierarchical decomposition of objectives enables independent yet complementary decisions, leading to more resilient autoscaling.
+
+The results also underscore the value of organizational constraints. Multi-agent systems with soft constraints (82.0\% success rate) outperform single-agent approaches, but KARMA's hard constraints achieve the best results, eliminating conflicting agent behaviors and optimizing scaling.
+
+
 
 \subsection{Gap 2: Adversarial Conditions}
-Adversarial conditions evaluate the system's robustness against disruptive scenarios such as DDoS attacks. Metrics include recovery time and service availability across all scenarios. Table~\ref{tab:adversarial_conditions} compares KARMA's performance to other baselines.
 
+Adversarial conditions evaluate the system's robustness against disruptive scenarios such as DDoS attacks.
 \begin{table}[h]
     \centering
     \caption{Performance under adversarial conditions (DDoS scenario).}
@@ -830,50 +826,55 @@ Adversarial conditions evaluate the system's robustness against disruptive scena
         \hline
         \textbf{Baseline} & \textbf{Recovery Time (s)} & \textbf{Service Availability (\%)} \\
         \hline
-        KHPA & 82.4 & 67.3 \\
-        Gym-HPA & 68.1 & 74.5 \\
-        Rlad-core & 55.3 & 80.2 \\
-        AWARE & 50.7 & 84.8 \\
-        \textit{Single-Agent w/o Org. Spec.} & 60.2 & 72.3 \\
-        \textit{Single-Agent w/ Hard Org. Spec.} & 45.3 & 80.7 \\
-        \textit{Multi-Agent w/o Org. Spec.} & 40.1 & 85.4 \\
-        \textit{Multi-Agent w/ Soft Org. Spec.} & 35.2 & 89.6 \\
-        \textbf{Multi-Agent w/ Hard Org. Spec. (KARMA)} & \textbf{28.5} & \textbf{95.2} \\
+        KHPA & 80.7 & 65.6 \\
+        Gym-HPA & 66.2 & 72.6 \\
+        Rlad-core & 37.4 & 78.3 \\
+        AWARE & 49.5 & 83.6 \\
+        Single-Agent w/o Org. Spec. & 60.3 & 72.4 \\
+        Single-Agent w/ Hard Org. Spec. & 48.5 & 77.5 \\
+        Multi-Agent w/o Org. Spec. & 43.5 & 82.0 \\
+        Multi-Agent w/ Soft Org. Spec. & 38.8 & 86.0 \\
+        \textbf{Multi-Agent w/ Hard Org. Spec. (KARMA)} & \textbf{33.0} & \textbf{90.7} \\
         \hline
     \end{tabular}}
 \end{table}
 
-KARMA consistently achieves the best performance in the DDoS scenario. As for \textit{Recovery Time}, KARMA recovers 28.9\% faster than Multi-Agent w/o Org. Spec. (40.1 s), demonstrating effective collaborative agent coordination. The \textit{Service Availability} with KARMA is about 95.2\%, showing it maintains higher availability compared to AWARE (84.8\%) and KHPA (67.3\%).
+\autoref{tab:adversarial_conditions} compares recovery times and service availability in the \textit{DDoS Attack} scenario. KARMA achieves the fastest recovery time (\textbf{33.0s}), outperforming AWARE (\textbf{38.8s}) and Rlad-core (\textbf{43.5s}). It also ensures a good service availability at \textbf{90.7\%}, reducing downtime compared to AWARE (\textbf{83.6\%}).
 
-Baselines like KHPA and Gym-HPA struggle to adapt to sustained adversarial loads, leading to slower recovery times and reduced service availability.
-KARMA's hard organizational specifications enable agents to prioritize critical actions and minimize conflicting responses, ensuring faster recovery and greater availability during attacks.
+Traditional autoscalers like KHPA and Gym-HPA rely on reactive threshold-based scaling, leading to slower recovery and lower service availability under attacks. RL-based methods such as Rlad-core and AWARE improve resilience but lack structured coordination, making them less effective against adversarial spikes. Single-agent approaches struggle with balancing attack mitigation and resource optimization, while multi-agent models with soft constraints allow exploratory actions that sometimes delay optimal responses.
+
+KARMA's proactive adversarial learning and structured coordination enable it to anticipate attacks rather than react after degradation. Explicit role-based constraints ensure agents prioritize critical scaling actions, resulting in faster mitigation and higher availability. These results highlight the effectiveness of multi-agent structured learning in security-sensitive autoscaling, where traditional methods exhibit slower adaptation and prolonged downtime.
+
 
 \subsection{Gap 3: Digital Twin Modeling}
-The accuracy of the digital twin model is critical for training agents under realistic conditions. This evaluation focuses on the transition model's accuracy in simulating Kubernetes dynamics across all scenarios. Table~\ref{tab:digital_twin_accuracy} summarizes the results.
 
+The accuracy of the digital twin model is critical for training agents under realistic conditions.
 \begin{table}[h]
     \centering
-    \caption{Digital twin transition model accuracy across all scenarios.}
+    \caption{Transition models accuracy across all scenarios.}
     \label{tab:digital_twin_accuracy}{
         \footnotesize
     \begin{tabular}{>{\raggedright\arraybackslash}m{6cm}>{\centering\arraybackslash}m{2cm}}
         \hline
         \textbf{Baseline} & \textbf{Accuracy (\%)} \\
         \hline
-        Without MLP Transition Model & 85.3 \\
-        With MLP Transition Model (KARMA) & \textbf{94.8} \\
+        Without MLP Transition Model & 83.5 \\
+        \textbf{With MLP Transition Model (KARMA)} & \textbf{94.9} \\
         \hline
     \end{tabular}}
 \end{table}
 
-KARMA's MLP-based transition model achieves a higher accuracy (94.8\%) compared to the baseline (85.3\%). The inclusion of an MLP approximator enhances the digital twin's ability to generalize across scenarios by capturing complex state transitions. This improvement is particularly evident in the \textit{Resource Contention} scenario, where accurate modeling of resource bottlenecks ensures effective policy training.
+\autoref{tab:digital_twin_accuracy} compares the accuracy of different digital twin models. The results show that KARMA achieves \textbf{94.9\%} accuracy, outperforming the non-MLP model (\textbf{83.5\%}), which struggles to generalize across varying workloads.
 
-Without an MLP, the transition model struggles to generalize, leading to suboptimal agent behaviors in dynamic environments. The high accuracy achieved by KARMA's model enables agents to better anticipate system responses, improving their ability to handle unforeseen workload patterns. This result underscores the importance of integrating machine learning-based approximators in simulation environments for realistic multi-agent reinforcement learning scenarios.
+The improvement stems from the MLP model's ability to capture non-linear dependencies between workload fluctuations, resource allocation, and scaling actions. Without this feature, the system fails to model complex cluster behaviors accurately.
+%
+By leveraging a neural network for transition modeling, KARMA ensures a more reliable digital twin, allowing agents to train under near-realistic conditions. This reduces the risk of poor decision-making when policies transfer to production, reinforcing the importance of high-fidelity simulations.
+
 
 
 \subsection{Gap 4: Automated MAS Generation}
 
-The efficiency of generating a MAS is evaluated in terms of convergence time and training overhead. Table~\ref{tab:mas_generation_efficiency} presents the results across all scenarios while \autoref{fig:learning_curves} shows learning curves for the main baselines in the mixed scenario over 2000 episodes.
+The efficiency of generating a MAS is evaluated in terms of convergence time and training overhead. \autoref{tab:mas_generation_efficiency} presents the results across concerned scenarios while \autoref{fig:learning_curves} shows learning curves in the mixed scenario over 2000 episodes.
 
 \begin{table}[h]
     \centering
@@ -892,9 +893,9 @@ The efficiency of generating a MAS is evaluated in terms of convergence time and
 
 The role-guided learning narrows the search space for optimal policies, enabling faster convergence and reduced computational costs. These efficiency gains are particularly important for scaling MAS solutions to complex environments.
 
-The learning curves in Figure~\ref{fig:learning_curves} demonstrate that KARMA achieves stable convergence significantly faster than the baseline without organizational specifications. By episode 950, KARMA exhibits minimal variance in cumulative rewards, whereas the baseline requires nearly double the episodes (1800) to reach comparable performance. This highlights the role of organizational constraints in guiding agents toward effective policies, thereby reducing exploration overhead.
+The learning curves in \autoref{fig:learning_curves} demonstrate that KARMA achieves stable convergence significantly faster than the baseline without organizational specifications. By episode 950, KARMA exhibits minimal variance in cumulative rewards, whereas the baseline requires nearly double the episodes (1800) to reach comparable performance. This highlights the role of organizational constraints in guiding agents toward effective policies, thereby reducing exploration overhead.
 
-\autoref{tab:mas_generation_efficiency}, shows reduced \textit{Convergence Time} by approximately 47\% compared to Multi-Agent w/o Org. Spec., showcasing the efficiency of role-guided learning in minimizing unnecessary exploration. Moreover, \textit{Training Overhead} is reduced by 62.5\%, showing a better practicality for large-scale systems where computational resources are a limiting factor.
+\autoref{tab:mas_generation_efficiency}, shows reduced \textit{Convergence Time} by approximately \textbf{47\%} compared to Multi-Agent w/o Org. Spec., showcasing the efficiency of role-guided learning in minimizing unnecessary exploration. Moreover, \textit{Training Overhead} is reduced by \textbf{62.5\%}, showing a better practicality for large-scale systems where computational resources are a limiting factor.
 
 \begin{figure}[h!]
     \centering
@@ -905,8 +906,8 @@ The learning curves in Figure~\ref{fig:learning_curves} demonstrate that KARMA a
 
 
 \subsection{Gap 5: Adaptability}
-Adaptability assesses the ability of the system to maintain performance under dynamic workloads and heterogeneous conditions. The reward standard deviation in the mixed scenario was measured and presented in Table~\ref{tab:adaptability_comparison}.
 
+Adaptability assesses the ability of the system to maintain performance under dynamic workloads accross scenarios.
 \begin{table}[h]
     \centering
     \caption{Comparison of adaptability metrics in the mixed scenario.}
@@ -916,17 +917,23 @@ Adaptability assesses the ability of the system to maintain performance under dy
         \hline
         \textbf{Baseline} & \textbf{Reward s.t.d (\%)} \\
         \hline
-        Single-Agent w/o Org. Spec. & 12.4 \\
-        Single-Agent w/ Hard Org. Spec. & 8.9 \\
-        Multi-Agent w/o Org. Spec. & 7.3 \\
-        \textbf{Multi-Agent w/ Hard Org. Spec. (KARMA)} & \textbf{3.1} \\
+        Single-Agent w/o Org. Spec. & 11.1 \\
+        Single-Agent w/ Hard Org. Spec. & 11.1 \\
+        Multi-Agent w/o Org. Spec. & 10.7 \\
+        Multi-Agent w/ Soft Org. Spec. & 9.0 \\
+        \textbf{Multi-Agent w/ Hard Org. Spec. (KARMA)} & \textbf{5.3} \\
         \hline
     \end{tabular}}
 \end{table}
 
-In the \textit{Mixed Scenario}, KARMA maintains stable performance across dynamically changing workloads, outperforming the next-best baseline (7.3\% variance). KARMA shows resilience against abrupt workload shifts with consistent rewards.
+\autoref{tab:adaptability_comparison} shows that KARMA achieves the lowest reward standard deviation (\textbf{5.3\%}), indicating a highly stable performance, outperforming Multi-Agent w/ Soft Org. Spec. (\textbf{9.0\%}) and Multi-Agent w/o Org. Spec. (\textbf{10.7\%}).
 
-Organizational constraints provide agents with clear priorities, reducing conflicting actions and ensuring stability and allow distributed decision-making, which enhances responsiveness to dynamic conditions. The reduced reward variance underscores KARMA’s ability to generalize across diverse scenarios, making it well-suited for real-world deployments.
+In the \textit{Mixed Scenario}, single-agent models exhibit higher variance as they must balance multiple competing objectives without specialization. Multi-agent approaches improve adaptability, but without structured coordination, fluctuations remain. The use of soft organizational constraints stabilizes performance, though some exploratory variations persist.
+
+KARMA's hierarchical reinforcement learning ensures lower variability by decomposing the overarching goal into specialized sub-goals. This structured approach enables agents to focus on well-defined objectives, reducing conflicting decisions and improving overall stability.
+%
+These findings underscore the importance of structured learning frameworks in autoscaling. By enforcing clear agent specializations, KARMA enhances adaptability, ensuring resilient performance across unpredictable workload conditions.
+
 
 \subsection{Gap 6: Explainability}
 \label{subsec:gap_explainability}
@@ -959,9 +966,9 @@ Explainability is qualitatively evaluated through trajectory clustering and quan
     }
 \end{table}
 
-KARMA shows the emergence of distinct behavioral patterns aligned with predefined roles validates KARMA's organizational model and has the highest alignment score (96.2\%), significantly outperforming Multi-Agent w/o Org. Spec. (78.5\%), showcasing well-coordinated agent behaviors. In adversarial scenarios, clustering purity is highest for KARMA, reflecting the clear differentiation of agent behaviors under organizational constraints.
+KARMA shows the emergence of distinct behavioral patterns aligned with predefined roles validates KARMA's organizational model and has the highest alignment score (\textbf{96.2\%}), significantly outperforming Multi-Agent w/o Org. Spec. (\textbf{85.3\%}), showcasing well-coordinated agent behaviors. In adversarial scenarios, clustering purity is highest for KARMA, reflecting the clear differentiation of agent behaviors under organizational constraints.
 %
-Distinct clusters validate the role-specific behaviors and highlight the interpretability of agent policies. Baselines without organizational specifications show reduced explainability, as evidenced by lower clustering purity and alignment scores with soft constraints for organizational specifications.
+Distinct clusters validate the role-specific behaviors and highlight the interpretability of agents. Baselines without organizational specifications show reduced explainability, as evidenced by lower clustering purity and alignment scores with soft organizational constraints.
 
 % \subsection{General discussion}
 
