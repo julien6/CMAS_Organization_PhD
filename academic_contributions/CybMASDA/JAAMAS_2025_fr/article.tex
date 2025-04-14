@@ -218,15 +218,15 @@
 %%==================================%%
 
 \abstract{
-    Designing Multi-Agent Systems (MAS) involves balancing structured behavior with adaptability. Traditional Agent-Oriented Software Engineering (AOSE) relies on expert design, while Multi-Agent Reinforcement Learning (MARL) offers autonomous learning but lacks interpretability and control. Viewing MAS design as a policy search problem, MARL can assist AOSE by discovering suitable agent policies. However, this integration remains underexplored.
+    Concevoir des Systèmes Multi-Agents (SMA) implique de trouver un équilibre entre comportement structuré et adaptabilité. L’Ingénierie Logicielle Orientée Agents (AOSE) repose traditionnellement sur l’expertise humaine, tandis que l’Apprentissage par Renforcement Multi-Agent (MARL) permet un apprentissage autonome, mais souffre d’un manque d’interprétabilité et de contrôle. En considérant la conception de SMA comme un problème de recherche de politique, MARL peut venir en appui à l’AOSE en découvrant des politiques adaptées pour les agents. Cependant, cette intégration reste peu explorée.
     %
-    We propose \textbf{MOISE+MARL Assisted MAS Design (MAMAD)}, a four-phase method framing MAS design as a constrained optimization problem: learning joint policies that maximize rewards while respecting $\mathcal{M}OISE^+$ roles and goals. The phases include:  
-    1) \textbf{Modeling} the environment,  
-    2) \textbf{Training} under organizational constraints,  
-    3) \textbf{Analyzing} emergent behaviors,  
-    4) \textbf{Transferring} to real-world deployment.
+    Nous proposons la méthode \textbf{MOISE+MARL Assisted MAS Design (MAMAD)}, une approche en quatre phases qui formalise la conception de SMA comme un problème d’optimisation sous contraintes : apprendre des politiques conjointes maximisant les récompenses tout en respectant les rôles et objectifs de $\mathcal{M}OISE^+$. Les phases incluent :  
+    1) la \textbf{modélisation} de l’environnement,  
+    2) l’\textbf{entraînement} sous contraintes organisationnelles,  
+    3) l’\textbf{analyse} des comportements émergents,  
+    4) le \textbf{transfert} vers un déploiement réel.
     %
-    We evaluate MAMAD on various environments, showing that the generated MAS do exhibit expected performance, compliance with design requirements and are explainable, while reducing manual design overhead.
+    Nous évaluons MAMAD sur différents environnements et montrons que les SMA générés atteignent les performances attendues, respectent les exigences de conception, restent interprétables, tout en réduisant la charge de conception manuelle.
 }
 
 % Introduction
@@ -244,243 +244,200 @@
 \maketitle
 
 
+
 \section{Introduction}
 
-\subsection{Context}
+\subsection{Contexte}
 
-Designing \textbf{MAS} for complex real-world applications, such as cybersecurity, logistics, autonomous robotics, or intelligent transportation, requires methodologies that ensure both structured and goal-oriented agent behaviors~\cite{Jamont2O15}. Traditionally, the \textbf{AOSE} paradigm has provided systematic frameworks for specifying and developing MAS, emphasizing the design of agents, roles, and interactions~\cite{Pavon2003, Bernon2005}. AOSE methodologies typically rely on explicit expert's knowledge and predefined organizational models to structure agent behavior, ensuring predictability, reliability, and adherence to constraints~\cite{Hindriks2014}.
+La conception de \textbf{Systèmes Multi-Agents} (SMA) pour des applications complexes du monde réel, telles que la cybersécurité, la logistique, la robotique autonome ou le transport intelligent, nécessite des méthodologies garantissant à la fois des comportements structurés et orientés vers des objectifs~\cite{Jamont2O15}. Traditionnellement, le paradigme de l’\textbf{Ingénierie Logicielle Orientée Agents} (AOSE) fournit des cadres systématiques pour spécifier et développer des SMA, en mettant l’accent sur la conception des agents, des rôles et des interactions~\cite{Pavon2003, Bernon2005}. Les méthodologies AOSE s’appuient généralement sur l’expertise explicite d’experts et sur des modèles organisationnels prédéfinis pour structurer le comportement des agents, assurant ainsi prévisibilité, fiabilité et conformité aux contraintes~\cite{Hindriks2014}.
 
-Traditional AOSE approaches have limitations in adaptability and scalability. They often require extensive domain expertise to define organizational structures and behavioral rules, making them difficult to generalize across dynamic environments. To our knowledge, no work have carried out research pushing Machine Learning (ML) into AOSE MAS design, such as adaption to unforeseen events~\cite{Garcia2004}.
+Cependant, les approches AOSE traditionnelles présentent des limites en termes d’adaptabilité et de passage à l’échelle. Elles exigent souvent une expertise approfondie du domaine pour définir les structures organisationnelles et les règles comportementales, ce qui rend leur généralisation difficile dans des environnements dynamiques. À notre connaissance, aucun travail n’a encore exploré l’intégration de l’Apprentissage Automatique (ML) dans la conception de SMA selon l’approche AOSE, notamment pour l’adaptation à des événements imprévus~\cite{Garcia2004}.
 
-In contrast, \textbf{MARL} has emerged as a distinct ML approach that enables autonomous agents to \textbf{learn and adapt} through experience. MARL techniques allow agents to develop \textbf{coordination strategies} by interacting with their environment and optimizing their decision-making policies based on cumulative rewards~\cite{Zhang2021}. This data-driven learning paradigm enables agents to dynamically adjust their behaviors to different contexts, even in highly uncertain or complex environments, such as decentralized control, adversarial scenarios, or cooperative problem-solving~\cite{Papoudakis2021}.
+En contraste, l’\textbf{Apprentissage par Renforcement Multi-Agent} (MARL) s’est imposé comme une approche ML distincte permettant aux agents autonomes de \textbf{l’apprendre et de s’adapter} par l’expérience. Les techniques MARL permettent aux agents de développer des \textbf{stratégies de coordination} en interagissant avec leur environnement et en optimisant leurs politiques décisionnelles sur la base de récompenses cumulées~\cite{Zhang2021}. Ce paradigme d’apprentissage fondé sur les données permet aux agents d’ajuster dynamiquement leurs comportements selon les contextes, y compris dans des environnements très incertains ou complexes, tels que le contrôle décentralisé, les scénarios adverses ou la résolution collaborative de problèmes~\cite{Papoudakis2021}.
 
-From a theoretical perspective, integrating \textbf{MARL} into \textbf{AOSE} offers a promising pathway to enhance MAS design. MARL can assist by \textit{automatically determining agent policies} that align with environmental constraints and goals, reducing manual behavior specification. It may enable agents to \textit{learn coordination strategies} or \textit{adapt to changing environments} based on experience. In this view, MARL serves as a learning-driven layer that instantiates and operationalizes the abstractions defined in AOSE.
+D’un point de vue théorique, l’intégration du \textbf{MARL} dans l’\textbf{AOSE} ouvre une voie prometteuse pour améliorer la conception de SMA. Le MARL peut aider à \textit{déterminer automatiquement les politiques des agents} qui respectent les contraintes de l’environnement et les objectifs, réduisant ainsi la spécification manuelle des comportements. Il permettrait aux agents d’\textit{apprendre des stratégies de coordination} ou de \textit{s’adapter à des environnements évolutifs} grâce à l’expérience. Dans cette optique, le MARL constitue une couche guidée par l’apprentissage, qui instancie et opérationnalise les abstractions définies dans l’AOSE.
 
-Despite its capabilities, MARL presents significant challenges in terms of \textbf{interpretability and control}. Unlike AOSE, which enforces structured agent interactions through predefined models, MARL relies on emergent behaviors, which can be unpredictable and difficult to interpret~\cite{Du2022}. This lack of transparency poses challenges in critical domains such as \textbf{cybersecurity} and \textbf{human-agent collaboration}, where ensuring explainability and adherence to high-level constraints is crucial. Furthermore, MARL lacks built-in mechanisms to enforce \textbf{organizational constraints}, such as predefined roles, team structures, or safety guidelines, limiting its applicability in mission-critical MAS applications~\cite{Nguyen2020}.
+Malgré ses atouts, le MARL présente d’importants défis en termes \textbf{d’interprétabilité et de contrôle}. Contrairement à l’AOSE, qui impose des interactions structurées via des modèles prédéfinis, le MARL repose sur des comportements émergents, souvent imprévisibles et difficiles à interpréter~\cite{Du2022}. Ce manque de transparence soulève des enjeux dans des domaines critiques tels que la \textbf{cybersécurité} ou la \textbf{collaboration humain-agent}, où l’explicabilité et le respect de contraintes de haut niveau sont essentiels. De plus, le MARL ne dispose pas de mécanismes intrinsèques pour faire respecter les \textbf{contraintes organisationnelles}, telles que les rôles prédéfinis, les structures d’équipe ou les directives de sécurité, ce qui limite son applicabilité dans des SMA critiques~\cite{Nguyen2020}.
 
-Given these contrasting advantages and limitations, this paper is positioned at finding a way to integrate the structured modeling capabilities of AOSE with the adaptive learning potential of MARL to design effective MAS, benefitting from the strengths of both domains.
+Face à ces avantages et limites contrastés, cet article cherche à intégrer les capacités de modélisation structurée de l’AOSE avec le potentiel adaptatif du MARL pour concevoir des SMA efficaces, tirant profit des atouts des deux approches.
 
-% To enable the integration of MARL wihin AOSE, we aim an \textbf{approach} that unifies the strengths of both paradigms, providing a systematic way to \textbf{design MAS while enabling agents to learn and adapt within organizational constraints}.
+\subsection{Problématique et verrous de recherche}
 
-\subsection{Problem statement and research gaps}
-
-In order to gather AOSE and MARL domains we adopt an optimization perspective on MAS design. We consider that designing a MAS in a deployment environment that has to achieve a global goal efficiently while adhering to optional additional user-defined requirements can be formulated as an \textbf{optimization problem under constraints in a MARL context}. In this formulation:
+Afin de concilier les domaines de l’AOSE et du MARL, nous adoptons une perspective d’\textbf{optimisation} dans la conception des SMA. Nous considérons que concevoir un SMA dans un environnement de déploiement, dont l’objectif est d’atteindre efficacement une finalité globale tout en respectant éventuellement des exigences supplémentaires définies par l’utilisateur, peut être formulé comme un \textbf{problème d’optimisation sous contraintes dans un contexte MARL}. Dans cette formulation :
 \begin{itemize}
-    \item The \textbf{variable to optimize} is the agents' joint policy in the policy space ;
-    \item The \textbf{goal function} is to maximize the cumulative reward over time, quantifying how effectively agents achieve their goal ;
-    \item The \textbf{constraints} are the organizational specifications, such as user-defined roles and goals, representing the designer's requirements.
+    \item La \textbf{variable à optimiser} est la politique conjointe des agents dans l’espace des politiques ;
+    \item La \textbf{fonction objectif} consiste à maximiser la récompense cumulée dans le temps, quantifiant ainsi l’efficacité des agents à atteindre leur objectif ;
+    \item Les \textbf{contraintes} sont les spécifications organisationnelles, telles que les rôles et objectifs définis par l’utilisateur, représentant les exigences du concepteur.
 \end{itemize}
-This formulation serves as the backbone of this article and motivates our contribution. 
+
+Cette formulation constitue l’ossature de cet article et motive notre contribution.
 %
-To implement this approach, several key research gaps remain unaddressed when considering the design of MAS from an \textbf{organizational perspective}:
+Pour mettre en œuvre cette approche, plusieurs verrous de recherche majeurs demeurent non résolus lorsqu’on aborde la conception de SMA sous un \textbf{angle organisationnel} :
 %
 \begin{itemize}
-    \item \textbf{(G1) Leveraging MARL's performance within AOSE}: AOSE lacks MARL integration, while MARL lacks structured design constraints. There is no \textbf{unified framework combining AOSE and MARL-driven learning}~\cite{Cossentino2014}. Addressing this gap would allow MAS to \textbf{leverage MARL's computational power} to automatically generate sufficiently performant agents' policies ;
+    \item \textbf{(G1) Exploiter les performances du MARL au sein de l’AOSE} : l’AOSE ne propose pas d’intégration du MARL, tandis que le MARL ne prend pas en charge les contraintes de conception structurée. Il n’existe actuellement \textbf{aucun cadre unifié combinant AOSE et apprentissage guidé par MARL}~\cite{Cossentino2014}. Lever ce verrou permettrait aux SMA de \textbf{bénéficier de la puissance computationnelle du MARL} pour générer automatiquement des politiques d’agents suffisamment performantes ;
           
-    \item \textbf{(G2) Understanding emergent collective behaviors in MARL}: MARL agents may develop unpredictable strategies, making behavior analysis difficult. A method is needed to \textbf{align emergent behaviors with organizational structures}~\cite{Du2022, Papoudakis2021}. Addressing this gap would improve \textbf{organizational explainability}, aiding validation, refinement, and deployment ;
+    \item \textbf{(G2) Comprendre les comportements collectifs émergents dans le MARL} : les agents MARL peuvent adopter des stratégies imprévisibles, rendant difficile l’analyse comportementale. Une méthode est nécessaire pour \textbf{aligner ces comportements émergents avec des structures organisationnelles}~\cite{Du2022, Papoudakis2021}. Résoudre ce verrou améliorerait l’\textbf{explicabilité organisationnelle}, facilitant la validation, l’ajustement et le déploiement ;
           
-    \item \textbf{(G3) Controlling or guiding agents at both individual and collective levels in MARL}: MARL lacks mechanisms to \textbf{guide agents toward structured behaviors while preserving flexibility}. Most approaches optimize performance without enforcing \textbf{organizational constraints}~\cite{Oroojlooy2023}. Addressing this gap would ensure \textbf{compliance with design requirements} and accelerate convergence by narrowing the policy search space ;
+    \item \textbf{(G3) Contrôler ou guider les agents aux niveaux individuel et collectif dans le MARL} : le MARL ne propose pas de mécanismes pour \textbf{orienter les agents vers des comportements structurés tout en préservant leur flexibilité}. La majorité des approches optimisent la performance sans imposer de \textbf{contraintes organisationnelles}~\cite{Oroojlooy2023}. Résoudre ce verrou garantirait la \textbf{conformité aux exigences de conception} et accélérerait la convergence en réduisant l’espace de recherche des politiques ;
           
-    \item \textbf{(G4) Automating end-to-end MAS design}: MAS design depends on domain experts and follows a costly, trial-and-error process. Manually crafted specifications \textbf{lack scalability and generalizability}~\cite{Nguyen2020}. Addressing this gap would enable \textbf{automated MAS design}, reducing expert reliance, manual effort, and resource costs while achieving comparable results.
+    \item \textbf{(G4) Automatiser la conception de SMA de bout en bout} : la conception de SMA repose aujourd’hui fortement sur des experts du domaine et s’appuie sur des processus coûteux par essais-erreurs. Les spécifications conçues manuellement \textbf{manquent de scalabilité et de généricité}~\cite{Nguyen2020}. Surmonter ce verrou permettrait une \textbf{conception automatisée des SMA}, réduisant la dépendance aux experts, l’effort manuel et les coûts, tout en obtenant des résultats comparables.
 \end{itemize}
 %
-These gaps highlight the need for a \textbf{method that integrates organizational modeling into MARL-driven MAS design}.
+Ces verrous soulignent la nécessité d’une \textbf{méthode intégrant la modélisation organisationnelle dans la conception de SMA guidée par le MARL}.
 
-\subsection{Contributions and paper organization}
+\subsection{Contributions et organisation de l’article}
 
-We propose the \textbf{MAMAD method}, an extension of the \textbf{MOISE+MARL} framework~\cite{soule2025moisemarl}\footnote{This article introducing MOISE+MARL has been accepted for AAMAS 2025 and is freely available at \url{https://arxiv.org/abs/2503.23615}}, to structure learning in MARL. MAMAD enables \textbf{controlled policy learning}, aligning agent behaviors with predefined organizational specifications while extracting insights from emergent behaviors. It wraps MOISE+MARL into a fully automated, four-phase design process driven by three inputs: the environment, user-defined requirements, and the global objective.
+Nous proposons la \textbf{méthode MAMAD}, une extension du cadre \textbf{MOISE+MARL}~\cite{soule2025moisemarl}\footnote{Cet article introduisant MOISE+MARL a été accepté à AAMAS 2025 et est librement accessible à l’adresse \url{https://arxiv.org/abs/2503.23615}}, afin de structurer l’apprentissage dans le MARL. MAMAD permet un \textbf{apprentissage contrôlé des politiques}, en alignant les comportements des agents avec des spécifications organisationnelles prédéfinies, tout en extrayant des connaissances à partir des comportements émergents. Il encapsule MOISE+MARL dans un processus de conception entièrement automatisé, en quatre phases, guidé par trois entrées : l’environnement, les exigences définies par l’utilisateur, et l’objectif global.
 
-In classical AOSE, the \textit{Requirement Engineering} phase involves specifying design requirements, environmental constraints, and global objectives~\cite{Pavon2003, Bernon2005}. We assume these are provided and leave the engineering methodology to the user. MAMAD formalizes and operationalizes them within the MOISE+MARL framework as part of an automated design workflow.
+Dans l’AOSE classique, la phase d’\textit{Ingénierie des Exigences} consiste à spécifier les contraintes de conception, les contraintes environnementales, et les objectifs globaux~\cite{Pavon2003, Bernon2005}. Nous supposons que ces éléments sont fournis, et laissons la méthodologie d’ingénierie au soin de l’utilisateur. MAMAD les formalise et les opérationnalise dans le cadre MOISE+MARL comme partie intégrante d’un processus de conception automatisé.
 
 \begin{enumerate}
-    \item \textbf{Modeling Phase:} Automatically builds a simulated environment by training a neural architecture inspired by "world models"~\cite{Ha2018}, and defines the MAS global goal through a dedicated reward function.
-    \item \textbf{Training Phase:} Agents learn in the simulated environment, optionally guided by organizational constraints: roles (limiting allowable actions) and goals (shaping rewards). These structure the learning process as user-defined specifications.
-    \item \textbf{Analysis Phase:} Unsupervised learning techniques analyze successful trajectories to extract emergent roles and goals within the constrained policy space, yielding validated specifications and policies.
-    \item \textbf{Transfer Phase:} The validated joint policy is deployed in the real-world environment to operationalize the trained MAS.
+    \item \textbf{Phase de Modélisation :} construit automatiquement un environnement simulé en entraînant une architecture neuronale inspirée des « world models »~\cite{Ha2018}, et définit l’objectif global du SMA via une fonction de récompense dédiée.
+    \item \textbf{Phase d’Entraînement :} les agents apprennent dans l’environnement simulé, éventuellement guidés par des contraintes organisationnelles : les rôles (limitant les actions autorisées) et les objectifs (structurant les récompenses). Ces éléments encadrent l’apprentissage selon les spécifications définies par l’utilisateur.
+    \item \textbf{Phase d’Analyse :} des techniques d’apprentissage non supervisé analysent les trajectoires réussies afin d’extraire des rôles et objectifs émergents au sein de l’espace des politiques contraint, produisant des spécifications et politiques validées.
+    \item \textbf{Phase de Transfert :} la politique conjointe validée est déployée dans l’environnement réel pour opérationnaliser le SMA entraîné.
 \end{enumerate}
 
-We evaluated \textbf{MAMAD} in gamified environments, used as controlled testbeds to assess its ability to generate high-fidelity simulations during the Modeling phase—bypassing the complexity of modeling physical environments. Results show strong alignment between the specifications applied during training and those inferred post hoc, validating both \textbf{organizational-level explainability} and \textbf{compliance with design requirements}. The resulting MAS also matched benchmark performance, confirming that \textbf{goal achievement} is preserved. Compared to manual methods, \textbf{automation} improved significantly, requiring fewer interventions. Ablation studies revealed that omitting automated modeling reduced policy generalization, while removing organizational constraints led to erratic agent behavior.
+Nous avons évalué \textbf{MAMAD} dans des environnements ludiques, utilisés comme bancs d’essai contrôlés pour évaluer sa capacité à générer des simulations fidèles durant la phase de Modélisation — évitant ainsi la complexité de la modélisation d’environnements physiques. Les résultats montrent une forte cohérence entre les spécifications appliquées pendant l’entraînement et celles inférées a posteriori, validant à la fois l’\textbf{explicabilité organisationnelle} et la \textbf{conformité aux exigences de conception}. Le SMA obtenu atteint également les performances de référence, confirmant que l’\textbf{atteinte des objectifs} est bien préservée. Comparée aux méthodes manuelles, l’\textbf{automatisation} a significativement progressé, nécessitant moins d’interventions humaines. Les études d’ablation révèlent que l’absence de modélisation automatique diminue la généralisation des politiques, tandis que l’absence de contraintes organisationnelles mène à des comportements erratiques des agents.
 
-\
+\vspace{0.5em}
 
-The rest of the paper is organized as follows. \autoref{sec:related_works} reviews related work on MAS design, MARL, and organizational control and explainability. \autoref{sec:background} recalls the basics of MARL, $\mathcal{M}OISE^+$ and World Model Learning used in the \textbf{MOISE+MARL} framework and \textbf{MAMAD}. \autoref{sec:mamad} presents the \textbf{MAMAD method} accros each phase, detailing MOISE+MARL and its use. \autoref{sec:experimental_setup} describes the experimental setup. \autoref{sec:results} reports and analyzes the results. \autoref{sec:conclusion} concludes the paper and outlines future directions.
-
-
-
-\section{Related works}\label{sec:related_works}
-
-This section reviews existing research through targeted gaps. \autoref{sub-sec:rel_aose_automate_marl} surveys AOSE methodologies and recent efforts to automate various aspects of MAS design (G4). It also discusses the current limitations in integrating MARL into AOSE, while considering approaches based on Reinforcement Learning (RL) that contribute to MAS development (G1).
-\autoref{sub-sec:rel_control} presents existing methods for guiding or constraining the learning process in MARL and RL (G2).
-\autoref{sub-sec:rel_evaluation} reviews works focused on enhancing the explainability of learned agent policies (G3).
-%
-% An overview of the reviewed literature is provided in \autoref{tab:related_works}.
-
-% \begin{table*}[t]
-%     \centering
-%     \caption{Summary of related works with respect to the targeted research gaps.}
-%     \label{tab:related_works}
-%     \begin{tabular}{p{5.2cm}cccc}
-%     \toprule
-%     \textbf{Reference / Approach} & \textbf{G1: MARL-AOSE} & \textbf{G2: Explainable MARL/RL} & \textbf{G3: Controllable MARL/RL} & \textbf{G4: Automated MAS Design} \\
-%     \midrule
-%     GAIA~\cite{gaia1998}, ADELFE~\cite{adelfe2002}, INGENIAS~\cite{pavon2005agent}, DIAMOND~\cite{Jamont2005} & none & none & none & low \\
-%     KB-ORG~\cite{dignum2001kb} & none & none & none & medium \\
-%     ADAS~\cite{smith2024automated}, AutoGenesisAgent~\cite{harper2024autogenesisagent} & none & none & none & high \\
-%     BMW Agents~\cite{crawford2024bmw} & none & none & low & high \\
-%     Rahwan et al.~\cite{rahwan2006integrating} & medium & none & none & medium \\
-%     Gómez-Rodríguez et al.~\cite{gomez2011modeling} & low & none & none & medium \\
-%     CyberSec MARL framework~\cite{hammar2023scalable} & medium & low & low & medium \\
-%     Spieker~\cite{spieker2021constraint} & none & low & high & none \\
-%     Kalweit et al.~\cite{kalweit2020deep} & none & low & high & none \\
-%     Achiam et al.~\cite{achiam2017constrained} & none & low & high & none \\
-%     Zhou et al.~\cite{zhou2024mentor} & none & low & medium & none \\
-%     Miryoosefi et al.~\cite{miryoosefi2022simple} & none & none & medium & none \\
-%     Zabounidis et al.~\cite{zabounidis2023concept} & none & high & none & none \\
-%     Iturria-Rivera et al.~\cite{iturria2024explainable} & none & high & none & none \\
-%     Liu et al.~\cite{liu2022mixrts} & none & high & none & none \\
-%     Poupart et al.~\cite{poupart2025perspectives} & none & medium & none & none \\
-%     Li et al.~\cite{li2025from} & none & high & none & none \\
-%     Wilson et al.~\cite{wilson2008learning}, Berenji and Vengerov~\cite{berenji2000learning}, Yusuf and Baber~\cite{yusuf2020inferential}, Serrino et al.~\cite{serrino2019finding} & low & medium & low & none \\
-%     \bottomrule
-%     \end{tabular}
-% \end{table*}
+L’article est organisé comme suit. \autoref{sec:related_works} présente les travaux connexes sur la conception de SMA, le MARL, le contrôle organisationnel et l’explicabilité. \autoref{sec:background} rappelle les bases du MARL, de $\mathcal{M}OISE^+$ et de l’apprentissage des World Models utilisés dans les cadres \textbf{MOISE+MARL} et \textbf{MAMAD}. \autoref{sec:mamad} décrit la \textbf{méthode MAMAD} à travers chacune de ses phases, en détaillant l’usage de MOISE+MARL. \autoref{sec:experimental_setup} décrit le protocole expérimental. \autoref{sec:results} présente et analyse les résultats. Enfin, \autoref{sec:conclusion} conclut l’article et esquisse les perspectives futures.
 
 
-\subsection{Automation and analogous MARL-driven works in AOSE}\label{sub-sec:rel_aose_automate_marl}
+\section{Travaux connexes}\label{sec:related_works}
 
-AOSE has introduced structured methodologies for MAS design, emphasizing role-based interactions, organizational hierarchies, and systematic agent coordination. Classical frameworks such as \textbf{GAIA}~\cite{gaia1998}, \textbf{ADELFE}~\cite{adelfe2002}, and \textbf{DIAMOND}~\cite{Jamont2005} provide well-defined processes for designing MAS, relying on explicit organizational modeling. However, these methods are largely manual and require specialized knowledge to define agent behaviors, roles, and organizational constraints, making scalability in complex or dynamic environments cumbersome.
+Cette section passe en revue les recherches existantes au regard des verrous ciblés. \autoref{sub-sec:rel_aose_automate_marl} examine les méthodologies AOSE et les efforts récents visant à automatiser divers aspects de la conception des SMA (G4). Elle aborde également les limites actuelles de l’intégration du MARL dans l’AOSE, tout en considérant les approches basées sur l’apprentissage par renforcement (RL) qui contribuent au développement des SMA (G1). \autoref{sub-sec:rel_control} présente les méthodes existantes pour guider ou contraindre le processus d’apprentissage dans le MARL et le RL (G2).
+\autoref{sub-sec:rel_evaluation} examine les travaux consacrés à l’amélioration de l’explicabilité des politiques apprises par les agents (G3).
 
-To enhance efficiency and scalability, various methodologies and frameworks have been proposed to automate different aspects of MAS design:
+\subsection{Automatisation et travaux analogues fondés sur le MARL dans l’AOSE}\label{sub-sec:rel_aose_automate_marl}
 
-\textbf{Model-Driven Engineering in AOSE:} INGENIAS adopts a model-driven engineering approach, providing meta-models and tools that facilitate the automatic generation of code, documentation, and tests from high-level specifications, thereby streamlining the development process of MAS~\cite{pavon2005agent}.
+L’AOSE a introduit des méthodologies structurées pour la conception de SMA, mettant l’accent sur les interactions fondées sur les rôles, les hiérarchies organisationnelles et la coordination systématique des agents. Des cadres classiques tels que \textbf{GAIA}~\cite{gaia1998}, \textbf{ADELFE}~\cite{adelfe2002} et \textbf{DIAMOND}~\cite{Jamont2005} proposent des processus bien définis pour concevoir des SMA, en s’appuyant sur une modélisation organisationnelle explicite. Toutefois, ces méthodes sont largement manuelles et nécessitent une expertise spécialisée pour définir les comportements des agents, les rôles et les contraintes organisationnelles, ce qui rend leur passage à l’échelle difficile dans des environnements complexes ou dynamiques.
 
-\textbf{Knowledge-Based Organizational Design:} The KB-ORG framework introduces a knowledge-based approach to automate the organizational design of MAS. By leveraging predefined templates and organizational knowledge, KB-ORG assists in the systematic assignment of roles and responsibilities to agents, reducing the manual overhead in organizational specification~\cite{dignum2001kb}.
+Afin d’améliorer l’efficacité et la scalabilité, diverses méthodologies et cadres ont été proposés pour automatiser différents aspects de la conception de SMA :
 
-\textbf{Automated Design of Agentic Systems:} The emerging field of Automated Design of Agentic Systems focuses on the automatic creation of agent-based system designs. This includes the generation of novel building blocks and their composition into functional systems, aiming to minimize human intervention in the design phase~\cite{smith2024automated}.
+\textbf{Ingénierie dirigée par les modèles en AOSE :} INGENIAS adopte une approche d’ingénierie dirigée par les modèles, en fournissant des méta-modèles et des outils facilitant la génération automatique de code, de documentation et de tests à partir de spécifications de haut niveau, rationalisant ainsi le processus de développement de SMA~\cite{pavon2005agent}.
 
-\textbf{Self-Generating Multi-Agent Systems:} AutoGenesisAgent presents a framework where multi-agent systems are capable of autonomously designing and deploying other multi-agent systems tailored for specific tasks. This self-generative capability encompasses the entire lifecycle from initial concept to deployment, highlighting a significant step towards fully automated MAS design~\cite{harper2024autogenesisagent}.
+\textbf{Conception organisationnelle fondée sur les connaissances :} Le cadre KB-ORG introduit une approche basée sur la connaissance pour automatiser la conception organisationnelle des SMA. En s’appuyant sur des modèles prédéfinis et une base de connaissances organisationnelle, KB-ORG assiste l’attribution systématique des rôles et responsabilités aux agents, réduisant ainsi le fardeau manuel lié à la spécification organisationnelle~\cite{dignum2001kb}.
 
-\textbf{Collaborative Frameworks for Task Automation:} The BMW Agents framework emphasizes task automation through multi-agent collaboration. It outlines a flexible agent engineering approach that supports planning and execution across various domains, ensuring scalability and adaptability in complex industrial applications~\cite{crawford2024bmw}.
+\textbf{Conception automatisée de systèmes agentiques :} Le domaine émergent de la conception automatisée de systèmes agentiques se concentre sur la création automatique de systèmes multi-agents. Cela inclut la génération de nouveaux blocs fonctionnels et leur composition en systèmes opérationnels, dans le but de minimiser l’intervention humaine lors de la phase de conception~\cite{smith2024automated}.
 
-\
+\textbf{Systèmes multi-agents auto-génératifs :} AutoGenesisAgent propose un cadre dans lequel des systèmes multi-agents sont capables de concevoir et déployer de manière autonome d’autres systèmes multi-agents adaptés à des tâches spécifiques. Cette capacité auto-générative couvre l’ensemble du cycle de vie, du concept initial au déploiement, constituant une avancée significative vers une conception de SMA totalement automatisée~\cite{harper2024autogenesisagent}.
 
-Parallel to traditional AOSE methodologies, the field of \textbf{MARL} enables agents to \textbf{autonomously learn} coordination strategies from experience. Even though, MARL/RL is not necessarly intended for AOSE, its capability for generating \textbf{self-organizing agent behaviors} may participate in it.
-A notable project in that direction is the \textit{Cyber Security Learning Environment}~\cite{hammar2023scalable}, which is an \textbf{online framework} for cybersecurity purposes where an agent is trained in a simulation to learn task-specific behaviors dynamically. This framework partially enables \textbf{automating end-to-end MAS design} since it follows an automated pipeline spanning from the environment modeling to training and deployment with minimal manual effort. It also offers visualization tools to interpret agent interactions, though without explicit organizational modeling.
+\textbf{Cadres collaboratifs pour l’automatisation des tâches :} Le cadre BMW Agents met l’accent sur l’automatisation des tâches à travers la collaboration multi-agents. Il décrit une approche d’ingénierie des agents flexible, prenant en charge la planification et l’exécution dans divers domaines, assurant ainsi la scalabilité et l’adaptabilité dans des applications industrielles complexes~\cite{crawford2024bmw}.
 
-Despite these advancements, challenges remain in seamlessly integrating AOSE and MARL. Aligning learning algorithms with organizational constraints and ensuring that emergent behaviors adhere to system specifications are ongoing research areas. Future work is directed towards developing standardized frameworks that encapsulate both design-time organizational models and run-time learning mechanisms, fostering the development of robust and adaptable multi-agent systems.
+\vspace{0.5em}
 
+Parallèlement aux méthodologies AOSE classiques, le domaine du \textbf{MARL} permet aux agents d’\textbf{apprendre de manière autonome} des stratégies de coordination à partir de l’expérience. Même si le MARL ou le RL ne sont pas initialement conçus pour l’AOSE, leur capacité à générer des \textbf{comportements auto-organisés} chez les agents peut y contribuer.
 
-\subsection{Control or Guidance in MARL}\label{sub-sec:rel_control}
+Un projet notable en ce sens est le \textit{Cyber Security Learning Environment}~\cite{hammar2023scalable}, un \textbf{cadre en ligne} destiné à la cybersécurité, dans lequel un agent est entraîné en simulation pour apprendre dynamiquement des comportements adaptés à des tâches spécifiques. Ce cadre permet en partie d’\textbf{automatiser la conception de SMA de bout en bout}, puisqu’il suit un pipeline automatisé allant de la modélisation de l’environnement à l’entraînement et au déploiement, avec un effort manuel minimal. Il propose également des outils de visualisation pour interpréter les interactions entre agents, bien qu’il ne s’appuie pas sur une modélisation organisationnelle explicite.
 
-In MARL, guiding or constraining the learning process is essential to ensure that agents develop behaviors aligning with safety, fairness, and task-specific requirements. Various methodologies have been proposed to incorporate such constraints into the learning framework.
-
-\textbf{Constraint-Guided Reinforcement Learning.} Spieker~\cite{spieker2021constraint} introduces Constraint-Guided Reinforcement Learning, which integrates constraint models into the agent-environment interaction. This approach allows agents to learn optimal policies within specified behavioral constraints, enhancing safety and reliability during training and deployment.
-
-\textbf{Constrained Q-Learning.} Kalweit et al.~\cite{kalweit2020deep} propose Deep Constrained Q-Learning, an off-policy algorithm that restricts the action space during the Q-value update process. By incorporating both single-step and approximate multi-step constraints, this method ensures that the learned policies adhere to predefined safety and performance criteria.
-
-\textbf{Constrained Policy Optimization.} Achiam et al.~\cite{achiam2017constrained} develop Constrained Policy Optimization (CPO), a policy search algorithm that enforces constraints throughout the training process. CPO provides theoretical guarantees for near-constraint satisfaction at each iteration, making it suitable for applications requiring strict adherence to safety standards.
-
-\textbf{Hierarchical Guidance with Human Feedback.} Zhou et al.~\cite{zhou2024mentor} present MENTOR, a Hierarchical RL framework that incorporates human feedback and dynamic distance constraints. This approach guides the agent in selecting subgoals that are neither too easy nor too difficult, facilitating a more stable and efficient learning process in complex tasks.
-
-\textbf{Reward-Free Constrained Learning.} Miryoosefi et al.~\cite{miryoosefi2022simple} propose a reward-free approach to constrained RL. By focusing on constraint satisfaction without relying on explicit reward signals, this method addresses scenarios where defining a suitable reward function is challenging or impractical.
-
-These methodologies highlight the importance of incorporating constraints and guidance mechanisms into MARL to ensure that agents learn behaviors that are not only effective but also align with predefined safety and performance standards.
+Malgré ces avancées, des défis subsistent quant à l’intégration fluide entre AOSE et MARL. Aligner les algorithmes d’apprentissage avec des contraintes organisationnelles et s’assurer que les comportements émergents respectent les spécifications du système restent des axes de recherche ouverts. Les travaux futurs s’orientent vers le développement de cadres standardisés encapsulant à la fois les modèles organisationnels définis en phase de conception et les mécanismes d’apprentissage à l’exécution, afin de favoriser le développement de systèmes multi-agents robustes et adaptatifs.
 
 
-\subsection{Explainability in MARL}\label{sub-sec:rel_evaluation}
+\subsection{Contrôle ou guidage dans le MARL}\label{sub-sec:rel_control}
 
-Explainability and interpretability in MARL aim to make the behavior of agents transparent, facilitating trust, debugging, and compliance with safety standards.
+Dans le MARL, guider ou contraindre le processus d’apprentissage est essentiel pour s’assurer que les agents développent des comportements alignés avec des exigences de sécurité, d’équité et de spécificité des tâches. Diverses méthodologies ont été proposées pour intégrer de telles contraintes dans le cadre d’apprentissage.
 
-\textbf{Concept-Based Interpretability.} Zabounidis et al.~\cite{zabounidis2023concept} introduce a method that incorporates interpretable concepts provided by domain experts into MARL models. By requiring the model to predict these concepts before making decisions, the approach enhances transparency and allows for expert intervention to correct mispredictions, improving both interpretability and performance.
+\textbf{Apprentissage par renforcement guidé par contraintes.} Spieker~\cite{spieker2021constraint} introduit l’« Apprentissage par renforcement guidé par contraintes », qui intègre des modèles de contraintes dans l’interaction agent-environnement. Cette approche permet aux agents d’apprendre des politiques optimales tout en respectant des contraintes comportementales spécifiées, renforçant ainsi la sécurité et la fiabilité durant l’entraînement et le déploiement.
 
-\textbf{Reward Decomposition Techniques.} Iturria-Rivera et al.~\cite{iturria2024explainable} propose an explainable MARL framework that utilizes reward decomposition in value function factorization-based algorithms like VDN and QMIX. This method provides insights into how individual components of the reward function contribute to the overall decision-making process, enhancing the interpretability of agent behaviors.
+\textbf{Q-Learning contraint.} Kalweit et al.~\cite{kalweit2020deep} proposent le Deep Constrained Q-Learning, un algorithme hors-politiques qui restreint l’espace des actions lors de la mise à jour des valeurs Q. En intégrant des contraintes à la fois à une étape unique et sur plusieurs étapes approximées, cette méthode garantit que les politiques apprises respectent des critères de sécurité et de performance prédéfinis.
 
-\textbf{Interpretable Model Architectures.} Liu et al.~\cite{liu2022mixrts} present MIXRTs, an architecture that combines recurrent neural networks with soft decision trees to create interpretable MARL models. This design allows for explicit representation of decision processes and clarifies each agent's contribution to team performance, addressing the opacity of traditional deep learning models.
+\textbf{Optimisation de politiques sous contraintes.} Achiam et al.~\cite{achiam2017constrained} développent la méthode Constrained Policy Optimization (CPO), un algorithme de recherche de politiques qui applique des contraintes tout au long du processus d’apprentissage. CPO offre des garanties théoriques de satisfaction quasi-optimale des contraintes à chaque itération, ce qui le rend adapté aux applications exigeant un strict respect des normes de sécurité.
 
-\textbf{Post-Hoc Explanation Methods.} Poupart et al.~\cite{poupart2025perspectives} discuss various post-hoc techniques for interpreting MARL models, such as relevance backpropagation and activation patching. These methods aim to extract explanations from trained models without altering their architectures, providing insights into agent behaviors and emergent phenomena.
+\textbf{Guidage hiérarchique avec retour humain.} Zhou et al.~\cite{zhou2024mentor} présentent MENTOR, un cadre d’apprentissage par renforcement hiérarchique intégrant le retour d’information humain et des contraintes dynamiques de distance. Cette approche guide l’agent dans la sélection de sous-objectifs ni trop simples ni trop complexes, facilitant ainsi un apprentissage plus stable et efficace dans des tâches complexes.
 
-\textbf{Model-Agnostic Interpretability.} Li et al.~\cite{li2025from} propose a model-agnostic approach that leverages Shapley values to transform complex deep RL policies into transparent representations. This technique bridges the gap between explainability and interpretability, offering stable and interpretable policies applicable to both on-policy and off-policy algorithms.
+\textbf{Apprentissage contraint sans récompense.} Miryoosefi et al.~\cite{miryoosefi2022simple} proposent une approche d’apprentissage contraint sans recours à une fonction de récompense explicite. En se concentrant uniquement sur la satisfaction des contraintes, cette méthode est adaptée aux contextes où la définition d’une fonction de récompense adéquate est difficile ou impraticable.
 
-\textbf{Role and Goal Inference.} Several works explore role or goal inference as a means to assess organizational fit. Wilson et al.~\cite{wilson2008learning} propose role transfer in Multi-Agent MDPs to enhance adaptability, though limited to task-specific roles. Berenji and Vengerov~\cite{berenji2000learning} model agent dependencies to improve coordination in UAV missions, but without abstract role computation. Yusuf and Baber~\cite{yusuf2020inferential} use Bayesian inference for dynamic task coordination, yet lack explicit organizational alignment. Serrino et al.~\cite{serrino2019finding} infer roles through interaction in social environments, focusing on operational rather than organizational roles.
+Ces méthodologies mettent en lumière l’importance d’incorporer des mécanismes de contrainte et de guidage dans le MARL, afin de garantir que les agents apprennent des comportements non seulement efficaces, mais également conformes aux standards de sécurité et de performance prédéfinis.
+
+
+\subsection{Explicabilité dans le MARL}\label{sub-sec:rel_evaluation}
+
+L’explicabilité et l’interprétabilité dans le MARL visent à rendre le comportement des agents transparent, facilitant la confiance, le débogage, ainsi que le respect des normes de sécurité.
+
+\textbf{Interprétabilité fondée sur des concepts.} Zabounidis et al.~\cite{zabounidis2023concept} introduisent une méthode qui intègre des concepts interprétables fournis par des experts du domaine dans les modèles MARL. En demandant au modèle de prédire ces concepts avant de prendre des décisions, l’approche renforce la transparence et permet l’intervention d’experts pour corriger d’éventuelles erreurs de prédiction, améliorant à la fois l’interprétabilité et les performances.
+
+\textbf{Techniques de décomposition des récompenses.} Iturria-Rivera et al.~\cite{iturria2024explainable} proposent un cadre MARL explicable reposant sur la décomposition des récompenses dans des algorithmes à base de factorisation de fonctions de valeur, tels que VDN et QMIX. Cette méthode fournit des éclairages sur la contribution des différentes composantes de la fonction de récompense au processus décisionnel global, renforçant ainsi l’interprétabilité des comportements des agents.
+
+\textbf{Architectures de modèles interprétables.} Liu et al.~\cite{liu2022mixrts} présentent MIXRTs, une architecture combinant réseaux de neurones récurrents et arbres de décision flous pour concevoir des modèles MARL interprétables. Cette architecture permet une représentation explicite des processus de décision et clarifie la contribution de chaque agent à la performance collective, en réponse à l’opacité des modèles d’apprentissage profond traditionnels.
+
+\textbf{Méthodes d’explication a posteriori.} Poupart et al.~\cite{poupart2025perspectives} discutent de diverses techniques d’explication a posteriori pour interpréter les modèles MARL, telles que la rétropropagation de pertinence et la modification d’activations. Ces méthodes visent à extraire des explications à partir de modèles entraînés sans en modifier l’architecture, fournissant ainsi des éclairages sur les comportements d’agents et les phénomènes émergents.
+
+\textbf{Interprétabilité indépendante du modèle.} Li et al.~\cite{li2025from} proposent une approche indépendante du modèle basée sur les valeurs de Shapley, qui transforme des politiques d’apprentissage par renforcement profond complexes en représentations transparentes. Cette technique comble le fossé entre explicabilité et interprétabilité, offrant des politiques stables et interprétables, applicables aussi bien aux algorithmes on-policy qu’off-policy.
+
+\textbf{Inférence des rôles et objectifs.} Plusieurs travaux explorent l’inférence de rôles ou d’objectifs comme moyen d’évaluer la cohérence organisationnelle. Wilson et al.~\cite{wilson2008learning} proposent un transfert de rôles dans des MDP multi-agents pour renforcer l’adaptabilité, bien que limité à des rôles spécifiques aux tâches. Berenji et Vengerov~\cite{berenji2000learning} modélisent les dépendances entre agents afin d’améliorer la coordination dans des missions de drones (UAV), mais sans inférence de rôles abstraits. Yusuf et Baber~\cite{yusuf2020inferential} utilisent l’inférence bayésienne pour une coordination dynamique des tâches, mais sans alignement organisationnel explicite. Serrino et al.~\cite{serrino2019finding} infèrent les rôles via les interactions dans des environnements sociaux, en se concentrant sur des rôles opérationnels plutôt qu’organisationnels.
 
 
 
-\section{Theoretical background}\label{sec:background}
+\section{Background théorique}\label{sec:background}
 
+\subsection{Cadre de Markov pour le MARL}
 
-\subsection{Markov framework for MARL}
+Pour appliquer les techniques de MARL, nous nous appuyons sur le modèle de \textit{Processus Décisionnel de Markov Décentralisé Partiellement Observable} (Dec-POMDP)~\cite{Oliehoek2016}. Les Dec-POMDP modélisent la coordination multi-agents décentralisée sous observabilité partielle, ce qui les rend particulièrement adaptés à l’intégration de contraintes organisationnelles. Contrairement aux \textit{jeux stochastiques partiellement observables} (POSG), le Dec-POMDP utilise une fonction de récompense commune, favorisant ainsi la collaboration~\cite{Beynier2013}.
 
-To apply MARL techniques, we rely on the \textit{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP) \cite{Oliehoek2016}. Dec-POMDPs model decentralized multi-agent coordination under partial observability, making them well suited for integrating organizational constraints. Unlike \textit{Partially Observable Stochastic Games} (POSG), the Dec-POMDP features a common reward function, promoting collaboration~\cite{Beynier2013}.
+Un Dec-POMDP $d \in D$ (où $D$ est l’ensemble des Dec-POMDPs) est défini comme un 7-uplet $d = \langle S, \{A_i\}, T, R, \{\Omega_i\}, O, \gamma \rangle$, où :
+\begin{itemize}
+    \item $S = \{s_1,\dots,s_{|S|}\}$ est l’ensemble des états possibles ;
+    \item $A_{i} = \{a_{1}^{i},\dots,a_{|A_{i}|}^{i}\}$ est l’ensemble des actions possibles pour l’agent $i$ ;
+    \item $T$ représente l’ensemble des probabilités de transition, avec $T(s,a,s') = \probP(s'|s,a)$, la probabilité de transition de l’état $s$ à l’état $s'$ après l’action $a$ ;
+    \item $R: S \times A \times S \rightarrow \mathbb{R}$ est la fonction de récompense, attribuant une récompense en fonction de l’état initial, de l’action effectuée, et de l’état résultant ;
+    \item $\Omega_{i} = \{o_{1}^{i},\dots,o_{|\Omega_{i}|}^{i}\}$ est l’ensemble des observations possibles pour l’agent $i$ ;
+    \item $O$ est l’ensemble des probabilités d’observation, avec $O(s',a,o) = \probP(o|s',a)$ représentant la probabilité d’obtenir l’observation $o$ après avoir réalisé l’action $a$ et atteint l’état $s'$ ;
+    \item $\gamma \in [0,1]$ est le facteur d’actualisation, utilisé pour pondérer les récompenses futures.
+\end{itemize}
 
-A Dec-POMDP $d \in D$ (where $D$ is the set of Dec-POMDPs) is defined as a 7-tuple $d = \langle S, \{A_i\}, T, R, \{\Omega_i\}, O, \gamma \rangle$, where $S = \{s_1,\dots,s_{|S|}\}$ is the set of possible states; $A_{i} = \{a_{1}^{i},\dots,a_{|A_{i}|}^{i}\}$ is the set of possible actions for agent $i$; $T$ represents the set of transition probabilities, with $T(s,a,s') = \probP(s'|s,a)$ as the probability of transitioning from state $s$ to state $s'$ following action $a$; $R: S \times A \times S \rightarrow \mathbb{R}$ is the reward function, assigning a reward based on the initial state, the action taken, and the resulting state; $\Omega_{i} = \{o_{1}^{i},\dots,o_{|\Omega_{i}|}^{i}\}$ is the set of possible observations for agent $i$; $O$ represents the set of observation probabilities, where $O(s',a,o) = \probP(o|s',a)$ is the probability of obtaining observation $o$ after performing action $a$ and reaching state $s'$; and $\gamma \in [0,1]$ is the discount factor, used to weight future rewards.
+Le formalisme suivant est utilisé avec MOISE+MARL pour résoudre le Dec-POMDP~\cite{Beynier2013,Albrecht2024} :
+\begin{itemize}
+    \item $\mathcal{A}$ représente l’ensemble des $n$ \textbf{agents} ;
+    \item $\Pi$ désigne l’ensemble des \textbf{politiques}, où une politique $\pi \in \Pi$, $\pi: \Omega \rightarrow A$, associe de manière déterministe une observation à une action, représentant la stratégie interne de l’agent ;
+    \item $\Pi^{j}$ représente l’ensemble des \textbf{politiques conjointes}, avec une politique conjointe $\pi^{j} \in \Pi^{j}, \pi^{j}: \Omega^n \rightarrow A^n = \Pi^n$, sélectionnant une action pour chaque agent en fonction de ses observations respectives. Elle agit comme une collection de politiques utilisées par les agents au sein d’une équipe ;
+    \item $H$ est l’ensemble des \textbf{historiques}, où un historique (ou trajectoire) sur $z \in \mathbb{N}$ étapes (typiquement le nombre maximal d’étapes dans un épisode) est représenté par le $z$-uplet $h = \langle \langle \omega_{k}, a_{k}\rangle | k \leq z, \omega \in \Omega, a \in A\rangle$, capturant la succession des observations et actions ;
+    \item $H^{j}$ désigne l’ensemble des \textbf{historiques conjoints}, avec un historique conjoint $h^{j} \in H^{j}$ sur $z$ étapes défini comme l’ensemble des historiques des agents : $h^{j} = \{h_1, h_2, \dots, h_n\}$ ;
+    \item $V^{j}(\pi^{j}): \Pi^{j} \rightarrow \mathbb{R}$ désigne la \textbf{récompense cumulative espérée} sur un horizon fini (en supposant $\gamma < 1$ ou un nombre d’étapes fini), où $\pi^{j}$ représente la politique conjointe pour l’équipe $i$, et $\pi^{j}_{-i}$ les politiques conjointes des autres équipes considérées comme fixées.
+\end{itemize}
 
-The following formalism is used with MOISE+MARL to solve the Dec-POMDP~\cite{Beynier2013,Albrecht2024}: $\mathcal{A}$ represents the set of $n$ \textbf{agents}; $\Pi$ denotes the set of \textbf{policies}, where a policy $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action, representing the agent's internal strategy; $\Pi^{j}$ represents the set of \textbf{joint policies}, with a joint policy $\pi^{j} \in \Pi^{j}, \pi^{j}: \Omega^n \rightarrow A^n = \Pi^n$, which selects an action for each agent based on their respective observations, acting as a collection of policies used by agents within a team; $H$ is the set of \textbf{histories}, where a history (or trajectory) over $z \in \mathbb{N}$ steps (typically the maximum number of steps in an episode) is represented as the $z$-tuple $h = \langle \langle \omega_{k}, a_{k}\rangle | k \leq z, \omega \in \Omega, a \in A\rangle$, capturing successive observations and actions; $H^{j}$ stands for the set of \textbf{joint histories}, with a joint history $h^{j} \in H^{j}$ over $z$ steps defined as the set of agent histories: $h^{j} = \{h_1, h_2, \dots, h_n\}$; and finally, $V^{j}(\pi^{j}): \Pi^{j} \rightarrow \mathbb{R}$ denotes the \textbf{expected cumulative reward} over a finite horizon (assuming $\gamma < 1$ or if the number of steps in an episode is finite), where $\pi^{j}$ represents the joint policy for team $i$, with $\pi^{j}_{-i}$ being the joint policies of other teams as fixed.
+% Résoudre un Dec-POMDP revient à chercher une politique conjointe $\pi^{j} \in \Pi^{j}$ telle que $V^{j}(\pi^{j}) \geq s$, où $s \in \mathbb{R}$ est une récompense cumulative cible.
 
-
-% We refer to \textbf{solving the Dec-POMDP} as the search for a joint policy $\pi^{j} \in \Pi^{j}$ such that $\pi^{j}s)$, achieving at least an expected cumulative reward of $s$, where $s \in \mathbb{R}$.
-
-\subsection{The $\mathcal{M}OISE^+$ organizational model}
-
-% \begin{figure}[h!]
-%     \centering
-%     \input{figures/moise_model.tex}
-%     \caption{A synthetic view of the $\mathcal{M}OISE^+$ model}
-%     \label{fig:moise_model}
-% \end{figure}
-
-% As illustrated in \autoref{fig:moise_model},
-$\mathcal{M}OISE^+$ comprises three types of organizational specifications:\\
-
-\noindent \textbf{Structural Specifications} define how agents are structured, expressed as $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$. $\mathcal{R}_{ss}$ is the set of roles ($\rho \in \mathcal{R}$) with an inheritance relation $\mathcal{IR}$ where $\rho_1 \sqsubset \rho_2$ if $\rho_1$ inherits from $\rho_2$. $\mathcal{GR}$ includes groups $\langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \allowbreak \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$. Links ($\mathcal{L}$) define connections between roles: acquaintance, communication, or authority. Compatibilities $\mathcal{C}$ denote roles that agents can play together. Intra- and inter-group links and compatibilities are shown by $\mathcal{L}^{intra}$, $\mathcal{L}^{inter}$, $\mathcal{C}^{intra}$, and $\mathcal{C}^{inter}$, with $np$ and $ng$ defining role and subgroup counts.\\
-
-\noindent \textbf{Functional Specifications} describe the agents' goals, represented as $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$. The social scheme $\mathcal{SCH}$ includes global goals $\mathcal{G}$, missions $\mathcal{M}$, and plans $\mathcal{P}$ that organize goals in a tree structure. Plans link goals with an operator ($op$) indicating sequence, choice, or parallel completion. Missions map to goal sets ($mo$), and agent counts per mission are specified by $nm$. Preferences $\mathcal{PO}$ indicate which missions agents prefer, denoted as $m_1 \prec m_2$.\\
-
-\noindent \textbf{Deontic Specifications} indicate the relationship between roles goals, given by $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$. Time constraints $\mathcal{TC}$ set periods for permissions or obligations ($Any$ for any time). Obligations ($\mathcal{OBL}$) require agents in role $\rho_a$ to undertake mission $m$ at times $tc$, while permissions ($\mathcal{PER}$) allow it. The $rds$ function maps roles to their deontic specifications as $\langle tc, y, m \rangle$ where $y$ is either permission (0) or obligation (1).
-
-\
-
-\noindent Organizational specifications applied to agents are roles and goals (as missions) through permissions or obligations. Indeed, the other structural specifications such as compatibilities or links are inherent to roles. Similarly, we consider that the goals, the missions, and their mapping ($mo$) are enough to also link all of the other functional specifications such as plans, cardinalities, or preference orders.
-Consequently, we consider it is sufficient to take into account roles, missions (goal and mapping) and permissions/obligations when linking $\mathcal{M}OISE^+$ with Dec-POMDP. 
-
-\subsection{Linking $\mathcal{M}OISE^+$ with MARL}
+\subsection{Lier $\mathcal{M}OISE^+$ avec le MARL}
 
 \begin{figure}[h!]
     \centering
     \input{figures/mm_synthesis_single_column.tex}
-    \caption{A minimal view of the MOISE+MARL framework:
-        Users first define $\mathcal{M}OISE^+$ specifications, which include roles ($\mathcal{R}$) and missions ($\mathcal{M}$), both associated through $rds$. They then create MOISE+MARL specifications by first defining \textbf{Constraint guides} such as $rag$ and $rrg$ to specify role logic, and $grg$ for goal logic. 
-        Next, \textbf{Linkers} are used to connect agents with roles through $ar$ and to link the logic of the constraint guides to the defined $\mathcal{M}OISE^+$ specifications. Once this is set up, roles can be assigned to agents, and the MARL framework updates accordingly during training.
-    }
+    \caption{Une vue minimale du cadre MOISE+MARL :
+        Les utilisateurs commencent par définir les spécifications $\mathcal{M}OISE^+$, qui incluent les rôles ($\mathcal{R}$) et les missions ($\mathcal{M}$), tous deux associés via la relation $rds$.  
+        Ils créent ensuite les spécifications MOISE+MARL en définissant d’abord les \textbf{guides de contrainte}, tels que $rag$ et $rrg$ pour spécifier la logique des rôles, et $grg$ pour la logique des objectifs.  
+        Puis, les \textbf{lieurs} (\textit{linkers}) sont utilisés pour relier les agents aux rôles via $ar$, et pour connecter la logique des guides de contrainte aux spécifications $\mathcal{M}OISE^+$ définies.  
+        Une fois cette configuration en place, les rôles peuvent être attribués aux agents, et le cadre MARL s’adapte automatiquement durant l’apprentissage.}
     \label{fig:mm_synthesis}
 \end{figure}
 
 \
 
-\noindent The \textbf{Constraint Guides} are three new relations introduced to describe the logics of $\mathcal{M}OISE^+$ roles and goals in the Dec-POMDP formalism:
-%
-% \begin{itemize}
+\noindent Les \textbf{Guides de Contrainte} sont trois relations introduites pour modéliser la logique des rôles et objectifs de $\mathcal{M}OISE^+$ dans le formalisme Dec-POMDP :
+
 \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
+    \item \textbf{Guide d’Action de Rôle} \quad $rag: H \times \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$ : cette relation modélise un rôle comme un ensemble de règles associant, à chaque paire composée d’un historique $h \in H$ et d’une observation $\omega \in \Omega$, un ensemble d’actions attendues $A \in \mathcal{P}(A)$ chacune associée à un niveau de contrainte $ch \in [0,1]$ (avec $ch = 1$ par défaut). En restreignant le choix de l’action suivante, l’agent est incité à se conformer au comportement attendu pour son rôle ;
     
-    \item \textbf{Role Action Guide} \quad $rag: H \times \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, the relation that models a role as a set of rules which, for each pair consisting of a history $h \in H$ and an observation received by the agent $\omega \in \Omega$, associates expected actions $A \in \mathcal{P}(A)$ each associated with a constraint hardness $ch \in [0,1]$ ($ch = 1$ by default). By restricting the choice of the next action among those authorized, the agent is forced to adhere to the role's expected behavior
-    \item \textbf{Role Reward Guide} \quad $rrg: H \times \Omega \times A \to \mathbb{R} = \{r_m \text{ if } a \notin A_\omega \text{, } rag(h, \omega) \allowbreak = \allowbreak A_\omega \times \mathbb{R} \text{, } h \in H; \text{ else } 0\}$, the relation that models a role by adding a penalty $r_m$ to the global reward if the last action chosen by the agent $a \in A$ is not authorized. This is intended to encourage the agent to adhere to the expected behavior of a role
-    \item \textbf{Goal Reward Guide} \quad $grg: H \rightarrow \mathbb{R}$, the relation that models a goal as a soft constraint adding a reward bonus $r_b \in \mathbb{R}$ if the agent's history $h \in H$ contains a goal's characteristic sub-sequence $h_g \in H_g$, encouraging the agent to reach it.
+    \item \textbf{Guide de Récompense de Rôle} \quad $rrg: H \times \Omega \times A \to \mathbb{R} = \{r_m \text{ si } a \notin A_\omega, \text{ avec } rag(h, \omega) = A_\omega \times \mathbb{R}, h \in H; \text{ sinon } 0\}$ : cette relation ajoute une pénalité $r_m$ à la récompense globale si l’action $a \in A$ choisie n’est pas autorisée. Elle encourage ainsi le respect du comportement attendu ;
+    
+    \item \textbf{Guide de Récompense d’Objectif} \quad $grg: H \rightarrow \mathbb{R}$ : cette relation modélise un objectif comme une contrainte souple qui ajoute un bonus $r_b \in \mathbb{R}$ à la récompense si l’historique $h \in H$ de l’agent contient une sous-séquence caractéristique $h_g \in H_g$ d’un objectif, l’encourageant ainsi à le réaliser.
 \end{enumerate*}
-% \end{itemize}
 
-\
+\vspace{0.8em}
 
-\noindent Finally, we introduce the \textbf{Linkers} to link the $\mathcal{M}OISE^+$ organizational specifications with constraint guides and agents:
-%
-% \begin{itemize}
+\noindent Nous introduisons également les \textbf{Lieurs} (\textit{Linkers}) pour connecter les spécifications organisationnelles de $\mathcal{M}OISE^+$ aux guides de contrainte et aux agents :
+
 \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
+    \item \textbf{Agent vers Rôle} \quad $ar: \mathcal{A} \to \mathcal{R}$ : relation bijective associant un agent à un rôle ;
     
-    \item \textbf{Agent to Role} \quad $ar: \mathcal{A} \to \mathcal{R}$, the bijective relation linking an agent to a role;
-    \item \textbf{Role to Constraint Guide} \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$, the relation associating each $\mathcal{M}OISE^+$ role to a $rag$ or $rrg$ relation, forcing/encouraging the agent to follow the expected actions for the role $\rho \in \mathcal{R}$;
-    \item \textbf{Goal to Constraint Guide} \quad $gcg: \mathcal{G} \rightarrow grg$, the relation linking goals to $grg$ relations, representing goals as rewards in MARL.
+    \item \textbf{Rôle vers Guide de Contrainte} \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$ : relie chaque rôle $\mathcal{M}OISE^+$ à un guide $rag$ ou $rrg$ pour contraindre ou encourager l’agent à suivre les actions attendues ;
+    
+    \item \textbf{Objectif vers Guide de Contrainte} \quad $gcg: \mathcal{G} \rightarrow grg$ : relie les objectifs à des guides $grg$, les représentant sous forme de récompenses dans le MARL.
 \end{enumerate*}
-% \end{itemize}
 
-\paragraph{\textbf{Resolving the Dec-POMDP with MOISE+MARL}}
+\paragraph{\textbf{Résolution du Dec-POMDP avec MOISE+MARL}}
 
 \begin{figure*}[h]
     \label{eq:single_value_function}
@@ -527,34 +484,43 @@ Consequently, we consider it is sufficient to take into account roles, missions 
     
 \end{figure*}
 
-A MOISE+MARL model is formalized as $MM = \langle \mathcal{OS}, ar, rcg, gcg, rag, rrg, grg\rangle$.
-Resolving the Dec-POMDP $d \in D$ with a $mm \in \mathcal{MM}$ model involves finding a joint policy $\pi^{j} = \{\pi^j_0,\pi^j_1\dots\pi^j_n\}$ that maximizes the state-value function $V^{\pi^{j}}$ (or reaches a minimum threshold), which represents the expected cumulative reward starting from an initial state $s \in S$ and following the joint policy $\pi^{j}$, applying successive joint actions $a^{j} \in A^n$ under additional constraint guides. The state-value is described in the case where agents act sequentially and cyclically (Agent Environment Cycle - AEC mode) in \hyperref[eq:single_value_function]{Definition 1}, adapting its definition for roles (in red) and missions (in blue), impacting the action space and reward. \autoref{fig:mm_synthesis} illustrates the links between $\mathcal{M}OISE^+$ and Dec-POMDP via the MOISE+MARL framework.
+Un modèle MOISE+MARL est formalisé par $MM = \langle \mathcal{OS}, ar, rcg, gcg, rag, rrg, grg\rangle$.
 
-At any time $t \in \mathbb{N}$ (initially $t = 0$), the agent $i = t \ mod \ n$ is constrained to a role $\rho_i = ar(i)$. For each temporally valid deontic specification $d_i = rds(\rho_i) = \langle tc_i,y_i, m_i \rangle$, the agent is permitted (if $y_i = 0$) or obligated (if $y_i = 1$) to commit in mission $m_i \in \mathcal{M}, \mathcal{G}_{m_i} = mo(m_i)$, and $n \in \mathbb{N}$ the number of agents.
-%
-First, based on the received observation $\omega_t$, the agent must choose an action either: within the expected actions of the role $A_t$ if a random value is below the role constraint hardness $ch_t$; or within the set of all actions $A$ otherwise. If $ch_t = 1$, the role is strongly constrained for the agent and weakly otherwise.
-%
-Then, the action is applied to the current state $s_t$ to transition to the next state $s_{t+1}$, generate the next observation $\omega_{t+1}$, and yield a reward. The reward is the sum of the global reward with penalties and bonuses obtained from the organizational specifications: \quad i) the sum of the bonuses for goals associated with each temporally valid mission (via Goal Reward Guides), weighted by the associated value ($\frac{1}{1-p+\epsilon}$); \quad ii) the penalty associated with the role (via "Role Reward Guides") weighted by the role constraint hardness.
-%
-Finally, the cumulative reward calculation continues in the next state $s_{t+1} \in S$ with the next agent $(i+1) \ mod \ n$.
+La résolution d’un Dec-POMDP $d \in D$ avec un modèle $mm \in \mathcal{MM}$ consiste à trouver une politique conjointe $\pi^{j} = \{\pi^j_0, \pi^j_1, \dots, \pi^j_n\}$ qui maximise la fonction de valeur d’état $V^{\pi^{j}}$ (ou atteint un seuil minimal), représentant la récompense cumulative attendue à partir d’un état initial $s \in S$, en suivant la politique $\pi^{j}$ et en appliquant des actions conjointes $a^{j} \in A^n$ sous l’effet des guides de contrainte supplémentaires.
 
+Cette fonction est décrite dans le cas où les agents agissent séquentiellement et cycliquement (mode Agent Environment Cycle - AEC) dans la \hyperref[eq:single_value_function]{Définition 1}. Celle-ci adapte sa définition pour refléter l’impact des rôles (en rouge) et des missions (en bleu), influant à la fois sur l’espace d’actions et la récompense. La \autoref{fig:mm_synthesis} illustre les liens entre $\mathcal{M}OISE^+$ et Dec-POMDP à travers le cadre MOISE+MARL.
 
+À chaque instant $t \in \mathbb{N}$ (initialement $t = 0$), l’agent $i = t \mod n$ est associé à un rôle $\rho_i = ar(i)$. Pour chaque spécification déontique valide $d_i = rds(\rho_i) = \langle tc_i, y_i, m_i \rangle$, l’agent est soit autorisé (si $y_i = 0$), soit obligé (si $y_i = 1$) à s’engager dans la mission $m_i \in \mathcal{M}$, avec $\mathcal{G}_{m_i} = mo(m_i)$ et $n \in \mathbb{N}$ le nombre d’agents.
 
-\subsection{Learning World Models}
+Ensuite, à partir de l’observation reçue $\omega_t$, l’agent choisit une action selon :
+i) l’ensemble des actions attendues $A_t$ si une valeur aléatoire est inférieure à la dureté de contrainte $ch_t$ ;
+ii) ou l’ensemble complet $A$ sinon.
 
-In RL, particularly under partial observability, \textbf{World Models}~\cite{ha2018recurrent} aim to approximate the transition and observation functions of a Partially Observable Markov Decision Process (POMDP) to enable planning, safe exploration, and efficient policy learning. This belongs to the \textit{model-based RL} (MBRL) paradigm~\cite{moerland2020model}. It is particularly usefull to capture an environment complexity in a simulation-like model automatically, yet lacking explicit environmental representation.
+Lorsque $ch_t = 1$, le rôle est fortement contraignant ; sinon, il est faiblement prescriptif.
 
-Let $\omega_t \in \Omega$ be the observation and $a_t \in \mathcal{A}$ the action at time $t$. The core of a world model is to approximates the \textbf{observable dynamics function} $\mathcal{T}: \Omega \times A \rightarrow \Omega$, that captures the hidden state transition and observable dynamics. Implementation of an observable dynamics function is often based on Recurrent Neural Network (RNN) such as or Long-Short Term Memory (LSTM)~\cite{hochreiter1997long} for temporal modeling. Yet, since observations are often too large in size to train a LSTM directly, an encoder $Enc: \Omega \rightarrow Z$ is often used to get reduced latent representation of observations, and a decoder $Dec: Z \rightarrow \Omega$ is used to decode predicted latent representation into a real observation.
+L’action choisie est appliquée à l’état $s_t$ pour générer une transition vers l’état $s_{t+1}$, produire l’observation $\omega_{t+1}$, et calculer une récompense.
+
+Cette récompense est composée de :
+i) la somme des bonus liés aux objectifs atteints, pour chaque mission valide temporellement (via les guides $grg$), pondérée par $\frac{1}{1 - p + \epsilon}$ ;
+ii) la pénalité induite par les écarts au comportement de rôle attendu (via les guides $rrg$), pondérée par $1 - ch_t$.
+
+Le calcul de la récompense cumulative se poursuit ensuite dans l’état suivant $s_{t+1} \in S$ avec l’agent suivant $(i+1) \mod n$.
+
+\subsection{Apprentissage de World Models}
+
+En apprentissage par renforcement (RL), notamment en contexte d’observabilité partielle, les \textbf{World Models} (\textit{World Models})~\cite{ha2018recurrent} visent à approximer les fonctions de transition et d’observation d’un Processus Décisionnel de Markov Partiellement Observable (POMDP). Ils permettent ainsi la planification, l’exploration sûre et un apprentissage de politiques plus efficace. Cette approche appartient au paradigme de l’\textit{apprentissage par renforcement basé sur un modèle} (\textit{Model-Based RL} – MBRL)~\cite{moerland2020model}. Elle est particulièrement utile pour capturer automatiquement la complexité d’un environnement sous la forme d’un modèle type simulation, sans représentation explicite de l’environnement.
+
+Soit $\omega_t \in \Omega$ l’observation et $a_t \in \mathcal{A}$ l’action à l’instant $t$. Le cœur d’un World Model consiste à approximer la \textbf{fonction de dynamique observable} $\mathcal{T}: \Omega \times A \rightarrow \Omega$, qui capture la transition d’état caché et les dynamiques observables. En pratique, cette fonction est souvent implémentée à l’aide de réseaux neuronaux récurrents (RNN), notamment les réseaux à mémoire long-court terme (LSTM)~\cite{hochreiter1997long}, pour modéliser la dimension temporelle. Toutefois, comme les observations sont souvent de grande dimension, un encodeur $Enc: \Omega \rightarrow Z$ est utilisé pour extraire une représentation latente réduite, et un décodeur $Dec: Z \rightarrow \Omega$ permet de reconstruire l’observation à partir de cette représentation.
+
 \[
     z_t = Enc(\omega_t), \quad
     z_{t+1} = \mathcal{T}(z_t, a_t), \quad
     \hat{\omega}_{t+1} = Dec(z_{t+1}),
 \]
-where $\forall z \in Z, \omega \in \Omega, dim(z) \leq dim(\omega)$ considering an observation $\omega$ to be described as a vector.
-Training minimizes the reconstruction loss $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$ and a prediction loss in latent space.
-%
-In a multi-agent context, world modeling must accommodate decentralized dynamics~\cite{yang2021representation}. Then, then observable dynamics function treats joint-observation (as well as joint latent representation) and joint-action. In MAMAD, world models instantiate the simulation core of \hyperref[sec:modelling]{Modeling}, acting as digital twins.
 
+où $\forall z \in Z, \omega \in \Omega, \dim(z) \leq \dim(\omega)$, en considérant l’observation $\omega$ comme un vecteur. L’entraînement du modèle vise à minimiser la perte de reconstruction $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$, ainsi qu’une perte de prédiction dans l’espace latent.
+
+Dans un contexte multi-agent, la modélisation du monde doit prendre en compte la dynamique décentralisée~\cite{yang2021representation}. La fonction de dynamique observable traite alors les observations et actions conjointes, ainsi que leurs représentations latentes respectives. Dans le cadre de MAMAD, les World Models constituent le noyau de simulation de la phase de \hyperref[sec:modelling]{modélisation}, agissant comme des jumeaux numériques.
 
 
 \section{The MAMAD method}\label{sec:mamad}
