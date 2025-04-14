@@ -370,7 +370,7 @@ A notable project in that direction is the \textit{Cyber Security Learning Envir
 Despite these advancements, challenges remain in seamlessly integrating AOSE and MARL. Aligning learning algorithms with organizational constraints and ensuring that emergent behaviors adhere to system specifications are ongoing research areas. Future work is directed towards developing standardized frameworks that encapsulate both design-time organizational models and run-time learning mechanisms, fostering the development of robust and adaptable multi-agent systems.
 
 
-\subsection{Control or Guidance in MARL}\label{sub-sec:rel_control}
+\subsection{Control or guidance in MARL}\label{sub-sec:rel_control}
 
 In MARL, guiding or constraining the learning process is essential to ensure that agents develop behaviors aligning with safety, fairness, and task-specific requirements. Various methodologies have been proposed to incorporate such constraints into the learning framework.
 
@@ -540,7 +540,7 @@ Finally, the cumulative reward calculation continues in the next state $s_{t+1} 
 
 
 
-\subsection{Learning World Models}
+\subsection{Learning world models}
 
 In RL, particularly under partial observability, \textbf{World Models}~\cite{ha2018recurrent} aim to approximate the transition and observation functions of a Partially Observable Markov Decision Process (POMDP) to enable planning, safe exploration, and efficient policy learning. This belongs to the \textit{model-based RL} (MBRL) paradigm~\cite{moerland2020model}. It is particularly usefull to capture an environment complexity in a simulation-like model automatically, yet lacking explicit environmental representation.
 
@@ -619,13 +619,21 @@ One can point out that we leverage a modeled Digital Twin through an approximate
 
 MAMAD's philosophy is to provide general workflow to follow for setting up each phase. These workflows may require choosing among different parameters such as modes, algorithms, or hyper-parameters. \autoref{tab:mamad_table_configuration} provides an overview of all of these parameters for the whole method and can be used a design canvas.
 
-% TODO: Put another column to show what formalism element we want to implement
 \input{tables/mamad_table_configuration.tex}
 
-% TODO: For each phase, explain what part of the formalism we want to implement, what are the ways to implement it...
 \subsection{Phase 1: Modeling}\label{sec:modelling}
 
-The goal of this phase is to build a structured model of the target environment that will serve as a foundation for training agents. Using simulation as basis for designing and implementing MAS is a common practice in AOSE methods~\cite{Jamont2O15}. This includes defining an appropriate state transition function, a reward function that aligns with the system's global goal, and, if applicable, organizational specifications (roles and missions) to guide agent behaviors.
+In this first phase, the MAMAD method focuses on formalizing the environment and high-level design intentions into a structured optimization problem. This step aims to instantiate the core elements of the design problem $d = \langle \Omega^j, A^j, \mathcal{T}, R_{\Omega}, \gamma \rangle$ and the MOISE+MARL organizational specification $\mathcal{MM} = \langle \mathcal{OS}, ar, rcg, gcg, rag, rrg, grg \rangle$.
+
+This involves three main outputs:
+
+\begin{itemize}
+    \item An \textbf{Observable Dynamics Function} $\mathcal{T}: \Omega^j \times A^j \rightarrow \Omega^j$, which approximates how joint-observations evolve over time in response to joint actions. This function plays the role of both the observation and transition functions in a Dec-POMDP acting as a simulation-basis for experimenting design, which is a common practice in AOSE methods~\cite{Jamont2O15};
+    \item An \textbf{Observation-Based Reward Function} $R_{\Omega}: \Omega^j \times A^j \rightarrow \mathbb{R}^{|\mathcal{A}|}$, which defines the multi-agent reward signal based on observable features, not the true environment state;
+    \item Optionally, a set of \textbf{organizational specifications} $\mathcal{MM}$, which constrain or guide agent behavior in accordance with the designer's intent (roles, missions, permissions, obligations).
+\end{itemize}
+
+This phase serves as the interface between informal knowledge (goal description $\mathcal{G}_{\text{inf}}$ and design constraints $\mathcal{C}_{\text{inf}}$) and the formal structures required for training and evaluation in later phases. It is a crucial step to make AOSE-compatible specifications actionable within MARL frameworks.
 
 \subsubsection{{General workflow}}
 The modeling process follows three main steps:
@@ -699,10 +707,22 @@ At the end of Phase 1, the output consists of:
     \item A \textbf{set of organizational specifications} (if applicable).
 \end{itemize}
 
-% TODO: For each phase, step, sub-step... -> Each step must be illustrated
 \subsection{Phase 2: Training}
 
-The goal of this phase is to train agents within the modeled environment to optimize their policies while optionally adhering to predefined organizational constraints. This phase involves selecting appropriate training strategies, RL algorithms, and hyperparameters to ensure stable and efficient learning.
+In the second phase, the goal is to solve the design problem $\langle \Omega^j, A^j, \mathcal{T}, R_{\Omega}, \gamma \rangle$ under the guidance of the organizational specification $\mathcal{MM}$ by learning a joint policy $\pi^j$ that maximizes cumulative rewards while complying with role- and goal-based constraints.
+
+Formally, this phase implements the relation:
+\[
+\texttt{train}: \left( \langle \Omega^j, A^j, \mathcal{T}, R_{\Omega}, \gamma \rangle, \mathcal{MM} \right) \longrightarrow \pi^j \in \Pi^j
+\]
+where $\Pi^j$ denotes the space of admissible joint policies over agents. The training process aims to find a policy $\pi^j$ that satisfies:
+\[
+\pi^j = \arg\max_{\pi \in \Pi^j_{\mathcal{MM}}} \mathbb{E} \left[ \sum_{t=0}^{\infty} \gamma^t R_{\Omega}(\omega_t, a_t) \right]
+\]
+with $\Pi^j_{\mathcal{MM}}$ representing the subspace of policies that respect the organizational constraints (e.g., role-action guides, reward modulation rules, and goal assignments).
+
+This phase bridges the MARL learning machinery with the constraints imposed by AOSE. The specifications encoded in $\mathcal{MM}$—if provided—narrow down the search space, enhance explainability, and align the emergent behaviors with designer intent. Otherwise, the training proceeds in a free-form mode, and structure will be extracted post hoc in Phase 3.
+
 
 \subsubsection{General workflow}
 The training phase follows these key steps:
@@ -722,7 +742,7 @@ To help implement this relation, we propose a \textbf{Trajectory-based Pattern} 
 A TP implies that any considered real observation or action is known and mapped to a label $l \in L$ (through $l: \Omega \cup A \to L$) to be conveniently managed. A TP $p \in P$ is defined as follows: $p$ is: either a "leaf sequence" denoted as a couple of history-cardinality $s_l = \langle h, \{c_min,c_max\}\rangle$ (where $h \in H, c_{min} \in \mathbb{N}, c_{max} \in \mathbb{N} \cup "*")$; or a "node sequence" denoted as a couple of a tuple of concrete sequences and cardinality $s_n = \langle \langle s_{l_1}, s_{l_1}\dots \rangle, \{c_min,c_max\}\rangle$. For example, the pattern $p = \allowbreak "[o_1,a_1,[o_2,a_2]\langle0,2\rangle]\langle1,*\rangle"$ can be formalized as the node sequence $\allowbreak \langle \langle \langle o_1,a_1\rangle,\langle 1,1 \rangle \rangle, \langle \langle o_2,a_2 \rangle, \langle 0,2 \rangle \rangle \rangle \langle 1,"*" \rangle$, indicating the set of histories $H_p$ containing at least once the sub-sequence consisting of a first pair $\langle o_1,a_1\rangle$ and then at most two repetitions of the pair $\langle o_2,a_2 \rangle$.
 The relation $b_g$ then becomes $b_g(h) = m(p_g,h), \text{ with } m: P \times H \to \{0,1\}$ indicating if a history $h \in H$ matches a history pattern $p \in P$ describing a history set $H_g$.
 
-\subsubsection{Setting organizational constraints (Optional)}
+\subsubsection{Setting organizational constraints (optional)}
 Before training, users may define organizational constraints using MOISE+MARL. These specifications guide learning by:
 \begin{itemize}
     \item Assigning roles to agents ($ar: \mathcal{A} \to \mathcal{R}$) ;
@@ -747,7 +767,6 @@ The choice of MARL algorithm is crucial and depends on environment complexity, i
     \item \textbf{Model-based methods (e.g., Dyna-Q+)}: Efficient in environments where an accurate world model exists, allowing for sample-efficient learning.
 \end{itemize}
 
-% TODO: Array hyperparameter selection
 \noindent \textbf{Algorithm selection criteria:}
 \begin{itemize}
     \item \textbf{For independent agents:} Use value-based methods ;
@@ -767,7 +786,6 @@ Once an algorithm is chosen, training involves optimizing agent policies while m
     \item \textbf{Monitoring key performance metrics} (reward convergence, stability).
 \end{itemize}
 
-% TODO: We need to talk about feedback
 \noindent \textbf{Hyperparameter tuning:}
 MAMAD recommends an empirical approach, with adjustments based on:
 \begin{itemize}
@@ -793,7 +811,20 @@ At the end of Phase 2, the output consists of:
 
 \subsection{Phase 3: Analyzing}
 
-The goal of this phase is to analyze the trained policies to infer organizational specifications (\textit{roles, missions, goals}) and evaluate whether agents adhere to structured behaviors. This phase leverages unsupervised learning techniques to identify emergent patterns and assess \textbf{organizational fit}. The results guide either a refinement loop (back to Phase 2) or final validation (leading to Phase 4).
+The purpose of this phase is to analyze the behavior of agents trained in Phase 2 in order to assess their alignment with organizational expectations and, if needed, to infer new specifications. This analysis evaluates the degree to which structured behaviors—such as roles, goals, and missions—have emerged, and whether they conform to or diverge from the current organizational specification $\mathcal{MM}$.
+
+Formally, this phase implements the relation:
+\[
+\texttt{analyze}: \left( \langle \Omega^j, A^j, \mathcal{T}, R_{\Omega}, \gamma \rangle, \mathcal{MM}, \pi^j \right) \longrightarrow (\mathcal{MM}_{\text{implicit}}, \text{OrgFit})
+\]
+where:
+\begin{itemize}
+    \item $\mathcal{MM}_{\text{implicit}}$ denotes the inferred MOISE+MARL structure from observed behaviors: implicit roles, missions, and goals;
+    \item \textit{OrgFit} is a quantitative score reflecting how well the learned behaviors match the intended or inferred organization, combining structural and functional adequacy.
+\end{itemize}
+
+This step closes the feedback loop between policy learning and organizational design. If the inferred structure $\mathcal{MM}_{\text{implicit}}$ matches the intended one $\mathcal{MM}$ (or is sufficiently interpretable and coherent), the MAS can proceed to deployment. Otherwise, this phase provides critical insights for refining either the training process or the initial specifications, ensuring explainability, coherence, and design traceability.
+
 
 \subsubsection{General workflow}
 The analysis phase follows these key steps:
@@ -840,7 +871,7 @@ Having already computed structural organizational fit and functional organizatio
 
 Overall, the K-mean and hierarchical clustering techniques require manual configuration to obtain roles and goals, avoiding introducing perturbations that could lead to determining false organizational specifications. Despite this, the method recommends thoroughly understanding the obtained roles and goals to manually identify and remove any remaining perturbations.
 
-\subsubsection{Manual Refinement and Stability Considerations}
+\subsubsection{Manual refinement and stability considerations}
 
 Despite the use of clustering techniques, manual configuration is required to avoid artifacts that may distort the inferred organizational structure. Hyperparameters such as the number of clusters in K-means or the depth of hierarchical clustering must be tuned to balance specificity and generalizability.
 
@@ -906,15 +937,16 @@ To ensure alignment between inferred specifications and learned policies, MAMAD 
 \end{itemize}
 
 \subsubsection{Decision making: refinement vs. validation}
-The final step of this phase determines the next course of action:
 
-% TODO: What does "High" and "Low" mean?
-% TODO: A guy from AOSE needs to be able to understand MARL, and a guy from MARL needs to be able to understand it.
-% TODO: The pedagogy on the 4 phases is missing.
+At the end of the analysis phase, the organizational fit score (\textit{OrgFit}) helps determine whether the learned policy aligns with the intended or emergent structure of the MAS.
+
 \begin{itemize}
-    \item \textbf{If Organizational Fit is High:} The inferred specifications are robust, and the process proceeds to \textbf{Phase 4 (Transfer)} ;
-    \item \textbf{If Organizational Fit is Low:} Training parameters should be adjusted, and the process returns to \textbf{Phase 2 (Training)} for further refinement.
+    \item \textbf{If \textit{OrgFit} is High:} This means that the agent behaviors are well-aligned with coherent roles and goal structures—whether explicitly defined or implicitly inferred. The system exhibits both \textit{structural consistency} (clear roles and missions) and \textit{functional adequacy} (effective achievement of goals). In this case, the MAS can proceed to \textbf{Phase 4 (Transfer)} for deployment.
+    
+    \item \textbf{If \textit{OrgFit} is Low:} This indicates that the learned policies either lack structure (e.g., agents switch behaviors erratically) or diverge from organizational specifications. This misalignment may stem from insufficient training, poorly tuned hyperparameters, or unclear constraints. The process should return to \textbf{Phase 2 (Training)}, optionally refining the model or organizational specifications in \textbf{Phase 1 (Modeling)} before retrying.
 \end{itemize}
+
+\noindent This decision step thus completes the third phase of the MAMAD method—\textbf{Analyzing}—which evaluates whether agent policies are ready for transfer or should be refined. It connects naturally to the fourth and final phase: \textbf{Transferring}, where agents are safely deployed in the target environment under organizational constraints.
 
 At the end of Phase 3, the output consists of:
 \begin{itemize}
@@ -925,7 +957,21 @@ At the end of Phase 3, the output consists of:
 
 \subsection{Phase 4: Transferring}
 
-The goal of this phase is to deploy the trained MAS into its target environment while ensuring safety, consistency, and compliance with organizational constraints. The deployment process follows a structured approach that includes validation in an emulated setting before real-world deployment.
+This final phase consists in deploying the trained MAS into its real target environment while ensuring that agents behave in accordance with the learned organizational specification. The core objective is to transfer the learned policy $\pi^j$ from the simulation (or digital twin) back to the real or emulated environment, enabling the system to act autonomously and safely.
+
+Formally, this phase implements the relation:
+\[
+\texttt{transfer}: \left( \mathcal{E}, \pi^j \right) \longrightarrow \mathcal{E}'
+\]
+where:
+\begin{itemize}
+    \item $\mathcal{E}$ is the current environment instance (real or emulated);
+    \item $\pi^j$ is the joint policy obtained from training and validated through analysis;
+    \item $\mathcal{E}'$ is the environment where actions from $\pi^j$ are actively applied, potentially generating new traces and observations for future iterations.
+\end{itemize}
+
+This phase completes the MAMAD design cycle by enabling the real-world execution of policies shaped and validated through previous phases. It also creates the conditions for a new modeling iteration if the environment evolves or if improved observations are needed, thus feeding the iterative optimization loop at the heart of MAMAD. The focus here is on safety, organizational compliance, and adaptive deployment mechanisms.
+
 
 \subsubsection{General workflow}
 This phase follows a systematic deployment strategy consisting of:
@@ -997,7 +1043,15 @@ We developed a tool that we propose to facilitate the implementation of the MAMA
 
 \subsection{A development environment for the method}
 
-To support the implementation and evaluation of the MAMAD method, we developed the \textbf{Cyber Multi-agent System Development Environment}~\footnote{Source code and details are freely available in \url{https://github.com/julien6/CybMASDE}} (\textbf{CybMASDE}), a dedicated framework that facilitates modeling, training, and deploying MAS. CybMASDE integrates several state-of-the-art libraries and tools to provide a flexible, scalable, and user-friendly environment for MARL-driven MAS design.
+To support the implementation and evaluation of the MAMAD method, we developed the \textbf{Cyber Multi-agent System Development Environment}~\footnote{Source code and details are freely available in \url{https://github.com/julien6/CybMASDE}} (\textbf{CybMASDE}), a dedicated framework that facilitates modeling, training, and deploying MAS. An visual overview of CybMASDE provided in \autoref{fig:cybmasde}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\linewidth]{figures/CybMASDE.png}
+    \caption{A screenshot of the \href{https://github.com/julien6/CybMASDE}{CybMASDE} tool. CybMASDE integrates several state-of-the-art libraries and tools to provide a flexible, scalable, and user-friendly environment for MARL-driven MAS design.}
+    \label{fig:cybmasde}
+\end{figure}
+
 
 CybMASDE leverages the \textbf{PettingZoo}~\cite{Terry2021} library, which offers a standardized API for MARL environments, ensuring interoperability with various MARL algorithms. This allows seamless integration of different multi-agent environments without the need for extensive custom modifications.
 
@@ -1040,12 +1094,13 @@ CybMASDE incorporates \textbf{TensorFlow} to enable automated environment modeli
 
 Additionally, CybMASDE provides \textbf{Hyper-Parameter Optimization (HPO)}, allowing users to fine-tune crucial training parameters such as:
 \begin{itemize}
-    \item Learning rate schedules ; % TODO: ...
-    \item Discount factors ($\gamma$) ; % TODO: each of the terms must be explained -> here it must be explained that the discount factor impacts to what extent the agent favors actions in the long term or the short term
-    \item Exploration-exploitation balances (e.g., $\epsilon$-greedy strategies)
-    \item Policy gradient update parameters (e.g., PPO clipping factors)
-    \item Reward shaping configurations.
+    \item \textbf{Learning rate schedules:} Control how quickly the learning algorithm updates its parameters. Adaptive or decaying schedules can help improve convergence stability and performance over time.
+    \item \textbf{Discount factor} ($\gamma$): Determines the agent's preference between short-term and long-term rewards. A lower $\gamma$ encourages myopic behavior (favoring immediate rewards), whereas a higher $\gamma$ promotes planning for delayed gains.
+    \item \textbf{Exploration-exploitation balance:} Typically managed via $\epsilon$-greedy or entropy-based strategies. It regulates the trade-off between discovering new behaviors (exploration) and exploiting current knowledge (exploitation).
+    \item \textbf{Policy gradient update parameters:} Include settings like the PPO clipping factor, which prevents excessively large updates to the policy. This helps maintain training stability and avoid policy collapse.
+    \item \textbf{Reward shaping configurations:} Involves adding auxiliary rewards to guide learning more effectively. Proper shaping can accelerate convergence by making useful intermediate states more attractive.
 \end{itemize}
+
 
 This feature ensures that trained policies are not only effective but also stable across different environments and organizational constraints.
 
@@ -1072,13 +1127,30 @@ Each algorithm-environment combination was executed on 5 parallel instances to e
 
 \subsection{Test environments and organizational specifications}
 
-To evaluate the MAMAD method, we employ four distinct multi-agent environments that serve as controlled testbeds. These environments span different problem domains, requiring coordination, strategic decision-making, and role-based interactions. Each environment is formally described below, including its state space, observation space, action space, reward structure, and overall goal. Additionally, we provide the corresponding organizational specifications, detailing roles, missions, and constraints used in the MAMAD framework.
+To evaluate the MAMAD method, we employ four distinct multi-agent environments that serve as controlled testbeds. These environments span different problem domains, requiring coordination, strategic decision-making, and role-based interactions. Each environment is formally described below, including its state space, observation space, action space, reward structure, and overall goal. Additionally, we provide the corresponding organizational specifications, detailing roles, missions, and constraints used in the MAMAD framework. A summary of 
+
+\begin{table}[h!]
+    \centering
+    \begin{footnotesize}
+        \renewcommand{\arraystretch}{1.3}
+        \begin{tabular}{p{2cm}p{2.2cm}p{2.2cm}p{2.2cm}p{2.2cm}}
+            \hline
+            \textbf{Key Aspect} & \textbf{CybORG}                & \textbf{Overcooked-AI} & \textbf{Predator-prey}     & \textbf{Warehouse Mgmt} \\ \hline
+            Realism             & Cyber-defense, dynamic threats & Human-like teamwork    & Abstract communication & Logistic workflow       \\ \hline
+            Emergent Roles      & Firewall, cleaner, rescuer     & Cooker, deliverer      & Speaker, listener      & Picker, crafter, packer \\ \hline
+            Goal Structure      & Multi-phase missions           & Sequential subtasks    & Shared objective       & Ordered pipeline        \\ \hline
+            Observability       & Noisy, partial views           & Occlusion, congestion  & Requires messaging     & Local and shared zones  \\ \hline
+            Org. Fit Evaluation & Coherence under attack         & Task delegation        & Comms-based roles      & Coordination efficiency \\ \hline
+        \end{tabular}
+        \caption{Key characteristics of environments used to assess MAMAD}
+        \label{tab:mamad_env_characteristics}
+    \end{footnotesize}
+\end{table}
+
 
 \paragraph{Warehouse Management (WM)}
-% TODO: for each environment, state what criteria you would like to check, in the form of tables
 The \textbf{Warehouse Management}~\cite{warehouse_management} environment models a grid-based logistics warehouse where multiple robots must collaborate to transport goods efficiently. The environment is inspired by industrial warehouse automation scenarios and serves as an ideal testbed for evaluating task allocation, role specialization, and real-time coordination. This environment is illustrated in \autoref{fig:warehouse}.
 
-% TODO: Better explain what agents are supposed to do <- what's the goal for each environment!
 \begin{itemize}
     \item \textbf{State Space:} A $N \times M$ grid where each cell contains a robot, a product, a crafting machine, or a drop-off location. The system tracks agent positions, inventory levels, and machine states ;
     \item \textbf{Observation Space:} Each agent has a local $V \times V$ view, perceiving products, teammates, and nearby machines ;
@@ -1105,8 +1177,8 @@ The \textbf{Warehouse Management}~\cite{warehouse_management} environment models
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.7\linewidth]{figures/wm.png}
-    \caption{A screenshot of the Warehouse Management environment: agents must coordinate to transport products efficiently while optimizing efficiency.}
+    \includegraphics[width=0.6\linewidth]{figures/wm.png}
+    \caption{A screenshot of the Warehouse Management environment: agents can move up, down, left, and right, multiple agents operate within a warehouse grid, performing tasks to process and deliver products. Agents can move in four directions (up, down, left, right) and interact with pick/drop zones when adjacent. The workflow involves: (i) collecting primary products from input conveyor pick/drop areas (blue zones); (ii) transporting them to crafting machine pick/drop areas (brown zones), where the primary products are transformed into a single secondary product based on a predefined crafting schema; (iii) retrieving the resulting secondary products and delivering them to output conveyor pick/drop areas (pink zones). Successful operation requires agents to coordinate their movements and actions to optimize throughput and efficiency within the warehouse.}
     \label{fig:warehouse}
 \end{figure}
 
@@ -1137,8 +1209,8 @@ The \textbf{Predator-Prey} environment is a well-known MARL benchmark~\cite{lowe
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.7\linewidth]{figures/predator_prey.png}
-    \caption{A screenshot of the Predator-Prey environment: predators (red) attempt to capture the prey (green) by coordinating movements.}
+    \includegraphics[width=0.6\linewidth]{figures/predator_prey.png}
+    \caption{A screenshot of the Predator-Prey environment: \textbf{green agents} (cooperative) and \textbf{red agents} (adversarial). The green agents aim to collect food items scattered across the environment while avoiding detection by the red agents. The environment includes \textbf{forest regions} that provide concealment; when a green agent enters a forest, it becomes partially or fully hidden from the red agents' observations. One red agent acts as a \textbf{leader} with enhanced observational capabilities and can communicate with other red agents to coordinate their pursuit.}
     \label{fig:predator_prey}
 \end{figure}
 
@@ -1171,8 +1243,8 @@ The \textbf{Overcooked-AI} environment~\cite{overcookedai} simulates a cooperati
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.7\linewidth]{figures/overcooked.png}
-    \caption{A screenshot of the Overcooked-AI environment: agents must coordinate to prepare and deliver food orders while avoiding congestion.}
+    \includegraphics[width=0.6\linewidth]{figures/overcooked.png}
+    \caption{A screenshot of the Overcooked-AI environment: Two agents (chefs) must collaborate to prepare and serve onion soups efficiently. The process involves collecting three onions (one at a time) from the dispenser, placing them into a cooking pot, waiting for the soup to cook, retrieving a clean dish, plating the soup, and delivering it to the serving counter. The kitchen layout includes obstacles and narrow pathways, requiring agents to coordinate their movements to avoid collisions and optimize task completion.}
     \label{fig:overcooked}
 \end{figure}
 
@@ -1206,8 +1278,8 @@ The \textbf{Cyber-Defense Simulation} is an ad hoc drom warm network on which de
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.7\linewidth]{figures/cyborg.png}
-    \caption{A screenshot of the CybORG environment: blue agents must defend against red agents.}
+    \includegraphics[width=0.6\linewidth]{figures/cyborg.png}
+    \caption{A screenshot of the CybORG environment: A swarm of 18 autonomous drones, initially controlled by blue (defensive) agents, forms an ad hoc network to facilitate communication between ground units. Each drone is susceptible to a hardware Trojan that can activate randomly, replacing the blue agent with a red (offensive) agent. Red agents aim to compromise the network by intercepting or blocking communications. The drones move according to a swarm algorithm, dynamically altering the network topology. Blue agents must detect and neutralize compromised drones while maintaining communication integrity.}
     \label{fig:cyborg}
 \end{figure}
 
@@ -1287,37 +1359,41 @@ To evaluate the impact of MAMAD's automated components, we conduct ablation stud
 
 Each ablation scenario is tested in at least two environments, with performance compared to the full MAMAD pipeline.
 
-
 \subsubsection{Summary of validation strategy}
-
-% TODO: Talk about bias in a fourth column
 
 \begin{table}[h!]
     \centering
-    \begin{tabular}{|l|l|l|}
+    \renewcommand{\arraystretch}{1.3}
+    \begin{footnotesize}
+    \begin{tabular}{p{1.5cm}p{2.4cm}p{2.2cm}p{4.5cm}}
         \hline
-        \textbf{Criterion}              & \textbf{Metric}                  & \textbf{Validation Method} \\
+        \textbf{Criterion} & \textbf{Metric} & \textbf{Validation Method} & \textbf{Potential Bias or Limitation} \\
         \hline
-        \multirow{3}{*}{Automation}     & Number of human interventions    & Direct counting            \\
-                                        & Time for MAS design              & Experiment logs            \\
-                                        & Iterations to convergence        & Training curves            \\
+        \multirow{3}{*}{Automation} 
+            & Human interventions & Direct counting & May ignore cognitive load or decision complexity \\
+            & Design time         & Experiment logs & Sensitive to logging granularity \\
+            & Convergence steps   & Training curves & May depend on hyperparameter quality \\
         \hline
-        \multirow{3}{*}{Efficiency}     & Cumulative Reward                & Score tracking             \\
-                                        & Policy Stability                 & Variance computation       \\
-                                        & Robustness Score                 & Perturbation tests         \\
+        \multirow{3}{*}{Efficiency} 
+            & Cumulative reward   & Score tracking   & Task-specific reward shaping may bias results \\
+            & Policy stability    & Reward variance  & Short-term noise may skew measurements \\
+            & Robustness score    & Perturbation tests & Depends on perturbation type and severity \\
         \hline
-        \multirow{3}{*}{Compliance}     & Constraint Violation Rate        & Policy enforcement check   \\
-                                        & Organizational Fit Level         & Role similarity analysis   \\
-                                        & Consistency Score                & Role-matching algorithms   \\
+        \multirow{3}{*}{Compliance} 
+            & Violation rate      & Rule checking    & May miss implicit norm violations \\
+            & Org. fit score      & Role/goal alignment analysis & Depends on clustering assumptions \\
+            & Consistency score   & Role-matching algorithms & Sensitive to threshold and distance metrics \\
         \hline
-        \multirow{3}{*}{Explainability} & Role Stability                   & Clustering analysis        \\
-                                        & Goal Transition Graph Complexity & Graph metrics              \\
-                                        & Policy Decision Tree Fidelity    & Model interpretability     \\
+        \multirow{3}{*}{Explainability} 
+            & Role stability      & Clustering variance & May conflate true roles with noise \\
+            & Goal graph complexity & Structural graph metrics & May reward oversimplified goals \\
+            & Decision fidelity   & Tree model accuracy & Depends on fidelity-explainability tradeoff \\
         \hline
     \end{tabular}
-    \caption{Summary of validation strategy, linking each research gap to measurable evaluation criteria.}
+    \caption{Validation criteria and methods across four axes: automation, efficiency, compliance, and explainability, along with associated evaluation risks.}
+    \label{tab:validation_strategy}
+    \end{footnotesize}
 \end{table}
-
 
 
 
@@ -1338,7 +1414,7 @@ The efficiency of the learning process was evaluated by measuring:
 \begin{table}[h!]
     \centering
     \caption{Metrics for evaluating the efficiency of MARL training}
-    \begin{tabular}{|l|c|}
+    \begin{tabular}{lc}
         \hline
         \textbf{Metric}                        & \textbf{Observed Value}    \\
         \hline
@@ -1367,7 +1443,7 @@ A critical challenge in MARL is ensuring that learned behaviors are interpretabl
 \begin{table}[h!]
     \centering
     \caption{Metrics for evaluating explainability of learned behaviors}
-    \begin{tabular}{|l|c|}
+    \begin{tabular}{lc}
         \hline
         \textbf{Metric}                                        & \textbf{Observed Value} \\
         \hline
@@ -1410,7 +1486,7 @@ To evaluate compliance, we assess the following metrics:
 \begin{table}[h!]
     \centering
     \caption{Metrics for evaluating compliance with design constraints}
-    \begin{tabular}{|l|c|}
+    \begin{tabular}{lc}
         \hline
         \textbf{Metric}                           & \textbf{Observed Value} \\
         \hline
@@ -1452,7 +1528,7 @@ To evaluate the extent of automation, we employ the following metrics:
 \begin{table}[h!]
     \centering
     \caption{Automation metrics comparing MAMAD to traditional MAS design methods}
-    \begin{tabular}{|l|c|c|}
+    \begin{tabular}{lcc}
         \hline
         \textbf{Metric}                              & \textbf{Traditional Methods} & \textbf{MAMAD} \\
         \hline
