@@ -1,0 +1,73 @@
+@startuml
+title CybMASDE – Component Diagram (MAMAD Implementation)
+
+left to right direction
+skinparam componentStyle rectangle
+
+' === Groupes logiques ===
+
+package "Core Services" {
+  component "Transferrer" <<service>>
+  component "Modeller" <<service>>
+  component "Trainer" <<service>>
+  component "Analyzer" <<service>>
+}
+
+package "ODF Management" {
+  component "ODF DB manager" <<service>>
+  component "ODF RNN manager" <<service>>
+  component "ODF exposer" <<service>>
+  component "ODF DB exposer" <<service>>
+  component "ODF RNN exposer" <<service>>
+}
+
+package "Policy Handling" {
+  component "joint policy trainer" <<service>>
+  component "joint policy exposer" <<service>>
+  component "joint policy tester" <<service>>
+}
+
+package "Artifacts" {
+  component "Real Environment"
+  component "ODF DB"
+  component "ODF RNN"
+  component "Πjoint"
+  component "MOISE+MARL Model"
+  component "MARLlib"
+  component "TEMM"
+}
+
+' === Liaisons principales ===
+
+"Transferrer" --> "Real Environment" : /apply joint action\n/get joint observation
+"Transferrer" --> "joint policy exposer" : /get next joint action
+"Transferrer" --> "ODF exposer" : /get next joint observation
+"Transferrer" --> "ODF DB manager" : /add transitions
+
+"Modeller" --> "ODF DB manager" : /get transitions\n/remove transitions
+"Modeller" --> "ODF RNN manager" : /train within interval\n/load checkpoint
+"Modeller" --> "ODF exposer" : /get next joint observation
+
+"Trainer" --> "joint policy trainer" : /train joint policy
+"Trainer" --> "joint policy exposer" : /get next joint action
+"Trainer" --> "ODF exposer" : /get next joint observation
+"Trainer" --> "MOISE+MARL Model" : use as reward/constraint
+"Trainer" --> "MARLlib" : use as env. wrapper
+
+"Analyzer" --> "TEMM" : /generate trajectories
+"Analyzer" --> "joint policy tester" : /get next joint action
+"Analyzer" --> "ODF exposer" : /get next joint observation
+"Analyzer" --> "MOISE+MARL Model" : /infer mm model
+
+"ODF DB manager" --> "ODF DB" : /initialize DB\n/save checkpoint
+"ODF RNN manager" --> "ODF RNN" : /initialize RNN\n/save checkpoint
+"ODF exposer" --> "ODF DB exposer"
+"ODF exposer" --> "ODF RNN exposer"
+"ODF DB exposer" --> "ODF DB" : /get transition
+"ODF RNN exposer" --> "ODF RNN" : /get next joint observation
+
+"joint policy trainer" --> "Πjoint" : /save checkpoint
+"joint policy exposer" --> "Πjoint" : /load checkpoint
+"joint policy tester" --> "Πjoint" : /load checkpoint
+
+@enduml
