@@ -64,22 +64,21 @@ $$
 Etat actuel du manuscrit
 
 
-## Introduction
+## Chapitre 1 : Introduction
 
-
-### 1.1 Un contexte de Cyberdéfense avec des défis futurs et nouveaux 
+### Section 1.1 : Un contexte de Cyberdéfense avec des défis futurs et nouveaux 
 % Contexte général : Présenter le contexte dans lequel le sujet de la thèse s'inscrit
 
-### 1.2 L’idée d’un système multi-agents de Cyberdéfense
+### Section 1.2 : L’idée d’un système multi-agents de Cyberdéfense
 % Contexte spécifique : Présenter le SMA de Cyberdéfense et son histoire comme point de départ du sujet de thèse
 
-### 1.3 Question de recherche
+### Section 1.3 : Question de recherche
 % Problème : Présenter la question de recherche
 
-### 1.4 Démarche de construction de la réponse, hypothèses de la thèse
+### Section 1.4 : Démarche de construction de la réponse, hypothèses de la thèse
 % Contribution : Présenter la démarche de recherche qui a conduit à proposer une méthode (MAMAD) comme réponse à la question de recherche et les hypothèses associées soutenant cette réponse.
 
-### 1.5 Organisation du manuscrit
+### Section 1.5 : Organisation du manuscrit
 % Organisation : Présenter l'organisation du manuscrit:
  - Partie I : présenter les bases pour chaque hypothèse, état de l'art pour chaque hypothèse, les verrous à franchir pour prendre appuie pleinement sur les hypothèses précédentes compte tenu des lacunes de la littérature
  - Partie II : présenter la méthode comme réponse principale qui orchestre toutes les contributions théoriques, puis détailler ces mêmes contributions qui permettent de combler les verrous théoriques et techniques identifiés précédement
@@ -88,15 +87,15 @@ Etat actuel du manuscrit
 
 # Partie I : notions, état de l'art, verrous, hypothèses
 
-## 2 vers un système multi-agents de cyberdéfense
+## Chapitre 2 : Vers un système multi-agents de cyberdéfense
 
-### 2.1 Concepts dans les systèmes multi-agents et l’organisation
+### Section 2.1 : Concepts dans les systèmes multi-agents et l’organisation
 
-### 2.2 Un état de l’art en matière de Cyberdéfense distribuée ou décentralisée
+### Section 2.2 : Un état de l’art en matière de Cyberdéfense distribuée ou décentralisée
 
-### 2.3 Synthèse et identification des verrous théoriques
+### Section 2.3 : Synthèse et identification des verrous théoriques
 
-## 3 problèmes détaillées et hypothèses de travail
+## Chapitre 3 : Problèmes détaillées et hypothèses de travail
 
 ### 3.1 Problèmes à considérer
 
