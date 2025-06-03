@@ -116,6 +116,14 @@
 \def\l@subparagraph{\@dottedtocline{6}{14em}{6em}}
 \makeatother
 
+\makeatletter
+\newcommand{\linebreakand}{%
+  \end{@IEEEauthorhalign}
+  \hfill\mbox{}\par
+  \mbox{}\hfill\begin{@IEEEauthorhalign}
+}
+\makeatother
+
 \setcounter{secnumdepth}{4}
 \setcounter{tocdepth}{4}
 
@@ -142,57 +150,59 @@
 
 \author{
 
-    % \IEEEauthorblockN{Julien Soulé}
-    % \IEEEauthorblockA{\textit{Thales Land and Air Systems, BU IAS}}
-    % %Rennes, France \\
-    % \IEEEauthorblockA{\textit{Univ. Grenoble Alpes,} \\
-    %     \textit{Grenoble INP, LCIS, 26000,}\\
-    %     Valence, France \\
-    %     julien.soule@lcis.grenoble-inp.fr}
+    \IEEEauthorblockN{Julien Soulé}
+    \IEEEauthorblockA{\textit{Thales Land and Air Systems, BU IAS}}
+    %Rennes, France \\
+    \IEEEauthorblockA{\textit{Univ. Grenoble Alpes,} \\
+        \textit{Grenoble INP, LCIS, 26000,}\\
+        Valence, France \\
+        julien.soule@lcis.grenoble-inp.fr}
+
+    \and
+
+    \IEEEauthorblockN{Jean-Paul Jamont\IEEEauthorrefmark{1}, Michel Occello\IEEEauthorrefmark{2}}
+    \IEEEauthorblockA{\textit{Univ. Grenoble Alpes,} \\
+        \textit{Grenoble INP, LCIS, 26000,}\\
+        Valence, France \\
+        \{\IEEEauthorrefmark{1}jean-paul.jamont,\IEEEauthorrefmark{2}michel.occello\}@lcis.grenoble-inp.fr
+    }
 
     % \and
 
-    % \IEEEauthorblockN{Jean-Paul Jamont\IEEEauthorrefmark{1}, Michel Occello\IEEEauthorrefmark{2}}
+    % \IEEEauthorblockN{Michel Occello}
     % \IEEEauthorblockA{\textit{Univ. Grenoble Alpes,} \\
-    %     \textit{Grenoble INP, LCIS, 26000,}\\
-    %     Valence, France \\
-    %     \{\IEEEauthorrefmark{1}jean-paul.jamont,\IEEEauthorrefmark{2}michel.occello\}@lcis.grenoble-inp.fr
-    % }
+    % \textit{Grenoble INP, LCIS, 26000,}\\
+    % Valence, France \\
+    % michel.occello@lcis.grenoble-inp.fr}
 
-    % % \and
-
-    % % \IEEEauthorblockN{Michel Occello}
-    % % \IEEEauthorblockA{\textit{Univ. Grenoble Alpes,} \\
-    % % \textit{Grenoble INP, LCIS, 26000,}\\
-    % % Valence, France \\
-    % % michel.occello@lcis.grenoble-inp.fr}
-
-    % % \and
+    \and
 
     % \linebreakand
 
-    % \hspace{0.5cm}
-    % \IEEEauthorblockN{Louis-Marie Traonouez}
-    % \IEEEauthorblockA{
-    %     \hspace{0.5cm}
-    %     \textit{Thales Land and Air Systems, BU IAS} \\
-    %     \hspace{0.5cm}
-    %     Rennes, France \\
-    %     \hspace{0.5cm}
-    %     louis-marie.traonouez@thalesgroup.com}
-
     % \and
 
-    % \hspace{-0.5cm}
-    % \IEEEauthorblockN{Paul Théron}
-    % \IEEEauthorblockA{
-    %     \hspace{-0.5cm}
-    %     \textit{AICA IWG} \\
-    %     \hspace{-0.5cm}
-    %     La Guillermie, France \\
-    %     \hspace{-0.5cm}
-    %     %lieu-dit Le Bourg, France \\
-    %     paul.theron@orange.fr}
+    \hspace{2cm}
+    \IEEEauthorblockN{Louis-Marie Traonouez}
+    \IEEEauthorblockA{
+        \hspace{2cm}
+        \textit{Thales Land and Air Systems, BU IAS} \\
+        \hspace{2cm}
+        Rennes, France \\
+        \hspace{2cm}
+        louis-marie.traonouez@thalesgroup.com}
+
+    \and
+
+    \hspace{1.5cm}
+    \IEEEauthorblockN{Paul Théron}
+    \IEEEauthorblockA{
+        \hspace{1.5cm}
+        \textit{AICA IWG} \\
+        \hspace{1.5cm}
+        La Guillermie, France \\
+        \hspace{1.5cm}
+        %lieu-dit Le Bourg, France \\
+        paul.theron@orange.fr}
 }
 
 \maketitle
@@ -213,12 +223,18 @@ component, formatting, style, styling, insert.
 \section{Introduction}
 \label{sec:introduction}
 
-% Contexte
+% Context
 Cloud-native critical systems are increasingly reliant on Kubernetes to orchestrate and manage interdependent services~\cite{Pahl2019}. HPA is a widely adopted mechanism to dynamically adjust the number of pods based on resource usage, enabling systems to handle highly dynamic workloads~\cite{Toka2020}. However, failures such as pod crashes, resource contention, and bottlenecks can severely jeopardize the performance of all of the cluster's functionalities we globally refer to as operational resilience~\cite{burns2016borg}. Worse, these failures may be exploited by attackers to degrade performance or induce outages, as seen in adversarial contexts like DDoS attacks~\cite{David2021}.
+
+Although DDoS attacks may seem unlikely in isolated enterprise clusters, many organizations expose services via ingress gateways, making them viable targets. Internally, DDoS-like overloads can also result from misconfigurations, compromised devices, or red-teaming exercises. Accounting for such adversarial scenarios aligns with cybersecurity best practices and helps ensure robust, fault-tolerant autoscaling.
 
 In such adversarial scenarios, malicious actors can exploit scaling mechanisms, exposing the limitations of conventional HPA systems. Modern approaches have sought to address these gaps using Reinforcement Learning (RL), where an agent optimizes a single global goal such as minimizing latency or resource usage~\cite{Gari2021}. While these methods demonstrate adaptability, they often fall short in handling diverse failure scenarios to maintain \textit{Quality of Service} (QoS)~\cite{Liu2024}. For example, prioritizing responses to cascading pod crashes during an attack may be far more critical than reducing latency. These challenges highlight the need for an autoscaling system capable of dynamically balancing multiple sub-goals to maintain all of the QoS to maximize operational resilience.
 
-Achieving this shift from single-goal optimization to a multi-goal approach is complex~\cite{Shoham2009MAS}. A single-agent RL system struggles to address such complexity due to the difficulty of coordinating responses to diverse and context-dependent failures~\cite{Jennings1998}. In contrast, MASs offer a promising paradigm by decomposing the overarching operational resilience maximization goal into sub-goals handled by specialized agents~\cite{Shoham2009MAS}. Considering an adversarial scenario, each defender agent can collaboratively contribute to complementary scaling actions to reach its own sub-goal, enabling more resilient and context-specific responses face to an attacker agent~\cite{Jennings1998}. We refer to the set of these collaborative agents as an HPA MAS. An HPA MAS actually builds upon the cyberdefense framework of Autonomous Intelligent Cybersecurity Agents (AICAs), which can be viewed as agents with specialized roles and missions collaboratively defending systems against attackers~\cite{Kott2018}.
+Achieving this shift from single-goal optimization to a multi-goal approach is complex~\cite{Shoham2009MAS}. In real-world scenarios, operational resilience is not reducible to a single objective: optimizing for low latency may conflict with ensuring high availability or limiting resource overprovisioning. During adversarial conditions, for example, prioritizing DDoS mitigation may require sacrificing latency, while pod crash recovery demands rapid reallocation of resources. A single RL agent struggles to address such priorities due to the difficulty of coordinating responses to diverse failures~\cite{Jennings1998}.
+
+In contrast, MASs offer a promising paradigm by decomposing the overarching operational resilience maximization goal into sub-goals handled by specialized agents~\cite{Shoham2009MAS}. Each agent focuses on a specific failure mode or performance objective, which facilitates specialization, improved coordination, and scalable policy learning under dynamic workloads.
+
+Considering an adversarial scenario, each defender can collaboratively contribute to complementary scaling actions to reach its own sub-goal, enabling more resilient and context-specific responses face to an attacker~\cite{Jennings1998}. We refer to the set of these collaborative as an HPA MAS. An HPA MAS actually builds upon the cyberdefense framework of Autonomous Intelligent Cybersecurity Agents (AICAs), which can be viewed as agents with specialized roles and missions collaboratively defending systems against attackers~\cite{Kott2018}.
 
 % Problématique
 However, designing HPA MASs tailored to a cluster presents significant challenges such as the need for detailed cluster knowledge, the time-consuming nature of manual design processes, and the difficulty of ensuring optimal agent behavior. Moreover, cluster changes require repeating the design process, increasing operational costs and complexity.
@@ -500,7 +516,7 @@ By defining specific \textbf{(role, mission)} pairs, the KARMA framework assigns
 
 KARMA integrates \textit{Multi-Agent Proximal Policy Optimization}~\cite{Yu2022} (MAPPO), an Actor-Critic MARL algorithm where the centralized critic provides global feedback, helping agents learn cooperative strategies by optimizing a shared value function. Meanwhile, decentralized actors ensure independent decision-making, preserving realistic execution. This structure fosters emergent collaboration as agents implicitly coordinate through the centralized learning process~\cite{Yu2022}, which is critical in KARMA due to the interdependencies between roles and missions.
 
-The training pipeline in KARMA follows a systematic sequence to optimize agent behaviors. Initially, policies (\(\pi_i\)), roles (RAG), and missions (GRG) are defined for all agents to establish a structured framework. Agents participate in simulation runs, generating trajectories within the digital twin environment. At each step, roles with hard constraints restrict the available actions to authorized ones, while soft constraints influence rewards by applying bonuses or penalties based on compliance. Missions add further reward shaping by incentivizing goal-aligned trajectories. The \textit{Optuna}~\cite{akiba2019optuna} framework is used for Hyper-Parameter Optimization, iteratively refining policies by adjusting hyperparameters and role specifications to improve convergence and enhance system resilience.
+The training pipeline in KARMA follows a systematic sequence to optimize agent behaviors. Initially, policies (\(\pi_i\)), roles (RAG), and missions (GRG) are defined for all agents to establish a structured framework. Agents participate in simulation runs, generating trajectories within the digital twin environment. At each step, roles with hard constraints restrict the available actions to authorized ones, while soft constraints influence rewards by applying bonuses or penalties based on compliance. Missions add further reward shaping by incentivizing goal-aligned trajectories. The \textit{Optuna}~\cite{akiba2019optuna} framework is used for Hyper-Parameter Optimization, iteratively refining policies by adjusting hyperparameters~\footnote{} and role specifications to improve convergence and enhance system resilience.
 
 Convergence is deemed successful when the standard deviation of cumulative rewards across episodes falls below a predefined threshold $\mu \in \mathbb{R}$, and cumulative rewards exceed an empirically determined minimum value $\lambda \in \mathbb{R}$.
 
@@ -540,7 +556,15 @@ Explainability in KARMA also requires an understanding of how agents coordinate 
     \item \textbf{Communication Relations}: Inferred from synchronized actions or information-sharing events. For example, agents sharing traffic load data to coordinate replica adjustments during surges.
 \end{enumerate*}
 
-To visualize these relations, a directed graph can be constructed where nodes represent agents and edges represent relations, annotated with interaction type on a time window.
+To visualize these relations, a directed graph can be constructed where nodes represent agents and edges represent relations, annotated with interaction type on a time window. An illustrative example is provided in \autoref{fig:example_interaction_graph}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[trim=0cm 2cm 0cm 2cm, clip, width=0.5\textwidth]{figures/roles_graph.pdf}
+    \caption{Example of inter-agent graph inferred from trajectories during a DDoS attack: The \textit{DDoS Manager} holds authority over the other agents, coordinating their responses. Additional relations capture observed communication (e.g., Bottleneck and Resource Managers) and awareness links (e.g., acquaintance between Failure and Bottleneck Managers).}
+    \label{fig:example_interaction_graph}
+\end{figure}
+
 %Considering a time window, we can generate a graph based on detected relations and may evolves dynamically on the next time window, highlighting changes in interaction patterns.
 
 % In addition, we also determine the \textbf{patterns of coordination} that aim to understand the mutual impact of an agent's actions onto another agent's trajectory  over time. Among Sequential Pattern Mining, we favoured the use of the \textit{PrefixSpan} algorithm to identify recurring action sequences across agents during specific scenarios. For example, patterns may show that one agent defers actions to another during adversarial conditions. Detected sequences can be represented as a sequence diagram illustrates how agents interact over time, showing causal relationships and dependencies in resolving challenges.
@@ -564,6 +588,7 @@ In this phase, policies interact with the real cluster:
 
 Agents in the transfer component continuously interact with the Kubernetes API, generating states that are stored in the modeling component's database. Initially, a large time window is used to collect representative traces for creating a near-realistic digital twin of the Kubernetes cluster. Subsequently, at shorter regular intervals, the modeling component updates the digital twin using the latest trace data. This iterative process aims to ensure agents dynamically adapt to workload.
 
+\noindent \textit{Safety Mechanisms:} To ensure safe policy deployment, KARMA applies several runtime safeguards. Action magnitudes are capped to avoid extreme scaling behaviors, and fallback mechanisms enable reverting to standard KHPA policies if unexpected states are detected. Additionally, policies can be first tested in canary deployments, isolating their effect before full rollout. Monitoring components continuously evaluate agent decisions and trigger alerts if anomalies occur.
 
 %
 % The agents interact seamlessly with Kubernetes:
@@ -581,8 +606,6 @@ Agents in the transfer component continuously interact with the Kubernetes API, 
 %     \item Agents are periodically retrained on this updated model to refine their policies for new workload patterns or adversarial conditions.
 %     \item Refined policies are redeployed to the cluster, maintaining high adaptability and resilience.
 % \end{enumerate*}
-
-\footnotetext[1]{\label{lnk:footnote_1}Source code available with extra details at: \url{https://anonymous.4open.science/r/KARMA-040B/README.md}}
 
 % =======================================
 \section{Experimental Setup}
@@ -632,9 +655,10 @@ The evaluation environment consists of a Kubernetes cluster simulating a \textbf
 %   - Baseline 3: Multi-Agent w/o Organizational Specifications
 %   - Baseline 4: Multi-Agent w/ Organizational Specifications
 
-\footnotetext[2]{\label{lnk:footnote_2}In our implementation by default $\alpha = 3$, $\sigma = 10$, $\kappa = 1$, and $ch = 1$}
+\footnotetext[2]{\label{lnk:footnote_2}In our implementation by default $\alpha = 3$, $\sigma = 10$, $\kappa = 1$, $ch = 1$, reward weights $(w_1, w_2, w_3, w_4, w_5) = (0.2, 0.2, 0.2, 0.2, 0.2)$, $Q_{\text{threshold}} = 30$ and $U_{\text{threshold}} = 90\%$.
+KARMA's source code and other hyperparameters can be found in \url{https://github.com/julien6/KARMA}}
 
-The KARMA framework leverages \textit{Cyber Multi-Agent System Development Environment}~\textsuperscript{\ref{lnk:footnote_1}} (CybMASDE) which is a general assisted-design MAS framework that seamlessly integrates into the KARMA framework~\textsuperscript{\ref{lnk:footnote_2}}.
+The KARMA framework leverages \textit{Cyber Multi-Agent System Development Environment}~\textsuperscript{\ref{lnk:footnote_2}} (CybMASDE) which is a general assisted-design MAS framework that seamlessly integrates into the KARMA framework.
 The framework includes:
 \begin{enumerate*}[label=\textbf{\arabic*)}, itemjoin={;\quad }]
     \item \textbf{Digital Twin Modeling:} A simulation environment replicates Kubernetes cluster using real-world traces
@@ -801,8 +825,10 @@ Operational resilience evaluates the ability of the system to handle failures an
         \hline
     \end{tabular}}
 \end{table}
-
+%
 \autoref{tab:operational_resilience} presents a comparison of KARMA against existing baselines. The results show that KARMA achieves the highest success rate (\textbf{90.9\%}), surpassing all baselines including AWARE (80.6\%) and Rlad-core (\textbf{77.4\%}). Similarly, the latency compliance of KARMA is the highest at \textbf{85.7\%}, while the lowest pending requests ratio (\textbf{5.9\%}) suggests efficient handling of workload variations.
+
+\noindent \textit{Statistical Note:} All reported values represent the mean over 10 independent evaluation runs. Although not shown in the tables for brevity, the standard deviation across runs remained consistently low ($\pm$1.8\% for success rate and $\pm$2.1 ms for latency in the mixed scenario), indicating robust outcomes.
 
 KARMA's performance stems from its structured multi-agent coordination, which optimally distributes resources based on failure contexts, avoiding redundant or conflicting scaling actions—issues common in single-agent RL-based autoscalers.
 %
@@ -819,7 +845,7 @@ The results also underscore the value of organizational constraints. Multi-agent
 Adversarial conditions evaluate the system's robustness against disruptive scenarios such as DDoS attacks.
 \begin{table}[h]
     \centering
-    \caption{Performance under adversarial conditions (DDoS scenario).}
+    \caption{Performance under DDoS scenario.}
     \label{tab:adversarial_conditions}{
         \footnotesize
     \begin{tabular}{>{\raggedright\arraybackslash}m{3.6cm}>{\centering\arraybackslash}m{1.8cm}>{\centering\arraybackslash}m{2cm}}
@@ -838,7 +864,7 @@ Adversarial conditions evaluate the system's robustness against disruptive scena
         \hline
     \end{tabular}}
 \end{table}
-
+%
 \autoref{tab:adversarial_conditions} compares recovery times and service availability in the \textit{DDoS Attack} scenario. KARMA achieves the fastest recovery time (\textbf{33.0s}), outperforming AWARE (\textbf{38.8s}) and Rlad-core (\textbf{43.5s}). It also ensures a good service availability at \textbf{90.7\%}, reducing downtime compared to AWARE (\textbf{83.6\%}).
 
 Traditional autoscalers like KHPA and Gym-HPA rely on reactive threshold-based scaling, leading to slower recovery and lower service availability under attacks. RL-based methods such as Rlad-core and AWARE improve resilience but lack structured coordination, making them less effective against adversarial spikes. Single-agent approaches struggle with balancing attack mitigation and resource optimization, while multi-agent models with soft constraints allow exploratory actions that sometimes delay optimal responses.
@@ -848,7 +874,6 @@ KARMA's proactive adversarial learning and structured coordination enable it to 
 
 \subsection{Gap 3: Digital Twin Modeling}
 
-The accuracy of the digital twin model is critical for training agents under realistic conditions.
 \begin{table}[h]
     \centering
     \caption{Transition models accuracy across all scenarios.}
@@ -863,8 +888,9 @@ The accuracy of the digital twin model is critical for training agents under rea
         \hline
     \end{tabular}}
 \end{table}
-
-\autoref{tab:digital_twin_accuracy} compares the accuracy of different digital twin models. The results show that KARMA achieves \textbf{94.9\%} accuracy, outperforming the non-MLP model (\textbf{83.5\%}), which struggles to generalize across varying workloads.
+%
+The accuracy of the digital twin model is critical for training agents under realistic conditions.
+\autoref{tab:digital_twin_accuracy} compares the accuracy of different digital twin models. The results show that KARMA achieves \textbf{94.9\%} accuracy, outperforming the non-MLP model (\textbf{83.5\%}), which struggles to generalize.
 
 The improvement stems from the MLP model's ability to capture non-linear dependencies between workload fluctuations, resource allocation, and scaling actions. Without this feature, the system fails to model complex cluster behaviors accurately.
 %
@@ -895,6 +921,8 @@ The role-guided learning narrows the search space for optimal policies, enabling
 
 The learning curves in \autoref{fig:learning_curves} demonstrate that KARMA achieves stable convergence significantly faster than the baseline without organizational specifications. By episode 950, KARMA exhibits minimal variance in cumulative rewards, whereas the baseline requires nearly double the episodes (1800) to reach comparable performance. This highlights the role of organizational constraints in guiding agents toward effective policies, thereby reducing exploration overhead.
 
+\noindent \textit{Overhead Discussion:} The training phase for KARMA required approximately 1.5 hours on a high-performance machine with 1 GPU (Tesla V100, 16GB) and 16 CPU cores, converging in under 1,000 episodes. At inference time, each agent's policy produces decisions in under 30ms, with a negligible memory footprint (<50MB per agent).
+
 \autoref{tab:mas_generation_efficiency}, shows reduced \textit{Convergence Time} by approximately \textbf{47\%} compared to Multi-Agent w/o Org. Spec., showcasing the efficiency of role-guided learning in minimizing unnecessary exploration. Moreover, \textit{Training Overhead} is reduced by \textbf{62.5\%}, showing a better practicality for large-scale systems where computational resources are a limiting factor.
 
 \begin{figure}[h!]
@@ -910,7 +938,7 @@ The learning curves in \autoref{fig:learning_curves} demonstrate that KARMA achi
 Adaptability assesses the ability of the system to maintain performance under dynamic workloads accross scenarios.
 \begin{table}[h]
     \centering
-    \caption{Comparison of adaptability metrics in the mixed scenario.}
+    \caption{Comparison of adaptability in the mixed scenario.}
     \label{tab:adaptability_comparison}{
     \footnotesize
     \begin{tabular}{>{\raggedright\arraybackslash}m{5cm}>{\centering\arraybackslash}m{3cm}}
@@ -925,7 +953,7 @@ Adaptability assesses the ability of the system to maintain performance under dy
         \hline
     \end{tabular}}
 \end{table}
-
+%
 \autoref{tab:adaptability_comparison} shows that KARMA achieves the lowest reward standard deviation (\textbf{5.3\%}), indicating a highly stable performance, outperforming Multi-Agent w/ Soft Org. Spec. (\textbf{9.0\%}) and Multi-Agent w/o Org. Spec. (\textbf{10.7\%}).
 
 In the \textit{Mixed Scenario}, single-agent models exhibit higher variance as they must balance multiple competing objectives without specialization. Multi-agent approaches improve adaptability, but without structured coordination, fluctuations remain. The use of soft organizational constraints stabilizes performance, though some exploratory variations persist.
@@ -950,7 +978,7 @@ Explainability is qualitatively evaluated through trajectory clustering and quan
 
 \begin{table}[h!]
     \centering
-    \caption{Alignment of Agent Behavior with Roles and Missions.}
+    \caption{Alignment of agents with roles and missions.}
     \label{tab:alignment}
     {\footnotesize
     \begin{tabular}{>{\raggedright\arraybackslash}m{4.1cm}>{\centering\arraybackslash}m{1.5cm}>
@@ -982,8 +1010,8 @@ Distinct clusters validate the role-specific behaviors and highlight the interpr
 %  - Résumé
 %  - Résumé des Points faibles et Perspectives
 
-This paper presented KARMA, a framework aimed at improving the operational resilience of Kubernetes clusters through a MAS-based approach.
-The experimental results demonstrate that KARMA effectively addresses several critical gaps in Kubernetes autoscaling. By integrating MARL with organizational principles, KARMA achieves improvements in adversarial robustness, and explainability. Its ability to decompose complex goals into roles and missions ensures coordinated agent behavior, as reflected in the high success rates, reduced recovery times. The use of MLP-based transition model, further strengthens KARMA's capacity to simulate realistic conditions, facilitating better policy generalization.
+This paper presented KARMA, a framework aimed at improving the operational resilience of Kubernetes clusters. While modular designs offer simplicity, they often rely on manual coordination that struggles in dynamic or adversarial contexts. In contrast, KARMA’s MAS approach enables adaptive, decentralized responses through agent specialization.
+The experimental results demonstrate that KARMA effectively addresses several critical gaps in Kubernetes autoscaling. By integrating MARL with organizational principles, KARMA achieves improvements in adversarial robustness, and explainability. Its ability to decompose complex goals into roles and missions ensures coordinated agent behavior. The use of MLP-based transition model, further strengthens KARMA's capacity to simulate realistic conditions.
 %
 % The main contributions of this work include:
 % \begin{itemize}
@@ -998,21 +1026,15 @@ The experimental results demonstrate that KARMA effectively addresses several cr
 
 However, some aspects need to be further explored:
 \begin{enumerate*}[label=\textbf{\arabic*)}, itemjoin={;\quad }]
-    \item \textbf{Simulation-to-Reality Gap:} Even though we generate a near-realistic simulation model from environment traces, we still need to better simulate unaccounted API latencies and unexpected system failures
-    \item \textbf{Dependence on Domain Expertise:} Defining roles, missions, and reward structures relies heavily on domain-specific knowledge, which may limit the framework's generalizability to other scenarios
-    \item \textbf{Computational Overhead:} The training process with multi-agent configurations and organizational constraints requires substantial computational resources, posing challenges for real clusters.
+    \item \textbf{Simulation-to-Reality Gap:} Even though we generate a near-realistic simulation model from environment traces, we need to better simulate unaccounted unexpected system failures
+    \item \textbf{Dependence on Domain Expertise:} Defining roles, missions, and reward structures relies heavily on domain-specific knowledge, which may limit the framework's generalizability
+    \item \textbf{Computational Overhead:} The training process with multi-agent configurations and organizational constraints requires substantial computational resources.
+    \item \textbf{Scalability to Multi-Node Clusters:} Although current experiments focus on a single-node cluster, preliminary evaluations are being conducted on larger-scale deployments.
+
     % \item \textbf{Sensitivity to Workload Shifts:} While KARMA demonstrates adaptability, abrupt changes in workload patterns or cluster configurations may require retraining or fine-tuning of agent policies.
     % \item \textbf{Evaluation Scope:} Although the framework was tested under diverse scenarios, including adversarial conditions, its performance on larger and more heterogeneous clusters remains to be validated.
 \end{enumerate*}
 
-Building on these initial results, we plan to explore:
-\begin{enumerate*}[label=\textbf{\arabic*)}, itemjoin={;\quad }]
-    \item \textbf{Automated Role and Mission Generation:} Improving non-supervised learning methods or pre-trained knowledge bases to automatically define roles and missions (Meta-learning), reducing the reliance on domain expertise
-    % \item \textbf{Efficient Training Pipelines:} Exploring optimization techniques, such as transfer learning or distributed training, to mitigate the computational overhead of multi-agent training.
-    \item \textbf{Dynamic Role Adjustment:} Investigating mechanisms for agents to dynamically adapt their roles and missions, enhancing flexibility and responsiveness
-    \item \textbf{Generalization to Larger Clusters:} Extending the framework to more complex, large-scale Kubernetes deployments with heterogeneous configurations.
-    % \item \textbf{Integration with Real-Time Monitoring:} Incorporating advanced monitoring systems to further refine the digital twin model and provide more accurate state representations.
-\end{enumerate*}
 
 % While KARMA is not a universal solution to all Kubernetes autoscaling challenges, it provides a step forward in addressing key gaps in operational resilience, adaptability, and explainability. The framework's combination of MARL and organizational principles offers a promising foundation for future research and development.
 
