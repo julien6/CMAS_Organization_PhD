@@ -147,8 +147,6 @@ Etat actuel du manuscrit
 
 ## 5.7 Tendances générales qui ressortent des résultats et de la synthèse
 
-## 6 
-
 ## 6 conclusion et travaux futurs
 
 ### 6.1 Vers une application industrielle pour la prise de décision en matière de Cyberdéfense
