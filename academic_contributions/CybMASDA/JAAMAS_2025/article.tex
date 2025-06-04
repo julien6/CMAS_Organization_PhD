@@ -251,7 +251,7 @@
 
 Designing \textbf{MAS} for complex real-world applications, such as cybersecurity, logistics, autonomous robotics, or intelligent transportation, requires methodologies that ensure both structured and goal-oriented agent behaviors~\cite{Jamont2O15}. Traditionally, the \textbf{AOSE} paradigm has provided systematic frameworks for specifying and developing MAS, emphasizing the design of agents, roles, and interactions~\cite{Pavon2003, Bernon2005}. AOSE methodologies typically rely on explicit expert's knowledge and predefined organizational models to structure agent behavior, ensuring predictability, reliability, and adherence to constraints~\cite{Hindriks2014}.
 
-Traditional AOSE approaches have limitations in adaptability and scalability. They often require extensive domain expertise to define organizational structures and behavioral rules, making them difficult to generalize across dynamic environments. To our knowledge, no work have carried out research pushing Machine Learning (ML) into AOSE MAS design, such as adaption to unforeseen events~\cite{Garcia2004}.
+Traditional AOSE approaches have limitations in adaptability and scalability. They often require extensive domain expertise to define organizational structures and behavioral rules, making them difficult to generalize across dynamic environments. To our knowledge, very few works have explored the integration of Machine Learning (ML) techniques into AOSE methodologies for MAS design, particularly in a way that allows adaptive policy learning under structured and functional organizational constraints~\cite{Garcia2004}.
 
 In contrast, \textbf{MARL} has emerged as a distinct ML approach that enables autonomous agents to \textbf{learn and adapt} through experience. MARL techniques allow agents to develop \textbf{coordination strategies} by interacting with their environment and optimizing their decision-making policies based on cumulative rewards~\cite{Zhang2021}. This data-driven learning paradigm enables agents to dynamically adjust their behaviors to different contexts, even in highly uncertain or complex environments, such as decentralized control, adversarial scenarios, or cooperative problem-solving~\cite{Papoudakis2021}.
 
@@ -273,7 +273,7 @@ In order to gather AOSE and MARL domains we adopt an optimization perspective on
 \end{itemize}
 This formulation serves as the backbone of this article and motivates our contribution. 
 %
-To implement this approach, several key research gaps remain unaddressed when considering the design of MAS from an \textbf{organizational perspective}:
+To implement this approach, several key research gaps remain unaddressed when considering the design of MAS from an \textbf{organizational perspective}. We identify four research gaps, denoted as G1 through G4, that motivate our contribution:
 %
 \begin{itemize}
     \item \textbf{(G1) Leveraging MARL's performance within AOSE}: AOSE lacks MARL integration, while MARL lacks structured design constraints. There is no \textbf{unified framework combining AOSE and MARL-driven learning}~\cite{Cossentino2014}. Addressing this gap would allow MAS to \textbf{leverage MARL's computational power} to automatically generate sufficiently performant agents' policies ;
@@ -294,7 +294,7 @@ We propose the \textbf{MAMAD method}, an extension of the \textbf{MOISE+MARL} fr
 In classical AOSE, the \textit{Requirement Engineering} phase involves specifying design requirements, environmental constraints, and global objectives~\cite{Pavon2003, Bernon2005}. We assume these are provided and leave the engineering methodology to the user. MAMAD formalizes and operationalizes them within the MOISE+MARL framework as part of an automated design workflow.
 
 \begin{enumerate}
-    \item \textbf{Modeling Phase:} Automatically builds a simulated environment by training a neural architecture inspired by "world models"~\cite{Ha2018}, and defines the MAS global goal through a dedicated reward function.
+    \item \textbf{Modeling Phase:} Automatically builds a simulated environment by training a neural architecture inspired by "world models"~\cite{Ha2018}, and defines the MAS global goal (which may be decomposed into multiple intermediary subgoals) through a dedicated reward function.
     \item \textbf{Training Phase:} Agents learn in the simulated environment, optionally guided by organizational constraints: roles (limiting allowable actions) and goals (shaping rewards). These structure the learning process as user-defined specifications.
     \item \textbf{Analysis Phase:} Unsupervised learning techniques analyze successful trajectories to extract emergent roles and goals within the constrained policy space, yielding validated specifications and policies.
     \item \textbf{Transfer Phase:} The validated joint policy is deployed in the real-world environment to operationalize the trained MAS.
@@ -408,15 +408,38 @@ Explainability and interpretability in MARL aim to make the behavior of agents t
 
 \section{Theoretical background}\label{sec:background}
 
+This section recaps the notation and basics we used in our contributions for MARL and the $\mathcal{M}OISE^+$ organizational model.
 
 \subsection{Markov framework for MARL}
 
 To apply MARL techniques, we rely on the \textit{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP) \cite{Oliehoek2016}. Dec-POMDPs model decentralized multi-agent coordination under partial observability, making them well suited for integrating organizational constraints. Unlike \textit{Partially Observable Stochastic Games} (POSG), the Dec-POMDP features a common reward function, promoting collaboration~\cite{Beynier2013}.
 
-A Dec-POMDP $d \in D$ (where $D$ is the set of Dec-POMDPs) is defined as a 7-tuple $d = \langle S, \{A_i\}, T, R, \{\Omega_i\}, O, \gamma \rangle$, where $S = \{s_1,\dots,s_{|S|}\}$ is the set of possible states; $A_{i} = \{a_{1}^{i},\dots,a_{|A_{i}|}^{i}\}$ is the set of possible actions for agent $i$; $T$ represents the set of transition probabilities, with $T(s,a,s') = \probP(s'|s,a)$ as the probability of transitioning from state $s$ to state $s'$ following action $a$; $R: S \times A \times S \rightarrow \mathbb{R}$ is the reward function, assigning a reward based on the initial state, the action taken, and the resulting state; $\Omega_{i} = \{o_{1}^{i},\dots,o_{|\Omega_{i}|}^{i}\}$ is the set of possible observations for agent $i$; $O$ represents the set of observation probabilities, where $O(s',a,o) = \probP(o|s',a)$ is the probability of obtaining observation $o$ after performing action $a$ and reaching state $s'$; and $\gamma \in [0,1]$ is the discount factor, used to weight future rewards.
+A Dec-POMDP $d \in D$ (with $D$ the set of Dec-POMDP) is a 7-tuple $d = (S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$ , where:
+\begin{itemize}
+    \item $S = \{s_1, ..s_{|S|}\}$: The set of the possible states.
+    \item $A_{i} = \{a_{1}^{i},..,a_{|A_{i}|}^{i}\}$: The set of the possible actions for agent $i$.
+    \item $T$ so that $T(s,a,s') = \probP{(s'|s,a)}$ : The set of conditional transition probabilities between states
+    \item $R: S \times A \times S \rightarrow \mathbb{R}$: The reward function
+    \item $\Omega_{i} = \{o_{1}^{i},..,o_{|\Omega_{i}|}^{i}\}$: The set of observations for agent $ag_i$
+    \item $O$ so that $O(s',a,o) = \probP{(o|s',a)}$ : The set of conditional observation probabilities.
+    \item $\gamma \in [0,1]$, the discount factor
+\end{itemize}
 
-The following formalism is used with MOISE+MARL to solve the Dec-POMDP~\cite{Beynier2013,Albrecht2024}: $\mathcal{A}$ represents the set of $n$ \textbf{agents}; $\Pi$ denotes the set of \textbf{policies}, where a policy $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action, representing the agent's internal strategy; $\Pi^{j}$ represents the set of \textbf{joint policies}, with a joint policy $\pi^{j} \in \Pi^{j}, \pi^{j}: \Omega^n \rightarrow A^n = \Pi^n$, which selects an action for each agent based on their respective observations, acting as a collection of policies used by agents within a team; $H$ is the set of \textbf{histories}, where a history (or trajectory) over $z \in \mathbb{N}$ steps (typically the maximum number of steps in an episode) is represented as the $z$-tuple $h = \langle \langle \omega_{k}, a_{k}\rangle | k \leq z, \omega \in \Omega, a \in A\rangle$, capturing successive observations and actions; $H^{j}$ stands for the set of \textbf{joint histories}, with a joint history $h^{j} \in H^{j}$ over $z$ steps defined as the set of agent histories: $h^{j} = \{h_1, h_2, \dots, h_n\}$; and finally, $V^{j}(\pi^{j}): \Pi^{j} \rightarrow \mathbb{R}$ denotes the \textbf{expected cumulative reward} over a finite horizon (assuming $\gamma < 1$ or if the number of steps in an episode is finite), where $\pi^{j}$ represents the joint policy for team $i$, with $\pi^{j}_{-i}$ being the joint policies of other teams as fixed.
+Considering $m$ \textbf{teams} (also referred as \textbf{groups}) each containing several agents among $\mathcal{A}$, we also detail the minimal formalism notation we re-used for solving the Dec-POMDP for a given team $i, 0 \leq i \leq m$ containing $n$ agents~\citep{Beynier2013,Albrecht2024}:
 
+\begin{itemize}
+
+    \item $\Pi$: the set of policies. A \textbf{policy} $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action. It represents the agent's internal logic;
+    \item $\Pi_{joint}$: the set of joint-policies. A \textbf{joint-policy} $\pi_{joint} \in \Pi_{joint}, \pi_{joint}: \Omega^n \rightarrow A^n = \Pi^n$ chooses an action for each agent regarding their respective observation. It can be viewed as a set of the policies used in agents;
+    \item $H$: the set of histories. A \textbf{history} over $z \in \mathbb{N}$ steps (where $z$ is generally the maximum number of steps for an episode) is the $z$-tuple $h = ((\omega_{k}, a_{k}) | k \leq z, \omega \in \Omega, a \in A)$
+    \item $H_{joint}$: the set of joint-histories. A \textbf{joint-history} over $z \in \mathbb{N}$ steps $h_{joint} \in H_{joint}, h_{joint} = \{h_1,h_2..h_n\}$ is the set of the agents' histories.
+    \item $U_{joint,i}(<\pi_{joint,i}, \pi_{joint,-i}>): \Pi_{joint} \rightarrow \mathbb{R}$: gives the \textbf{expected cumulative reward} over a finite horizon (if $\gamma < 1$ or the number of steps in an episode is finite), with $\pi_{joint,i}$ the joint policy for team $i$ and $\pi_{joint,-i}$ all of the other concatenated joint-policies (considered as fixed);
+    \item $BR_{joint,i}(\pi_{joint,i}) = argmax_{\pi_{joint,i}}(U(<\pi_{joint,i},\pi_{joint,-i}>))$: gives the \textbf{best response} $\pi_{joint,i}^*$ in the sense that the team cannot change any of the policies in the joint-policy $\pi_{joint,i}^*$ to get a better expected cumulative reward than $U_i^* = U_{joint,i}(<\pi_{joint,i}^*, \pi_{joint,-i}>)$;
+    \item $SR_{joint,i}(\pi_{joint,i}, s) = \{\pi_{joint,i} | U(<\pi_{joint,i},\pi_{joint,-i}>) \geq s\}$: gives the \textbf{sufficient response} as the set of joint-policies getting at least $s \in \mathbb{R}, s \leq U_i^*$ as expected cumulative reward.
+\end{itemize}
+
+We refer to \textbf{solving} the Dec-POMDP for the team $i$ as finding a joint policy $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = BR_{joint,i}(\pi_{joint,i})$ that maximize the expected cumulative reward over a finite horizon.
+We refer to \textbf{sub-optimally solving} the Dec-POMDP at $s$ expectancy as finding a the joint policies $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = SR_{joint,i}(\pi_{joint,i}, s)$ that gets the expected cumulative reward over a finite horizon at least at $s \in \mathbb{R}, s \leq U_i^*$.
 
 % We refer to \textbf{solving the Dec-POMDP} as the search for a joint policy $\pi^{j} \in \Pi^{j}$ such that $\pi^{j}s)$, achieving at least an expected cumulative reward of $s$, where $s \in \mathbb{R}$.
 
@@ -430,18 +453,85 @@ The following formalism is used with MOISE+MARL to solve the Dec-POMDP~\cite{Bey
 % \end{figure}
 
 % As illustrated in \autoref{fig:moise_model},
-$\mathcal{M}OISE^+$ comprises three types of organizational specifications:\\
 
-\noindent \textbf{Structural Specifications} define how agents are structured, expressed as $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$. $\mathcal{R}_{ss}$ is the set of roles ($\rho \in \mathcal{R}$) with an inheritance relation $\mathcal{IR}$ where $\rho_1 \sqsubset \rho_2$ if $\rho_1$ inherits from $\rho_2$. $\mathcal{GR}$ includes groups $\langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \allowbreak \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$. Links ($\mathcal{L}$) define connections between roles: acquaintance, communication, or authority. Compatibilities $\mathcal{C}$ denote roles that agents can play together. Intra- and inter-group links and compatibilities are shown by $\mathcal{L}^{intra}$, $\mathcal{L}^{inter}$, $\mathcal{C}^{intra}$, and $\mathcal{C}^{inter}$, with $np$ and $ng$ defining role and subgroup counts.\\
+$\mathcal{M}OISE^+$~\citep{Hubner2002} provides an advanced formal description for an organization without incompatibilities with MARL, especially for formal description of agents' policies. It takes into account explicitly the social aspects between agents where \textquote{AGR} focuses on the integration of standards oriented towards design. Additionally, it provides a sufficiently detailed vision of organization to be understood at different point of views.
+Based on $\mathcal{M}OISE^+$~\citep{Hubner2007} formalism, we only give the minimal elements of the formalism we used for our approach.
 
-\noindent \textbf{Functional Specifications} describe the agents' goals, represented as $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$. The social scheme $\mathcal{SCH}$ includes global goals $\mathcal{G}$, missions $\mathcal{M}$, and plans $\mathcal{P}$ that organize goals in a tree structure. Plans link goals with an operator ($op$) indicating sequence, choice, or parallel completion. Missions map to goal sets ($mo$), and agent counts per mission are specified by $nm$. Preferences $\mathcal{PO}$ indicate which missions agents prefer, denoted as $m_1 \prec m_2$.\\
+\paragraph{\textbf{Organization specifications (OS)}}: $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, the set of all organization specifications, where $\mathcal{SS}$ are the \textbf{Structural Specifications}, $\mathcal{FS}$ are the \textbf{Functional Specifications}, and $\mathcal{DS}$ are the \textbf{Deontic Specifications}
 
-\noindent \textbf{Deontic Specifications} indicate the relationship between roles goals, given by $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$. Time constraints $\mathcal{TC}$ set periods for permissions or obligations ($Any$ for any time). Obligations ($\mathcal{OBL}$) require agents in role $\rho_a$ to undertake mission $m$ at times $tc$, while permissions ($\mathcal{PER}$) allow it. The $rds$ function maps roles to their deontic specifications as $\langle tc, y, m \rangle$ where $y$ is either permission (0) or obligation (1).
+\paragraph{\textbf{Structural Specifications (SS)}}: $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$, where:
+
+\begin{itemize}
+
+    \item $\mathcal{R}_{ss}$: the set of all roles (denoted $\rho \in \mathcal{R}$);
+
+    \item $\mathcal{IR}: \mathcal{R} \rightarrow \mathcal{R}$: the inheritance relation between roles ($\mathcal{IR}(\rho_1) = \rho_2$ means $\rho_1$ inherits from $\rho_2$ also denoted $\rho_1 \sqsubset \rho_2$);
+
+    \item $RG \subseteq GR$ the set of root groups, $GR = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$, the set of all groups, where
+
+          \begin{itemize}
+
+              \item $\mathcal{R} \subseteq \mathcal{R}_{ss}$: the set of non-abstract roles;
+
+              \item $\mathcal{SG} \subseteq \mathcal{GR}$: the set of sub-groups;
+
+              \item $\mathcal{L} = \mathcal{R} \cross \mathcal{R} \cross \mathcal{TL}$: the set of links. A link is a 3-tuple $(\rho_s,\rho_d,t) \in \mathcal{L}$ (also denoted as a predicate $link(\rho_s,\rho_d,t))$, where $\rho_{s}$ is the source role, $\rho_{d}$ is the destination role, and $t \in \mathcal{TL}, \mathcal{TL} = \{acq, com, aut\}$ is the link type;
+                    \begin{itemize}
+                        \item If $t = acq$ (acquaintance), the agents playing the source role $\rho_{\mathrm{s}}$ are allowed to have a representation of the agents playing the destination role $\rho_{d}$;
+                        \item If $t = com$ (communication), the $\rho_{\mathrm{s}}$ agents are allowed to communicate with $\rho_{d}$ agents;
+                        \item If $t = aut$ (authority), the $\rho_{\mathrm{s}}$ agents are allowed to have authority on $\rho_{d}$ agents. It requires an acquaintance and communication link.
+                    \end{itemize}
+              \item $\mathcal{L}^{intra} \subseteq \mathcal{L}$: the set of intra-group links;
+              \item $\mathcal{L}^{inter} \subseteq \mathcal{L}$: the set of inter-group links;
+
+              \item $\mathcal{C} = \mathcal{R} \cross \mathcal{R}$: the set of compatibilities. A compatibility is a couple $(a,b) \in \mathcal{C}$ (also denoted $\rho_a \bowtie \rho_b$), means agents playing role $\rho_a \in \mathcal{R}$ can also play role $\rho_b \in \mathcal{R}$;
+              \item $\mathcal{C}^{intra} \subseteq \mathcal{C}$: the set of intra-group compatibilities;
+              \item $\mathcal{C}^{inter} \subseteq \mathcal{C}$: the set of inter-group compatibilities;
+
+              \item $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of agents adopting a role;
+              \item $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of each sub-group.
+
+          \end{itemize}
+
+\end{itemize}
+
+\paragraph{\textbf{Functional Specifications (FS)}}: $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$, where:
+
+\begin{itemize}
+    \item $\mathcal{SCH} = \langle\mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$: the set of \textbf{social scheme}, where:
+          \begin{itemize}
+              \item $\mathcal{G}$ is the set of global goal;
+
+              \item $\mathcal{M}$ is the set of mission labels;
+              \item $\mathcal{P} = \langle \mathcal{G}, \{\mathcal{G}\}^s, OP, [0,1] \rangle, s \in \mathbb{N}^*$ is the set of plans that builds the tree structure of the goals.
+              %
+              A plan $p \in \mathcal{P}$ is 4-tuple $p=(g_f,\{g_i\}_{0 \leq i \leq s}, op, p), g_f \in \mathcal{G}, g_i \in \mathcal{G}, op \in OP, OP = \{sequence, choice, parallel\}, p \in [0,1]$, meaning that the goal $g_f$ is achieved if some of the sub-goals $g_i$ are achieved with a success probability $p$ and according to the operator $op$:
+              %
+              \begin{itemize}
+                \item if $op = sequence$, the $g_i$ can only be achieved in the same order sequentially;
+                \item if $op = choice$, only one of the $g_i$ has to be achieved;
+                \item if $op = parallel$, the $g_i$ can only be achieved sequentially or simultaneously.
+              \end{itemize}
+
+              \item $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$: specifies the set of goals a mission is associated to;
+              \item $nm: \mathcal{M} \rightarrow \mathbb{N} \times \mathbb{N}$ the cardinality of agents committed for each mission.
+          \end{itemize}
+    \item $\mathcal{PO}: \mathcal{M} \cross \mathcal{M}$: the set of \textbf{preference order}. A preference order is couple $(m_1, m_2), m_1 \in \mathcal{M}, m_2 \in \mathcal{M}$ (also denoted $m_{1} \prec m_{2}$) meaning that if there is a moment when an agent is permitted to commit to $m_{1}$ and also $m_{2}$, it has a social preference for committing to $m_{1}$.
+\end{itemize}
+
+\paragraph{\textbf{Deontic Specifications (DS)}}: $\mathcal{DS} = \langle \mathcal{OBL},\mathcal{PER} \rangle$, the set of deontic specifications, where:
+
+\begin{itemize}
+    \item $\mathcal{TC}$: the set of \textbf{time constraints}. A time constraint $tc \in \mathcal{TC}$ specifies a set of periods during which a permission or obligation is valid ($Any \in \mathcal{TC}$ means everytime);
+    \item $\mathcal{OBL}: \mathcal{R} \cross \mathcal{M} \cross \mathcal{TC}$: the set of \textbf{obligations}. An obligation is a 3-tuple $(\rho_a,m,tc)$ (aslo denoted $obl(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+    \item $\mathcal{PER}$: the set of \textbf{permissions}. A permission is a 3-tuple $(\rho_a,m,tc)$ (aslo denoted $per(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+\end{itemize}
 
 \
 
 \noindent Organizational specifications applied to agents are roles and goals (as missions) through permissions or obligations. Indeed, the other structural specifications such as compatibilities or links are inherent to roles. Similarly, we consider that the goals, the missions, and their mapping ($mo$) are enough to also link all of the other functional specifications such as plans, cardinalities, or preference orders.
 Consequently, we consider it is sufficient to take into account roles, missions (goal and mapping) and permissions/obligations when linking $\mathcal{M}OISE^+$ with Dec-POMDP. 
+
 
 \subsection{Linking $\mathcal{M}OISE^+$ with MARL}
 
@@ -483,7 +573,11 @@ Consequently, we consider it is sufficient to take into account roles, missions 
 
 \paragraph{\textbf{Resolving the Dec-POMDP with MOISE+MARL}}
 
-\begin{figure*}[h]
+A MOISE+MARL model is formalized as $MM = \langle \mathcal{OS}, ar, rcg, gcg, rag, rrg, grg\rangle$.
+Resolving the Dec-POMDP $d \in D$ with a $mm \in \mathcal{MM}$ model involves finding a joint policy $\pi^{j} = \{\pi^j_0,\pi^j_1\dots\pi^j_n\}$ that maximizes the state-value function $V^{\pi^{j}}$ (or reaches a minimum threshold), which represents the expected cumulative reward starting from an initial state $s \in S$ and following the joint policy $\pi^{j}$, applying successive joint actions $a^{j} \in A^n$ under additional constraint guides. The state-value is described in the case where agents act sequentially and cyclically (Agent Environment Cycle - AEC mode) in \hyperref[eq:single_value_function]{Definition 1}, adapting its definition for roles (in red) and missions (in blue), impacting the action space and reward. \autoref{fig:mm_synthesis} illustrates the links between $\mathcal{M}OISE^+$ and Dec-POMDP via the MOISE+MARL framework.
+
+
+\begin{figure*}[h!]
     \label{eq:single_value_function}
     \raggedright
     \textbf{\textit{Definition 1} \quad State-Value function adapted to constraint guides in AEC:}
@@ -528,8 +622,6 @@ Consequently, we consider it is sufficient to take into account roles, missions 
     
 \end{figure*}
 
-A MOISE+MARL model is formalized as $MM = \langle \mathcal{OS}, ar, rcg, gcg, rag, rrg, grg\rangle$.
-Resolving the Dec-POMDP $d \in D$ with a $mm \in \mathcal{MM}$ model involves finding a joint policy $\pi^{j} = \{\pi^j_0,\pi^j_1\dots\pi^j_n\}$ that maximizes the state-value function $V^{\pi^{j}}$ (or reaches a minimum threshold), which represents the expected cumulative reward starting from an initial state $s \in S$ and following the joint policy $\pi^{j}$, applying successive joint actions $a^{j} \in A^n$ under additional constraint guides. The state-value is described in the case where agents act sequentially and cyclically (Agent Environment Cycle - AEC mode) in \hyperref[eq:single_value_function]{Definition 1}, adapting its definition for roles (in red) and missions (in blue), impacting the action space and reward. \autoref{fig:mm_synthesis} illustrates the links between $\mathcal{M}OISE^+$ and Dec-POMDP via the MOISE+MARL framework.
 
 At any time $t \in \mathbb{N}$ (initially $t = 0$), the agent $i = t \ mod \ n$ is constrained to a role $\rho_i = ar(i)$. For each temporally valid deontic specification $d_i = rds(\rho_i) = \langle tc_i,y_i, m_i \rangle$, the agent is permitted (if $y_i = 0$) or obligated (if $y_i = 1$) to commit in mission $m_i \in \mathcal{M}, \mathcal{G}_{m_i} = mo(m_i)$, and $n \in \mathbb{N}$ the number of agents.
 %
@@ -567,7 +659,7 @@ The MAMAD~\footnote{Source code and details of MAMAD are available at \url{https
 \begin{figure}[h!]
     \centering
     \input{figures/cycle.tex}
-    \caption{Lifecycle of a MAS designed with MAMAD: i) Users start by modeling the environment from real traces, global goal and design requirements as roles and goals; \quad ii) Then, they launch the training of agents with MARL techniques; \quad iii) A post-training analysis is performed to get insights into the emergent agents' roles and goals, guiding the improvement of the applied organizational specifications ; \quad v) Once validated, trained policies are launched to operate the environment's actuators, generating new traces for a better environment modeling}
+    \caption{Lifecycle of a MAS designed with MAMAD: i) Users start by modeling the environment from a sufficient amount of real traces (obtained by initially transfered agents), global goal and design requirements as roles and goals; \quad ii) Then, they launch the training of agents with MARL techniques; \quad iii) A post-training analysis is performed to get insights into the emergent agents' roles and goals, guiding the improvement of the applied organizational specifications ; \quad v) Once validated, trained policies are launched to operate the environment's actuators, generating new traces for a better environment modeling}
     \label{fig:cycle}
 \end{figure}
 
@@ -812,7 +904,7 @@ At the end of Phase 2, the output consists of:
 
 \subsection{Phase 3: Analyzing}
 
-The purpose of this phase is to analyze the behavior of agents trained in Phase 2 in order to assess their alignment with organizational expectations and, if needed, to infer new specifications. This analysis evaluates the degree to which structured behaviors—such as roles, goals, and missions—have emerged, and whether they conform to or diverge from the current organizational specification $\mathcal{MM}$.
+The purpose of this phase is to analyze the behavior of agents trained in Phase 2 in order to assess their alignment with organizational expectations and, if needed, to infer new specifications. This analysis evaluates the degree to which structured behaviors (such as roles, goals, and missions) have emerged, and whether they conform to or diverge from the current organizational specification $\mathcal{MM}$.
 
 Formally, this phase implements the relation:
 \[
@@ -947,7 +1039,7 @@ At the end of the analysis phase, the organizational fit score (\textit{OrgFit})
     \item \textbf{If \textit{OrgFit} is Low:} This indicates that the learned policies either lack structure (e.g., agents switch behaviors erratically) or diverge from organizational specifications. This misalignment may stem from insufficient training, poorly tuned hyperparameters, or unclear constraints. The process should return to \textbf{Phase 2 (Training)}, optionally refining the model or organizational specifications in \textbf{Phase 1 (Modeling)} before retrying.
 \end{itemize}
 
-\noindent This decision step thus completes the third phase of the MAMAD method—\textbf{Analyzing}—which evaluates whether agent policies are ready for transfer or should be refined. It connects naturally to the fourth and final phase: \textbf{Transferring}, where agents are safely deployed in the target environment under organizational constraints.
+\noindent This decision step thus completes the third phase of the MAMAD method (\textbf{Analyzing}) which evaluates whether agent policies are ready for transfer or should be refined. It connects naturally to the fourth and final phase: \textbf{Transferring}, where agents are safely deployed in the target environment under organizational constraints.
 
 At the end of Phase 3, the output consists of:
 \begin{itemize}
