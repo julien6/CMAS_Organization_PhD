@@ -13,7 +13,7 @@
 
 ## Chapitre 2 — Revue critique et émergence de l'approche
 
-**Objectif :** présenter la revue de littérature réalisée, mettre en évidence les limites des approches existantes et motiver le recentrage vers le MARL guidé par organisation.
+**Objectif :** présenter la revue de littérature réalisée au début de la thèse, mettre en évidence les limites des approches existantes et motiver le recentrage vers le MARL guidé par organisation.
 
 * 2.1 Conception classique des SMA : modèles symboliques, AOSE, architectures fixes
 * 2.2 SMA en cybersécurité et cyberdéfense : état de l'art
@@ -33,11 +33,11 @@
 
 ---
 
-# Partie II — Fondements théoriques et formels
+# Partie II — Fondements théoriques, revue de littérature et verrous
 
-**Objectif :** présenter les concepts et formalismes nécessaires, puis analyser chaque hypothèse à travers un état de l'art ciblé, l'identification d'un gap, et une reformulation justifiée.
+**Objectif :** présenter les concepts et formalismes nécessaires, puis analyser chaque hypothèse à travers un état de l'art ciblé, l'identification d'un verrou, et une reformulation justifiée.
 
-## Chapitre 4 — Concepts transversaux pour la conception SMA/MARL
+## Chapitre 4 — Concepts transversaux
 
 **Objectif :** définir les notions et modèles fondamentaux communs aux contributions.
 
@@ -46,7 +46,7 @@
 * 4.3 Apprentissage par renforcement multi-agent (MARL)
 * 4.4 Intégration organisation-apprentissage
 
-## Chapitre 5 — Analyse des hypothèses : état de l’art, gap, formulation
+## Chapitre 5 — Analyse des hypothèses : état de l’art, verrou, formulation
 
 **Objectif :** pour chaque hypothèse H1–H5, analyser le domaine lié, identifier un manque, et formuler l’hypothèse comme réponse.
 
@@ -58,7 +58,7 @@
 
 ---
 
-# Partie III — Méthodologie de conception : MAMAD
+# Partie III — Méthode de conception : MAMAD
 
 **Objectif :** présenter en détail les 4 phases de la méthode MAMAD et les contributions associées. On montre aussi comment la méthode et chaque phase est aussi pensé pour la conception d'un AICA auto-organisé, adaptatif...
 
@@ -92,7 +92,7 @@
 
 ---
 
-# Partie IV — Évaluation expérimentale
+# Partie IV — Cadre expérimental et analyse
 
 **Objectif :** valider les hypothèses, tester la méthode MAMAD sur des scénarios concrets, analyser les résultats. Enfin, analyser les apports de manière transversale par rapport à la question de recherche, discuter les limites de la méthode et la positionner par rapport à la littérature.
 
