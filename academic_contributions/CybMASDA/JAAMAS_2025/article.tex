@@ -289,7 +289,9 @@ These gaps highlight the need for a \textbf{method that integrates organizationa
 
 \subsection{Contributions and paper organization}
 
-We propose the \textbf{MAMAD method}, an extension of the \textbf{MOISE+MARL} framework~\cite{soule2025moisemarl}\footnote{This article introducing MOISE+MARL has been accepted for AAMAS 2025 and is freely available at \url{https://arxiv.org/abs/2503.23615}}, to structure learning in MARL. MAMAD enables \textbf{controlled policy learning}, aligning agent behaviors with predefined organizational specifications while extracting insights from emergent behaviors. It wraps MOISE+MARL into a fully automated, four-phase design process driven by three inputs: the environment, user-defined requirements, and the global objective.
+We propose the \textbf{MAMAD method}, an extension of the \textbf{MOISE+MARL} framework~\cite{soule2025moisemarl}
+% \footnote{This article introducing MOISE+MARL has been accepted for AAMAS 2025 and is freely available at \url{https://arxiv.org/abs/2503.23615}}
+, to structure learning in MARL. MAMAD enables \textbf{controlled policy learning}, aligning agent behaviors with predefined organizational specifications while extracting insights from emergent behaviors. It wraps MOISE+MARL into a fully automated, four-phase design process driven by three inputs: the environment, user-defined requirements, and the global objective.
 
 In classical AOSE, the \textit{Requirement Engineering} phase involves specifying design requirements, environmental constraints, and global objectives~\cite{Pavon2003, Bernon2005}. We assume these are provided and leave the engineering methodology to the user. MAMAD formalizes and operationalizes them within the MOISE+MARL framework as part of an automated design workflow.
 
@@ -425,112 +427,67 @@ A Dec-POMDP $d \in D$ (with $D$ the set of Dec-POMDP) is a 7-tuple $d = (S,\{A_i
     \item $\gamma \in [0,1]$, the discount factor
 \end{itemize}
 
-Considering $m$ \textbf{teams} (also referred as \textbf{groups}) each containing several agents among $\mathcal{A}$, we also detail the minimal formalism notation we re-used for solving the Dec-POMDP for a given team $i, 0 \leq i \leq m$ containing $n$ agents~\citep{Matignon2007,Yuan2023}:
+Considering $m$ \textbf{teams} (also referred as \textbf{groups}) each containing several agents among $\mathcal{A}$, we also detail the minimal formalism notation we re-used for solving the Dec-POMDP for a given team $i, 0 \leq i \leq m$ containing $n$ agents~\cite{Matignon2007,Yuan2023}:
 
 \begin{itemize}
 
     \item $\Pi$: the set of policies. A \textbf{policy} $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action. It represents the agent's internal logic;
-    \item $\Pi_{joint}$: the set of joint-policies. A \textbf{joint-policy} $\pi_{joint} \in \Pi_{joint}, \pi_{joint}: \Omega^n \rightarrow A^n = \Pi^n$ chooses an action for each agent regarding their respective observation. It can be viewed as a set of the policies used in agents;
+    \item $\Pi^{joint}$: the set of joint-policies. A \textbf{joint-policy} $\pi^{joint} \in \Pi^{joint}, \pi^{joint}: \Omega^n \rightarrow A^n = \Pi^n$ chooses an action for each agent regarding their respective observation. It can be viewed as a set of the policies used in agents;
     \item $H$: the set of histories. A \textbf{history} over $z \in \mathbb{N}$ steps (where $z$ is generally the maximum number of steps for an episode) is the $z$-tuple $h = ((\omega_{k}, a_{k}) | k \leq z, \omega \in \Omega, a \in A)$
-    \item $H_{joint}$: the set of joint-histories. A \textbf{joint-history} over $z \in \mathbb{N}$ steps $h_{joint} \in H_{joint}, h_{joint} = \{h_1,h_2..h_n\}$ is the set of the agents' histories.
-    \item $U_{joint,i}(<\pi_{joint,i}, \pi_{joint,-i}>): \Pi_{joint} \rightarrow \mathbb{R}$: gives the \textbf{expected cumulative reward} over a finite horizon (if $\gamma < 1$ or the number of steps in an episode is finite), with $\pi_{joint,i}$ the joint policy for team $i$ and $\pi_{joint,-i}$ all of the other concatenated joint-policies (considered as fixed);
-    \item $BR_{joint,i}(\pi_{joint,i}) = argmax_{\pi_{joint,i}}(U(<\pi_{joint,i},\pi_{joint,-i}>))$: gives the \textbf{best response} $\pi_{joint,i}^*$ in the sense that the team cannot change any of the policies in the joint-policy $\pi_{joint,i}^*$ to get a better expected cumulative reward than $U_i^* = U_{joint,i}(<\pi_{joint,i}^*, \pi_{joint,-i}>)$;
-    \item $SR_{joint,i}(\pi_{joint,i}, s) = \{\pi_{joint,i} | U(<\pi_{joint,i},\pi_{joint,-i}>) \geq s\}$: gives the \textbf{sufficient response} as the set of joint-policies getting at least $s \in \mathbb{R}, s \leq U_i^*$ as expected cumulative reward.
+    \item $H^{joint}$: the set of joint-histories. A \textbf{joint-history} over $z \in \mathbb{N}$ steps $h^{joint} \in H^{joint}, h^{joint} = \{h_1,h_2..h_n\}$ is the set of the agents' histories.
+    \item $U^{joint}_{i}(<\pi^{joint}_{i}, \pi^{joint}_{-i}>): \Pi^{joint} \rightarrow \mathbb{R}$: gives the \textbf{expected cumulative reward} over a finite horizon (if $\gamma < 1$ or the number of steps in an episode is finite), with $\pi^{joint}_{i}$ the joint policy for team $i$ and $\pi^{joint}_{-i}$ all of the other concatenated joint-policies (considered as fixed);
+    \item $BR^{joint}_{i}(\pi^{joint}_{i}) = argmax_{\pi^{joint}_{i}}(U(<\pi^{joint}_{i},\pi^{joint}_{-i}>))$: gives the \textbf{best response} $\pi^{joint,*}_{i}$ in the sense that the team cannot change any of the policies in the joint-policy $\pi^{joint,*}_{i}$ to get a better expected cumulative reward than $U_i^* = U^{joint}_{i}(<\pi^{joint,*}_{i}, \pi^{joint}_{-i}>)$;
+    \item $SR^{joint}_{i}(\pi^{joint}_{i}, s) = \{\pi^{joint}_{i} | U(<\pi^{joint}_{i},\pi^{joint}_{-i}>) \geq s\}$: gives the \textbf{sufficient response} as the set of joint-policies getting at least $s \in \mathbb{R}, s \leq U_i^*$ as expected cumulative reward.
 \end{itemize}
 
-We refer to \textbf{solving} the Dec-POMDP for the team $i$ as finding a joint policy $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = BR_{joint,i}(\pi_{joint,i})$ that maximize the expected cumulative reward over a finite horizon.
-We refer to \textbf{sub-optimally solving} the Dec-POMDP at $s$ expectancy as finding a the joint policies $\pi_{joint,i} \in \Pi_{joint}, \pi_{joint,i} = SR_{joint,i}(\pi_{joint,i}, s)$ that gets the expected cumulative reward over a finite horizon at least at $s \in \mathbb{R}, s \leq U_i^*$.
+\noindent We refer to \textbf{solving} the Dec-POMDP for the team $i$ as finding a joint policy $\pi^{joint}_{i} \in \Pi^{joint}, \pi^{joint}_{i} = BR^{joint}_{i}(\pi^{joint}_{i})$ that maximize the expected cumulative reward over a finite horizon.
+We refer to \textbf{sub-optimally solving} the Dec-POMDP at $s$ expectancy as finding a the joint policies $\pi^{joint}_{i} \in \Pi^{joint}, \pi^{joint}_{i} = SR^{joint}_{i}(\pi^{joint}_{i}, s)$ that gets the expected cumulative reward over a finite horizon at least at $s \in \mathbb{R}, s \leq U_i^*$.
 
 % We refer to \textbf{solving the Dec-POMDP} as the search for a joint policy $\pi^{j} \in \Pi^{j}$ such that $\pi^{j}s)$, achieving at least an expected cumulative reward of $s$, where $s \in \mathbb{R}$.
 
-\subsection{The $\mathcal{M}OISE^+$ organizational model}
+\subsection{The $\mathcal{M}OISE^+$ Organizational Model}
 
-% \begin{figure}[h!]
-%     \centering
-%     \input{figures/moise_model.tex}
-%     \caption{A synthetic view of the $\mathcal{M}OISE^+$ model}
-%     \label{fig:moise_model}
-% \end{figure}
+The $\mathcal{M}OISE^+$ model~\cite{Hubner2002, Hubner2007} provides a comprehensive formal framework for specifying multi-agent organizations. It appears to us, particularly well-suited for integration with MARL. While $\mathcal{M}OISE^+$ offers a comprehensive set of structural, functional, and deontic specifications, we show notation for the core components directly relevant to our approach: \textit{roles}, \textit{missions} (goals), and \textit{permissions/obligations}.
 
-% As illustrated in \autoref{fig:moise_model},
+\paragraph{\textbf{Structural specifications}}
+%
+The structural specifications of the $\mathcal{M}OISE^+$ model include:
+%
+\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+    \item roles, denoted $\mathcal{R}$ (with $\rho \in \mathcal{R}$)
+\end{enumerate*}
+%
+Structural specifications also contain inheritance relation, the definition of groups and sub-groups, interconnected via links that encode various inter-role relationships such as acquaintance, communication, and authority, as well as compatibility relations defining which roles can be played simultaneously by the same agent, and cardinality constraints specifying the allowed number of agents assigned to roles and groups.
 
-$\mathcal{M}OISE^+$~\citep{Hubner2002} provides an advanced formal description for an organization without incompatibilities with MARL, especially for formal description of agents' policies. It takes into account explicitly the social aspects between agents where \textquote{AGR} focuses on the integration of standards oriented towards design. Additionally, it provides a sufficiently detailed vision of organization to be understood at different point of views.
-Based on $\mathcal{M}OISE^+$~\citep{Hubner2007} formalism, we only give the minimal elements of the formalism we used for our approach.
+\paragraph{\textbf{Functional specifications}}
 
-\paragraph{\textbf{Organization specifications (OS)}}: $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, the set of all organization specifications, where $\mathcal{SS}$ are the \textbf{Structural Specifications}, $\mathcal{FS}$ are the \textbf{Functional Specifications}, and $\mathcal{DS}$ are the \textbf{Deontic Specifications}
+The functional specifications of the $\mathcal{M}OISE^+$ model include
+%
+\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+    \item global goals, denoted $\mathcal{G}$ (with $g \in \mathcal{G}$), decomposed into hierarchical structures through plans, where decomposition operators specify how sub-goals contribute to higher-level objectives;
+    \item missions that contain assigned goals, denoted $\mathcal{M}$ (with $m \in \mathcal{M}$)
+    \item a goal to mission mapping, denoted $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$
+\end{enumerate*}
+%
+Functional specifications also include mission cardinalities indicating how many agents may commit to each mission (fixed to one in our contribution), and complemented by preference orders expressing social priorities when multiple missions are simultaneously available.
 
-\paragraph{\textbf{Structural Specifications (SS)}}: $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$, where:
+\paragraph{\textbf{Deontic specifications}}
 
-\begin{itemize}
-
-    \item $\mathcal{R}_{ss}$: the set of all roles (denoted $\rho \in \mathcal{R}$);
-          
-    \item $\mathcal{IR}: \mathcal{R} \rightarrow \mathcal{R}$: the inheritance relation between roles ($\mathcal{IR}(\rho_1) = \rho_2$ means $\rho_1$ inherits from $\rho_2$ also denoted $\rho_1 \sqsubset \rho_2$);
-          
-    \item $RG \subseteq GR$ the set of root groups, $GR = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$, the set of all groups, where
-          
-          \begin{itemize}
-
-              \item $\mathcal{R} \subseteq \mathcal{R}_{ss}$: the set of non-abstract roles;
-                    
-              \item $\mathcal{SG} \subseteq \mathcal{GR}$: the set of sub-groups;
-                    
-              \item $\mathcal{L} = \mathcal{R} \cross \mathcal{R} \cross \mathcal{TL}$: the set of links. A link is a 3-tuple $(\rho_s,\rho_d,t) \in \mathcal{L}$ (also denoted as a predicate $link(\rho_s,\rho_d,t))$, where $\rho_{s}$ is the source role, $\rho_{d}$ is the destination role, and $t \in \mathcal{TL}, \mathcal{TL} = \{acq, com, aut\}$ is the link type;
-                    \begin{itemize}
-                        \item If $t = acq$ (acquaintance), the agents playing the source role $\rho_{\mathrm{s}}$ are allowed to have a representation of the agents playing the destination role $\rho_{d}$;
-                        \item If $t = com$ (communication), the $\rho_{\mathrm{s}}$ agents are allowed to communicate with $\rho_{d}$ agents;
-                        \item If $t = aut$ (authority), the $\rho_{\mathrm{s}}$ agents are allowed to have authority on $\rho_{d}$ agents. It requires an acquaintance and communication link.
-                    \end{itemize}
-              \item $\mathcal{L}^{intra} \subseteq \mathcal{L}$: the set of intra-group links;
-              \item $\mathcal{L}^{inter} \subseteq \mathcal{L}$: the set of inter-group links;
-                    
-              \item $\mathcal{C} = \mathcal{R} \cross \mathcal{R}$: the set of compatibilities. A compatibility is a couple $(a,b) \in \mathcal{C}$ (also denoted $\rho_a \bowtie \rho_b$), means agents playing role $\rho_a \in \mathcal{R}$ can also play role $\rho_b \in \mathcal{R}$;
-              \item $\mathcal{C}^{intra} \subseteq \mathcal{C}$: the set of intra-group compatibilities;
-              \item $\mathcal{C}^{inter} \subseteq \mathcal{C}$: the set of inter-group compatibilities;
-                    
-              \item $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of agents adopting a role;
-              \item $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$: the relation giving the cardinality of each sub-group.
-                    
-          \end{itemize}
-          
-\end{itemize}
-
-\paragraph{\textbf{Functional Specifications (FS)}}: $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$, where:
-
-\begin{itemize}
-    \item $\mathcal{SCH} = \langle\mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$: the set of \textbf{social scheme}, where:
-          \begin{itemize}
-              \item $\mathcal{G}$ is the set of global goal;
-                    
-              \item $\mathcal{M}$ is the set of mission labels;
-              \item $\mathcal{P} = \langle \mathcal{G}, \{\mathcal{G}\}^s, OP, [0,1] \rangle, s \in \mathbb{N}^*$ is the set of plans that builds the tree structure of the goals.
-                    %
-                    A plan $p \in \mathcal{P}$ is 4-tuple $p=(g_f,\{g_i\}_{0 \leq i \leq s}, op, p), g_f \in \mathcal{G}, g_i \in \mathcal{G}, op \in OP, OP = \{sequence, choice, parallel\}, p \in [0,1]$, meaning that the goal $g_f$ is achieved if some of the sub-goals $g_i$ are achieved with a success probability $p$ and according to the operator $op$:
-                    %
-                    \begin{itemize}
-                        \item if $op = sequence$, the $g_i$ can only be achieved in the same order sequentially;
-                        \item if $op = choice$, only one of the $g_i$ has to be achieved;
-                        \item if $op = parallel$, the $g_i$ can only be achieved sequentially or simultaneously.
-                    \end{itemize}
-                    
-              \item $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$: specifies the set of goals a mission is associated to;
-              \item $nm: \mathcal{M} \rightarrow \mathbb{N} \times \mathbb{N}$ the cardinality of agents committed for each mission.
-          \end{itemize}
-    \item $\mathcal{PO}: \mathcal{M} \cross \mathcal{M}$: the set of \textbf{preference order}. A preference order is couple $(m_1, m_2), m_1 \in \mathcal{M}, m_2 \in \mathcal{M}$ (also denoted $m_{1} \prec m_{2}$) meaning that if there is a moment when an agent is permitted to commit to $m_{1}$ and also $m_{2}$, it has a social preference for committing to $m_{1}$.
-\end{itemize}
-
-\paragraph{\textbf{Deontic Specifications (DS)}}: $\mathcal{DS} = \langle \mathcal{OBL},\mathcal{PER} \rangle$, the set of deontic specifications, where:
-
-\begin{itemize}
-    \item $\mathcal{TC}$: the set of \textbf{time constraints}. A time constraint $tc \in \mathcal{TC}$ specifies a set of periods during which a permission or obligation is valid ($Any \in \mathcal{TC}$ means everytime);
-    \item $\mathcal{OBL}: \mathcal{R} \cross \mathcal{M} \cross \mathcal{TC}$: the set of \textbf{obligations}. An obligation is a 3-tuple $(\rho_a,m,tc)$ (aslo denoted $obl(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
-    \item $\mathcal{PER}$: the set of \textbf{permissions}. A permission is a 3-tuple $(\rho_a,m,tc)$ (aslo denoted $per(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
-\end{itemize}
+The deontic specifications of the $\mathcal{M}OISE^+$ model define the agents' normative constraints through:
+%
+\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+    \item permissions, denoted $\mathcal{PER} = (\rho_a,m,tc)$ (aslo denoted $per(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+    \item and obligations, denoted $\mathcal{OBL} = (\rho_a,m,tc)$ (aslo denoted $obl(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+\end{enumerate*}
+%
+A time constraint $tc \in \mathcal{TC}$ specifies a set of periods during which a permission or obligation is valid ($Any \in \mathcal{TC}$ means everytime);
 
 \
 
 \noindent Organizational specifications applied to agents are roles and goals (as missions) through permissions or obligations. Indeed, the other structural specifications such as compatibilities or links are inherent to roles. Similarly, we consider that the goals, the missions, and their mapping ($mo$) are enough to also link all of the other functional specifications such as plans, cardinalities, or preference orders.
 Consequently, we consider it is sufficient to take into account roles, missions (goal and mapping) and permissions/obligations when linking $\mathcal{M}OISE^+$ with Dec-POMDP. 
+
+For this reason, we adopt a minimal but sufficient formalization focused on $\langle \mathcal{R}, \mathcal{M}, \mathcal{PER}, \mathcal{OBL}, mo \rangle$ to guide organizational policy learning within our $\mathcal{M}OISE^+$ MARL framework.
 
 
 \subsection{Linking $\mathcal{M}OISE^+$ with MARL}
@@ -643,16 +600,11 @@ The core temporal structure is modeled using a \textbf{Recurrent Latent Dynamics
     h_t = f(h_{t-1}, z_t, a_t), \quad
     z_{t+1} = g(h_t),
 \]
-where $f(\cdot)$ typically corresponds to a recurrent neural network (e.g., LSTM~\cite{hochreiter1997long}) applied to the concatenation of $h_{t-1}$, $z_t$, and $a_t$, and $g(\cdot)$ maps the recurrent state to the next latent representation (often implmented as an MLP~\cite{hochreiter1997long}).
+where $f(\cdot)$ typically corresponds to a recurrent neural network (e.g., LSTM~\cite{hochreiter1997long}) applied to the concatenation of $h_{t-1}$, $z_t$, and $a_t$, and $g(\cdot)$ maps the recurrent state to the next observation latent representation (often implmented as an MLP~\cite{hochreiter1997long}).
 
-The predicted latent state is then decoded via $Dec: Z \rightarrow \Omega$ into the predicted observation $\hat{\omega}_{t+1} = Dec(z_{t+1})$. The entire model is jointly trained to minimize both:
-\begin{itemize}
-    \item the \emph{reconstruction loss} $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$ in observation space,
-    \item and optionally, a \emph{latent prediction loss} to stabilize latent dynamics learning.
-\end{itemize}
+The predicted latent state is then decoded via $Dec: Z \rightarrow \Omega$ into the predicted observation $\hat{\omega}_{t+1} = Dec(z_{t+1})$. The entire model is jointly trained to minimize both the \emph{reconstruction loss} $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$ in observation space, and optionally, a \emph{latent prediction loss} to stabilize latent dynamics learning.
 
 The recurrent hidden state $h_t$ serves as a compact summary of the full interaction history up to time $t$, avoiding the need to explicitly store long observation-action trajectories.
-
 For simplicity of notation, we define the full composition that directly maps current observation, action, and recurrent state to the next predicted observation as the \textbf{Observation Prediction Model}:
 \[
     \mathcal{T}(h_{t-1}, \omega_t, a_t) := Dec(g(f(h_{t-1}, Enc(\omega_t), a_t))) = \hat{\omega}_{t+1}.
@@ -660,26 +612,20 @@ For simplicity of notation, we define the full composition that directly maps cu
 
 \subsubsection{Extension to Multi-Agent World Models}
 
-In multi-agent settings, a straightforward approach to apply world modeling is to concatenate the individual observations and actions into global joint vectors:
-\[
-\omega_{t}^{joint} = (\omega_t^1, \dots, \omega_t^n), \quad a_{t}^{joint} = (a_t^1, \dots, a_t^n).
-\]
-While direct concatenation provides a simple aggregation, it may result in very high-dimensional inputs as the number of agents increases.
+In multi-agent settings, joint observations and actions rapidly become high-dimensional as the number of agents increases. To address this, joint encoding functions are introduced for both observations and actions.
 
-To address this scalability issue, we introduce joint encoding functions $j_{\omega}: \Omega_{joint} \rightarrow \tilde{\Omega}$ and $j_a: A_{joint} \rightarrow \tilde{A}$, which map joint observations and actions into compact latent representations:
-\[
-\tilde{\omega}_t = j_{\omega}(\omega_t^{joint}), \quad \tilde{a}_t = j_a(a_t^{joint}).
-\]
-These joint encoders can be implemented as learnable neural networks (e.g., multilayer perceptrons or attention-based architectures) that aggregate multi-agent information into fixed-size feature vectors while capturing dependencies between agents.
+Specifically, joint observations $\omega_t^{joint} = (\omega_t^1, \dots, \omega_t^n) \in \Omega_{joint}$ are mapped to compact latent representations using an observation encoder $Enc_{\omega_j}: \Omega_{joint} \rightarrow \tilde{\Omega}$, yielding $\tilde{\omega}_t = Enc_{\omega_j}(\omega_t^{joint})$. The inverse mapping $Dec_{\omega_j}: \tilde{\Omega} \rightarrow \Omega_{joint}$ allows reconstruction of the joint observation if needed. Similarly, joint actions $a_t^{joint} = (a_t^1, \dots, a_t^n) \in A_{joint}$ are encoded via $Enc_{a_j}: A_{joint} \rightarrow \tilde{\mathcal{A}}$, resulting in $\tilde{a}_t = Enc_{a_j}(a_t^{joint})$, with decoder $Dec_{a_j}$ for potential reconstruction.
+%
+MLPs or attention-based architectures are typically employed for these encoders to aggregate multi-agent information into fixed-size feature vectors while capturing relevant inter-agent dependencies.
 
-Once joint encoding is performed, the multi-agent world model operates analogously to the single-agent case, using $\tilde{\omega}_t$ and $\tilde{a}_t$ as inputs to the recurrent latent dynamics model. This design allows for scalable modeling while preserving critical inter-agent interactions. Within the MAMAD framework, such world models instantiate the simulation core of the \hyperref[sec:modelling]{Modeling Phase}, effectively serving as high-fidelity digital twins of the target environment.
+Once joint encoding is performed, the multi-agent world model operates analogously to the single-agent case, using $\tilde{\omega}_t$ and $\tilde{a}_t$ as inputs to the recurrent latent dynamics model. This design enables scalable modeling while preserving critical interaction patterns between agents. Within the MAMAD framework, such world models instantiate the simulation core of the \hyperref[sec:modelling]{Modeling Phase}, effectively serving as high-fidelity digital twins of the target environment.
 
 
 \section{The MAMAD method}\label{sec:mamad}
 
 \subsection{General overview of the method}
 
-The MAMAD~\footnote{Source code and details of MAMAD are available at \url{https://github.com/julien6/MAMAD}} method is built around four main phases: (1) modeling the environment, goal, and organizational constraints according to the proposed framework, (2) learning policies using various MARL algorithms, (3) analyzing behaviors and inferring organizational specifications with a proposed method, and (4) developing and deploying the MAS. This approach guides the agent learning process while enforcing strict organizational constraints, ensuring the efficiency of the learned policies. The lifecycle of a MAMAD-designed MAS is illustrated in \autoref{fig:cycle}.
+The MAMAD~\footnotemark[1] method is built around four main phases: (1) modeling the environment, goal, and organizational constraints according to the proposed framework, (2) learning policies using various MARL algorithms, (3) analyzing behaviors and inferring organizational specifications with a proposed method, and (4) developing and deploying the MAS. This approach guides the agent learning process while enforcing strict organizational constraints, ensuring the efficiency of the learned policies. The lifecycle of a MAMAD-designed MAS is illustrated in \autoref{fig:cycle}.
 
 \begin{figure}[h!]
     \centering
@@ -960,9 +906,9 @@ As presented in \autoref{sec:related_works}, we were unable to identify any avai
 %
 TEMM uses unsupervised learning techniques to generalize roles and missions from the set of collected trajectories over multiple test episodes. By measuring the gap between inferred implicit organizational specifications and actual behaviors, we can also quantify the organizational fit as to how well a policy conforms to the inferred implicit organizational specifications.
 
-TEMM is based on proposed definitions for each $\mathcal{M}OISE^+$ organizational specification regarding joint-histories or other organizational specifications, using specific unsupervised lea-rning techniques to infer them progressively. Here, we provide an informal description of the method~\hyperref[fn:github]{\footnotemark[1]}.
+TEMM is based on proposed definitions for each $\mathcal{M}OISE^+$ organizational specification regarding joint-histories or other organizational specifications, using specific unsupervised lea-rning techniques to infer them progressively. Here, we provide an informal description of the method~\hyperref[fn:github]{\footnotemark[2]}.
 %
-\footnotetext[1]{ \label{fn:github} Additional details, developed code, datasets containing all the hyperparameters and details of the organizational specifications are available at \url{https://github.com/julien6/MOISE-MARL}}
+\footnotetext[2]{ \label{fn:github} Additional details, developed code, datasets containing all the hyperparameters and details of the organizational specifications are available at \url{https://github.com/julien6/MOISE-MARL}}
 
 \paragraph{1) Inferring roles and their inheritance}
 
@@ -1161,7 +1107,9 @@ We developed a tool that we propose to facilitate the implementation of the MAMA
 
 \subsection{A development environment for the method}
 
-To support the implementation and evaluation of the MAMAD method, we developed the \textbf{Cyber Multi-agent System Development Environment}~\footnote{Source code and details are freely available in \url{https://github.com/julien6/CybMASDE}} (\textbf{CybMASDE}), a dedicated framework that facilitates modeling, training, and deploying MAS. An visual overview of CybMASDE provided in \autoref{fig:cybmasde}.
+To support the implementation and evaluation of the MAMAD method, we developed the \textbf{Cyber Multi-agent System Development Environment}~\footnotemark[1], a dedicated framework that facilitates modeling, training, and deploying MAS. An visual overview of CybMASDE provided in \autoref{fig:cybmasde}.
+
+\footnotetext[1]{Source code and details are freely available in \url{https://github.com/julien6/CybMASDE}} (\textbf{CybMASDE})
 
 \begin{figure}[h!]
     \centering
