@@ -632,22 +632,47 @@ Then, the action is applied to the current state $s_t$ to transition to the next
 Finally, the cumulative reward calculation continues in the next state $s_{t+1} \in S$ with the next agent $(i+1) \ mod \ n$.
 
 
+\subsection{Learning World Models}
 
-\subsection{Learning world models}
+In Reinforcement Learning (RL), particularly under partial observability, \textbf{World Models}~\cite{ha2018recurrent, hafner2020dream} aim to learn internal models approximating both the environment's transition and observation dynamics. Such models enable agents to perform planning, improve sample efficiency, and facilitate safe exploration. This modeling approach belongs to the \textit{model-based RL} (MBRL) paradigm~\cite{moerland2020model}, and is especially useful for automatically constructing high-fidelity simulation models even when explicit environment representations are unavailable.
 
-In RL, particularly under partial observability, \textbf{World Models}~\cite{ha2018recurrent} aim to approximate the transition and observation functions of a Partially Observable Markov Decision Process (POMDP) to enable planning, safe exploration, and efficient policy learning. This belongs to the \textit{model-based RL} (MBRL) paradigm~\cite{moerland2020model}. It is particularly usefull to capture an environment complexity in a simulation-like model automatically, yet lacking explicit environmental representation.
+Formally, at each time step $t$, let $\omega_t \in \Omega$ denote the current high-dimensional observation, $a_t \in A$ the action taken, and $h_{t-1} \in \mathcal{H}$ the recurrent hidden state summarizing the interaction history up to $t-1$. Since observations are typically high-dimensional (e.g., images, complex state vectors), an encoder $Enc: \Omega \rightarrow Z$ is first applied to project observations into a compact latent space $Z$ with $z_t = Enc(\omega_t)$, where $\dim(Z) \ll \dim(\Omega)$.
 
-Let $\omega_t \in \Omega$ be the observation and $a_t \in \mathcal{A}$ the action at time $t$. The core of a world model is to approximates the \textbf{observable dynamics function} $\mathcal{T}: \Omega \times A \rightarrow \Omega$, that captures the hidden state transition and observable dynamics. Implementation of an observable dynamics function is often based on Recurrent Neural Network (RNN) such as or Long-Short Term Memory (LSTM)~\cite{hochreiter1997long} for temporal modeling. Yet, since observations are often too large in size to train a LSTM directly, an encoder $Enc: \Omega \rightarrow Z$ is often used to get reduced latent representation of observations, and a decoder $Dec: Z \rightarrow \Omega$ is used to decode predicted latent representation into a real observation.
+The core temporal structure is modeled using a \textbf{Recurrent Latent Dynamics Model}~\cite{hafner2020dream}, which predicts the next latent state $z_{t+1}$ by updating the recurrent hidden state and applying latent dynamics:
 \[
-    z_t = Enc(\omega_t), \quad
-    z_{t+1} = \mathcal{T}(z_t, a_t), \quad
-    \hat{\omega}_{t+1} = Dec(z_{t+1}),
+    h_t = f(h_{t-1}, z_t, a_t), \quad
+    z_{t+1} = g(h_t),
 \]
-where $\forall z \in Z, \omega \in \Omega, dim(z) \leq dim(\omega)$ considering an observation $\omega$ to be described as a vector.
-Training minimizes the reconstruction loss $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$ and a prediction loss in latent space.
-%
-In a multi-agent context, world modeling must accommodate decentralized dynamics~\cite{Gronauer2022}. Then, then observable dynamics function treats joint-observation (as well as joint latent representation) and joint-action. In MAMAD, world models instantiate the simulation core of \hyperref[sec:modelling]{Modeling}, acting as digital twins.
+where $f(\cdot)$ typically corresponds to a recurrent neural network (e.g., LSTM~\cite{hochreiter1997long}) applied to the concatenation of $h_{t-1}$, $z_t$, and $a_t$, and $g(\cdot)$ maps the recurrent state to the next latent representation (often implmented as an MLP~\cite{hochreiter1997long}).
 
+The predicted latent state is then decoded via $Dec: Z \rightarrow \Omega$ into the predicted observation $\hat{\omega}_{t+1} = Dec(z_{t+1})$. The entire model is jointly trained to minimize both:
+\begin{itemize}
+    \item the \emph{reconstruction loss} $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$ in observation space,
+    \item and optionally, a \emph{latent prediction loss} to stabilize latent dynamics learning.
+\end{itemize}
+
+The recurrent hidden state $h_t$ serves as a compact summary of the full interaction history up to time $t$, avoiding the need to explicitly store long observation-action trajectories.
+
+For simplicity of notation, we define the full composition that directly maps current observation, action, and recurrent state to the next predicted observation as the \textbf{Observation Prediction Model}:
+\[
+    \mathcal{T}(h_{t-1}, \omega_t, a_t) := Dec(g(f(h_{t-1}, Enc(\omega_t), a_t))) = \hat{\omega}_{t+1}.
+\]
+
+\subsubsection{Extension to Multi-Agent World Models}
+
+In multi-agent settings, a straightforward approach to apply world modeling is to concatenate the individual observations and actions into global joint vectors:
+\[
+\omega_{t}^{joint} = (\omega_t^1, \dots, \omega_t^n), \quad a_{t}^{joint} = (a_t^1, \dots, a_t^n).
+\]
+While direct concatenation provides a simple aggregation, it may result in very high-dimensional inputs as the number of agents increases.
+
+To address this scalability issue, we introduce joint encoding functions $j_{\omega}: \Omega_{joint} \rightarrow \tilde{\Omega}$ and $j_a: A_{joint} \rightarrow \tilde{A}$, which map joint observations and actions into compact latent representations:
+\[
+\tilde{\omega}_t = j_{\omega}(\omega_t^{joint}), \quad \tilde{a}_t = j_a(a_t^{joint}).
+\]
+These joint encoders can be implemented as learnable neural networks (e.g., multilayer perceptrons or attention-based architectures) that aggregate multi-agent information into fixed-size feature vectors while capturing dependencies between agents.
+
+Once joint encoding is performed, the multi-agent world model operates analogously to the single-agent case, using $\tilde{\omega}_t$ and $\tilde{a}_t$ as inputs to the recurrent latent dynamics model. This design allows for scalable modeling while preserving critical inter-agent interactions. Within the MAMAD framework, such world models instantiate the simulation core of the \hyperref[sec:modelling]{Modeling Phase}, effectively serving as high-fidelity digital twins of the target environment.
 
 
 \section{The MAMAD method}\label{sec:mamad}
@@ -708,7 +733,7 @@ The design problem $\langle \Omega^j, A^j, \mathcal{T}_0, R_{\Omega}^j, \gamma \
     }
 \end{algorithm}
 
-One can point out that we leverage a modeled Digital Twin through an approximated observation dynamics function that is used as a simulator for a later training whereas MBRL both integrates environment modeling and training at the same time. Indeed, we favour decoupling environment modeling from training for : i) the reusability of the modeled environment in new agent training optionally requiring small adjustments ; \quad ii) the need for simple agents that do not embedded costly environment model for planning ; \quad iii) the need to have a high-fidelity modeled environment focusing all efforts on a single common one, benefitting to all agents in their training.
+One can point out that we leverage a modeled Digital Twin through an approximated \textbf{observable dynamics function} that is used as a simulator for a later training whereas MBRL both integrates environment modeling and training at the same time. Indeed, we favour decoupling environment modeling from training for : i) the reusability of the modeled environment in new agent training optionally requiring small adjustments ; \quad ii) the need for simple agents that do not embedded costly environment model for planning ; \quad iii) the need to have a high-fidelity modeled environment focusing all efforts on a single common one, benefitting to all agents in their training.
 
 MAMAD's philosophy is to provide general workflow to follow for setting up each phase. These workflows may require choosing among different parameters such as modes, algorithms, or hyper-parameters. \autoref{tab:mamad_table_configuration} provides an overview of all of these parameters for the whole method and can be used a design canvas.
 
