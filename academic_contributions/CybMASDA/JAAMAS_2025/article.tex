@@ -188,6 +188,8 @@
 
 \begin{document}
 
+
+
 \title[Assisting Multi-Agent System Design with MOISE+ and MARL: The MAMAD Method]{Assisting Multi-Agent System Design with $\mathcal{M}OISE^+$ and MARL: The MAMAD Method}
 
 %%=============================================================%%
@@ -221,15 +223,15 @@
 %%==================================%%
 
 \abstract{
-    Designing Multi-Agent Systems (MAS) involves balancing structured behavior with adaptability. Traditional Agent-Oriented Software Engineering (AOSE) relies on expert design, while Multi-Agent Reinforcement Learning (MARL) offers autonomous learning but lacks interpretability and control. Viewing MAS design as a policy search problem, MARL can assist AOSE by discovering suitable agent policies. However, this integration remains underexplored.
+    Traditional Agent-Oriented Software Engineering (AOSE) methods rely on explicit and expert-driven design for Multi-Agent Systems (MAS), but often lack automation. In contrast, Multi-Agent Reinforcement Learning (MARL) and related fields offer automated ways to model environments and learn suitable agent policies. However, integrating these techniques into AOSE remains underexplored partly due to the lack of control, explainability, and unifying frameworks.
     %
-    We propose \textbf{MOISE+MARL Assisted MAS Design (MAMAD)}, a four-phase method framing MAS design as a constrained optimization problem: learning joint policies that maximize rewards while respecting $\mathcal{M}OISE^+$ roles and goals. The phases include:  
+    We propose \textbf{MOISE+MARL Assisted MAS Design (MAMAD)}, a four-phase method framing MAS design as a constrained optimization problem: learning joint policies that maximize rewards while respecting $\mathcal{M}OISE^+$ roles and goals. The phases include:
     1) \textbf{Modeling} the environment,  
     2) \textbf{Training} under organizational constraints,  
     3) \textbf{Analyzing} emergent behaviors,  
     4) \textbf{Transferring} to real-world deployment.
     %
-    We evaluate MAMAD on various environments, showing that the generated MAS do exhibit expected performance, compliance with design requirements and are explainable, while reducing manual design overhead.
+    We evaluate MAMAD on various environments, showing that the generated MAS exhibit expected performance, compliance with design requirements and are explainable, while reducing manual design overhead.
 }
 
 % Introduction
@@ -252,43 +254,45 @@
 
 \subsection{Context}
 
-Designing \textbf{MAS} for complex real-world applications, such as cybersecurity, logistics, autonomous robotics, or intelligent transportation, requires methodologies that ensure both structured and goal-oriented agent behaviors~\cite{Jamont2O15}. Traditionally, the \textbf{AOSE} paradigm has provided systematic frameworks for specifying and developing MAS, emphasizing the design of agents, roles, and interactions~\cite{Pavon2003, Bernon2005}. AOSE methodologies typically rely on explicit expert's knowledge and predefined organizational models to structure agent behavior, ensuring predictability, reliability and safety~\cite{Hindriks2014}.
+Designing \textbf{Multi-Agent Systems (MAS)} for real-world domains (such as cybersecurity, autonomous logistics or robotic swarms) requires designing agents that are both autonomous and coordinated, adaptable and structured. To address these demands, the field of \textbf{Agent-Oriented Software Engineering (AOSE)} has historically provided principled methodologies based on symbolic representations. \textbf{GAIA}~\cite{gaia1998}, \textbf{ADELFE}~\cite{adelfe2002}, and \textbf{DIAMOND}~\cite{Jamont2005} provide well-defined processes for designing MAS, relying on explicit modeling with possibly explicit roles, missions, or interaction protocols~\cite{Pavon2003,Bernon2005}. They offer guarantees in terms of predictability, safety, and explainability by leveraging expert-driven design processes~\cite{Hindriks2014,Jamont2O15}. However, these methods are largely manual and require specialized knowledge to define agent behaviors, making scalability in complex or dynamic environments cumbersome.
 
-Traditional AOSE approaches have limitations in adaptability and scalability. They often require extensive domain expertise to define organizational structures and behavioral rules, making them difficult to generalize across dynamic environments. To our knowledge, very few works have explored the integration of Machine Learning (ML) techniques into AOSE methodologies for MAS design, particularly in a way that allows policy learning under structured and functional organizational constraints~\cite{Garcia2004}.
+To improve efficiency and scalability, several AOSE frameworks have also sought to automate key aspects of MAS design. INGENIAS leverages model-driven engineering to generate code and documentation from high-level specifications~\cite{Pavon2003}, while KB-ORG uses organizational templates and domain knowledge to automate the assignment of roles and responsibilities~\cite{Sims2008}. More recent efforts explore the automatic generation and composition of agent components~\cite{smith2024automated}, as seen in the Automated Design of Agentic Systems field. AutoGenesisAgent goes further by enabling MAS to autonomously design and deploy other MAS tailored to specific tasks~\cite{harper2024autogenesisagent}.
 
-In contrast, \textbf{MARL} has emerged as a distinct ML approach that enables autonomous agents to learn and adapt through experience. MARL techniques allow agents to develop coordination strategies by interacting with their environment and optimizing their decision-making policies based on cumulative rewards~\cite{Zhang2021}. This data-driven learning paradigm enables agents to dynamically adjust their behaviors to different contexts, even in highly uncertain or complex environments, such as decentralized control, adversarial scenarios, or cooperative problem-solving~\cite{Papoudakis2021}.
+Despite these efforts towards automation, these AOSE works still faces major limitations towards a fully end-to-end automated design process. Crucially, they lack automated support for modeling complex environments as test environments, optimizing agent behaviors, or analyzing emergent dynamics across large-scale interactions. These gaps hinder their application in real-world systems where constant adaptation and scalable intelligence are key.
 
-From a theoretical perspective, integrating \textbf{MARL} into \textbf{AOSE} offers a promising pathway to enhance MAS design. The design process in MARL can be supported by analyzing optimized agent policies that account for environmental constraints, with the goal of maximizing objective achievement while reducing manual behavior specification. In this context, MARL serves as a learning-driven layer that instantiates and operationalizes the abstractions defined by AOSE.
+In parallel, \textbf{Machine Learning (ML)} has led to diverse works and subfields that, although developed independently from AOSE in Multi-Agent Systems paradigm, provide capabilities likely relevant for MAS design offering the automation, adaptivity, and scalability that AOSE lacks. Two major subfields are:
+\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+    \item \textbf{World Models}~\cite{Ha2018}, which learn high-fidelity environment simulations from agents trajectories
+    \item \textbf{Multi-Agent Reinforcement Learning (MARL)}~\cite{Zhang2021, Papoudakis2021}, which enables decentralized policy optimization through exploration and trial-and-error
+\end{enumerate*}
 
-Despite its capabilities, MARL presents significant challenges in terms of interpretability and control. Unlike AOSE, which enforces structured agent interactions through predefined models, MARL relies on emergent behaviors, which can be unpredictable and difficult to interpret~\cite{Du2022}. This lack of transparency poses challenges in critical domains such as cybersecurity and human-agent collaboration, where ensuring explainability and adherence to high-level constraints is crucial. Furthermore, MARL lacks built-in mechanisms to enforce organizational constraints, such as predefined roles, team structures, or safety guidelines, limiting its applicability in mission-critical MAS applications~\cite{Nguyen2020}.
+However, ML-based approaches also present key limitations. While MARL enables agents to learn without manual supervision, the resulting policies are often opaque, difficult to control, and poorly aligned with explicit design requirements~\cite{Nguyen2020, Du2022}, limiting their safe deployment.
+Although World Models~\cite{Ha2018} show promise in single-agent settings, their extension to multi-agent systems remains challenging due to increased complexity in coordination and observability.
+Most importantly, there is still no fully automated MAS design framework that bridges real-world environments with a pipeline orchestrating potentially leveraged ML-based works, leaving a major gap for practical deployment.
 
-Given these contrasting advantages and limitations, this paper is positioned at finding a way to integrate the structured modeling capabilities of AOSE with the adaptive learning potential of MARL to design effective MAS, benefitting from the strengths of both domains.
+In light of this contrast, there is a strong motivation to explore how the symbolic, model-based rigor of AOSE could be complemented by the learning-based automation of ML. Rather than viewing these paradigms as incompatible, we argue that they can be unified within a hybrid methodology, benefitting from both domains.
 
-% To enable the integration of MARL wihin AOSE, we aim an \textbf{approach} that unifies the strengths of both paradigms, providing a systematic way to \textbf{design MAS while enabling agents to learn and adapt within organizational constraints}.
 
 \subsection{Problem statement and research gaps}
 
-In order to gather AOSE and MARL domains we adopt an optimization perspective on MAS design. We consider that designing a MAS in a deployment environment that has to achieve a global goal efficiently while adhering to optional additional user-defined requirements can be formulated as an \textbf{optimization problem under constraints in a MARL context}. In this formulation:
+In order to gather AOSE and MARL domains we adopt an optimization perspective on MAS design.
+We consider the design of a MAS operating in a real-world environment and expected to achieve a global objective, possibly under additional organizational requirements. The core of this problem is formulated as a \textbf{constrained optimization process in a MARL setting}, where:
 \begin{itemize}
-    \item The \textbf{variable to optimize} is the agents' joint policy in the policy space ;
-    \item The \textbf{goal function} is to maximize the cumulative reward over time, quantifying how effectively agents achieve their goal ;
-    \item The \textbf{constraints} are the organizational specifications, such as user-defined roles and goals, representing the designer's requirements.
+    \item The \textbf{optimization variable} is the agents' joint policy;
+    \item The \textbf{objective function} maximizes cumulative rewards over time;
+    \item The \textbf{constraints} encode high-level requirements.
 \end{itemize}
-This formulation serves as the backbone of this article and motivates our contribution. 
-%
-To implement this approach, several key research gaps remain unaddressed when considering the design of MAS from an \textbf{organizational perspective}. We identify four research gaps, denoted as G1 through G4, that motivate our contribution:
-%
+
+Based on this core formulation, we aim to bridge AOSE gaps by ML techniques while bridging ML gaps with AOSE reversely:
+
 \begin{itemize}
-    \item \textbf{(G1) Leveraging MARL's performance within AOSE}: AOSE lacks MARL integration, while MARL lacks structured design constraints. There is no unified framework combining AOSE and MARL-driven learning~\cite{Cossentino2014}. Addressing this gap would allow MAS to \textbf{leverage MARL's computational power} to automatically generate sufficiently performant agents' policies ;
-          
-    \item \textbf{(G2) Understanding emergent collective behaviors in MARL}: Agents in MARL may develop unpredictable strategies, making behavior analysis challenging. A method is needed to interpret emergent behaviors through an organizational view~\cite{Du2022, Papoudakis2021}. Addressing this gap would enhance \textbf{organizational explainability}, facilitating validation, refinement, and deployment.
-          
-    \item \textbf{(G3) Controlling or guiding agents at both individual and collective levels in MARL}: MARL lacks mechanisms to guide agents toward structured behaviors while preserving flexibility. Most approaches optimize performance without enforcing organizational constraints~\cite{Yuan2023}. Addressing this gap would ensure \textbf{compliance with design requirements} and accelerate convergence by narrowing the policy search space ;
-          
-    \item \textbf{(G4) Automating end-to-end MAS design}: MAS design depends on domain experts and follows a costly, trial-and-error process. Manually crafted specifications lack scalability and generalizability~\cite{Nguyen2020}. Addressing this gap would enable \textbf{automated MAS design}, reducing expert reliance, manual effort, and resource costs while achieving comparable results.
+    \item \textbf{(G1) End-to-end automation.} Traditional AOSE methods require human expertise for each phase of MAS design, from environment modeling to behavior specification. ML techniques, particularly World Models and MARL, have the potential to automate these phases. However, no existing framework integrates these techniques into a unified MAS design pipeline. Moreover, World Models remain underdeveloped in multi-agent settings, especially in realistic deployment scenarios. Bridging this gap would allow scalable, self-adapting MAS design based on data rather than expert rules.
+    \item \textbf{(G2) Compliance with design requirements.} Most MARL approaches focus on performance optimization without enforcing design-time requirements such as safety rules, organizational roles, or mission structures. Recent work like MOISE+MARL~\cite{soule2025moisemarl} shows the feasibility of introducing structured constraints into policy learning, but remains isolated. Addressing this gap requires a general approach to express and enforce such constraints across training.
+
+    \item \textbf{(G3) Organizational-level explainability.} ML-generated policies are often black boxes, making it difficult to interpret how agent behaviors fulfill the intended organization. In AOSE, behavior is derived from structured roles and missions, enabling clear traceability. Extending such explainability to MARL-trained policies would support trust and validation in critical applications. Yet, few works address explainability from a collective, organizational point of view.
 \end{itemize}
-%
-These gaps highlight the need for a method that integrates organizational modeling into MARL-driven MAS design.
+
+Together, these gaps outline the need for a method that both \textit{automates} MAS design and \textit{preserves} organizational structure and explainability. Our proposed method, MAMAD, aims to close these gaps by combining formal AOSE models and reinforcement learning into a unified, iterative process.
 
 \subsection{Contributions and paper organization}
 
@@ -305,11 +309,11 @@ In classical AOSE, the \textit{Requirement Engineering} phase involves specifyin
     \item \textbf{Transfer Phase:} The validated joint policy is deployed in the real-world environment to operationalize the trained MAS.
 \end{enumerate}
 
-We evaluated \textbf{MAMAD} in gamified environments, used as controlled testbeds to assess its ability to generate high-fidelity simulations during the Modeling phase (bypassing the complexity of modeling physical environments). Results show strong alignment between the specifications applied during training and those inferred post hoc, validating both \textbf{organizational-level explainability} and \textbf{compliance with design requirements}. The resulting MAS also matched benchmark performance, confirming that \textbf{goal achievement} is preserved. Compared to manual methods, \textbf{automation} improved significantly, requiring fewer interventions. Ablation studies revealed that omitting automated modeling reduced policy generalization, while removing organizational constraints led to erratic agent behavior.
+We evaluated \textbf{MAMAD} in gamified environments, used as controlled testbeds to assess its ability to generate high-fidelity simulations during the Modeling phase (bypassing the complexity of modeling physical environments). Results show strong alignment between the specifications applied during training and those inferred post hoc, validating both \textbf{(G3) Organizational-level explainability} and \textbf{(G2) Compliance with design requirements}. Compared to manual methods, \textbf{(G1) End-to-end automation.} improved significantly, requiring fewer interventions. Ablation studies revealed that omitting automated modeling reduced policy generalization, while removing organizational constraints led to erratic agent behavior.
 
 \
 
-The rest of the paper is organized as follows. \autoref{sec:related_works} reviews related work on MAS design, MARL, and organizational control and explainability. \autoref{sec:background} recalls the basics of MARL, the $\mathcal{M}OISE^+$ organizational model and \textbf{World Models} used in the \textbf{MOISE+MARL} framework and \textbf{MAMAD}. \autoref{sec:mamad} presents the MAMAD method accros each phase, detailing the design workflow and the use of MOISE+MARL. \autoref{sec:experimental_setup} describes the experimental setup. \autoref{sec:results} reports and analyzes the results. \autoref{sec:conclusion} concludes the paper and outlines future directions.
+The rest of the paper is organized as follows. \autoref{sec:related_works} detail each gap reviewing related works for each of them. \autoref{sec:mamad} presents the MAMAD method by detailing the algorithmic design workflow. Each phase introduces contributions bridging targeted gaps and their use.\autoref{sec:experimental_setup} describes the experimental setup. \autoref{sec:results} reports and analyzes the results. \autoref{sec:conclusion} concludes the paper and outlines future directions.
 
 
 
@@ -411,213 +415,213 @@ Explainability and interpretability in MARL aim to make the behavior of agents t
 
 
 
-\section{Theoretical background}\label{sec:background}
+% \section{Theoretical background}\label{sec:background}
 
-This section recaps the notation and basics we used in our contributions for MARL and the $\mathcal{M}OISE^+$ organizational model.
+% This section recaps the notation and basics we used in our contributions for MARL and the $\mathcal{M}OISE^+$ organizational model.
 
-\subsection{Markov framework for MARL}
+% \subsection{Markov framework for MARL}
 
-To apply MARL techniques, we rely on the \textit{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP) \cite{Oliehoek2016}. Dec-POMDPs model decentralized multi-agent coordination under partial observability, making them well suited for integrating organizational constraints. Unlike \textit{Partially Observable Stochastic Games} (POSG), the Dec-POMDP features a common reward function, promoting collaboration~\cite{Matignon2007}.
+% To apply MARL techniques, we rely on the \textit{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP) \cite{Oliehoek2016}. Dec-POMDPs model decentralized multi-agent coordination under partial observability, making them well suited for integrating organizational constraints. Unlike \textit{Partially Observable Stochastic Games} (POSG), the Dec-POMDP features a common reward function, promoting collaboration~\cite{Matignon2007}.
 
-A Dec-POMDP $d \in D$ (with $D$ the set of Dec-POMDP) is a 7-tuple $d = (S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$ , where:
-\begin{itemize}
-    \item $S = \{s_1, ..s_{|S|}\}$: The set of the possible states.
-    \item $A_{i} = \{a_{1}^{i},..,a_{|A_{i}|}^{i}\}$: The set of the possible actions for agent $i$.
-    \item $T$ so that $T(s,a,s') = \probP{(s'|s,a)}$ : The set of conditional transition probabilities between states
-    \item $R: S \times A \times S \rightarrow \mathbb{R}$: The reward function
-    \item $\Omega_{i} = \{o_{1}^{i},..,o_{|\Omega_{i}|}^{i}\}$: The set of observations for agent $ag_i$
-    \item $O$ so that $O(s',a,o) = \probP{(o|s',a)}$ : The set of conditional observation probabilities.
-    \item $\gamma \in [0,1]$, the discount factor
-\end{itemize}
+% A Dec-POMDP $d \in D$ (with $D$ the set of Dec-POMDP) is a 7-tuple $d = (S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$ , where:
+% \begin{itemize}
+%     \item $S = \{s_1, ..s_{|S|}\}$: The set of the possible states.
+%     \item $A_{i} = \{a_{1}^{i},..,a_{|A_{i}|}^{i}\}$: The set of the possible actions for agent $i$.
+%     \item $T$ so that $T(s,a,s') = \probP{(s'|s,a)}$ : The set of conditional transition probabilities between states
+%     \item $R: S \times A \times S \rightarrow \mathbb{R}$: The reward function
+%     \item $\Omega_{i} = \{o_{1}^{i},..,o_{|\Omega_{i}|}^{i}\}$: The set of observations for agent $ag_i$
+%     \item $O$ so that $O(s',a,o) = \probP{(o|s',a)}$ : The set of conditional observation probabilities.
+%     \item $\gamma \in [0,1]$, the discount factor
+% \end{itemize}
 
-Considering $m$ \textbf{teams} (also referred as \textbf{groups}) each containing several agents among $\mathcal{A}$, we also detail the minimal formalism notation we re-used for solving the Dec-POMDP for a given team $i, 0 \leq i \leq m$ containing $n$ agents~\cite{Matignon2007,Yuan2023}:
+% Considering $m$ \textbf{teams} (also referred as \textbf{groups}) each containing several agents among $\mathcal{A}$, we also detail the minimal formalism notation we re-used for solving the Dec-POMDP for a given team $i, 0 \leq i \leq m$ containing $n$ agents~\cite{Matignon2007,Yuan2023}:
 
-\begin{itemize}
+% \begin{itemize}
 
-    \item $\Pi$: the set of policies. A \textbf{policy} $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action. It represents the agent's internal logic;
-    \item $\Pi^{j}$: the set of joint-policies. A \textbf{joint-policy} $\pi^{j} \in \Pi^{j}, \pi^{j}: \Omega^n \rightarrow A^n = \Pi^n$ chooses an action for each agent regarding their respective observation. It can be viewed as a set of the policies used in agents;
-    \item $H$: the set of histories. A \textbf{history} (we also interchangeably call \textbf{trajectory}) over $z \in \mathbb{N}$ steps (where $z$ is generally the maximum number of steps for an episode) is the $z$-tuple $h = ((\omega_{k}, a_{k}) | k \leq z, \omega \in \Omega, a \in A)$
-    \item $H^{j}$: the set of joint-histories. A \textbf{joint-history} over $z \in \mathbb{N}$ steps $h^{j} \in H^{j}, h^{j} = \{h_1,h_2..h_n\}$ is the set of the agents' histories.
-    \item $U^{j}_{i}(<\pi^{j}_{i}, \pi^{j}_{-i}>): \Pi^{j} \rightarrow \mathbb{R}$: gives the \textbf{expected cumulative reward} over a finite horizon (if $\gamma < 1$ or the number of steps in an episode is finite), with $\pi^{j}_{i}$ the joint policy for team $i$ and $\pi^{j}_{-i}$ all of the other concatenated joint-policies (considered as fixed);
-    \item $BR^{j}_{i}(\pi^{j}_{i}) = argmax_{\pi^{j}_{i}}(U(<\pi^{j}_{i},\pi^{j}_{-i}>))$: gives the \textbf{best response} $\pi^{j,*}_{i}$ in the sense that the team cannot change any of the policies in the joint-policy $\pi^{j,*}_{i}$ to get a better expected cumulative reward than $U_i^* = U^{j}_{i}(<\pi^{j,*}_{i}, \pi^{j}_{-i}>)$;
-    \item $SR^{j}_{i}(\pi^{j}_{i}, s) = \{\pi^{j}_{i} | U(<\pi^{j}_{i},\pi^{j}_{-i}>) \geq s\}$: gives the \textbf{sufficient response} as the set of joint-policies getting at least $s \in \mathbb{R}, s \leq U_i^*$ as expected cumulative reward.
-\end{itemize}
+%     \item $\Pi$: the set of policies. A \textbf{policy} $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action. It represents the agent's internal logic;
+%     \item $\Pi^{j}$: the set of joint-policies. A \textbf{joint-policy} $\pi^{j} \in \Pi^{j}, \pi^{j}: \Omega^n \rightarrow A^n = \Pi^n$ chooses an action for each agent regarding their respective observation. It can be viewed as a set of the policies used in agents;
+%     \item $H$: the set of histories. A \textbf{history} (we also interchangeably call \textbf{trajectory}) over $z \in \mathbb{N}$ steps (where $z$ is generally the maximum number of steps for an episode) is the $z$-tuple $h = ((\omega_{k}, a_{k}) | k \leq z, \omega \in \Omega, a \in A)$
+%     \item $H^{j}$: the set of joint-histories. A \textbf{joint-history} over $z \in \mathbb{N}$ steps $h^{j} \in H^{j}, h^{j} = \{h_1,h_2..h_n\}$ is the set of the agents' histories.
+%     \item $U^{j}_{i}(<\pi^{j}_{i}, \pi^{j}_{-i}>): \Pi^{j} \rightarrow \mathbb{R}$: gives the \textbf{expected cumulative reward} over a finite horizon (if $\gamma < 1$ or the number of steps in an episode is finite), with $\pi^{j}_{i}$ the joint policy for team $i$ and $\pi^{j}_{-i}$ all of the other concatenated joint-policies (considered as fixed);
+%     \item $BR^{j}_{i}(\pi^{j}_{i}) = argmax_{\pi^{j}_{i}}(U(<\pi^{j}_{i},\pi^{j}_{-i}>))$: gives the \textbf{best response} $\pi^{j,*}_{i}$ in the sense that the team cannot change any of the policies in the joint-policy $\pi^{j,*}_{i}$ to get a better expected cumulative reward than $U_i^* = U^{j}_{i}(<\pi^{j,*}_{i}, \pi^{j}_{-i}>)$;
+%     \item $SR^{j}_{i}(\pi^{j}_{i}, s) = \{\pi^{j}_{i} | U(<\pi^{j}_{i},\pi^{j}_{-i}>) \geq s\}$: gives the \textbf{sufficient response} as the set of joint-policies getting at least $s \in \mathbb{R}, s \leq U_i^*$ as expected cumulative reward.
+% \end{itemize}
 
-\noindent We refer to \textbf{solving} the Dec-POMDP for the team $i$ as finding a joint policy $\pi^{j}_{i} \in \Pi^{j}, \pi^{j}_{i} = BR^{j}_{i}(\pi^{j}_{i})$ that maximize the expected cumulative reward over a finite horizon.
-We refer to \textbf{sub-optimally solving} the Dec-POMDP at $s$ expectancy as finding a the joint policies $\pi^{j}_{i} \in \Pi^{j}, \pi^{j}_{i} = SR^{j}_{i}(\pi^{j}_{i}, s)$ that gets the expected cumulative reward over a finite horizon at least at $s \in \mathbb{R}, s \leq U_i^*$.
+% \noindent We refer to \textbf{solving} the Dec-POMDP for the team $i$ as finding a joint policy $\pi^{j}_{i} \in \Pi^{j}, \pi^{j}_{i} = BR^{j}_{i}(\pi^{j}_{i})$ that maximize the expected cumulative reward over a finite horizon.
+% We refer to \textbf{sub-optimally solving} the Dec-POMDP at $s$ expectancy as finding a the joint policies $\pi^{j}_{i} \in \Pi^{j}, \pi^{j}_{i} = SR^{j}_{i}(\pi^{j}_{i}, s)$ that gets the expected cumulative reward over a finite horizon at least at $s \in \mathbb{R}, s \leq U_i^*$.
 
-% We refer to \textbf{solving the Dec-POMDP} as the search for a joint policy $\pi^{j} \in \Pi^{j}$ such that $\pi^{j}s)$, achieving at least an expected cumulative reward of $s$, where $s \in \mathbb{R}$.
+% % We refer to \textbf{solving the Dec-POMDP} as the search for a joint policy $\pi^{j} \in \Pi^{j}$ such that $\pi^{j}s)$, achieving at least an expected cumulative reward of $s$, where $s \in \mathbb{R}$.
 
-\subsection{The $\mathcal{M}OISE^+$ Organizational Model}
+% \subsection{The $\mathcal{M}OISE^+$ Organizational Model}
 
-The $\mathcal{M}OISE^+$ model~\cite{Hubner2002, Hubner2007} provides a comprehensive formal framework for specifying multi-agent organizations. While $\mathcal{M}OISE^+$ offers a comprehensive set of structural, functional, and deontic specifications, we show notation for the core components directly relevant to our approach: \textit{roles}, \textit{missions} (goals), and \textit{permissions/obligations}.
+% The $\mathcal{M}OISE^+$ model~\cite{Hubner2002, Hubner2007} provides a comprehensive formal framework for specifying multi-agent organizations. While $\mathcal{M}OISE^+$ offers a comprehensive set of structural, functional, and deontic specifications, we show notation for the core components directly relevant to our approach: \textit{roles}, \textit{missions} (goals), and \textit{permissions/obligations}.
 
-\paragraph{\textbf{Structural specifications}}
-%
-The structural specifications of the $\mathcal{M}OISE^+$ model include the roles, denoted $\mathcal{R}$ (with $\rho \in \mathcal{R}$).
-%
-Structural specifications also contain inheritance relation, the definition of groups and sub-groups, interconnected via links that encode various inter-role relationships such as acquaintance, communication, and authority, as well as compatibility relations defining which roles can be played simultaneously by the same agent, and cardinality constraints specifying the allowed number of agents assigned to roles and groups.
+% \paragraph{\textbf{Structural specifications}}
+% %
+% The structural specifications of the $\mathcal{M}OISE^+$ model include the roles, denoted $\mathcal{R}$ (with $\rho \in \mathcal{R}$).
+% %
+% Structural specifications also contain inheritance relation, the definition of groups and sub-groups, interconnected via links that encode various inter-role relationships such as acquaintance, communication, and authority, as well as compatibility relations defining which roles can be played simultaneously by the same agent, and cardinality constraints specifying the allowed number of agents assigned to roles and groups.
 
-\paragraph{\textbf{Functional specifications}}
+% \paragraph{\textbf{Functional specifications}}
 
-The functional specifications of the $\mathcal{M}OISE^+$ model include:
-%
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-    \item global goals, denoted $\mathcal{G}$ (with $g \in \mathcal{G}$), decomposed into hierarchical structures through plans, where decomposition operators specify how sub-goals contribute to higher-level objectives;
-    \item missions that contain assigned goals, denoted $\mathcal{M}$ (with $m \in \mathcal{M}$)
-    \item a goal to mission mapping, denoted $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$.
-\end{enumerate*}
-%
-Functional specifications also include mission cardinalities indicating how many agents may commit to each mission (fixed to one in our contribution), and complemented by preference orders expressing social priorities when multiple missions are simultaneously available.
+% The functional specifications of the $\mathcal{M}OISE^+$ model include:
+% %
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+%     \item global goals, denoted $\mathcal{G}$ (with $g \in \mathcal{G}$), decomposed into hierarchical structures through plans, where decomposition operators specify how sub-goals contribute to higher-level objectives;
+%     \item missions that contain assigned goals, denoted $\mathcal{M}$ (with $m \in \mathcal{M}$)
+%     \item a goal to mission mapping, denoted $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$.
+% \end{enumerate*}
+% %
+% Functional specifications also include mission cardinalities indicating how many agents may commit to each mission (fixed to one in our contribution), and complemented by preference orders expressing social priorities when multiple missions are simultaneously available.
 
-\paragraph{\textbf{Deontic specifications}}
+% \paragraph{\textbf{Deontic specifications}}
 
-The deontic specifications of the $\mathcal{M}OISE^+$ model define the agents' normative constraints through:
-%
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-    \item permissions, denoted $\mathcal{PER} = (\rho_a,m,tc)$ (aslo denoted $per(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
-    \item and obligations, denoted $\mathcal{OBL} = (\rho_a,m,tc)$ (aslo denoted $obl(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
-\end{enumerate*}
-%
-A time constraint $tc \in \mathcal{TC}$ specifies a set of periods during which a permission or obligation is valid ($Any \in \mathcal{TC}$ means everytime);
+% The deontic specifications of the $\mathcal{M}OISE^+$ model define the agents' normative constraints through:
+% %
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+%     \item permissions, denoted $\mathcal{PER} = (\rho_a,m,tc)$ (aslo denoted $per(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+%     \item and obligations, denoted $\mathcal{OBL} = (\rho_a,m,tc)$ (aslo denoted $obl(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+% \end{enumerate*}
+% %
+% A time constraint $tc \in \mathcal{TC}$ specifies a set of periods during which a permission or obligation is valid ($Any \in \mathcal{TC}$ means everytime);
 
-\
+% \
 
-\noindent Organizational specifications applied to agents are roles and goals (as missions) through permissions or obligations. Indeed, the other structural specifications such as compatibilities or links are inherent to roles. Similarly, we consider that the goals, the missions, and their mapping ($mo$) are enough to also link all of the other functional specifications such as plans, cardinalities, or preference orders.
-Consequently, we consider it is sufficient to take into account roles, missions (goal and mapping) and permissions/obligations when linking $\mathcal{M}OISE^+$ with Dec-POMDP. 
+% \noindent Organizational specifications applied to agents are roles and goals (as missions) through permissions or obligations. Indeed, the other structural specifications such as compatibilities or links are inherent to roles. Similarly, we consider that the goals, the missions, and their mapping ($mo$) are enough to also link all of the other functional specifications such as plans, cardinalities, or preference orders.
+% Consequently, we consider it is sufficient to take into account roles, missions (goal and mapping) and permissions/obligations when linking $\mathcal{M}OISE^+$ with Dec-POMDP. 
 
-For this reason, we adopt a minimal but sufficient formalization focused on the following organizational specification set $\mathcal{OS} = \langle \mathcal{R}, \mathcal{M}, \mathcal{PER}, \mathcal{OBL}, mo \rangle$ to guide organizational policy learning within our $\mathcal{M}OISE^+$ MARL framework.
+% For this reason, we adopt a minimal but sufficient formalization focused on the following organizational specification set $\mathcal{OS} = \langle \mathcal{R}, \mathcal{M}, \mathcal{PER}, \mathcal{OBL}, mo \rangle$ to guide organizational policy learning within our $\mathcal{M}OISE^+$ MARL framework.
 
 
-\subsection{Linking $\mathcal{M}OISE^+$ with MARL}
+% \subsection{Linking $\mathcal{M}OISE^+$ with MARL}
 
-\begin{figure}[h!]
-    \centering
-    \input{figures/mm_synthesis_single_column.tex}
-    \caption{A minimal view of the MOISE+MARL framework:
-        Users first define $\mathcal{M}OISE^+$ specifications, which include roles ($\mathcal{R}$) and missions ($\mathcal{M}$), both associated through $rds$. They then create MOISE+MARL specifications by first defining \textbf{Constraint guides} such as $rag$ and $rrg$ to specify role logic, and $grg$ for goal logic. 
-        Next, \textbf{Linkers} are used to connect agents with roles through $ar$ and to link the logic of the constraint guides to the defined $\mathcal{M}OISE^+$ specifications. Once this is set up, roles can be assigned to agents, and the MARL framework updates accordingly during training.
-    }
-    \label{fig:mm_synthesis}
-\end{figure}
+% \begin{figure}[h!]
+%     \centering
+%     \input{figures/mm_synthesis_single_column.tex}
+%     \caption{A minimal view of the MOISE+MARL framework:
+%         Users first define $\mathcal{M}OISE^+$ specifications, which include roles ($\mathcal{R}$) and missions ($\mathcal{M}$), both associated through $rds$. They then create MOISE+MARL specifications by first defining \textbf{Constraint guides} such as $rag$ and $rrg$ to specify role logic, and $grg$ for goal logic. 
+%         Next, \textbf{Linkers} are used to connect agents with roles through $ar$ and to link the logic of the constraint guides to the defined $\mathcal{M}OISE^+$ specifications. Once this is set up, roles can be assigned to agents, and the MARL framework updates accordingly during training.
+%     }
+%     \label{fig:mm_synthesis}
+% \end{figure}
 
-\
+% \
 
-\noindent The \textbf{Constraint Guides} are three new relations introduced to describe the logics of $\mathcal{M}OISE^+$ roles and goals in the Dec-POMDP formalism:
-%
-\begin{itemize}
-    % \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
+% \noindent The \textbf{Constraint Guides} are three new relations introduced to describe the logics of $\mathcal{M}OISE^+$ roles and goals in the Dec-POMDP formalism:
+% %
+% \begin{itemize}
+%     % \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
     
-    \item \textbf{Role Action Guide} \quad $rag: H \times \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, the relation that models a role as a set of rules which, for each pair consisting of a history $h \in H$ and an observation received by the agent $\omega \in \Omega$, associates expected actions $A \in \mathcal{P}(A)$ each associated with a constraint hardness $ch \in [0,1]$ ($ch = 1$ by default). By restricting the choice of the next action among those authorized, the agent is forced to adhere to the role's expected behavior
-    \item \textbf{Role Reward Guide} \quad $rrg: H \times \Omega \times A \to \mathbb{R} = \{r_m \text{ if } a \notin A_\omega \text{, } rag(h, \omega) \allowbreak = \allowbreak A_\omega \times \mathbb{R} \text{, } h \in H; \text{ else } 0\}$, the relation that models a role by adding a penalty $r_m$ to the global reward if the last action chosen by the agent $a \in A$ is not authorized. This is intended to encourage the agent to adhere to the expected behavior of a role
-    \item \textbf{Goal Reward Guide} \quad $grg: H \rightarrow \mathbb{R}$, the relation that models a goal as a soft constraint adding a reward bonus $r_b \in \mathbb{R}$ if the agent's history $h \in H$ contains a goal's characteristic sub-sequence $h_g \in H_g$, encouraging the agent to reach it.
-          % \end{enumerate*}
-\end{itemize}
+%     \item \textbf{Role Action Guide} \quad $rag: H \times \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, the relation that models a role as a set of rules which, for each pair consisting of a history $h \in H$ and an observation received by the agent $\omega \in \Omega$, associates expected actions $A \in \mathcal{P}(A)$ each associated with a constraint hardness $ch \in [0,1]$ ($ch = 1$ by default). By restricting the choice of the next action among those authorized, the agent is forced to adhere to the role's expected behavior
+%     \item \textbf{Role Reward Guide} \quad $rrg: H \times \Omega \times A \to \mathbb{R} = \{r_m \text{ if } a \notin A_\omega \text{, } rag(h, \omega) \allowbreak = \allowbreak A_\omega \times \mathbb{R} \text{, } h \in H; \text{ else } 0\}$, the relation that models a role by adding a penalty $r_m$ to the global reward if the last action chosen by the agent $a \in A$ is not authorized. This is intended to encourage the agent to adhere to the expected behavior of a role
+%     \item \textbf{Goal Reward Guide} \quad $grg: H \rightarrow \mathbb{R}$, the relation that models a goal as a soft constraint adding a reward bonus $r_b \in \mathbb{R}$ if the agent's history $h \in H$ contains a goal's characteristic sub-sequence $h_g \in H_g$, encouraging the agent to reach it.
+%           % \end{enumerate*}
+% \end{itemize}
 
-\
+% \
 
-\noindent Finally, we introduce the \textbf{Linkers} to link the $\mathcal{M}OISE^+$ organizational specifications with constraint guides and agents:
-%
-\begin{itemize}
-    % \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
+% \noindent Finally, we introduce the \textbf{Linkers} to link the $\mathcal{M}OISE^+$ organizational specifications with constraint guides and agents:
+% %
+% \begin{itemize}
+%     % \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
     
-    \item \textbf{Agent to Role} \quad $ar: \mathcal{A} \to \mathcal{R}$, the bijective relation linking an agent to a role;
-    \item \textbf{Role to Constraint Guide} \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$, the relation associating each $\mathcal{M}OISE^+$ role to a $rag$ or $rrg$ relation, forcing/encouraging the agent to follow the expected actions for the role $\rho \in \mathcal{R}$;
-    \item \textbf{Goal to Constraint Guide} \quad $gcg: \mathcal{G} \rightarrow grg$, the relation linking goals to $grg$ relations, representing goals as rewards in MARL.
-          % \end{enumerate*}
-\end{itemize}
+%     \item \textbf{Agent to Role} \quad $ar: \mathcal{A} \to \mathcal{R}$, the bijective relation linking an agent to a role;
+%     \item \textbf{Role to Constraint Guide} \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$, the relation associating each $\mathcal{M}OISE^+$ role to a $rag$ or $rrg$ relation, forcing/encouraging the agent to follow the expected actions for the role $\rho \in \mathcal{R}$;
+%     \item \textbf{Goal to Constraint Guide} \quad $gcg: \mathcal{G} \rightarrow grg$, the relation linking goals to $grg$ relations, representing goals as rewards in MARL.
+%           % \end{enumerate*}
+% \end{itemize}
 
-\paragraph{\textbf{Resolving the Dec-POMDP with MOISE+MARL}}
+% \paragraph{\textbf{Resolving the Dec-POMDP with MOISE+MARL}}
 
-A MOISE+MARL model is formalized as $\mathcal{MM} = \langle \mathcal{OS}, ar, rcg, gcg, rag, rrg, grg\rangle$.
-Resolving the Dec-POMDP $d \in D$ with a $mm \in \mathcal{MM}$ model involves finding a joint policy $\pi^{j} = \{\pi^j_0,\pi^j_1\dots\pi^j_n\}$ that maximizes the state-value function $V^{\pi^{j}}$ (or reaches a minimum threshold), which represents the expected cumulative reward starting from an initial state $s \in S$ and following the joint policy $\pi^{j}$, applying successive joint actions $a^{j} \in A^n$ under additional constraint guides. The state-value is described in the case where agents act sequentially and cyclically (Agent Environment Cycle - AEC mode) in \hyperref[eq:single_value_function]{Definition 1}, adapting its definition for roles (in red) and missions (in blue), impacting the action space and reward. \autoref{fig:mm_synthesis} illustrates the links between $\mathcal{M}OISE^+$ and Dec-POMDP via the MOISE+MARL framework.
+% A MOISE+MARL model is formalized as $\mathcal{MM} = \langle \mathcal{OS}, ar, rcg, gcg, rag, rrg, grg\rangle$.
+% Resolving the Dec-POMDP $d \in D$ with a $mm \in \mathcal{MM}$ model involves finding a joint policy $\pi^{j} = \{\pi^j_0,\pi^j_1\dots\pi^j_n\}$ that maximizes the state-value function $V^{\pi^{j}}$ (or reaches a minimum threshold), which represents the expected cumulative reward starting from an initial state $s \in S$ and following the joint policy $\pi^{j}$, applying successive joint actions $a^{j} \in A^n$ under additional constraint guides. The state-value is described in the case where agents act sequentially and cyclically (Agent Environment Cycle - AEC mode) in \hyperref[eq:single_value_function]{Definition 1}, adapting its definition for roles (in red) and missions (in blue), impacting the action space and reward. \autoref{fig:mm_synthesis} illustrates the links between $\mathcal{M}OISE^+$ and Dec-POMDP via the MOISE+MARL framework.
 
 
-\begin{figure*}[h!]
-    \label{eq:single_value_function}
-    \raggedright
-    \textbf{\textit{Definition 1} \quad State-Value function adapted to constraint guides in AEC:}
+% \begin{figure*}[h!]
+%     \label{eq:single_value_function}
+%     \raggedright
+%     \textbf{\textit{Definition 1} \quad State-Value function adapted to constraint guides in AEC:}
     
-    \begin{scriptsize}
-        \vspace{-0.6cm}
-        \begin{gather*}
-            V^{\pi^j}(s_t) = \hspace{-0.75cm}
-            %
-            \sum_{\textcolor{red}{ \substack{a_{t} \in A \text{ si } rn() < ch_{t}, \\
-                        a_{t} \in A_{t} \text{ else}}
-                }}{\hspace{-0.7cm} \pi_i(a_{t} | \omega_t)}
-            %
-            \sum_{s_{t+1} \in S}
-            %    
-            {\hspace{-0.1cm} T(s_{t+1} | s_t, a_{t})
-            \Bigl[R(s_t,a_{t},s_{t+1}) + \hspace{-0.1cm}
-            \textcolor{blue}{ \sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \frac{grg_m(h_{t+1})}{1 - p + \epsilon} } }
-            + } \\
-            {\textcolor{red}{(1-ch_t) \times rrg(\omega_t,a_{t+1})} + V^{\pi^j_{i+1 \ mod \ n}}(s_{t+1})\Bigr]}
-        \end{gather*}
-        %
-        \vspace{-0.5cm}
-        \textcolor{red}{\[\text{ \hspace{-0.1cm} With } rag(h_t, \omega_t) = A_{t} \times \mathbb{R} \text{, } \langle a_t, ch_{t} \rangle \in A_{t} \times \mathbb{R} \text{ ; } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
-        %
-        \vspace{-0.6cm}
-        \textcolor{blue}{
-            \begin{gather*}
-                \hspace{-0.001cm}
-                \text{With } \omega_t = O(\omega_t | s_t, a_t) \text{ ; } h_t = \{h_0 = \langle \rangle, h_{t+1} = \langle h_t, \langle \omega_{t+1}, a_{t+1} \rangle \rangle \} \text{ ; } \epsilon \in \mathbb{R}_{>0} \text{ ; } grg_m(h) = 
-            \end{gather*}
-        }
-        \vspace{-0.95cm}
-        \textcolor{blue}{
-            \begin{gather*}
-                \hspace{-0.5cm} \sum_{\hspace{0.3cm}(grg_i,w_i) \in mo(m)}{\hspace{-0.9cm} w_i \times grg_i(h)}
-                \text{ ; } v_m(t) = \{ 1 \text{ if } t \in t_c \text{ ; else } 0 \} \text{ ; } \mathcal{M}_i = \{m_j | \langle ar(i),m_j,t_c,p \rangle \in \mathcal{M}\}
-            \end{gather*}
-        }
-        \vspace{-0.6cm}
-    \end{scriptsize}
+%     \begin{scriptsize}
+%         \vspace{-0.6cm}
+%         \begin{gather*}
+%             V^{\pi^j}(s_t) = \hspace{-0.75cm}
+%             %
+%             \sum_{\textcolor{red}{ \substack{a_{t} \in A \text{ si } rn() < ch_{t}, \\
+%                         a_{t} \in A_{t} \text{ else}}
+%                 }}{\hspace{-0.7cm} \pi_i(a_{t} | \omega_t)}
+%             %
+%             \sum_{s_{t+1} \in S}
+%             %    
+%             {\hspace{-0.1cm} T(s_{t+1} | s_t, a_{t})
+%             \Bigl[R(s_t,a_{t},s_{t+1}) + \hspace{-0.1cm}
+%             \textcolor{blue}{ \sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \frac{grg_m(h_{t+1})}{1 - p + \epsilon} } }
+%             + } \\
+%             {\textcolor{red}{(1-ch_t) \times rrg(\omega_t,a_{t+1})} + V^{\pi^j_{i+1 \ mod \ n}}(s_{t+1})\Bigr]}
+%         \end{gather*}
+%         %
+%         \vspace{-0.5cm}
+%         \textcolor{red}{\[\text{ \hspace{-0.1cm} With } rag(h_t, \omega_t) = A_{t} \times \mathbb{R} \text{, } \langle a_t, ch_{t} \rangle \in A_{t} \times \mathbb{R} \text{ ; } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
+%         %
+%         \vspace{-0.6cm}
+%         \textcolor{blue}{
+%             \begin{gather*}
+%                 \hspace{-0.001cm}
+%                 \text{With } \omega_t = O(\omega_t | s_t, a_t) \text{ ; } h_t = \{h_0 = \langle \rangle, h_{t+1} = \langle h_t, \langle \omega_{t+1}, a_{t+1} \rangle \rangle \} \text{ ; } \epsilon \in \mathbb{R}_{>0} \text{ ; } grg_m(h) = 
+%             \end{gather*}
+%         }
+%         \vspace{-0.95cm}
+%         \textcolor{blue}{
+%             \begin{gather*}
+%                 \hspace{-0.5cm} \sum_{\hspace{0.3cm}(grg_i,w_i) \in mo(m)}{\hspace{-0.9cm} w_i \times grg_i(h)}
+%                 \text{ ; } v_m(t) = \{ 1 \text{ if } t \in t_c \text{ ; else } 0 \} \text{ ; } \mathcal{M}_i = \{m_j | \langle ar(i),m_j,t_c,p \rangle \in \mathcal{M}\}
+%             \end{gather*}
+%         }
+%         \vspace{-0.6cm}
+%     \end{scriptsize}
     
-\end{figure*}
+% \end{figure*}
 
 
-At any time $t \in \mathbb{N}$ (initially $t = 0$), the agent $i = t \ mod \ n$ is constrained to a role $\rho_i = ar(i)$. For each temporally valid deontic specification $d_i = rds(\rho_i) = \langle tc_i,y_i, m_i \rangle$, the agent is permitted (if $y_i = 0$) or obligated (if $y_i = 1$) to commit in mission $m_i \in \mathcal{M}, \mathcal{G}_{m_i} = mo(m_i)$, and $n \in \mathbb{N}$ the number of agents.
-%
-First, based on the received observation $\omega_t$, the agent must choose an action either: within the expected actions of the role $A_t$ if a random value is below the role constraint hardness $ch_t$; or within the set of all actions $A$ otherwise. If $ch_t = 1$, the role is strongly constrained for the agent and weakly otherwise.
-%
-Then, the action is applied to the current state $s_t$ to transition to the next state $s_{t+1}$, generate the next observation $\omega_{t+1}$, and yield a reward. The reward is the sum of the global reward with penalties and bonuses obtained from the organizational specifications: \quad i) the sum of the bonuses for goals associated with each temporally valid mission (via Goal Reward Guides), weighted by the associated value ($\frac{1}{1-p+\epsilon}$); \quad ii) the penalty associated with the role (via \textquote{Role Reward Guides}) weighted by the role constraint hardness.
-%
-Finally, the cumulative reward calculation continues in the next state $s_{t+1} \in S$ with the next agent $(i+1) \ mod \ n$.
+% At any time $t \in \mathbb{N}$ (initially $t = 0$), the agent $i = t \ mod \ n$ is constrained to a role $\rho_i = ar(i)$. For each temporally valid deontic specification $d_i = rds(\rho_i) = \langle tc_i,y_i, m_i \rangle$, the agent is permitted (if $y_i = 0$) or obligated (if $y_i = 1$) to commit in mission $m_i \in \mathcal{M}, \mathcal{G}_{m_i} = mo(m_i)$, and $n \in \mathbb{N}$ the number of agents.
+% %
+% First, based on the received observation $\omega_t$, the agent must choose an action either: within the expected actions of the role $A_t$ if a random value is below the role constraint hardness $ch_t$; or within the set of all actions $A$ otherwise. If $ch_t = 1$, the role is strongly constrained for the agent and weakly otherwise.
+% %
+% Then, the action is applied to the current state $s_t$ to transition to the next state $s_{t+1}$, generate the next observation $\omega_{t+1}$, and yield a reward. The reward is the sum of the global reward with penalties and bonuses obtained from the organizational specifications: \quad i) the sum of the bonuses for goals associated with each temporally valid mission (via Goal Reward Guides), weighted by the associated value ($\frac{1}{1-p+\epsilon}$); \quad ii) the penalty associated with the role (via \textquote{Role Reward Guides}) weighted by the role constraint hardness.
+% %
+% Finally, the cumulative reward calculation continues in the next state $s_{t+1} \in S$ with the next agent $(i+1) \ mod \ n$.
 
 
-\subsection{Learning World Models}
+% \subsection{Learning World Models}
 
-In Reinforcement Learning (RL), particularly under partial observability, \textbf{World Models}~\cite{ha2018recurrent, hafner2020dream} aim to learn internal models approximating both the environment's transition and observation dynamics. Such models enable agents to perform planning, improve sample efficiency, and facilitate safe exploration. This modeling approach belongs to the \textit{model-based RL} (MBRL) paradigm~\cite{moerland2020model}, and is especially useful for automatically constructing high-fidelity simulation models even when explicit environment representations are unavailable.
+% In Reinforcement Learning (RL), particularly under partial observability, \textbf{World Models}~\cite{ha2018recurrent, hafner2020dream} aim to learn internal models approximating both the environment's transition and observation dynamics. Such models enable agents to perform planning, improve sample efficiency, and facilitate safe exploration. This modeling approach belongs to the \textit{model-based RL} (MBRL) paradigm~\cite{moerland2020model}, and is especially useful for automatically constructing high-fidelity simulation models even when explicit environment representations are unavailable.
 
-Formally, at each time step $t$, let $\omega_t \in \Omega$ denote the current high-dimensional observation, $a_t \in A$ the action taken, and $h_{t-1} \in \mathcal{H}$ the recurrent hidden state summarizing the interaction history up to $t-1$. Since observations are typically high-dimensional (e.g., images, complex state vectors), an encoder $Enc: \Omega \rightarrow Z$ is first applied to project observations into a compact latent space $Z$ with $z_t = Enc(\omega_t)$, where $\dim(Z) \ll \dim(\Omega)$.
+% Formally, at each time step $t$, let $\omega_t \in \Omega$ denote the current high-dimensional observation, $a_t \in A$ the action taken, and $h_{t-1} \in \mathcal{H}$ the recurrent hidden state summarizing the interaction history up to $t-1$. Since observations are typically high-dimensional (e.g., images, complex state vectors), an encoder $Enc: \Omega \rightarrow Z$ is first applied to project observations into a compact latent space $Z$ with $z_t = Enc(\omega_t)$, where $\dim(Z) \ll \dim(\Omega)$.
 
-The core temporal structure is modeled using a \textbf{Recurrent Latent Dynamics Model}~\cite{hafner2020dream}, which predicts the next latent state $z_{t+1}$ by updating the recurrent hidden state and applying latent dynamics:
-\[
-    h_t = f(h_{t-1}, z_t, a_t), \quad
-    z_{t+1} = g(h_t),
-\]
-where $f(\cdot)$ typically corresponds to a recurrent neural network (e.g., LSTM~\cite{hochreiter1997long}) applied to the concatenation of $h_{t-1}$, $z_t$, and $a_t$, and $g(\cdot)$ maps the recurrent state to the next observation latent representation (often implmented as an MLP~\cite{hochreiter1997long}).
+% The core temporal structure is modeled using a \textbf{Recurrent Latent Dynamics Model}~\cite{hafner2020dream}, which predicts the next latent state $z_{t+1}$ by updating the recurrent hidden state and applying latent dynamics:
+% \[
+%     h_t = f(h_{t-1}, z_t, a_t), \quad
+%     z_{t+1} = g(h_t),
+% \]
+% where $f(\cdot)$ typically corresponds to a recurrent neural network (e.g., LSTM~\cite{hochreiter1997long}) applied to the concatenation of $h_{t-1}$, $z_t$, and $a_t$, and $g(\cdot)$ maps the recurrent state to the next observation latent representation (often implmented as an MLP~\cite{hochreiter1997long}).
 
-The predicted latent state is then decoded via $Dec: Z \rightarrow \Omega$ into the predicted observation $\hat{\omega}_{t+1} = Dec(z_{t+1})$. The entire model is jointly trained to minimize both the \emph{reconstruction loss} $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$ in observation space, and optionally, a \emph{latent prediction loss} to stabilize latent dynamics learning.
+% The predicted latent state is then decoded via $Dec: Z \rightarrow \Omega$ into the predicted observation $\hat{\omega}_{t+1} = Dec(z_{t+1})$. The entire model is jointly trained to minimize both the \emph{reconstruction loss} $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$ in observation space, and optionally, a \emph{latent prediction loss} to stabilize latent dynamics learning.
 
-The recurrent hidden state $h_t$ serves as a compact summary of the full interaction history up to time $t$, avoiding the need to explicitly store long observation-action trajectories.
-For simplicity of notation, we define the full composition that directly maps current observation, action, and recurrent state to the next predicted observation as the \textbf{Observation Prediction Model}:
-\[
-    \mathcal{T}(h_{t-1}, \omega_t, a_t) := Dec(g(f(h_{t-1}, Enc(\omega_t), a_t))) = \hat{\omega}_{t+1}.
-\]
+% The recurrent hidden state $h_t$ serves as a compact summary of the full interaction history up to time $t$, avoiding the need to explicitly store long observation-action trajectories.
+% For simplicity of notation, we define the full composition that directly maps current observation, action, and recurrent state to the next predicted observation as the \textbf{Observation Prediction Model}:
+% \[
+%     \mathcal{T}(h_{t-1}, \omega_t, a_t) := Dec(g(f(h_{t-1}, Enc(\omega_t), a_t))) = \hat{\omega}_{t+1}.
+% \]
 
-\subsubsection{Extension to Multi-Agent World Models}
+% \subsubsection{Extension to Multi-Agent World Models}
 
-In multi-agent settings, joint observations and actions rapidly become high-dimensional as the number of agents increases. To address this, joint encoding functions are introduced for both observations and actions.
+% In multi-agent settings, joint observations and actions rapidly become high-dimensional as the number of agents increases. To address this, joint encoding functions are introduced for both observations and actions.
 
-Specifically, joint observations $\omega_t^{j} = (\omega_t^1, \dots, \omega_t^n) \in \Omega^{j}$ are mapped to compact latent representations using an observation encoder $Enc_{\omega_j}: \Omega^{j} \rightarrow \tilde{\Omega}$, yielding $\tilde{\omega}_t = Enc_{\omega_j}(\omega_t^{j})$. The inverse mapping $Dec_{\omega_j}: \tilde{\Omega} \rightarrow \Omega^{j}$ allows reconstruction of the joint observation if needed. Similarly, joint actions $a_t^{j} = (a_t^1, \dots, a_t^n) \in A^{j}$ are encoded via $Enc_{a_j}: A^{j} \rightarrow \tilde{\mathcal{A}}$, resulting in $\tilde{a}_t = Enc_{a_j}(a_t^{j})$, with decoder $Dec_{a_j}$ for potential reconstruction.
-%
-MLPs or attention-based architectures are typically employed for these encoders to aggregate multi-agent information into fixed-size feature vectors while capturing relevant inter-agent dependencies.
+% Specifically, joint observations $\omega_t^{j} = (\omega_t^1, \dots, \omega_t^n) \in \Omega^{j}$ are mapped to compact latent representations using an observation encoder $Enc_{\omega_j}: \Omega^{j} \rightarrow \tilde{\Omega}$, yielding $\tilde{\omega}_t = Enc_{\omega_j}(\omega_t^{j})$. The inverse mapping $Dec_{\omega_j}: \tilde{\Omega} \rightarrow \Omega^{j}$ allows reconstruction of the joint observation if needed. Similarly, joint actions $a_t^{j} = (a_t^1, \dots, a_t^n) \in A^{j}$ are encoded via $Enc_{a_j}: A^{j} \rightarrow \tilde{\mathcal{A}}$, resulting in $\tilde{a}_t = Enc_{a_j}(a_t^{j})$, with decoder $Dec_{a_j}$ for potential reconstruction.
+% %
+% MLPs or attention-based architectures are typically employed for these encoders to aggregate multi-agent information into fixed-size feature vectors while capturing relevant inter-agent dependencies.
 
-Once joint encoding is performed, the multi-agent world model operates analogously to the single-agent case, using $\tilde{\omega}_t$ and $\tilde{a}_t$ as inputs to the recurrent latent dynamics model. This design enables scalable modeling while preserving critical interaction patterns between agents. Within the MAMAD framework, such world models instantiate the simulation core of the \hyperref[sec:modelling]{Modeling Phase}, effectively serving as high-fidelity digital twins of the target environment.
+% Once joint encoding is performed, the multi-agent world model operates analogously to the single-agent case, using $\tilde{\omega}_t$ and $\tilde{a}_t$ as inputs to the recurrent latent dynamics model. This design enables scalable modeling while preserving critical interaction patterns between agents. Within the MAMAD framework, such world models instantiate the simulation core of the \hyperref[sec:modelling]{Modeling Phase}, effectively serving as high-fidelity digital twins of the target environment.
 
 
 \section{The MAMAD method}\label{sec:mamad}
@@ -682,549 +686,311 @@ One can point out that we leverage a modeled Digital Twin through an approximate
 
 MAMAD's philosophy is to provide general workflow to follow for setting up each phase. These workflows may require choosing among different parameters such as modes, algorithms, or hyper-parameters. \autoref{tab:mamad_table_configuration} provides an overview of all of these parameters for the whole method and can be used a design canvas.
 
-\input{tables/mamad_table_configuration.tex}
+% \input{tables/mamad_table_configuration.tex}
 
-\subsection{Phase 1: Modeling}\label{sec:modelling}
 
-In this first phase, the MAMAD method focuses on formalizing the environment and high-level design intentions into a structured optimization problem. This step aims to instantiate the core elements of the design problem $d = \langle \Omega^j, A^j, \mathcal{T}, R_{\Omega}, \gamma \rangle$ and the MOISE+MARL organizational specification $\mathcal{MM} = \langle \mathcal{OS}, ar, rcg, gcg, rag, rrg, grg \rangle$.
+\subsection{Modelling}\label{sec:modelling}
 
-Formally, this phase implements the relation:
+The \textbf{Modelling phase} aims to construct a high-fidelity simulated environment from real-world interaction traces, enabling safe and efficient offline training. Unlike many approaches in multi-agent learning that assume a preexisting simulator, MAMAD builds the environment from scratch when only a real system or black-box interface is available.
+
+This step addresses the following formal component of the MAMAD loop:  
 \[
-    \texttt{model}: \left( \mathcal{E}, \mathcal{G}_{inf}, \mathcal{C}_{inf} \right) \longrightarrow (\mathcal{T}_i, R, \mathcal{MM}_i)
+(\mathcal{T}_i, R, \mathcal{MM}_i) \gets \texttt{model}(\mathcal{E}_i, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}})
 \]
-where $d_i = (\mathcal{T}_i, R, \mathcal{MM}_i)$ denotes the extended Dec-POMDP that model the problem to solve. This involves three main outputs:
 
-\begin{itemize}
-    \item An \textbf{Observation Prediction Model} $\mathcal{T}^{j}(h_{t-1}^{j}, \omega_t^{j}, a_t^{j}) = \hat{\omega}_{t+1}^{j}$, which approximates the next joint-observation in response to joint-action, previous joint-observation, and a given a joint-history. This function plays the role of both the observation and transition functions in a Dec-POMDP acting as a simulation-basis for experimenting design, which is a common practice in AOSE methods~\cite{Jamont2O15};
-    \item An \textbf{Observation-Based Reward Function} $R_{\Omega}: \Omega^j \times A^j \rightarrow \mathbb{R}^{|\mathcal{A}|}$, which defines the multi-agent reward signal based on observable features, not the true environment state;
-    \item Optionally, a set of \textbf{organizational specifications} $\mathcal{MM}$, which constrain or guide agent behavior in accordance with the designer's intent (roles, missions, permissions, obligations).
-\end{itemize}
+\subsubsection*{Formalization and Contribution}
 
-This phase serves as the interface between informal knowledge (goal description $\mathcal{G}_{\text{inf}}$ and design constraints $\mathcal{C}_{\text{inf}}$) and the formal structures required for training and evaluation in later phases. It is a crucial step to make AOSE-compatible specifications actionable within MARL frameworks.
+Let $\Omega^j$ be the joint observation space and $A^j$ the joint action space. We approximate the observable dynamics as a deterministic function:
+\[
+\hat{\mathcal{T}}: \Omega^j \times A^j \rightarrow \Omega^j
+\]
+This function is learned in a latent space $Z$ constructed via a VAE:
+\[
+\phi: \Omega^j \rightarrow Z, \quad \phi^{-1}: Z \rightarrow \Omega^j
+\]
 
-\subsubsection{{General workflow}}
-The modeling process follows three main steps described in \autoref{alg:model}:
-\begin{enumerate}
-    \item \textbf{Environment Modeling:} Defining how observations and state transitions occur, either manually or through automated techniques ;
-    \item \textbf{Reward Function Definition:} Establishing a performance metric for the agents to optimize ;
-    \item \textbf{Integration of Organizational Specifications:} Structuring agent roles and missions within the MOISE+MARL framework ;
-\end{enumerate}
+We define the latent transition function:
+\[
+f: Z \times A^j \rightarrow Z
+\]
+which is approximated using a recurrent neural network (RNN), trained to minimize:
+\[
+\mathcal{L}_{\text{pred}} = \sum_{t} \| f(z_t, a^j_t) - z_{t+1} \|^2
+\]
+where $z_t = \phi(\omega^j_t)$ and $z_{t+1} = \phi(\omega^j_{t+1})$.
+
+\textbf{Reward Function:} Since the true state is unobservable, MAMAD requires a reward function $R_\Omega$ defined on observations:
+\[
+R^j_\Omega: \Omega^j \times A^j \rightarrow \mathbb{R}^{|\mathcal{A}|}
+\]
+
+\textbf{Organizational Constraints:} The user provides (optionally) an initial organizational specification $\mathcal{MM}_0$ in the MOISE+ formalism, or leaves some parts unspecified to be inferred later.
+
+\subsubsection*{Modelling Algorithm}
 
 \begin{algorithm}[H]
-    \caption{Modeling phase: definition of \texttt{model} relation}
-    \label{alg:model}
+    \caption{MAMAD Modelling Phase}
+    \label{alg:modelling}
     \DontPrintSemicolon
-    \KwIn{Environment $\mathcal{E}_i$, Informal goal $\mathcal{G}_{inf}$, Informal constraints $\mathcal{C}_{inf}$}
-    \KwOut{Observable dynamics $\mathcal{T}_i$, reward function $R$, organizational specification $\mathcal{MM}_i$}
+    \KwIn{Real environment $\mathcal{E}_i$, goal spec $\mathcal{G}_{\text{inf}}$, constraints $\mathcal{C}_{\text{inf}}$, history buffer $\mathcal{H}$}
+    \KwOut{Observation transition model $\hat{\mathcal{T}}$, observation reward $R^j_\Omega$, org. specification $\mathcal{MM}_i$}
     
-    \textbf{Step 1: Environment Modeling} \\
-    \eIf{Manual modeling}{
-        Design simulator $\mathcal{T}_i$ manually based on known rules
-    }{
-        Collect trajectories $\mathcal{H}_{data}$ from $\mathcal{E}_i$ \\
-        Train Observation Prediction Model $\mathcal{T}_i$ using Recurrent Latent Dynamics:
-        \[
-            \mathcal{T}_i(h_{t-1}, \omega_t, a_t) := Dec(g(f(h_{t-1}, Enc(\omega_t), a_t)))
-        \]
-    }
-    
-    \textbf{Step 2: Reward Function Definition} \\
-    \eIf{Manual reward definition}{
-    Define reward function $R: \Omega^j \times A^j \to \mathbb{R}^{|\mathcal{A}|}$
-    }{
-    Use Inverse Reinforcement Learning (IRL) over $\mathcal{H}_{data}$ to estimate $R$
-    }
-    
-    \textbf{Step 3: Organizational Specifications Integration (optional)} \\
-    \eIf{Domain knowledge available}{
-        Define organizational specification $\mathcal{MM}_i = \langle \mathcal{OS}, ar, rcg, gcg, rag, rrg, grg \rangle$
-    }{
-        Leave $\mathcal{MM}_i$ undefined for later inference
-    }
-    
-    \Return $(\mathcal{T}_i, R, \mathcal{MM}_i)$
+    \tcp*[l]{1. Collect joint observation-action-observation triplets}
+    $\mathcal{D} \gets$ extract transitions $(\omega^j_t, a^j_t, \omega^j_{t+1})$ from $\mathcal{H}$
+
+    \tcp*[l]{2. Learn latent encoder/decoder via VAE}
+    Train $\phi, \phi^{-1}$ on observations $\omega^j_t$ using HPO on latent dimension
+
+    \tcp*[l]{3. Encode dataset in latent space}
+    $Z \gets \{ z_t = \phi(\omega^j_t) \mid (\omega^j_t, a^j_t) \in \mathcal{D} \}$
+
+    \tcp*[l]{4. Train RNN predictor}
+    Train $f: Z \times A^j \rightarrow Z$ to predict $z_{t+1}$ from $(z_t, a^j_t)$
+
+    \tcp*[l]{5. Define predictive transition function}
+    $\hat{\mathcal{T}}(\omega^j_t, a^j_t) \gets \phi^{-1}(f(\phi(\omega^j_t), a^j_t))$
+
+    \tcp*[l]{6. Define observation-level reward function}
+    Define $R^j_\Omega$ manually or by reward shaping from $\mathcal{G}_{\text{inf}}$
+
+    \tcp*[l]{7. Translate constraints into MOISE+}
+    $\mathcal{MM}_i \gets \texttt{instantiate}(\mathcal{C}_{\text{inf}})$
 \end{algorithm}
 
-\subsubsection{Modeling the environment}
+\subsubsection*{Discussion}
 
-To ensure that agents can train in an environment with high-fidelity to target environment, MAMAD provides two approaches:
+This modeling phase isolates the simulation problem from the training algorithm. Unlike end-to-end MBRL, MAMAD's modularity promotes:
 \begin{itemize}
-    \item \textbf{Manual modeling} consists of directly implementing a simulator that encodes all environmental rules and transition dynamics. This approach is feasible for well-understood systems but may be impractical for complex environments ;
-    \item \textbf{Automated modeling} (preferred) leverages ML techniques, particularly \textit{Imitation Learning}, to learn the transition function from real-world data. This method captures complex dynamics and allows adaptation to changing environments.
+    \item reuse of the environment model across agents and tasks;
+    \item interpretability and tuning of the model components;
+    \item compatibility with safety-critical applications where testing on real systems is costly.
 \end{itemize}
 
-In the automated modeling approach, MAMAD recommends:
-\begin{itemize}
-    \item Collecting agent \textbf{trajectories} from exploratory runs in the real environment (or a safe emulation) ;
-    \item Training a predictive model (\textit{e.g.}, a \textbf{RNN}) to approximate the observation function $\hat{O}: S \times A \to \Omega$, ensuring fidelity to real-world transitions ;
-    \item Selecting hyperparameters based on environment complexity: simple environments may require shallow architectures, while dynamic systems benefit from deep recurrent models.
-\end{itemize}
 
-\noindent \textbf{Rationale for favoring automated modeling:}
-\begin{itemize}
-    \item \textbf{Scalability:} Works for large-scale, dynamic systems where explicit modeling is impractical ;
-    \item \textbf{Adaptability:} Captures previously unknown or evolving behaviors ;
-    \item \textbf{Data-driven accuracy:} Trains directly from observed interactions, reducing the risk of human bias.
-\end{itemize}
+\subsection{Training}
 
-\subsubsection{Defining the reward function}
-The reward function $R: S \times A \times S \to \mathbb{R}$ must quantify how well agents fulfill their goals. MAMAD supports two strategies:
-\begin{itemize}
-    \item \textbf{Manual definition} (preferred): The designer explicitly specifies reward values based on desired behaviors and penalties for undesired ones ;
-    \item \textbf{Automated definition via Inverse Reinforcement Learning (IRL)}: If defining a reward function is challenging, IRL can infer it from expert demonstrations.
-\end{itemize}
+\subsubsection*{Objective and Context}
 
-MAMAD suggests that the reward function should:
-\begin{itemize}
-    \item Emphasize \textbf{goal achievement} rather than constraining behaviors ;
-    \item Use \textbf{trajectory similarity metrics} to measure proximity to ideal behavior ;
-    \item Penalize undesired states while maintaining sufficient exploration incentives.
-\end{itemize}
-
-\noindent \textbf{Why manual reward design is preferred:}
-\begin{itemize}
-    \item \textbf{Interpretability:} Easier to understand and validate than learned reward functions ;
-    \item \textbf{Explicit control:} Ensures alignment with operational goals ;
-    \item \textbf{Avoids IRL pitfalls:} IRL can be biased by suboptimal demonstrations and may require extensive fine-tuning.
-\end{itemize}
-
-\subsubsection{Integrating MOISE+MARL organizational specifications}
-If organizational constraints are required, MAMAD allows for:
-\begin{itemize}
-    \item \textbf{Direct specification} by users with domain knowledge: roles $\mathcal{R}$, missions $\mathcal{M}$, and constraints (RAG, RRG, GRG) are explicitly defined ;
-    \item \textbf{Learning organizational structures} in Phase 3: If the user lacks prior knowledge, they may leave the organizational specifications empty and extract them later from emergent behaviors.
-\end{itemize}
-
-The role definitions are structured within MOISE+MARL:
-\begin{itemize}
-    \item Assigning agents to roles via $ar: \mathcal{A} \to \mathcal{R}$ ;
-    \item Mapping roles to behavioral constraints ($rag$, $rrg$) ;
-    \item Linking goals to mission constraints ($gcg$).
-\end{itemize}
-
-At the end of Phase 1, the output consists of:
-\begin{itemize}
-    \item A \textbf{modeled environment} (manual or automated) ;
-    \item A \textbf{reward function} that defines agent goals ;
-    \item A \textbf{set of organizational specifications} (if applicable).
-\end{itemize}
-
-\subsection{Phase 2: Training}
-
-In the second phase, the goal is to solve the design problem $\langle \Omega^j, A^j, \mathcal{T}, R_{\Omega}, \gamma \rangle$ under the guidance of the organizational specification $\mathcal{MM}$ by learning a joint policy $\pi^j$ that maximizes cumulative rewards while complying with role- and goal-based constraints.
-
-Formally, this phase implements the relation:
+The \textbf{Training phase} aims to learn agent policies that maximize a reward while complying with organizational constraints expressed via the MOISE+ model. This phase corresponds to the following element in the MAMAD loop:
 \[
-    \texttt{train}: \left( \langle \Omega^j, A^j, \mathcal{T}, R_{\Omega}, \gamma \rangle, \mathcal{MM} \right) \longrightarrow \pi^j \in \Pi^j
+\pi^j_i \gets \texttt{train}(d_i, \mathcal{MM}_i)
 \]
-where $\Pi^j$ denotes the space of admissible joint policies over agents. The training process aims to find a policy $\pi^j$ that satisfies:
+where \( d_i = \langle \Omega, A, \mathcal{T}_i, R^j_\Omega, \gamma \rangle \) is the modeled environment.
+
+\subsubsection*{Organizational Model Integration}
+
+Let us briefly recall the MOISE+ model $\mathcal{MM}$:
 \[
-    \pi^j = \arg\max_{\pi \in \Pi^j_{\mathcal{MM}}} \mathbb{E} \left[ \sum_{t=0}^{\infty} \gamma^t R_{\Omega}(\omega_t, a_t) \right]
+\mathcal{MM} = \langle \mathcal{OS}, ar, rcg, gcg, rag, rrg, grg \rangle
 \]
-with $\Pi^j_{\mathcal{MM}}$ representing the subspace of policies that respect the organizational constraints (e.g., role-action guides, reward modulation rules, and goal assignments).
+where $\mathcal{OS}$ is the organizational specification (roles, missions, goals), and the remaining components define allocation and compatibility relations.
 
-This phase bridges the MARL learning machinery with the constraints imposed by AOSE. The specifications encoded in $\mathcal{MM}$ (if provided) narrow down the search space, enhance explainability, and align the emergent behaviors with designer intent. Otherwise, the training proceeds in a free-form mode, and structure will be extracted post hoc in Phase 3.
+We define:
+- A \textbf{Policy Action Constraint (PAC)}: a mapping $\texttt{PAC}_r : \Omega \rightarrow 2^{A}$ for role \( r \), restricting the actions available under a given observation;
+- A \textbf{Trajectory-based Reward Function (TRF)}: a function \( \texttt{TRF}_g : (\Omega \times A)^* \rightarrow \mathbb{R} \) assigning rewards based on an agent's individual trajectory toward goal \( g \).
 
+\subsubsection*{Extended MARL Optimization Problem}
 
-\subsubsection{General workflow}
-The training phase follows these key steps described in \autoref{alg:train}:
-\begin{enumerate}
-    \item \textbf{Setting Organizational Constraints (Optional)}: If the user has prior knowledge of roles and missions, they can specify them via MOISE+MARL before training ;
-    \item \textbf{Choosing a MARL Algorithm}: Selecting a learning algorithm based on environment characteristics, desired coordination levels, and constraints ;
-    \item \textbf{Hyperparameter Tuning and Training}: Running the learning process while monitoring stability and performance ;
-\end{enumerate}
+We define the constrained learning problem as follows:
+\[
+\begin{aligned}
+\text{maximize} \quad & \mathbb{E} \left[ \sum_{t=0}^\infty \gamma^t R^j_\Omega(\omega^j_t, a^j_t) + \texttt{TRF}_g(h_t) \right] \\
+\text{subject to} \quad & a^j_t \in \texttt{PAC}_r(\omega^j_t) \quad \forall r \in \texttt{Roles}, \text{ if agent in } r
+\end{aligned}
+\]
+with \( h_t \) the local trajectory prefix of an agent up to time \( t \).
+
+\subsubsection*{Training Algorithm}
 
 \begin{algorithm}[H]
-    \caption{Training phase: definition of \texttt{train} relation}
-    \label{alg:train}
+    \caption{MAMAD Training Phase}
+    \label{alg:training}
     \DontPrintSemicolon
-    \KwIn{Design problem $d_i = \langle \Omega^j, A^j, \mathcal{T}_i, R, \gamma \rangle$, Organizational specification $\mathcal{MM}_i$}
-    \KwOut{Trained joint policy $\pi^j_i$}
-    
-    \textbf{Step 1: Apply constraint guides (if defined)} \\
-    Embed $rag$, $rrg$, $grg$ into simulation loop to modulate actions and rewards.
-    
-    \textbf{Step 2: Hyperparameter Search Space Generation} \\
-    Extract environment features $F_{env}$ and resources $F_{res}$ \\
-    Define HPO search space $\mathcal{H}$ using expert rules on $F_{env}, F_{res}$
-    
-    \textbf{Step 3: Hyperparameter Optimization (HPO)} \\
-    \ForEach{hyperparameter config $h \in \mathcal{H}$}{
-        Train MARL algorithm with config $h$ \\
-        Evaluate policy $\pi^j_h$ on performance metrics (reward, stability, constraints)
+    \KwIn{Simulated env $d_i = (\Omega, A, \mathcal{T}_i, R_\Omega, \gamma)$, MOISE+ model $\mathcal{MM}_i$}
+    \KwOut{Joint policy $\pi^j_i$}
+
+    \tcp*[l]{1. Derive constraint mappings}
+    Compute $\texttt{PAC}_r$, $\texttt{TRF}_g$ from $\mathcal{MM}_i$
+
+    \tcp*[l]{2. Initialize MARL algorithm}
+    Select algorithm (e.g., MAPPO, QMIX, MADDPG) and initialize parameters
+
+    \For{$k \gets 1$ \KwTo $K$ training steps}{
+        Sample episode $(\omega^j_0, a^j_0, \omega^j_1, ..., \omega^j_T)$ via policy $\pi^j_i$
+
+        \tcp*[l]{3. Apply hard constraints}
+        Mask actions at each step with $\texttt{PAC}_r(\omega^j_t)$
+
+        \tcp*[l]{4. Compute rewards}
+        Use $R_\Omega(\omega^j_t, a^j_t)$ and $\texttt{TRF}_g(h_t)$
+
+        \tcp*[l]{5. Update policy}
+        Use standard MARL update step (policy gradient, Q-learning, etc.)
     }
-    
-    \textbf{Step 4: Selection of best configuration} \\
-    Select $\pi^j_i = \arg\max_{\pi^j_h} \text{Performance}(\pi^j_h)$
-    
-    \Return $\pi^j_i$
 \end{algorithm}
 
-\subsubsection{Easying constraint guides implementation}
+\subsubsection*{Discussion}
 
-Since roles, goals, and missions as simple labels, their definition is assumed. However, implementing a $rag$, $rrg$, or $grg$ relation requires defining a potentially large number of histories, possibly redundant. Therefore, an extensional definition of a set of histories can be tedious. Moreover, the logic of all constraint guides takes the agent trajectory as input to determine whether the trajectory belongs to a predefined history set. For example, a $rag$ relation can be seen as determining the next expected actions depending on whether the trajectory belongs to a given set and the new observation received.
-
-A first approach is to let users develop their constraint guides in an intensional way with custom logic (such as a script code) in order to analyse history and compute the output in a manageable way. In that case, the relation $b_g: H \to \{0,1\}$ formalizes how users propose to determine whether a history belongs to a predefined set $H_g$.
-To help implement this relation, we propose a \textbf{Trajectory-based Pattern} (TP) inspired by Natural Language Processing, denoted $p \in P$, as a way to define a set of histories in an intensional way.
-
-A TP implies that any considered real observation or action is known and mapped to a label $l \in L$ (through $l: \Omega \cup A \to L$) to be conveniently managed. A TP $p \in P$ is defined as follows: $p$ is: either a \textquote{leaf sequence} denoted as a couple of history-cardinality $s_l = \langle h, \{c_min,c_max\}\rangle$ (where $h \in H, c_{min} \in \mathbb{N}, c_{max} \in \mathbb{N} \cup \textquote{*})$; or a \textquote{node sequence} denoted as a couple of a tuple of concrete sequences and cardinality $s_n = \langle \langle s_{l_1}, s_{l_1}\dots \rangle, \{c_min,c_max\}\rangle$. For example, the pattern $p = \allowbreak \textquote{[o_1,a_1,[o_2,a_2]\langle0,2\rangle]\langle1,*\rangle}$ can be formalized as the node sequence $\allowbreak \langle \langle \langle o_1,a_1\rangle,\langle 1,1 \rangle \rangle, \langle \langle o_2,a_2 \rangle, \langle 0,2 \rangle \rangle \rangle \langle 1,\textquote{*} \rangle$, indicating the set of histories $H_p$ containing at least once the sub-sequence consisting of a first pair $\langle o_1,a_1\rangle$ and then at most two repetitions of the pair $\langle o_2,a_2 \rangle$.
-The relation $b_g$ then becomes $b_g(h) = m(p_g,h), \text{ with } m: P \times H \to \{0,1\}$ indicating if a history $h \in H$ matches a history pattern $p \in P$ describing a history set $H_g$.
-
-\subsubsection{Setting organizational constraints (optional)}
-Before training, users may define organizational constraints using MOISE+MARL. These specifications guide learning by:
-\begin{itemize}
-    \item Assigning roles to agents ($ar: \mathcal{A} \to \mathcal{R}$) ;
-    \item Restricting agent actions via \textbf{Role Action Guides (RAG)} ;
-    \item Applying role-specific rewards through \textbf{Role Reward Guides (RRG)} ;
-    \item Defining goal-related incentives using \textbf{Goal Reward Guides (GRG)}.
-\end{itemize}
-
-\noindent \textbf{When to apply constraints:}
-\begin{itemize}
-    \item \textbf{If prior knowledge exists:} Constraints help accelerate convergence by reducing the search space ;
-    \item \textbf{If no prior knowledge exists:} Constraints can be left empty. The analysis phase (Phase 3) will extract meaningful roles and missions from emergent behaviors.
-\end{itemize}
-
-\subsubsection{Choosing a MARL algorithm}
-The choice of MARL algorithm is crucial and depends on environment complexity, interaction dynamics, and organizational constraints. MAMAD supports the following categories:
+This training strategy ensures organizational compliance \textit{by design}, rather than relying on emergent behavior. Compared to unconstrained MARL, our framework offers:
 
 \begin{itemize}
-    \item \textbf{Value-based methods (e.g., Q-Mix, DQN)}: Suitable for fully decentralized training but can struggle with cooperative tasks due to non-stationarity ;
-    \item \textbf{Policy-based methods (e.g., MAPPO, PPO)}: Ideal for cooperative learning as they optimize policies directly and ensure stable training under constraints ;
-    \item \textbf{Actor-Critic methods (e.g., MADDPG)}: Useful for mixed cooperative-competitive scenarios, balancing individual and global goals ;
-    \item \textbf{Model-based methods (e.g., Dyna-Q+)}: Efficient in environments where an accurate world model exists, allowing for sample-efficient learning.
+    \item stronger safety guarantees;
+    \item controllable and interpretable agent behaviors;
+    \item improved sample efficiency through structured guidance.
 \end{itemize}
 
-\noindent \textbf{Algorithm selection criteria:}
-\begin{itemize}
-    \item \textbf{For independent agents:} Use value-based methods ;
-    \item \textbf{For cooperative teams:} Use policy-based or actor-critic methods ;
-    \item \textbf{For organizationally constrained environments (MOISE+MARL):} Policy-based methods work best ;
-    \item \textbf{For environments with predictable transitions:} Model-based methods can improve sample efficiency.
-\end{itemize}
+\subsection{Analyzing}
 
-\noindent If the optimal algorithm is unknown, MAMAD supports \textbf{benchmarking multiple MARL algorithms} to determine the best fit empirically.
+\subsubsection*{Objective and Context}
 
-\subsubsection{Hyperparameter tuning and training}
-Once an algorithm is chosen, training involves optimizing agent policies while monitoring performance. The training process consists of:
-\begin{itemize}
-    \item \textbf{Initializing agent policies} (random or pre-trained) ;
-    \item \textbf{Running training episodes}, collecting experience in replay buffers ;
-    \item \textbf{Updating policies} using gradient-based optimization ;
-    \item \textbf{Monitoring key performance metrics} (reward convergence, stability).
-\end{itemize}
-
-\noindent \textbf{Hyperparameter tuning:}
-MAMAD recommends an empirical approach, with adjustments based on:
-\begin{itemize}
-    \item \textbf{Exploration-exploitation balance:} Adjust $\epsilon$-greedy or entropy regularization ;
-    \item \textbf{Learning stability:} Monitor variance in agent rewards ;
-    \item \textbf{Role adherence:} Ensure agents follow organizational constraints.
-\end{itemize}
-
-\noindent \textbf{Stopping criteria:}
-Training is considered complete when:
-\begin{itemize}
-    \item Agents achieve a reward threshold ($V^{\pi} \geq s$) ;
-    \item Policy stability is reached (variance $\leq \sigma_{\max}^2$).
-\end{itemize}
-
-At the end of Phase 2, the output consists of:
-\begin{itemize}
-    \item A \textbf{trained MARL policy} optimized for task performance ;
-    \item \textbf{Optional structured behaviors} if MOISE+MARL constraints were applied ;
-    \item \textbf{Empirical insights} into agent interactions for later analysis.
-\end{itemize}
-
-
-\subsection{Phase 3: Analyzing}
-
-The purpose of this phase is to analyze the behavior of agents trained in Phase 2 in order to assess their alignment with organizational expectations and, if needed, to infer new specifications. This analysis evaluates the degree to which structured behaviors (such as roles, goals, and missions) have emerged, and whether they conform to or diverge from the current organizational specification $\mathcal{MM}$.
-
-Formally, this phase implements the relation:
+The \textbf{Analyzing phase} aims to assess whether the learned joint policy aligns with the intended organizational specification, and optionally refine or infer missing structural elements. This corresponds to the third component of the MAMAD loop:
 \[
-    \texttt{analyze}: \left( \langle \Omega^j, A^j, \mathcal{T}, R_{\Omega}, \gamma \rangle, \mathcal{MM}, \pi^j \right) \longrightarrow (\mathcal{MM}_{\text{implicit}}, \text{OrgFit})
+(\mathcal{MM}_{i,\text{implicit}}, \text{fit}) \gets \texttt{analyze}(d_i, \mathcal{MM}_i, \pi^j_i)
 \]
-where:
+
+It supports the user in verifying organizational coherence and, if needed, refining the constraints for the next iteration.
+
+\subsubsection*{Related Work}
+
+Explainability in MARL has primarily focused on local policy visualization~\cite{madrona2023explain}, saliency analysis~\cite{verma2022attention}, or reward decomposition~\cite{juozapaitis2019explainable}. Few works address global coordination and its mapping to organizational semantics, which are critical for multi-agent system design.
+
+Our contribution is the \textbf{TEMM} method: \emph{Trajectory-based Evaluation of Multi-agent behaviors w.r.t. MOISE+}, which evaluates the fit between learned behaviors and organizational expectations in terms of roles and goals.
+
+\subsubsection*{Key Concepts}
+
+Let $\pi^j$ be the learned joint policy and $\mathcal{MM}$ the organizational model.
+
+TEMM decomposes analysis into three steps:
+
 \begin{itemize}
-    \item $\mathcal{MM}_{\text{implicit}}$ denotes the inferred MOISE+MARL structure from observed behaviors: implicit roles, missions, and goals;
-    \item \textit{OrgFit} is a quantitative score reflecting how well the learned behaviors match the intended or inferred organization, combining structural and functional adequacy.
+    \item \textbf{Role Inference:} cluster agent trajectories in the action space to identify behavioral roles;
+    \item \textbf{Goal Inference:} identify recurrent observations or subgoals reached by agents;
+    \item \textbf{Organizational Fit:} quantify the alignment between inferred and predefined roles/goals.
 \end{itemize}
 
-This step closes the feedback loop between policy learning and organizational design. If the inferred structure $\mathcal{MM}_{\text{implicit}}$ matches the intended one $\mathcal{MM}$ (or is sufficiently interpretable and coherent), the MAS can proceed to deployment. Otherwise, this phase provides critical insights for refining either the training process or the initial specifications, ensuring explainability, coherence, and design traceability.
+We denote:
+- $\hat{\mathcal{R}}$: the inferred role set from clustering;
+- $\hat{\mathcal{G}}$: the set of inferred agent goals (e.g., via observation centroids);
+- $\texttt{SOF}(\mathcal{MM}, \hat{\mathcal{R}})$: Structural Organizational Fit;
+- $\texttt{FOF}(\mathcal{MM}, \hat{\mathcal{G}})$: Functional Organizational Fit;
+- $\texttt{OF}$: global Organizational Fit as an aggregation of SOF and FOF.
 
-
-\subsubsection{General workflow}
-The analysis phase follows these key steps described in \autoref{alg:analyze}:
-\begin{enumerate}
-    \item \textbf{Selecting Analysis Techniques}: Choosing appropriate clustering and evaluation methods based on environment complexity and learning outcomes ;
-    \item \textbf{Extracting Organizational Specifications}: Inferring roles, missions, and goals from agent behaviors ;
-    \item \textbf{Measuring Organizational Fit}: Quantifying how well agent behaviors align with the inferred organizational structure ;
-    \item \textbf{Decision Making}: Determining whether to refine learning (return to Phase 2) or proceed to deployment (Phase 4) ;
-\end{enumerate}
+\subsubsection*{Analyzing Algorithm}
 
 \begin{algorithm}[H]
-    \caption{Analyzing phase: definition of \texttt{analyze} relation (TEMM)}
-    \label{alg:analyze}
+    \caption{MAMAD Analyzing Phase (TEMM)}
+    \label{alg:analyzing}
     \DontPrintSemicolon
-    \KwIn{Design problem $d_i$, Organizational specification $\mathcal{MM}_i$, Trained policy $\pi^j_i$}
-    \KwOut{Inferred organizational specification $\mathcal{MM}_{implicit}$, Organizational Fit score $\mathit{OrgFit}$}
-    
-    Collect test trajectories $\mathcal{H}_{test}$ by executing $\pi^j_i$
-    
-    \textbf{Step 1: Role Inference via Cluster-Centric Role Abstraction} \\
-    Perform hierarchical clustering over agent action sequences \\
-    Extract Common Longest Sequences (CLS) per cluster $\rightarrow$ infer roles $\mathcal{R}_{implicit}$ \\
-    Compute role inheritance relations via CLS containment
-    
-    \textbf{Step 2: Goal and Mission Inference} \\
-    Construct Joint-Observation Transition Graphs from $\mathcal{H}_{test}$ \\
-    Apply K-means clustering over joint-observations to identify abstract goals $\mathcal{G}_{implicit}$ \\
-    Aggregate goals into missions $\mathcal{M}_{implicit}$
-    
-    \textbf{Step 3: Permission and Obligation Inference} \\
-    For each agent-role association, determine valid mission sets \\
-    Infer permissions and obligations based on exclusivity and consistency
-    
-    \textbf{Step 4: Organizational Fit Evaluation} \\
-    Compute Structural Fit: alignment of CLS vs actual behaviors \\
-    Compute Functional Fit: alignment of goal clusters vs observed interactions \\
-    Set $\mathit{OrgFit} = \frac{1}{2} \times (StructuralFit + FunctionalFit)$
-    
-    \Return $(\mathcal{MM}_{implicit}, \mathit{OrgFit})$
+    \KwIn{Dataset $\mathcal{D}$ of trajectories under $\pi^j_i$, organizational model $\mathcal{MM}_i$}
+    \KwOut{Inferred model $\mathcal{MM}_{i,\text{implicit}}$, Fit score}
+
+    \tcp*[l]{1. Extract individual agent trajectories}
+    For each agent $a$, extract $(\omega_t^a, a_t^a)$ over episodes
+
+    \tcp*[l]{2. Role inference via clustering}
+    Cluster sequences of actions to identify roles $\hat{\mathcal{R}}$
+
+    \tcp*[l]{3. Goal inference via observation space}
+    Identify stable or converged observations to form $\hat{\mathcal{G}}$
+
+    \tcp*[l]{4. Compute organizational fit}
+    Compute $\texttt{SOF}(\mathcal{MM}_i, \hat{\mathcal{R}})$ and $\texttt{FOF}(\mathcal{MM}_i, \hat{\mathcal{G}})$
+
+    \tcp*[l]{5. Aggregate into global fit}
+    $\texttt{OF} = \alpha \cdot \texttt{SOF} + (1 - \alpha) \cdot \texttt{FOF}$
+
+    \tcp*[l]{6. Construct inferred model}
+    $\mathcal{MM}_{i,\text{implicit}} \gets$ extracted roles and goals
+
 \end{algorithm}
 
-\subsubsection{The TEMM method}
-\label{sec:TEMM_algorithm}
-
-As presented in \autoref{sec:related_works}, we were unable to identify any available method that fully meets our requirements for determining implicit roles, implicit goals, or organizational fit. Therefore, we propose the \textbf{Trajectory-based Evaluation in MOISE+MARL} (TEMM) method for automatic inference and evaluation of roles and missions.
-%
-TEMM uses unsupervised learning techniques to generalize roles and missions from the set of collected trajectories over multiple test episodes. By measuring the gap between inferred implicit organizational specifications and actual behaviors, we can also quantify the organizational fit as to how well a policy conforms to the inferred implicit organizational specifications.
-
-TEMM is based on proposed definitions for each $\mathcal{M}OISE^+$ organizational specification regarding joint-histories or other organizational specifications, using specific unsupervised lea-rning techniques to infer them progressively. Here, we provide an informal description of the method~\hyperref[fn:github]{\footnotemark[2]}.
-%
-\footnotetext[2]{ \label{fn:github} Additional details, developed code, datasets containing all the hyperparameters and details of the organizational specifications are available at \url{https://github.com/julien6/MOISE-MARL}}
-
-\paragraph{1) Inferring roles and their inheritance}
-
-We introduce that a role $\rho$ is defined as a policy whose associated agents' histories all contain a Common Longest Sequence (CLS). We introduce that a role $\rho_2$ inherits from $\rho_1$ if the CLS of histories associated with $\rho_2$ is also contained within that of $\rho_1$.
-Based on these definitions, TEMM uses a \textquote{hierarchical clustering} technique to find the CLSs among agent histories. The results can be represented as a dendrogram, allowing inferring implicit roles and inheritance relationships, their respective relationships with histories.
-We measure the gap between current agents' sequence and inferred implicit roles' sequences, as the \textquote{structural organizational fit}.
-
-\paragraph{2) Inferring goals, plans, and missions}
-
-We introduce that a goal is a set of common joint-observation reached by following the histories of successful agents.
-For each joint-history, TEMM calculates the joint-observation transition graph, which is then merged into a general graph. By measuring the distance between two vectorized joint-observations with K-means, we can find trajectory clusters that some agents may follow. Then, we sample some sets of joint-observations for each trajectory as implicit goals. For example, we can select the narrowest set of joint-observations where agents seem to collectively transition at a given time to reach their goal. Otherwise, balanced sampling on low-variance trajectories could be performed. Knowing which trajectory a goal belongs to, TEMM infers plans based solely on choices and sequences.
-
-We introduce that a mission is the set of goals that one or more agents are accomplishing.
-Knowing the shared goals achieved by the agents, TEMM determines representative goal sets as missions.
-By measuring the distance between inferred implicit goals which joint-observations with current agents' joint-observation, we compute the \textquote{structural organizational fit}.
-
-\paragraph{3) Inferring obligations and permissions}
-
-We introduce that an obligation is when an agent playing the role $\rho$ fulfills the goals of a mission and no others during certain time constraints, while permission is when the agent playing the role $\rho$ may fulfill other goals during specific time constraints.
-TEMM determines which agents are associated with which mission and whether they are restricted to certain missions, making them obligations, or if they have permission.
-Having already computed structural organizational fit and functional organizational fit, the organizational fit is the sum of these two values.
-
-\
-
-Overall, the K-mean and hierarchical clustering techniques require manual configuration to obtain roles and goals, avoiding introducing perturbations that could lead to determining false organizational specifications. Despite this, the method recommends thoroughly understanding the obtained roles and goals to manually identify and remove any remaining perturbations.
-
-\subsubsection{Manual refinement and stability considerations}
-
-Despite the use of clustering techniques, manual configuration is required to avoid artifacts that may distort the inferred organizational structure. Hyperparameters such as the number of clusters in K-means or the depth of hierarchical clustering must be tuned to balance specificity and generalizability.
-
-Furthermore, TEMM suggests an \textbf{interactive refinement process}:
-\begin{itemize}
-    \item \textbf{Visual inspection of inferred roles and goals.}
-    \item \textbf{Post-processing techniques to remove noise.}
-    \item \textbf{User-defined constraints to refine clusters.}
-\end{itemize}
-
-While clustering algorithms provide an initial organizational framework, expert intervention is recommended to ensure meaningful abstractions. The TEMM method enables automated inference of structural and functional organization in MARL by extracting abstract roles, goals, and missions from agent behaviors. By defining organizational fit as the sum of structural and functional fit, TEMM provides a quantitative measure of policy alignment with inferred organizational structures.
-
-\subsubsection{Selecting analysis techniques}
-Since learned behaviors emerge from interactions, unsupervised learning is required to extract structured patterns. The analysis process relies on the following methods:
+This phase is optional but highly recommended in MAMAD. It allows users to:
 
 \begin{itemize}
-    \item \textbf{Hierarchical Clustering}: Detects hierarchical role structures by grouping agents with similar behavior patterns ;
-    \item \textbf{K-means Clustering}: Identifies mission clusters based on agent trajectory distributions ;
-    \item \textbf{Graph-based Analysis}: Constructs \textbf{Joint-Observation Transition Graphs} to extract abstract goals from recurring state-action sequences.
+    \item Evaluate how well the system conforms to its intended organizational structure;
+    \item Automatically detect emergent structures and suggest refinement;
+    \item Justify policy behaviors to stakeholders through interpretable specifications.
 \end{itemize}
 
-\noindent \textbf{Technique selection criteria:}
-\begin{itemize}
-    \item \textbf{For environments with strong role differentiation:} Hierarchical clustering is preferable ;
-    \item \textbf{For environments with fluid mission assignments:} K-means clustering works best ;
-    \item \textbf{For environments with complex dependencies:} Graph-based methods are recommended.
-\end{itemize}
+This creates a powerful feedback loop in MAMAD, enabling a principled transition between implicit and explicit organizational design.
 
-\subsubsection{Extracting organizational specifications}
-To generate meaningful insights from learned behaviors, MAMAD extracts the following organizational elements:
 
-\begin{itemize}
-    \item \textbf{Inferring Roles ($\mathcal{R}$)}: Defined by the \textbf{CLS} of agents' histories ;
-    \item \textbf{Inferring Role Inheritance ($\mathcal{IR}$)}: Established when the CLS of role $\rho_2$ is contained in the CLS of $\rho_1$ ;
-    \item \textbf{Inferring Goals ($\mathcal{G}$)}: Detected as frequently recurring joint-observations in transition graphs ;
-    \item \textbf{Inferring Missions ($\mathcal{M}$)}: Formed by clustering sets of inferred goals.
-\end{itemize}
+\subsection{Transferring}
 
-\noindent \textbf{Interpretation Process:}
-\begin{itemize}
-    \item \textbf{Case 1 - Clear Role/Mission Separation:} If roles and missions emerge with strong clusters, the inferred specifications are valid ;
-    \item \textbf{Case 2 - Unclear or Erratic Behaviors:} If high variance is observed, it suggests that agents have not yet converged to structured behaviors.
-\end{itemize}
+\subsubsection*{Objective and Context}
 
-\noindent \textbf{If Case 2 Occurs:}
-\begin{itemize}
-    \item Return to \textbf{Phase 2} to refine learning (e.g., adjust constraints, change MARL algorithm, or increase training time) ;
-    \item Re-evaluate \textbf{reward function formulation} to ensure it correctly incentivizes desired behaviors.
-\end{itemize}
-
-\subsubsection{Measuring organizational fit}
-To ensure alignment between inferred specifications and learned policies, MAMAD introduces the \textbf{Organizational Fit Score}, composed of:
-
-\begin{itemize}
-    \item \textbf{Structural Fit:} Measures alignment between agent histories and inferred role structures ;
-    \item \textbf{Functional Fit:} Measures how well inferred goals match actual agent interactions.
-\end{itemize}
-
-\noindent \textbf{Quantification Methods:}
-\begin{itemize}
-    \item \textbf{Normalized Distance Metrics:} Compare agent trajectories with inferred organizational patterns ;
-    \item \textbf{Variance Analysis:} Higher variance in rewards suggests less stable role specialization.
-\end{itemize}
-
-\subsubsection{Decision making: refinement vs. validation}
-
-At the end of the analysis phase, the organizational fit score (\textit{OrgFit}) helps determine whether the learned policy aligns with the intended or emergent structure of the MAS.
-
-\begin{itemize}
-    \item \textbf{If \textit{OrgFit} is High:} This means that the agent behaviors are well-aligned with coherent roles and goal structures (whether explicitly defined or implicitly inferred). The system exhibits both \textit{structural consistency} (clear roles and missions) and \textit{functional adequacy} (effective achievement of goals). In this case, the MAS can proceed to \textbf{Phase 4 (Transfer)} for deployment.
-          
-    \item \textbf{If \textit{OrgFit} is Low:} This indicates that the learned policies either lack structure (e.g., agents switch behaviors erratically) or diverge from organizational specifications. This misalignment may stem from insufficient training, poorly tuned hyperparameters, or unclear constraints. The process should return to \textbf{Phase 2 (Training)}, optionally refining the model or organizational specifications in \textbf{Phase 1 (Modeling)} before retrying.
-\end{itemize}
-
-\noindent This decision step thus completes the third phase of the MAMAD method (\textbf{Analyzing}) which evaluates whether agent policies are ready for transfer or should be refined. It connects naturally to the fourth and final phase: \textbf{Transferring}, where agents are safely deployed in the target environment under organizational constraints.
-
-At the end of Phase 3, the output consists of:
-\begin{itemize}
-    \item A \textbf{set of refined organizational specifications} (roles, missions, goals) ;
-    \item A \textbf{quantified measure of organizational fit} ;
-    \item A \textbf{decision on whether to refine training or proceed to deployment}.
-\end{itemize}
-
-\subsection{Phase 4: Transferring}
-
-This final phase consists in deploying the trained MAS into its real target environment while ensuring that agents behave in accordance with the learned organizational specification. The core objective is to transfer the learned policy $\pi^j$ from the simulation (or digital twin) back to the real or emulated environment, enabling the system to act autonomously and safely.
-
-Formally, this phase implements the relation:
+The \textbf{Transferring phase} closes the MAMAD design loop by operationalizing the trained policies in the real environment. It corresponds to:
 \[
-    \texttt{transfer}: \left( \mathcal{E}, \pi^j \right) \longrightarrow \mathcal{E}'
+\mathcal{E}_{i+1} \gets \texttt{transfer}(\mathcal{E}_i, \pi^j_i)
 \]
-where:
-\begin{itemize}
-    \item $\mathcal{E}$ is the current environment instance (real or emulated);
-    \item $\pi^j$ is the joint policy obtained from training and validated through analysis;
-    \item $\mathcal{E}'$ is the environment where actions from $\pi^j$ are actively applied, potentially generating new traces and observations for future iterations.
-\end{itemize}
-
-This phase completes the MAMAD design cycle by enabling the real-world execution of policies shaped and validated through previous phases. It also creates the conditions for a new modeling iteration if the environment evolves or if improved observations are needed, thus feeding the iterative optimization loop at the heart of MAMAD. The focus here is on safety, organizational compliance, and adaptive deployment mechanisms.
-
-
-\subsubsection{General workflow}
-This phase follows a systematic deployment strategy, also described in \autoref{alg:transfer}, consisting of:
+This phase serves two purposes:
 \begin{enumerate}
-    \item \textbf{Choosing a Deployment Mode}: Deciding between local or remote deployment based on system constraints ;
-    \item \textbf{Safe Transfer Validation}: Testing trained policies in an emulated environment before real-world execution ;
-    \item \textbf{Final Deployment}: Deploying agents into the real environment with optional real-time monitoring ;
+    \item Deploy the latest trained policies in the real environment for execution;
+    \item Collect new data from this deployment, used to update the environment model or trigger new MAMAD cycles.
 \end{enumerate}
 
+Unlike the previous phases, which primarily rely on simulated data, this phase ensures alignment with the operational reality.
+
+\subsubsection*{Theoretical Framing}
+
+We define:
+\begin{itemize}
+    \item The real environment $\mathcal{E}_i$ as a black-box with unknown transition dynamics;
+    \item The observation-action interface $\mathcal{I}$ as an API ensuring communication with real agents;
+    \item The set of deployed policies $\pi^j_i$ as either centralized (controlled externally) or decentralized (embedded into agents);
+    \item A transition database $\mathcal{H}_i$ collecting $(\omega_t^j, a_t^j, \omega_{t+1}^j)$ tuples from the real environment.
+\end{itemize}
+
+This setup allows the continuous growth of a dataset $\mathcal{H}_0, \mathcal{H}_1, \ldots$, which improves the accuracy of the environment model $\mathcal{T}_i$ over time.
+
+\subsubsection*{Modes of Execution}
+
+\paragraph{Centralized Mode.} A remote controller computes and dispatches actions based on $\pi^j_i$. It directly receives the joint observation $\omega_t^j$ and sends back $a_t^j$. This allows precise control and trace collection but assumes synchronous interaction and full connectivity.
+
+\paragraph{Decentralized Mode.} Agents embed their local policy and act autonomously. Periodically, they upload their local history. This enables robustness and scalability, though synchronization and observation fidelity may vary.
+
+\subsubsection*{Transfer Algorithm}
+
 \begin{algorithm}[H]
-    \caption{Transferring phase: definition of \texttt{transfer} relation}
-    \label{alg:transfer}
+    \caption{MAMAD Transfer Phase}
+    \label{alg:transferring}
     \DontPrintSemicolon
-    \KwIn{Current environment $\mathcal{E}_i$, Trained policy $\pi^j_i$}
-    \KwOut{Deployed system $\mathcal{E}_{i+1}$}
-    
-    \textbf{Step 1: Safe Validation in Emulated Environment} \\
-    Deploy $\pi^j_i$ in high-fidelity emulation \\
-    Evaluate:
-    \begin{itemize}
-        \item Behavioral Consistency w.r.t. inferred organizational specifications
-        \item Constraint Adherence (safety/performance)
-        \item Stability across multiple runs
-    \end{itemize}
-    
-    \textbf{If validation fails:} return to Phase 2
-    
-    \textbf{Step 2: Choose Deployment Mode} \\
-    \eIf{Safety-critical}{
-        Use Remote Deployment
-    }{
-        Use Local Deployment (embedded policies)
+    \KwIn{Real environment $\mathcal{E}_i$, policy $\pi^j_i$, mode $\in$ \{centralized, decentralized\}, threshold $\theta$}
+    \KwOut{Updated environment $\mathcal{E}_{i+1}$, data batch $\mathcal{H}_{i+1}$}
+
+    Initialize connection with real environment via interface $\mathcal{I}$\;
+    Deploy policy $\pi^j_i$ according to selected mode\;
+
+    \While{process is active}{
+        \eIf{mode == centralized}{
+            Observe $\omega_t^j$ from $\mathcal{E}_i$\;
+            Compute $a_t^j \gets \pi^j_i(\omega_t^j)$\;
+            Send $a_t^j$ to actuators via $\mathcal{I}$\;
+            Observe $\omega_{t+1}^j$ and store $(\omega_t^j, a_t^j, \omega_{t+1}^j)$ in $\mathcal{H}_i$\;
+        }{
+            Agents act autonomously and store local transitions\;
+            Periodically upload new data $(\omega_t^a, a_t^a, \omega_{t+1}^a)$ via $\mathcal{I}$\;
+        }
+
+        \If{new data batch size $> \theta$}{
+            Save $\mathcal{H}_i$ to persistent storage\;
+            \textbf{Trigger a new MAMAD cycle}
+        }
     }
-    
-    \textbf{Step 3: Incremental Real Deployment} \\
-    Gradually integrate agents into real system \\
-    Perform real-time monitoring of organizational compliance
-    
-    \Return $\mathcal{E}_{i+1}$
 \end{algorithm}
 
+\subsubsection*{Discussion}
 
-\subsubsection{Choosing a deployment mode}
-The deployment mode determines how the trained policies interact with the target environment. MAMAD supports two deployment options:
-
-\begin{itemize}
-    \item \textbf{Remote Deployment (Indirect Control)}: Agents operate on the system without direct physical presence, transmitting control signals to actuators. This is suitable for cybersecurity applications, robotic fleets, and cloud-based MAS ;
-    \item \textbf{Local Deployment (Direct Control)}: Agents are embedded into the physical system and interact directly with sensors and actuators. This is required for autonomous vehicles, robotic teams, and industrial automation.
-\end{itemize}
-
-\noindent \textbf{Deployment Mode Selection Criteria:}
-\begin{itemize}
-    \item \textbf{For safety-critical applications}: Remote deployment is preferred to reduce operational risks ;
-    \item \textbf{For real-time interaction needs}: Local deployment ensures faster response times ;
-    \item \textbf{For hybrid applications}: A combination of both can be used, where some agents are deployed remotely while others interact directly with the environment.
-\end{itemize}
-
-\subsubsection{Safe transfer validation}
-Before executing the trained policies in a real-world system, MAMAD integrates a safety validation step. This consists of deploying the agents in a controlled \textbf{emulated environment} to verify:
-\begin{itemize}
-    \item \textbf{Behavioral Consistency}: Ensuring agents behave according to inferred organizational roles and missions ;
-    \item \textbf{Constraint Adherence}: Validating that agents respect predefined safety and performance constraints ;
-    \item \textbf{Performance Stability}: Checking that learned policies achieve consistent results across multiple test runs.
-\end{itemize}
-
-\noindent \textbf{Validation Process:}
-\begin{itemize}
-    \item \textbf{Step 1: Environment Emulation} - Create a high-fidelity digital replica of the target environment ;
-    \item \textbf{Step 2: Policy Execution} - Test agent policies within the emulation framework ;
-    \item \textbf{Step 3: Risk Assessment} - Identify potential failures and deviations from expected behavior ;
-    \item \textbf{Step 4: Adjustment (if needed)} - If validation fails, return to \textbf{Phase 2 (Training)} for refinement.
-\end{itemize}
-
-\subsubsection{Final deployment}
-Once validation confirms that policies meet operational requirements, MAMAD proceeds with real-world deployment. This phase follows a structured rollout approach:
+This phase ensures that:
 
 \begin{itemize}
-    \item \textbf{Incremental Deployment}: Agents are introduced gradually, minimizing system-wide disruptions ;
-    \item \textbf{Real-Time Monitoring}: Agent actions are tracked in real time to ensure compliance with specifications ;
-    \item \textbf{Policy Update Mechanisms}: The system maintains flexibility by allowing policy updates or adaptations if environmental conditions change.
+    \item The system is not just trained in silico but grounded in reality;
+    \item Traces collected can be used to refine the model $\mathcal{T}_i$ or restart the loop;
+    \item Deployment choices (centralized vs decentralized) impact the control, latency, and autonomy of the system.
 \end{itemize}
 
-\noindent \textbf{Monitoring and Adaptation:}
-\begin{itemize}
-    \item If agent behavior deviates from expected roles/missions → Adjust organizational specifications and re-train ;
-    \item If the environment changes significantly → Restart from \textbf{Phase 1 (Modeling)}.
-\end{itemize}
+From a design perspective, this phase closes the MAMAD loop as a continuous, self-improving organizational pipeline, akin to digital twin synchronization and lifelong learning systems.
 
-At the end of Phase 4, the output consists of:
-\begin{itemize}
-    \item Successfully deployed agents operating within the real-world system ;
-    \item A validated \textbf{organizationally compliant} MAS ;
-    \item An ongoing monitoring and refinement strategy.
-\end{itemize}
 
 
 
@@ -1233,79 +999,79 @@ At the end of Phase 4, the output consists of:
 
 We developed a tool that we propose to facilitate the implementation of the MAMAD method through four environments following a proposed evaluation protocol.
 
-\subsection{A development environment for the method}
+% \subsection{A development environment for the method}
 
-To support the implementation and evaluation of the MAMAD method, we developed the \textbf{Cyber Multi-agent System Development Environment}~\footnotemark[1], a dedicated framework that facilitates modeling, training, and deploying MAS. An visual overview of CybMASDE provided in \autoref{fig:cybmasde}.
+% To support the implementation and evaluation of the MAMAD method, we developed the \textbf{Cyber Multi-agent System Development Environment}~\footnotemark[1], a dedicated framework that facilitates modeling, training, and deploying MAS. An visual overview of CybMASDE provided in \autoref{fig:cybmasde}.
 
-\footnotetext[1]{Source code and details are freely available in \url{https://github.com/julien6/CybMASDE}} (\textbf{CybMASDE})
+% \footnotetext[1]{Source code and details are freely available in \url{https://github.com/julien6/CybMASDE}} (\textbf{CybMASDE})
 
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.7\linewidth]{figures/CybMASDE.png}
-    \caption{A screenshot of the \href{https://github.com/julien6/CybMASDE}{CybMASDE} tool. CybMASDE integrates several state-of-the-art libraries and tools to provide a flexible, scalable, and user-friendly environment for MARL-driven MAS design.}
-    \label{fig:cybmasde}
-\end{figure}
-
-
-CybMASDE leverages the \textbf{PettingZoo}~\cite{Terry2021} library, which offers a standardized API for MARL environments, ensuring interoperability with various MARL algorithms. This allows seamless integration of different multi-agent environments without the need for extensive custom modifications.
-
-At the core of CybMASDE's learning capabilities lies \textbf{MARLlib}~\cite{hu2022marllib}, a comprehensive library providing access to a wide range of MARL algorithms. MARLlib ensures optimized implementations of cutting-edge MARL techniques and fine-tuned policy models, enabling efficient training across diverse environments. CybMASDE fully supports MARLlib's algorithms, offering users the flexibility to select, experiment with, and compare different approaches based on environment dynamics and learning goals.
-
-\paragraph{Supported MARL algorithms}
-CybMASDE supports the full range of MARL algorithms provided by MARLlib, including:
-\begin{itemize}
-    \item \textbf{Value-based methods:}
-          \begin{itemize}
-              \item Independent Q-Learning ;
-              \item VDN (Value-Decomposition Networks)~\cite{sunehag2018vdn} ;
-              \item QMIX~\cite{rashid2018qmix} ;
-              \item QTRAN~\cite{son2019qtran}.
-          \end{itemize}
-    \item \textbf{Policy-based methods:}
-          \begin{itemize}
-              \item Independent PPO ;
-              \item MAPPO (Multi-Agent Proximal Policy Optimization)~\cite{yu2021mappo} ;
-              \item MADDPG (Multi-Agent Deep Deterministic Policy Gradient)~\cite{lowe2017multi} ;
-              \item HATRPO (Heterogeneous-Agent Trust Region Policy Optimization)~\cite{kuba2022}.
-          \end{itemize}
-    \item \textbf{Actor-Critic methods:}
-          \begin{itemize}
-              \item COMA (Counterfactual Multi-Agent Policy Gradients)~\cite{foerster2018counterfactual} ;
-              \item MAVEN (Multi-Agent Variational Exploration)~\cite{mahajan2019maven} ;
-              \item ROMA (Role-Oriented Multi-Agent RL)~\cite{wang2020roma}.
-          \end{itemize}
-    \item \textbf{Model-based methods:}
-          \begin{itemize}
-              \item Dyna-Q and Dyna-Q+ (planning-based approaches) ;
-              \item MB-MARL (Model-Based MARL variants).
-          \end{itemize}
-\end{itemize}
-
-This extensive support ensures that CybMASDE can accommodate different MARL paradigms, including \textbf{Centralized Training with Decentralized Execution} (CTDE), fully decentralized learning, and explicit coordination mechanisms. Users can easily compare different MARL strategies to determine the most suitable algorithm for a given MAS scenario.
-
-\paragraph{Environment simulation and hyperparameter optimization}
-CybMASDE incorporates \textbf{TensorFlow} to enable automated environment modeling, allowing users to generate and refine environment models via deep learning-based function approximation. This is particularly useful for cases where the environment's transition dynamics are unknown or difficult to model manually. The system supports \textbf{world-model-based learning}, where agents are trained using a learned simulation of the environment, reducing dependence on real-world interaction data.
-
-Additionally, CybMASDE provides \textbf{Hyper-Parameter Optimization (HPO)}, allowing users to fine-tune crucial training parameters such as:
-\begin{itemize}
-    \item \textbf{Learning rate schedules:} Control how quickly the learning algorithm updates its parameters. Adaptive or decaying schedules can help improve convergence stability and performance over time.
-    \item \textbf{Discount factor} ($\gamma$): Determines the agent's preference between short-term and long-term rewards. A lower $\gamma$ encourages myopic behavior (favoring immediate rewards), whereas a higher $\gamma$ promotes planning for delayed gains.
-    \item \textbf{Exploration-exploitation balance:} Typically managed via $\epsilon$-greedy or entropy-based strategies. It regulates the trade-off between discovering new behaviors (exploration) and exploiting current knowledge (exploitation).
-    \item \textbf{Policy gradient update parameters:} Include settings like the PPO clipping factor, which prevents excessively large updates to the policy. This helps maintain training stability and avoid policy collapse.
-    \item \textbf{Reward shaping configurations:} Involves adding auxiliary rewards to guide learning more effectively. Proper shaping can accelerate convergence by making useful intermediate states more attractive.
-\end{itemize}
+% \begin{figure}[h!]
+%     \centering
+%     \includegraphics[width=0.7\linewidth]{figures/CybMASDE.png}
+%     \caption{A screenshot of the \href{https://github.com/julien6/CybMASDE}{CybMASDE} tool. CybMASDE integrates several state-of-the-art libraries and tools to provide a flexible, scalable, and user-friendly environment for MARL-driven MAS design.}
+%     \label{fig:cybmasde}
+% \end{figure}
 
 
-This feature ensures that trained policies are not only effective but also stable across different environments and organizational constraints.
+% CybMASDE leverages the \textbf{PettingZoo}~\cite{Terry2021} library, which offers a standardized API for MARL environments, ensuring interoperability with various MARL algorithms. This allows seamless integration of different multi-agent environments without the need for extensive custom modifications.
 
-\paragraph{User interface and deployment capabilities}
-CybMASDE provides:
-\begin{itemize}
-    \item A \textbf{full-featured API} for advanced users, enabling fine-grained control over environment configurations, learning parameters, and agent interactions ;
-    \item A \textbf{graphical user interface (GUI)} for simplified access to key functionalities, allowing non-experts to configure and launch MARL training sessions with minimal setup ;
-    \item \textbf{Support for multi-environment benchmarking}, where multiple training runs can be executed in parallel, enabling systematic comparison of different MARL methods ;
-    \item \textbf{Automated policy deployment}, where trained agents can be directly transferred to real or simulated environments for validation and real-world execution.
-\end{itemize}
+% At the core of CybMASDE's learning capabilities lies \textbf{MARLlib}~\cite{hu2022marllib}, a comprehensive library providing access to a wide range of MARL algorithms. MARLlib ensures optimized implementations of cutting-edge MARL techniques and fine-tuned policy models, enabling efficient training across diverse environments. CybMASDE fully supports MARLlib's algorithms, offering users the flexibility to select, experiment with, and compare different approaches based on environment dynamics and learning goals.
+
+% \paragraph{Supported MARL algorithms}
+% CybMASDE supports the full range of MARL algorithms provided by MARLlib, including:
+% \begin{itemize}
+%     \item \textbf{Value-based methods:}
+%           \begin{itemize}
+%               \item Independent Q-Learning ;
+%               \item VDN (Value-Decomposition Networks)~\cite{sunehag2018vdn} ;
+%               \item QMIX~\cite{rashid2018qmix} ;
+%               \item QTRAN~\cite{son2019qtran}.
+%           \end{itemize}
+%     \item \textbf{Policy-based methods:}
+%           \begin{itemize}
+%               \item Independent PPO ;
+%               \item MAPPO (Multi-Agent Proximal Policy Optimization)~\cite{yu2021mappo} ;
+%               \item MADDPG (Multi-Agent Deep Deterministic Policy Gradient)~\cite{lowe2017multi} ;
+%               \item HATRPO (Heterogeneous-Agent Trust Region Policy Optimization)~\cite{kuba2022}.
+%           \end{itemize}
+%     \item \textbf{Actor-Critic methods:}
+%           \begin{itemize}
+%               \item COMA (Counterfactual Multi-Agent Policy Gradients)~\cite{foerster2018counterfactual} ;
+%               \item MAVEN (Multi-Agent Variational Exploration)~\cite{mahajan2019maven} ;
+%               \item ROMA (Role-Oriented Multi-Agent RL)~\cite{wang2020roma}.
+%           \end{itemize}
+%     \item \textbf{Model-based methods:}
+%           \begin{itemize}
+%               \item Dyna-Q and Dyna-Q+ (planning-based approaches) ;
+%               \item MB-MARL (Model-Based MARL variants).
+%           \end{itemize}
+% \end{itemize}
+
+% This extensive support ensures that CybMASDE can accommodate different MARL paradigms, including \textbf{Centralized Training with Decentralized Execution} (CTDE), fully decentralized learning, and explicit coordination mechanisms. Users can easily compare different MARL strategies to determine the most suitable algorithm for a given MAS scenario.
+
+% \paragraph{Environment simulation and hyperparameter optimization}
+% CybMASDE incorporates \textbf{TensorFlow} to enable automated environment modeling, allowing users to generate and refine environment models via deep learning-based function approximation. This is particularly useful for cases where the environment's transition dynamics are unknown or difficult to model manually. The system supports \textbf{world-model-based learning}, where agents are trained using a learned simulation of the environment, reducing dependence on real-world interaction data.
+
+% Additionally, CybMASDE provides \textbf{Hyper-Parameter Optimization (HPO)}, allowing users to fine-tune crucial training parameters such as:
+% \begin{itemize}
+%     \item \textbf{Learning rate schedules:} Control how quickly the learning algorithm updates its parameters. Adaptive or decaying schedules can help improve convergence stability and performance over time.
+%     \item \textbf{Discount factor} ($\gamma$): Determines the agent's preference between short-term and long-term rewards. A lower $\gamma$ encourages myopic behavior (favoring immediate rewards), whereas a higher $\gamma$ promotes planning for delayed gains.
+%     \item \textbf{Exploration-exploitation balance:} Typically managed via $\epsilon$-greedy or entropy-based strategies. It regulates the trade-off between discovering new behaviors (exploration) and exploiting current knowledge (exploitation).
+%     \item \textbf{Policy gradient update parameters:} Include settings like the PPO clipping factor, which prevents excessively large updates to the policy. This helps maintain training stability and avoid policy collapse.
+%     \item \textbf{Reward shaping configurations:} Involves adding auxiliary rewards to guide learning more effectively. Proper shaping can accelerate convergence by making useful intermediate states more attractive.
+% \end{itemize}
+
+
+% This feature ensures that trained policies are not only effective but also stable across different environments and organizational constraints.
+
+% \paragraph{User interface and deployment capabilities}
+% CybMASDE provides:
+% \begin{itemize}
+%     \item A \textbf{full-featured API} for advanced users, enabling fine-grained control over environment configurations, learning parameters, and agent interactions ;
+%     \item A \textbf{graphical user interface (GUI)} for simplified access to key functionalities, allowing non-experts to configure and launch MARL training sessions with minimal setup ;
+%     \item \textbf{Support for multi-environment benchmarking}, where multiple training runs can be executed in parallel, enabling systematic comparison of different MARL methods ;
+%     \item \textbf{Automated policy deployment}, where trained agents can be directly transferred to real or simulated environments for validation and real-world execution.
+% \end{itemize}
 
 
 \subsection{Computing resources}
@@ -1535,47 +1301,46 @@ To ensure that MAMAD produces meaningful and interpretable organizational specif
 
 If inferred roles and missions remain stable across training runs and align with expectations, this validates MAMAD's ability to structure MAS designs.
 
-\subsubsection{Ablation studies and robustness evaluation}
-To evaluate the impact of MAMAD's automated components, we conduct ablation studies by selectively disabling key components~\label{sec:experimental_setup_ablations}:
-\begin{itemize}
-    \item \textbf{Without Automated Modeling (WAM)}: Manual environment models were used instead of neural world models ;
-    \item \textbf{Without Organizational Constraints (WOC)}: No MOISE+MARL specifications were provided during training ;
-    \item \textbf{Without Trajectory-Based Analysis (WTA)}: No trajectory-based organizational extraction; policies were directly deployed post-training.
-\end{itemize}
+% \subsubsection{Ablation studies and robustness evaluation}
+% To evaluate the impact of MAMAD's automated components, we conduct ablation studies by selectively disabling key components~\label{sec:experimental_setup_ablations}:
+% \begin{itemize}
+%     \item \textbf{Without Automated Modeling (WAM)}: Manual environment models were used instead of neural world models ;
+%     \item \textbf{Without Organizational Constraints (WOC)}: No MOISE+MARL specifications were provided during training ;
+%     \item \textbf{Without Trajectory-Based Analysis (WTA)}: No trajectory-based organizational extraction; policies were directly deployed post-training.
+% \end{itemize}
 
-Each ablation scenario is tested in at least two environments, with performance compared to the full MAMAD pipeline.
+% Each ablation scenario is tested in at least two environments, with performance compared to the full MAMAD pipeline.
 
-\subsubsection{Summary of validation strategy}
 
-\begin{table}[h!]
-    \centering
-    \renewcommand{\arraystretch}{1.3}
-    \begin{footnotesize}
-        \begin{tabular}{p{1.5cm}p{2.4cm}p{2.2cm}p{4.5cm}}
-            \hline
-            \textbf{Criterion} & \textbf{Metric}       & \textbf{Validation Method}   & \textbf{Potential Bias or Limitation}            \\
-            \hline
-            \multirow{3}{*}{Automation}
-                               & $T_{design}$ (Performance per design time)   & Experiment logs + MAS performance & May depend on subjective time estimation granularity \\
-                               & $K_{design}$ (Injected knowledge quantity)   & Code lines of role/goal specs    & Approximate proxy for knowledge complexity \\
-                               & $N_{iter}$ (Iterations to convergence)       & Training curves                  & Influenced by initial HPO space \\
-            \hline
-            \multirow{4}{*}{Efficiency}
-                               & $R_{cum}$ (Cumulative reward)   & Score tracking     & Task-specific reward shaping may bias \\
-                               & $\sigma_R$ (Policy stability)   & Reward variance     & Sensitive to stochasticity \\
-                               & $CR$ (Convergence rate)         & Convergence analysis & Hyperparameter-sensitive \\
-                               & $R_{robust}$ (Robustness score) & Perturbation tests  & Depends on perturbation type \\
-            \hline
-            \multirow{3}{*}{\shortstack{Compliance \& \\ Explainability}}
-                               & $V_c$ (Constraint violation rate) & Rule checking      & May miss implicit violations \\
-                               & $F_{org}$ (Organizational fit)    & Role/goal alignment analysis & Relies on cluster assumptions \\
-                               & $S_{cons}$ (Consistency score)    & Role recovery analysis & Sensitive to clustering granularity \\
-            \hline
-        \end{tabular}
-        \caption{Validation strategy with evaluation criteria, metrics, methods, and limitations.}
-        \label{tab:validation_strategy}
-    \end{footnotesize}
-\end{table}
+% \begin{table}[h!]
+%     \centering
+%     \renewcommand{\arraystretch}{1.3}
+%     \begin{footnotesize}
+%         \begin{tabular}{p{1.5cm}p{2.4cm}p{2.2cm}p{4.5cm}}
+%             \hline
+%             \textbf{Criterion} & \textbf{Metric}       & \textbf{Validation Method}   & \textbf{Potential Bias or Limitation}            \\
+%             \hline
+%             \multirow{3}{*}{Automation}
+%                                & $T_{design}$ (Performance per design time)   & Experiment logs + MAS performance & May depend on subjective time estimation granularity \\
+%                                & $K_{design}$ (Injected knowledge quantity)   & Code lines of role/goal specs    & Approximate proxy for knowledge complexity \\
+%                                & $N_{iter}$ (Iterations to convergence)       & Training curves                  & Influenced by initial HPO space \\
+%             \hline
+%             \multirow{4}{*}{Efficiency}
+%                                & $R_{cum}$ (Cumulative reward)   & Score tracking     & Task-specific reward shaping may bias \\
+%                                & $\sigma_R$ (Policy stability)   & Reward variance     & Sensitive to stochasticity \\
+%                                & $CR$ (Convergence rate)         & Convergence analysis & Hyperparameter-sensitive \\
+%                                & $R_{robust}$ (Robustness score) & Perturbation tests  & Depends on perturbation type \\
+%             \hline
+%             \multirow{3}{*}{\shortstack{Compliance \& \\ Explainability}}
+%                                & $V_c$ (Constraint violation rate) & Rule checking      & May miss implicit violations \\
+%                                & $F_{org}$ (Organizational fit)    & Role/goal alignment analysis & Relies on cluster assumptions \\
+%                                & $S_{cons}$ (Consistency score)    & Role recovery analysis & Sensitive to clustering granularity \\
+%             \hline
+%         \end{tabular}
+%         \caption{Validation strategy with evaluation criteria, metrics, methods, and limitations.}
+%         \label{tab:validation_strategy}
+%     \end{footnotesize}
+% \end{table}
 
 
 \section{Results and Discussion} \label{sec:results}
@@ -1713,56 +1478,56 @@ Finally, we evaluate design automation using:
 While RB has minimal knowledge injection, it lacks any organizational control. OB requires large expert effort ($K_{design}$) and longer design cycles. MAMAD significantly reduces manual specification while automatically discovering relevant organizational structures in only a few iterations.
 
 
-\subsection{Ablation Studies and Component Impact}
+% \subsection{Ablation Studies and Component Impact}
 
-To assess the relative contribution of MAMAD's core components, we conducted ablation studies across the four test environments, systematically disabling key automation modules (as stated in \autoref{sec:experimental_setup_ablations}).
-The ablations were compared against the full MAMAD pipeline (denoted \textbf{FULL}).
+% To assess the relative contribution of MAMAD's core components, we conducted ablation studies across the four test environments, systematically disabling key automation modules (as stated in \autoref{sec:experimental_setup_ablations}).
+% The ablations were compared against the full MAMAD pipeline (denoted \textbf{FULL}).
 
-We report the combined compliance and efficiency impact using $F_{org}$ (organizational fit), $R_{cum}$ (cumulative reward), and $T_{design}$ (design time in days), as representative global indicators.
+% We report the combined compliance and efficiency impact using $F_{org}$ (organizational fit), $R_{cum}$ (cumulative reward), and $T_{design}$ (design time in days), as representative global indicators.
 
-\begin{table}[h!]
-    \centering
-    \caption{Ablation study results across environments}
-    \begin{tabular}{l|c|ccc}
-        \hline
-        \textbf{Environment} & \textbf{Mode} & $F_{org}$ & $R_{cum}$ & $T_{design}$ \\
-        \hline
-        \multirow{4}{*}{Overcooked-AI}
-        & FULL & 95\% & 95\% & 1.5 \\
-        & WAM & 93\% & 90\% & 3.0 \\
-        & WOC & 80\% & 85\% & 1.5 \\
-        & WTA & 92\% & 94\% & 1.5 \\
-        \hline
-        \multirow{4}{*}{Predator-Prey}
-        & FULL & 90\% & 88\% & 1.8 \\
-        & WAM & 87\% & 83\% & 3.5 \\
-        & WOC & 75\% & 80\% & 1.8 \\
-        & WTA & 85\% & 86\% & 1.8 \\
-        \hline
-        \multirow{4}{*}{Warehouse}
-        & FULL & 94\% & 92\% & 2.0 \\
-        & WAM & 91\% & 88\% & 3.8 \\
-        & WOC & 82\% & 83\% & 2.0 \\
-        & WTA & 90\% & 90\% & 2.0 \\
-        \hline
-        \multirow{4}{*}{CyberDefense}
-        & FULL & 87\% & 85\% & 2.5 \\
-        & WAM & 83\% & 80\% & 4.2 \\
-        & WOC & 70\% & 75\% & 2.5 \\
-        & WTA & 85\% & 84\% & 2.5 \\
-        \hline
-    \end{tabular}
-    \label{tab:ablation}
-\end{table}
+% \begin{table}[h!]
+%     \centering
+%     \caption{Ablation study results across environments}
+%     \begin{tabular}{l|c|ccc}
+%         \hline
+%         \textbf{Environment} & \textbf{Mode} & $F_{org}$ & $R_{cum}$ & $T_{design}$ \\
+%         \hline
+%         \multirow{4}{*}{Overcooked-AI}
+%         & FULL & 95\% & 95\% & 1.5 \\
+%         & WAM & 93\% & 90\% & 3.0 \\
+%         & WOC & 80\% & 85\% & 1.5 \\
+%         & WTA & 92\% & 94\% & 1.5 \\
+%         \hline
+%         \multirow{4}{*}{Predator-Prey}
+%         & FULL & 90\% & 88\% & 1.8 \\
+%         & WAM & 87\% & 83\% & 3.5 \\
+%         & WOC & 75\% & 80\% & 1.8 \\
+%         & WTA & 85\% & 86\% & 1.8 \\
+%         \hline
+%         \multirow{4}{*}{Warehouse}
+%         & FULL & 94\% & 92\% & 2.0 \\
+%         & WAM & 91\% & 88\% & 3.8 \\
+%         & WOC & 82\% & 83\% & 2.0 \\
+%         & WTA & 90\% & 90\% & 2.0 \\
+%         \hline
+%         \multirow{4}{*}{CyberDefense}
+%         & FULL & 87\% & 85\% & 2.5 \\
+%         & WAM & 83\% & 80\% & 4.2 \\
+%         & WOC & 70\% & 75\% & 2.5 \\
+%         & WTA & 85\% & 84\% & 2.5 \\
+%         \hline
+%     \end{tabular}
+%     \label{tab:ablation}
+% \end{table}
 
-\textbf{Automated Modeling (WAM)}: Disabling the world model leads to longer design times ($T_{design}$ increases), as manual modeling is time-consuming. While performance ($R_{cum}$) and organizational fit ($F_{org}$) remain acceptable, degradation is observable, particularly in dynamic environments like CyberDefense.
+% \textbf{Automated Modeling (WAM)}: Disabling the world model leads to longer design times ($T_{design}$ increases), as manual modeling is time-consuming. While performance ($R_{cum}$) and organizational fit ($F_{org}$) remain acceptable, degradation is observable, particularly in dynamic environments like CyberDefense.
 
-\textbf{Organizational Constraints (WOC)}: Removing organizational guidance has the strongest impact on $F_{org}$ and slightly reduces task performance, as agents converge toward less structured but effective policies. The drop in organizational fit confirms the importance of MOISE+MARL guidance.
+% \textbf{Organizational Constraints (WOC)}: Removing organizational guidance has the strongest impact on $F_{org}$ and slightly reduces task performance, as agents converge toward less structured but effective policies. The drop in organizational fit confirms the importance of MOISE+MARL guidance.
 
-\textbf{Trajectory-Based Analysis (WTA)}: Skipping trajectory-based role/goal inference results in moderately lower $F_{org}$ but still maintains most of the learned behaviors. However, the absence of explicit post-hoc explainability limits model interpretability.
+% \textbf{Trajectory-Based Analysis (WTA)}: Skipping trajectory-based role/goal inference results in moderately lower $F_{org}$ but still maintains most of the learned behaviors. However, the absence of explicit post-hoc explainability limits model interpretability.
 
 
-Overall, these ablation studies confirm that all three components contribute to both performance and explainability, with organizational constraints being the most critical for role consistency.
+% Overall, these ablation studies confirm that all three components contribute to both performance and explainability, with organizational constraints being the most critical for role consistency.
 
 
 \section{Conclusion and perspectives}\label{sec:conclusion}
