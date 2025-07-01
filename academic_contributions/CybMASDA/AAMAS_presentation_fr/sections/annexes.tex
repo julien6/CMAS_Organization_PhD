@@ -1,119 +1,4 @@
-\begin{frame}{Appendix}{Challenges in Defining Constraint Guides (RAG, RRG, GRG)}
-
-\textbf{Problem:} Defining constraint guides in MARL is challenging in practice.
-
-\begin{itemize}
-  \item A full specification "by extension" is impractical:
-    \begin{itemize}
-      \item Enumerating all possible observation or history cases is intractable.
-      \item Maintaining and updating such rules does not scale.
-    \end{itemize}
-
-  \item \textbf{We propose two intensional strategies to define constraint guides:}
-  \begin{enumerate}
-    \item \textbf{Custom logic scripting:} Users define Python functions (per role/goal) that take in trajectory and observation to return:
-    \begin{itemize}
-      \item RAG: allowed actions with hardness weights
-      \item RRG: reward penalties/bonuses for specific actions
-      \item GRG: reward shaping based on trajectory features
-    \end{itemize}
-    \item \textbf{Trajectory Patterns (TPs):} Compact, declarative patterns inspired by NLP to match a set of trajectories to represent a behavior.
-  \end{enumerate}
-\end{itemize}
-
-\end{frame}
-
-%==================================================
-
-\begin{frame}{Appendix}{Solution 1: Constraint Guides via Custom Scripting}
-
-\textbf{Principle:} Define a function per role/goal that analyzes trajectory and current observation.
-
-\vspace{0.5em}
-\textbf{Example (Overcooked-AI)}:
-
-\begin{itemize}
-  \item \textbf{Role: Primary cook}
-  \item \textbf{Observation:} Agent is holding a dish, a pot is ready, no wall ahead
-  \item \textbf{Trajectory:} Previously picked onion, then chopped
-\end{itemize}
-
-\textbf{Script outputs:}
-
-\begin{itemize}
-  \item \textbf{RAG:} \{`interact' $\rightarrow$ 1.0, `nothing' $\rightarrow$ 0.2\}
-  \item \textbf{RRG:} +2 bonus if `interact' is used near ready pot
-  \item \textbf{GRG:} +1 if trajectory ends with delivery of soup
-\end{itemize}
-
-\textbf{Advantage:} Custom logic can consider spatial layout, previous steps, object held, etc.
-
-\end{frame}
-
-%==================================================
-
-\begin{frame}{Appendix}{Solution 2: Constraint Guides via Trajectory Patterns (TPs)}
-
-\textbf{Principle:} Define reusable and human-readable trajectory patterns to match agent behavior.
-
-\vspace{0.5em}
-\textbf{Format:} TP = pattern transitions as \textbf{\textit{[obs, act | sub\_TP]($n_{min}$, $n_{max}$)}}
-
-\textbf{Example (Overcooked-AI):}
-
-\begin{itemize}
-  \item \textbf{Pattern:} \\ \textit{[`see\_onion`, `interact`, [\#any](*),`see\_chopped`, `interact`, [\#any](*), `see\_pot`, `interact`](1,1)}
-  \item \textbf{TP Match:} Agent has filled pot with chopped onion
-  \item \textbf{Current Observation:} \texttt{see\_ready\_pot}
-\end{itemize}
-
-\textbf{Then:}
-\begin{itemize}
-  \item \textbf{RAG:} Only allow `interact`
-  \item \textbf{RRG:} +3 bonus for `interact` now
-  \item \textbf{GRG:} Encourage reaching delivery window afterward
-\end{itemize}
-
-\textbf{Benefits:}
-\begin{itemize}
-  \item Easier to define symbolic patterns across different environments
-  \item Compact encoding of temporally extended behavior
-  \item TPs can be reused across agents and roles
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}{Appendix}{Software and hardware configuration}
-
-  \begin{block}{MMA – MOISE+MARL API}
-    \begin{itemize}
-      \item Python API integrating:
-            \begin{itemize}
-              \item \textbf{PettingZoo} (multi-agent environments)
-              \item \textbf{MARLlib} (training library for MARL algorithms)
-            \end{itemize}
-      \item Features:
-            \begin{itemize}
-              \item Role and goal specifications (via JSON or Python)
-              \item Action masking and reward shaping during learning
-              \item Support for all major MARL paradigms: MADDPG, MAPPO, Q-Mix, COMA\dots
-            \end{itemize}
-    \end{itemize}
-  \end{block}
-
-  \vspace{0.5em}
-
-  \begin{block}{Computing Resources and Protocol}
-    \begin{itemize}
-      \item Run on HPC cluster: NVIDIA A100/V100 and AMD MI210 GPUs
-      \item 5 parallel runs per env/algorithm combination
-      \item Hyperparameters from MARLlib or optimized via \textbf{Optuna}~\autocite{akiba2019optuna}
-    \end{itemize}
-  \end{block}
-
-\end{frame}
-
-\begin{frame}{Appendix}{The $\mathcal{M}OISE^+$ Framework (2/2)}
+\begin{frame}{Annexe}{Le cadre $\mathcal{M}OISE^+$ (2/2)}
 
     \vspace{-2.5ex}
 
@@ -123,7 +8,7 @@
             \centering
             \begin{figure}[H]
                 \includegraphics[width=0.7\textwidth]{figures/soccer_ss.png}
-                \caption*{Structural Specifications}
+                \caption*{Spécifications structurelles}
             \end{figure}
         \end{column}
         \hspace{-20ex}
@@ -132,7 +17,7 @@
             \begin{figure}[H]
                 \centering
                 \includegraphics[width=1.2\textwidth]{figures/soccer_fs.png}
-                \caption*{Functional Specifications}
+                \caption*{Spécifications fonctionnelles}
             \end{figure}
         \end{column}
     \end{columns}
@@ -144,162 +29,150 @@
         \begin{figure}[H]
             \centering
             \includegraphics[width=0.4\linewidth]{figures/soccer_ds.png}
-            \caption*{Deontic Specifications}
+            \caption*{Spécifications déontiques}
         \end{figure}
     \end{minipage}
 
 \end{frame}
 
-\begin{frame}{Appendix}{Q: Do organizational constraints harm exploration?}
+\begin{frame}{Annexe}{Q : Les contraintes organisationnelles nuisent-elles à l'exploration ?}
     \begin{itemize}
-        \item \textbf{Not necessarily.} Constraints can actually \textit{guide exploration} more effectively by pruning unpromising behaviors.
-        \item The hardness parameter allows tuning how strictly agents follow roles/goals.
-        \item With soft constraints, agents retain exploration capabilities while being nudged toward structured behaviors.
+        \item \textbf{Pas nécessairement.} Les contraintes peuvent en réalité \textit{guider l'exploration} de manière plus efficace en élaguant les comportements non prometteurs.
+        \item Le paramètre de difficulté (hardness) permet d’ajuster la rigueur avec laquelle les agents suivent les rôles/objectifs.
+        \item Avec des contraintes souples, les agents conservent leur capacité d'exploration tout en étant orientés vers des comportements structurés.
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Appendix}{Q: How is MOISE+MARL different from Hierarchical RL?}
+\begin{frame}{Annexe}{Q : En quoi MOISE+MARL est-il différent du RL hiérarchique ?}
     \begin{itemize}
-        \item HRL decomposes tasks internally via learned hierarchies.
-        \item MOISE+MARL imposes external \textbf{organizational roles and missions} as behavioral constraints.
-        \item Roles are \textit{interpretable, configurable, and decoupled from the agent architecture}.
+        \item Le RL hiérarchique décompose les tâches de manière interne via des hiérarchies apprises.
+        \item MOISE+MARL impose des \textbf{rôles et missions organisationnels externes} comme contraintes comportementales.
+        \item Les rôles sont \textit{interprétables, configurables et découplés de l’architecture de l’agent}.
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Appendix}{Q: Does your framework scale with many agents? What about policy plasticity?}
+\begin{frame}{Annexe}{Q : Votre cadre passe-t-il à l’échelle avec de nombreux agents ? Et la plasticité des politiques ?}
     \begin{itemize}
-        \item Scalability: Roles can be \textbf{abstract} and applied to groups of agents (e.g., “defender”, “collector”).
-        \item Plasticity: Constraint strength is tunable. Soft constraints preserve policy adaptability.
-        \item Trade-off: Strong constraints yield stability, soft ones allow flexibility.
+        \item Scalabilité : les rôles peuvent être \textbf{abstraits} et appliqués à des groupes d’agents (ex. “défenseur”, “collecteur”).
+        \item Plasticité : la force des contraintes est ajustable. Les contraintes souples préservent l’adaptabilité des politiques.
+        \item Compromis : des contraintes fortes apportent de la stabilité, les contraintes souples offrent de la flexibilité.
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Appendix}{Q: How does MOISE+MARL handle partial observability?}
+\begin{frame}{Annexe}{Q : Comment MOISE+MARL gère-t-il la partialité d’observation ?}
     \begin{itemize}
-        \item Built on the Dec-POMDP formalism: partial observability is natively supported.
-        \item Constraints apply to agents' \textbf{observed trajectories}—not full states.
-        \item No need for global knowledge or central control.
+        \item Basé sur le formalisme Dec-POMDP : la partialité d’observation est gérée nativement.
+        \item Les contraintes s’appliquent aux \textbf{trajectoires observées} des agents — et non aux états globaux.
+        \item Aucun besoin de connaissance globale ou de contrôle centralisé.
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Appendix}{Q: Is the TEMM method computationally heavy? Can it generalize?}
+\begin{frame}{Annexe}{Q : La méthode TEMM est-elle coûteuse ? Peut-elle généraliser ?}
     \begin{itemize}
-        \item TEMM is applied post-training. It uses clustering (K-means, hierarchical) and can be parallelized.
-        \item It supports any environment with labeled trajectories and does not depend on the training algorithm.
-        \item Currently offline only; real-time extensions are under consideration.
+        \item TEMM est appliquée après l'entraînement. Elle utilise du clustering (K-means, hiérarchique) et peut être parallélisée.
+        \item Elle s’applique à tout environnement avec des trajectoires étiquetées, et ne dépend pas de l’algorithme d’apprentissage.
+        \item Actuellement hors-ligne uniquement ; des extensions temps réel sont à l’étude.
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Appendix}{Q: How do you evaluate the impact of organizational constraints?}
+\begin{frame}{Annexe}{Q : Comment évaluez-vous l’impact des contraintes organisationnelles ?}
     \begin{itemize}
-        \item We compare a Reference Baseline (no constraints) and a Constrained Baseline (MOISE+MARL).
-        \item Metrics: Cumulative Reward, Convergence Rate, Org. Fit, Consistency, Robustness, Violation Rate.
-        \item MOISE+MARL consistently improves organizational fit and stability across all environments tested.
+        \item Nous comparons une référence de base (sans contraintes) à une base contrainte (MOISE+MARL).
+        \item Métriques : Récompense Cumulative, Taux de Convergence, Ajustement Organisationnel, Cohérence, Robustesse, Taux de Violation.
+        \item MOISE+MARL améliore systématiquement l’ajustement organisationnel et la stabilité dans tous les environnements testés.
     \end{itemize}
 \end{frame}
 
 % ===============
+\begin{frame}{Annexe}
+    {Contexte}
 
-\begin{frame}{Appendix}
-    {Context}
-
-    \begin{block}{Multi-Agent Systems (MAS) paradigm for complex \& distributed problems}
+    \begin{block}{Paradigme des Systèmes Multi-Agents (SMA) pour des problèmes complexes et distribués}
         \begin{itemize}
-            \item \textbf{task decomposition}: missions delegated to agents achieved through cooperation~\parencite{Raileanu2023};
-            \item \textbf{benefits}: handle conflicting goals, parallel computation, system robustness, scalability\dots
+            \item \textbf{décomposition de tâches} : missions déléguées, coopération~\parencite{Raileanu2023} ;
+            \item \textbf{avantages} : gestion d’objectifs, calcul parallèle, robustesse, passage à l’échelle\dots
         \end{itemize}
     \end{block}
 
-    \begin{block}{\textbf{Organization}: key for MAS designing}
+    \begin{block}{\textbf{Organisation} : élément clé dans la conception des SMA}
         \begin{itemize}
-            \item \textbf{coordination}: how to collaboratively achieve a common goal~\parencite{Hubner2007};
-            \item \textbf{dynamic \& uncertain environments}: flexible runtime behavior to adapt~\parencite{Kathleen2020};
+            \item \textbf{coordination} : atteindre objectif collaborativement~\parencite{Hubner2007} ;
+            \item \textbf{environnements dynamiques et incertains} : flexibilité, adaptation~\parencite{Kathleen2020} ;
         \end{itemize}
     \end{block}
 
-    \begin{block}{Methods and practice for MAS design}
+    \begin{block}{Méthodes et pratiques pour la conception de SMA}
         \begin{itemize}
-            \item \textbf{approach + organizational model}: methods rely on designers' experience to hand-craft agents' \textbf{policies} so resulting MAS achieve goals;
-                  %   \begin{itemize}
-                  %       \item Examples: \emph{GAIA}~\parencite{Wooldridge2000,Cernuzzi2014}, \emph{ADELFE}~\parencite{Mefteh2015}, or \emph{DIAMOND}~\parencite{Jamont2015}, \emph{KB-ORG}~\parencite{Sims2008}
-                  %   \end{itemize}
-            \item \textbf{simulation to reality}: 1) safe \& efficient MAS design in high fidelity simulated environment; \quad 2) transfer to real environment to perform adequately~\parencite{Schon2021}.
+            \item \textbf{approche + modèle organisationnel} : méthodes reposent sur expérience des concepteurs pour créer manuellement \textbf{politiques} afin que le SMA atteigne ses objectifs ;
+            \item \textbf{de la simulation à la réalité} : 1) conception sûre et efficace dans un environnement simulé fidèle ; \quad 2) transfert vers l’environnement réel~\parencite{Schon2021}.
         \end{itemize}
-        \quad $\Longrightarrow$ \textbf{Iterative process proceeding by trial and error}
-
+        \quad $\Longrightarrow$ \textbf{Processus itératif basé sur essais et erreurs}
     \end{block}
 
 \end{frame}
 
-\begin{frame}{Appendix}{CAGE Challenge 3}
+\begin{frame}{Annexe}{CAGE Challenge 3}
     \begin{figure}
         \includegraphics[width=0.9\linewidth]{figures/cage_challenge_3.png}
-        \caption*{Florin forces patrolling the Guilder border with troops that communicate via an ad-hoc network provided by aerial drones. Here, Guilder has successfully corrupted two drones within this network and can thus intercept, or alter, some of the messages being communicated.}
+        \caption*{Les forces de Florin patrouillent à la frontière avec Guilder, en utilisant un réseau ad hoc fourni par des drones aériens. Ici, Guilder a réussi à corrompre deux drones de ce réseau et peut ainsi intercepter ou modifier une partie des messages échangés.}
     \end{figure}
 \end{frame}
 
-\begin{frame}{Appendix}{Prey-predator}
+\begin{frame}{Annexe}{Prédateur-proie}
     \begin{figure}
         \includegraphics[width=0.5\linewidth]{figures/mpe_simple_world_comm.png}
     \end{figure}
 \end{frame}
 
-\begin{frame}{Appendix}{Knight, archers, zombies}
-    \begin{figure}
-        \includegraphics[width=0.8\linewidth]{figures/butterfly_knights_archers_zombies.png}
-    \end{figure}
-\end{frame}
+\begin{frame}{Annexe}
+    {Notions de base sur les SMA}
 
-\begin{frame}{Appendix}
-    {MAS basics}
-
-    \begin{block}{Keywords}
+    \begin{block}{Mots-clés}
         \begin{itemize}
-            \item \textbf{Agent}: entity immersed in an environment perceiving observation and making decision autonomously to achieve some goals;
-            \item \textbf{MAS}: a set of agents collaborating with self/re-organizing mechanisms to achieve their goal;
-            \item \textbf{Organization}: the agents' interactions even though it may be implicit;
-            \item \textbf{Organizational Model (OM)}: medium to formally describe an explicit/implicit organization;
-            \item \textbf{Organizational Specifications (OS)}: components of an OM to characterize an organization
+            \item \textbf{Agent} : entité immergée dans un environnement, percevant des observations et prenant des décisions de manière autonome pour atteindre des objectifs ;
+            \item \textbf{SMA} : ensemble d’agents collaborant avec des mécanismes d’auto-(ré)organisation pour atteindre leurs objectifs ;
+            \item \textbf{Organisation} : interactions entre agents, explicites ou implicites ;
+            \item \textbf{Modèle Organisationnel (MO)} : support pour décrire formellement une organisation explicite ou implicite ;
+            \item \textbf{Spécifications Organisationnelles (OS)} : composants d’un MO servant à caractériser une organisation.
         \end{itemize}
     \end{block}
 
-    \begin{block}{Organizational model: $\mathcal{M}OISE^+$}
+    \begin{block}{Modèle organisationnel : $\mathcal{M}OISE^+$}
         \begin{itemize}
-            \item more complex than \emph{Agent Group Roles} (integration of standards);
-            \item takes into account the social aspects between agents explicitly;
-            \item possible to link agents' policies to organizational specifications.
+            \item plus complexe que \emph{Agent Group Roles} (intégration de standards) ;
+            \item prend explicitement en compte les aspects sociaux entre agents ;
+            \item permet de relier les politiques des agents aux spécifications organisationnelles.
         \end{itemize}
     \end{block}
 
 \end{frame}
+\begin{frame}{Annexe}
+    {Notions de base en MARL}
 
-\begin{frame}{Appendix}
-    {MARL basics}
-
-    \begin{block}{Keywords}
+    \begin{block}{Mots-clés}
         \begin{itemize}
-            \item \textbf{Policy}: the \textquote{logic} to choose next action according to observation for an agent;
-            \item \textbf{History/trajectory}: the tuple of (observation, action) couples over an episode;
-            \item \textbf{Joint-policy / Joint-history}: all of the agents' policies / histories as tuples;
-            \item \textbf{Reinforcement learning}: an agent updates its policy to maximize a cumulative reward;
-            \item \textbf{Multi-Agent Reinforcement Learning (MARL)}: extends to multiple agents that learn while considering the actions of other agents;
+            \item \textbf{Politique} : la « logique » utilisée par un agent pour choisir la prochaine action en fonction de son observation ;
+            \item \textbf{Historique/trajectoire} : la suite des couples (observation, action) au cours d’un épisode ;
+            \item \textbf{Politique conjointe / Historique conjoint} : l’ensemble des politiques / historiques de tous les agents ;
+            \item \textbf{Apprentissage par renforcement} : un agent met à jour sa politique pour maximiser une récompense cumulative ;
+            \item \textbf{Apprentissage par renforcement multi-agent (MARL)} : extension à plusieurs agents apprenant en tenant compte des actions des autres.
         \end{itemize}
     \end{block}
 
 \end{frame}
 
-\begin{frame}{Appendix}{AOMEA approach: Overview}
+\begin{frame}{Annexe}{Méthode MAMAD : Vue d’ensemble}
 
     \begin{columns}
 
         \begin{column}{0.6\textwidth}
 
-            \textbf{Phase 1: Modeling}
+            \textbf{Phase 1 : Modélisation}
 
             \begin{itemize}
-                \item Manually develop a simulated environment ($1.1$) where agents must cooperate to achieve goal ($1.2$);
-                \item Can define expected roles behavior as histories;
-                \item May constraint agents to roles ($1.3$).
+                \item Développer manuellement un environnement simulé ($1.1$) dans lequel les agents doivent coopérer pour atteindre un objectif ($1.2$) ;
+                \item Possibilité de définir les comportements attendus des rôles comme des historiques ;
+                \item Possibilité de contraindre les agents à certains rôles ($1.3$).
             \end{itemize}
 
         \end{column}
@@ -316,18 +189,18 @@
 \end{frame}
 
 
-\begin{frame}{Appendix}{AOMEA approach: Overview}
+\begin{frame}{Annexe}{Méthode MAMAD : Vue d’ensemble}
 
     \begin{columns}
 
         \begin{column}{0.6\textwidth}
 
-            \textbf{Phase 2: Solving}
+            \textbf{Phase 2 : Résolution}
 
             \begin{itemize}
-                \item Organization-oriented MARL (OMARL) algorithm: MARL process augmented with Organizational model;
-                \item Solve satisfying constrained roles' histories ($2.1$);
-                \item Gets associated OS ($2.2$)
+                \item Algorithme OMARL (Organisation-oriented MARL) : processus MARL enrichi par un modèle organisationnel ;
+                \item Apprentissage visant à satisfaire les historiques contraints des rôles ($2.1$) ;
+                \item Obtention de spécifications organisationnelles associées ($2.2$).
             \end{itemize}
 
         \end{column}
@@ -341,23 +214,21 @@
 
     \end{columns}
 
-
 \end{frame}
 
-\begin{frame}{Appendix}{AOMEA approach: Overview}
+\begin{frame}{Annexe}{Méthode MAMAD : Vue d’ensemble}
 
     \begin{columns}
 
         \begin{column}{0.6\textwidth}
 
-            \textbf{Phase 3: Analyzing}
+            \textbf{Phase 3 : Analyse}
 
             \begin{itemize}
-                \item Designers observe the trained agents' policies ($3.2$);
-                \item Designers observe the computed OS ($3.1$): understand how they reach the goal;
-                \item Designers get some design indications for a MAS to achieve the goal: curated OS ($3.3$).
+                \item Les concepteurs observent les politiques apprises des agents ($3.2$) ;
+                \item Ils examinent les spécifications organisationnelles calculées ($3.1$) pour comprendre comment les agents atteignent l’objectif ;
+                \item Ils obtiennent des indications pour concevoir un SMA opérationnel : spécifications organisationnelles sélectionnées ($3.3$).
             \end{itemize}
-
 
         \end{column}
 
@@ -372,18 +243,18 @@
 
 \end{frame}
 
-\begin{frame}{Appendix}{AOMEA approach: Overview}
+\begin{frame}{Annexe}{Méthode MAMAD : Vue d’ensemble}
 
     \begin{columns}
 
         \begin{column}{0.6\textwidth}
 
-            \textbf{Phase 4: Developing}
+            \textbf{Phase 4 : Déploiement / Développement}
 
             \begin{itemize}
-                \item Designers observe the curated OS for implementing a MAS;
-                \item Regular MAS development hence addressing safety issues;
-                \item Implemented MAS assessed in simulations.
+                \item Les concepteurs utilisent les spécifications sélectionnées pour implémenter un SMA ;
+                \item Développement d’un SMA classique avec prise en compte des questions de sûreté ;
+                \item Le SMA est évalué par simulation.
             \end{itemize}
 
         \end{column}
@@ -400,68 +271,7 @@
 \end{frame}
 
 
-
-\begin{frame}{Appendix}{AOMEA approach: Theoretical core}
-
-    \begin{block}{Organization-oriented MARL (OMARL)}
-        An MARL process augmented with an OM for:
-        \begin{itemize}
-            \item \textbf{Constraining Policies Space}: gets the joint-policies satisfying the given design specifications;
-            \item \textbf{Inferring Organizational Specifications}: gets the specifications from the agents' policies.
-        \end{itemize}
-
-    \end{block}
-
-    \begin{block}{\emph{Partial Relations with Agent History and Organization Model} algorithm (PRAHOM)}
-        Implementing an OMARL process\dots
-        \begin{enumerate}
-            \item \textbf{Constraining Policies Space}
-                  \begin{itemize}
-                      \item Cannot use policies directly $\rightarrow$ \textbf{histories} characterizing \textbf{policies};
-                      \item Relations between \textbf{OS} to expected \textbf{histories};
-                      \item Agents constrained to OS $\rightarrow$ at each step: available actions updated regarding \textbf{OS} histories.
-                  \end{itemize}
-
-            \item \textbf{Inferring Organizational Specifications}
-                  \begin{itemize}
-                      \item Analyze histories $\rightarrow$ characterize collective behaviors as OS;
-                      \item Using known relations between OS and histories;
-                      \item Using general OS definition regarding histories.
-                  \end{itemize}
-        \end{enumerate}
-    \end{block}
-\end{frame}
-
-\begin{frame}{Appendix}{AOMEA approach: Theoretical core}
-
-    \textbf{Constraining Policies Space} during training
-
-    \begin{columns}
-
-        \begin{column}{0.3\textwidth}
-
-            \begin{itemize}
-                \item At each step, available actions set is changed to match policy constraints defined by users;
-                \item Constraints integrated through: external correction, learning, internal policy change.
-            \end{itemize}
-
-        \end{column}
-
-        \begin{column}{0.8\textwidth}
-            \begin{figure}
-                \centering
-                \includegraphics[width=0.7\linewidth]{figures/prahom_training_constrain.png}
-                \caption*{A summary view of the PRAHOM constraining}
-                \label{fig:prahom_process}
-            \end{figure}
-        \end{column}
-
-    \end{columns}
-
-\end{frame}
-
-
-\begin{frame}{Appendix}{AOMEA approach: Theoretical core}
+\begin{frame}{Appendix}{Trajectory-based Evaluation in MOISE+MARL}
 
     \textbf{Inferring Organizational Specifications}
 
@@ -488,115 +298,117 @@
     \end{columns}
 
 \end{frame}
-
-
-\begin{frame}{Appendix}{Constrained Reinforcement Learning (Constrained-RL)}
+\begin{frame}{Annexe}{Apprentissage par renforcement contraint (Constrained-RL)}
 
     \begin{itemize}
-        \item Learn a policy that optimizes reward while respecting \textbf{safety} or \textbf{performance} constraints.
+        \item Apprendre une politique qui maximise la récompense tout en respectant des contraintes de \textbf{sûreté} ou de \textbf{performance}.
 
-        \item \textbf{Hard constraints}: must always be respected (e.g., shielding).
-        \item \textbf{Soft constraints}: enforced on average or via penalties.
+        \item \textbf{Contraintes dures} : doivent être toujours respectées (ex. : \textit{Shielding}).
+        \item \textbf{Contraintes souples} : respectées en moyenne ou via des pénalités.
 
-        \item \textbf{Main methods:}
+        \item \textbf{Principales méthodes :}
               \begin{itemize}
-                  \item \textbf{Reward Shaping}: add penalties when constraints are violated.
-                  \item \textbf{Policy Projection}: adjust actions to remain within limits.
-                  \item \textbf{Dual Variables}: use Lagrangian multipliers to manage constraints.
+                  \item \textbf{Modelage de récompense (Reward Shaping)} : ajouter des pénalités lorsque les contraintes sont violées.
+                  \item \textbf{Projection de politique} : ajuster les actions pour rester dans les limites.
+                  \item \textbf{Variables duales} : utiliser des multiplicateurs de Lagrange pour gérer les contraintes.
               \end{itemize}
-
     \end{itemize}
+
 \end{frame}
 
-\begin{frame}{Appendix}{Safe Exploration and Shielding in Reinforcement Learning}
+\begin{frame}{Annexe}{\textit{Safe exploration} et \textit{Shielding} en apprentissage par renforcement}
 
     \begin{itemize}
-        \item \textbf{Safe Exploration} $\rightarrow$ ensure safety during exploration by limiting risky behaviors.
-        \item Mainly by modifying the reward function (e.g., via Lagrangian), but also with:
-        \item \textbf{Shielding}: intervene in real time to block unsafe actions and ensure safe exploration.
+        \item \textbf{\textit{Safe exploration}} $\rightarrow$ garantir la sûreté pendant l'exploration en limitant les comportements risqués.
+        \item Principalement en modifiant la fonction de récompense (ex. : via Lagrangiens), mais aussi grâce à :
+        \item \textbf{\textit{Shielding}} : intervenir en temps réel pour bloquer les actions dangereuses et garantir une \textit{Safe exploration}.
     \end{itemize}
 
-    \textbf{Reference:} \\
+    \textbf{Référence :} \\
     \textit{Akifumi Wachi, Wataru Hashimoto, Xun Shen, \& Kazumune Hashimoto (2023). Safe Exploration in Reinforcement Learning: A Generalized Formulation and Algorithms. In NeurIPS 2023.}
 
 \end{frame}
 
-\begin{frame}[fragile]{Appendix}{Optuna Usage Example}
+\begin{frame}[fragile]{Annexe}{Exemple d’utilisation d’Optuna}
     \begin{itemize}
-        \item \textbf{Optuna} is an open-source library for hyperparameter optimization (HPO), widely used in machine learning.
-        \item Examples of hyperparameters: learning rate, activation function, number of layers, layer sizes, distance threshold for clustering, etc.
-        \item \textbf{Steps to use Optuna:}
+        \item \textbf{Optuna} est une bibliothèque open-source pour l’optimisation des hyperparamètres (HPO), largement utilisée en apprentissage automatique.
+        \item Exemples d’hyperparamètres : taux d’apprentissage, fonction d’activation, nombre de couches, taille des couches, seuil de distance pour le clustering, etc.
+        \item \textbf{Étapes pour utiliser Optuna :}
               \begin{itemize}
-                  \item \texttt{1.} Define an objective function.
-                  \item \texttt{2.} Launch a study with Optuna.
-                  \item \texttt{3.} Use the best result to train the model.
+                  \item \texttt{1.} Définir une fonction objectif.
+                  \item \texttt{2.} Lancer une étude avec Optuna.
+                  \item \texttt{3.} Utiliser le meilleur résultat pour entraîner le modèle.
               \end{itemize}
     \end{itemize}
 
-    \begin{lstlisting}[language=Python, basicstyle=\small\ttfamily, frame=single, caption=Optuna example in Python]
+    \begin{lstlisting}[language=Python, basicstyle=\small\ttfamily, frame=single, caption=Exemple d'utilisation d'Optuna en Python]
 import optuna
 
 def objective(trial):
     x = trial.suggest_float("x", -10, 10)
-    return (x - 2) ** 2  # Mock value function
+    return (x - 2) ** 2  # Fonction fictive
 
 study = optuna.create_study(direction="minimize")
 study.optimize(objective, n_trials=100)
 
-print(study.best_params)  # Display best parameters
+print(study.best_params)  # Affiche les meilleurs parametres
     \end{lstlisting}
 \end{frame}
 
-\begin{frame}{Appendix}{PettingZoo Overview}
+\begin{frame}{Annexe}{Présentation de PettingZoo}
+
     \begin{itemize}
-        \item Python library for multi-agent environments.
-        \item Simplifies training and evaluation of agents in various multi-agent setups.
-        \item \textbf{Main features:}
+        \item Bibliothèque Python pour les environnements multi-agents.
+        \item Facilite l'entraînement et l'évaluation d'agents dans différents contextes multi-agents.
+
+        \item \textbf{Fonctionnalités principales :}
               \begin{itemize}
-                  \item Supports multiple environment types (turn-based, parallel, etc.).
-                  \item Easy integration with RL frameworks like RLlib.
-                  \item Compatible with Gym APIs for intuitive usage.
+                  \item Prise en charge de différents types d’environnements (tour par tour, parallèle, etc.).
+                  \item Intégration facile avec des frameworks RL comme RLlib.
+                  \item Compatible avec les API Gym pour une utilisation intuitive.
               \end{itemize}
-        \item \textbf{Example environments included:}
+
+        \item \textbf{Exemples d’environnements inclus :}
               \begin{itemize}
-                  \item Games: \textit{TicTacToe}, \textit{ConnectFour}
-                  \item Collaboration/competition: \textit{Pistonball}, \textit{Prisoner's Dilemma}
-                  \item Integration with Atari multi-agent suite
+                  \item Jeux : \textit{TicTacToe}, \textit{ConnectFour}
+                  \item Collaboration/compétition : \textit{Pistonball}, \textit{Dilemme du prisonnier}
+                  \item Intégration avec la suite Atari multi-agents
               \end{itemize}
     \end{itemize}
+
 \end{frame}
 
-\begin{frame}[fragile]{Appendix}{PettingZoo Usage Example}
+\begin{frame}[fragile]{Annexe}{Exemple d'utilisation de PettingZoo}
     \begin{itemize}
-        \item Example: Create and interact with an environment.
-        \item Load environment, reset, and interact step-by-step with agents.
+        \item Exemple : créer et interagir avec un environnement.
+        \item Charger l’environnement, le réinitialiser, puis interagir étape par étape avec les agents.
     \end{itemize}
     \vspace{0.3cm}
     \begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
 from pettingzoo.butterfly import pistonball_v6
 
-# Create and reset environment
+# Creation et reinitialisation de l environnement
 env = pistonball_v6.env()
 env.reset()
 
-# Interaction loop
+# Boucle d interaction
 for agent in env.agent_iter():
     obs, reward, done, info = env.last()
-    action = env.action_space(agent).sample()  # Random action
+    action = env.action_space(agent).sample()  # Action aleatoire
     env.step(action)
     if done:
-        env.reset()  # Reset if episode is finished
+        env.reset()  # Reinitialisation si episode termine
     \end{lstlisting}
 \end{frame}
 
-\begin{frame}{Appendix}{KB-Org}
-    \frametitle{Organization-based Multi-Agent Systems: From Modeling to Implementation}
+\begin{frame}{Annexe}{KB-Org}
+    \frametitle{Systèmes multi-agents basés sur l'organisation : de la modélisation à l'implémentation}
 
     \begin{itemize}
-        \item Models and implements organization-based MAS;
-        \item Embeds organizational concepts to structure agent behavior and interactions;
-        \item Provides a repository of ready-to-use organizational templates;
-        \item Aims at improving explainability and coordination.
+        \item Modélise et implémente des SMA basés sur une organisation explicite ;
+        \item Intègre des concepts organisationnels pour structurer les comportements et interactions ;
+        \item Fournit un référentiel de modèles organisationnels prêts à l'emploi ;
+        \item Vise à améliorer l'explicabilité et la coordination.
     \end{itemize}
 
     \vspace{1em}
@@ -604,59 +416,59 @@ for agent in env.agent_iter():
 
 \end{frame}
 
-\begin{frame}{Appendix}{MARLlib Overview}
+\begin{frame}{Annexe}{Présentation de MARLlib}
 
     \begin{itemize}
-        \item Python library for MARL
-        \item Supports various environments: PettingZoo, StarCraft II, MPE, etc.
-        \item Implements multiple MARL algorithms: MADDPG, MAPPO, etc.
-        \item Offers tools for training, evaluation, and algorithm comparison.
-        \item Provides fine-tuned configuration presets for many environments.
+        \item Bibliothèque Python pour l’apprentissage par renforcement multi-agent (MARL) ;
+        \item Supporte plusieurs environnements : PettingZoo, StarCraft II, MPE, etc. ;
+        \item Implémente plusieurs algorithmes MARL : MADDPG, MAPPO, etc. ;
+        \item Propose des outils pour l'entraînement, l’évaluation et la comparaison d’algorithmes ;
+        \item Fournit des configurations prêtes à l’emploi ajustées pour divers environnements.
     \end{itemize}
 
 \end{frame}
 
-\begin{frame}[allowframebreaks]{Appendix}{MARLlib Algorithms Overview}
+\begin{frame}[allowframebreaks]{Annexe}{Aperçu des algorithmes dans MARLlib}
 
     \begin{itemize}
-        \item \textbf{Value-Based Algorithms}
+        \item \textbf{Algorithmes basés sur la valeur}
               \begin{itemize}
-                  \item \textbf{Multi-Agent Q-Learning}: Basic multi-agent extension of Q-learning.\newline
-                  \textit{Note: Simple but suffers from scalability and non-stationarity issues.}
-                  \item \textbf{MADDPG}: Extension of DDPG for MARL.\newline
-                  \textit{Note: Suitable for continuous actions but data-hungry and complex.}
+                  \item \textbf{Multi-Agent Q-Learning} : Extension multi-agent de Q-learning.\newline
+                        \textit{Remarque : simple mais souffre de problèmes d’échelle et de non-stationnarité.}
+                  \item \textbf{MADDPG} : Extension de DDPG au cadre multi-agent.\newline
+                        \textit{Remarque : adapté aux actions continues mais gourmand en données et complexe.}
               \end{itemize}
 
-        \item \textbf{Policy-Based Algorithms}
+        \item \textbf{Algorithmes basés sur la politique}
               \begin{itemize}
-                  \item \textbf{REINFORCE}: Basic policy gradient method for direct policy learning.\newline
-                  \textit{Note: Works in stochastic environments but has high variance.}
-                  \item \textbf{MAPPO (Multi-Agent PPO)}: Multi-agent extension of PPO.\newline
-                  \textit{Note: Stabilizes updates, but requires tuning and high compute.}
+                  \item \textbf{REINFORCE} : Méthode de gradient de politique basique.\newline
+                        \textit{Remarque : fonctionne en environnements stochastiques, mais variance élevée.}
+                  \item \textbf{MAPPO (Multi-Agent PPO)} : Extension multi-agent de PPO.\newline
+                        \textit{Remarque : stabilise les mises à jour, mais nécessite du réglage et des ressources.}
               \end{itemize}
 
-        \item \textbf{Hybrid Algorithms}
+        \item \textbf{Algorithmes hybrides}
               \begin{itemize}
-                  \item \textbf{A3C}: Combines value and policy learning for balanced exploration.\newline
-                  \textit{Note: Fast training but needs complex synchronization.}
-                  \item \textbf{MAPPO}: PPO-based hybrid with centralized training.\newline
-                  \textit{Note: Effective for cooperative tasks, but resource-intensive.}
+                  \item \textbf{A3C} : Combine apprentissage de la valeur et de la politique.\newline
+                        \textit{Remarque : apprentissage rapide mais synchronisation complexe.}
+                  \item \textbf{MAPPO} : Variante hybride basée sur PPO avec entraînement centralisé.\newline
+                        \textit{Remarque : efficace pour les tâches coopératives, mais coûteux.}
               \end{itemize}
 
-        \item \textbf{Theoretical and Game-Based Algorithms}
+        \item \textbf{Algorithmes théoriques ou basés sur la théorie des jeux}
               \begin{itemize}
-                  \item \textbf{IQL (Independent Q-Learning)}: Per-agent Q-learning.\newline
-                  \textit{Note: Easy to implement but suffers from non-stationarity.}
-                  \item \textbf{COMA}: Uses counterfactual baselines to assess agent contributions.\newline
-                  \textit{Note: Reduces variance, improves cooperation, but computationally heavy.}
+                  \item \textbf{IQL (Independent Q-Learning)} : Q-learning par agent, sans coordination.\newline
+                        \textit{Remarque : simple à implémenter, mais souffre de non-stationnarité.}
+                  \item \textbf{COMA} : Utilise des contre-factuels pour évaluer la contribution des agents.\newline
+                        \textit{Remarque : réduit la variance, améliore la coopération, mais coûteux.}
               \end{itemize}
 
-        \item \textbf{Centralized Training with Decentralized Execution (CTDE)}
+        \item \textbf{Entraînement centralisé avec exécution décentralisée (CTDE)}
               \begin{itemize}
-                  \item \textbf{QMIX}: Decomposes Q-values to support coordination.\newline
-                  \textit{Note: Balances centralized learning and decentralized execution.}
-                  \item \textbf{VDN (Value Decomposition Networks)}: Simplifies coordination via value decomposition.\newline
-                  \textit{Note: Efficient, but limited for complex interactions.}
+                  \item \textbf{QMIX} : Décompose les Q-valeurs pour permettre la coordination.\newline
+                        \textit{Remarque : bon compromis entre apprentissage centralisé et exécution décentralisée.}
+                  \item \textbf{VDN (Value Decomposition Networks)} : Coordination par décomposition des valeurs.\newline
+                        \textit{Remarque : efficace, mais limité pour les interactions complexes.}
               \end{itemize}
     \end{itemize}
 

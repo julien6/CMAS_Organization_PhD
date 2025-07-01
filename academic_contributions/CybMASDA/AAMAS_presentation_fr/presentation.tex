@@ -183,13 +183,13 @@
   \hfill
   \usebeamercolor[fg]{page number in head/foot}%
   \scriptsize%
-  \ifnum\value{framenumber}>19%
-    Appendix \number\numexpr\value{framenumber}-19\relax/32%
+  \ifnum\value{framenumber}>22%
+    Appendix \number\numexpr\value{framenumber}-22\relax/26%
   \else%
-    \ifnum\value{framenumber}>16%
+    \ifnum\value{framenumber}>19%
       %
     \else
-      \number\numexpr\value{framenumber}\relax/16%
+      \number\numexpr\value{framenumber}\relax/19%
     \fi
 
   \fi%
@@ -438,7 +438,7 @@
     \begin{column}{0.5\textwidth}
 
       \begin{itemize}
-        \item Combiner Dec-POMDP avec le modèle organisationnel MOISE+.
+        \item Combiner Dec-POMDP avec le modèle organisationnel $\mathcal{M}OISE^+$.
         \item Les agents se voient attribuer des rôles et des missions.
         \item Utiliser des guides de contraintes pour ajuster :
               \begin{itemize}
@@ -507,6 +507,91 @@
     at ([xshift=9.1cm,yshift=-3.69cm]current page.north west) {\small \textit{GRG}};
 
   \end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}{Le cadre MOISE+MARL}{Défis dans la définition des guides de contrainte (RAG, RRG, GRG)}
+
+    \textbf{Problème :} Définir les guides de contrainte dans le MARL est un défi en pratique.
+
+    \begin{itemize}
+        \item Une spécification complète \textquote{par extension} est peu praticable :
+              \begin{itemize}
+                  \item Énumérer tous les cas possibles d’observation ou d’historique est intraitable.
+                  \item Maintenir et mettre à jour de telles règles ne passe pas à l’échelle.
+              \end{itemize}
+
+        \item \textbf{Nous proposons deux stratégies intensionnelles pour définir les guides de contrainte :}
+              \begin{enumerate}
+                  \item \textbf{Scripts logiques personnalisés :} L’utilisateur définit des fonctions Python (par rôle/objectif) qui prennent en entrée une trajectoire et une observation, et retournent :
+                        \begin{itemize}
+                            \item RAG : actions autorisées avec des poids de difficulté
+                            \item RRG : pénalités ou bonus de récompense pour certaines actions
+                            \item GRG : shaping de récompense basé sur des caractéristiques de trajectoire
+                        \end{itemize}
+                  \item \textbf{\textit{Trajectory-based Pattern} (TPs) :} Patrons déclaratifs compacts inspirés du traitement du langage naturel, utilisés pour représenter des comportements.
+              \end{enumerate}
+    \end{itemize}
+
+\end{frame}
+
+%==================================================
+
+\begin{frame}{Le cadre MOISE+MARL}{Solution 1 : Guides de contrainte via scripts personnalisés}
+
+    \textbf{Principe :} Définir une fonction par rôle/objectif qui analyse la trajectoire et l'observation actuelle.
+
+    \vspace{0.5em}
+    \textbf{Exemple (Overcooked-AI) :}
+
+    \begin{itemize}
+        \item \textbf{Rôle :} Cuisinier principal
+        \item \textbf{Observation :} L’agent tient une assiette, une casserole est prête, pas de mur devant
+        \item \textbf{Trajectoire :} L’agent a précédemment pris un oignon, puis l’a découpé
+    \end{itemize}
+
+    \textbf{Sortie du script :}
+
+    \begin{itemize}
+        \item \textbf{RAG :} \{`interact' $\rightarrow$ 1.0, `nothing' $\rightarrow$ 0.2\}
+        \item \textbf{RRG :} Bonus de +2 si `interact` est utilisé à proximité d’une casserole prête
+        \item \textbf{GRG :} +1 si la trajectoire se termine par une livraison de soupe
+    \end{itemize}
+
+    \textbf{Avantage :} La logique personnalisée peut prendre en compte la disposition spatiale, les étapes précédentes, l’objet tenu, etc.
+
+\end{frame}
+
+%==================================================
+
+\begin{frame}{Le cadre MOISE+MARL}{Solution 2 : Guides de contrainte via \textit{Trajectory-based Pattern} (TPs)}
+
+    \textbf{Principe :} Définir des \textit{Trajectory-based Pattern} réutilisables et lisibles par un humain pour correspondre au comportement d’un agent.
+
+    \vspace{0.5em}
+    \textbf{Format :} TP = transitions décrites comme \textbf{\textit{[obs, act | sub\_TP]($n_{min}$, $n_{max}$)}}
+
+    \textbf{Exemple (Overcooked-AI) :}
+
+    \begin{itemize}
+        \item \textbf{Patron :} \\ \textit{[`see\_onion`, `interact`, [\#any](*), `see\_chopped`, `interact`, [\#any](*), `see\_pot`, `interact`](1,1)}
+        \item \textbf{Correspondance TP :} L’agent a rempli une casserole avec un oignon découpé
+        \item \textbf{Observation actuelle :} \texttt{see\_ready\_pot}
+    \end{itemize}
+
+    \textbf{Alors :}
+    \begin{itemize}
+        \item \textbf{RAG :} Autoriser uniquement l’action `interact`
+        \item \textbf{RRG :} Bonus de +3 pour `interact` maintenant
+        \item \textbf{GRG :} Encourager à se diriger vers la zone de livraison ensuite
+    \end{itemize}
+
+    \textbf{Avantages :}
+    \begin{itemize}
+        \item Plus facile de définir des patrons symboliques dans divers environnements
+        \item Codage compact de comportements temporellement étendus
+        \item Les TPs peuvent être réutilisés entre agents et rôles
+    \end{itemize}
 
 \end{frame}
 
@@ -641,7 +726,7 @@
   \begin{block}{Protocole d'évaluation}
     \begin{itemize}
       \item \textbf{Référence de base (RB)} : entraînement MARL sans contraintes organisationnelles.
-      \item \textbf{Base organisationnelle (OB)} : entraînement avec spécifications MOISE+ prédéfinies.
+      \item \textbf{Base organisationnelle (OB)} : entraînement avec spécifications $\mathcal{M}OISE^+$ prédéfinies.
       \item Les métriques sont calculées et comparées entre environnements.
     \end{itemize}
   \end{block}
@@ -705,7 +790,7 @@
 \begin{frame}{Résultats}{adéquation organisationnelle, performance et comparaison}
 
   \begin{itemize}
-    \item \textbf{adéquation organisationnelle} ↑ comme attendu :
+    \item \textbf{Adéquation organisationnelle} ↑ comme attendu :
           \begin{itemize}
             \item Predator-Prey : +44\% (0.43 → 0.87), Overcooked-AI : +89\%, Entrepôt : +80\%
           \end{itemize}
@@ -756,6 +841,11 @@
       \item Passer à Jax/JaxMARL~\autocite{flair2023jaxmarl} ;
     \end{itemize}
   \end{block}
+
+  \ \\
+
+  \hspace{-0.5cm}
+  {\textit{\small Démo : \url{https://tinyurl.com/msae6zyv}}}
 
 \end{frame}
 
