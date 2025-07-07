@@ -64,6 +64,10 @@
 \usepackage{listings}
 \usepackage{xcolor}
 
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{amsmath}
+
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
@@ -936,13 +940,13 @@ ii) aligning with roles (via the Role Reward Guide), scaled by $(1-ch_t)$.
 %
 To achieve this, we rely on the \textbf{TEMM} method~\cite{soule2025moisemarl}. TEMM assumes that agent behaviors (despite superficial variability) exhibit regularities when achieving comparable cumulative rewards. Thus, behaviors that appear different may be interpreted as noisy variations of a limited number of latent strategies. According to the law of large numbers, averaging over a sufficient set of successful joint histories can help filter out such noise, revealing typical strategies.
 
-Observation trajectories are clustered using distance-based metrics (e.g., LCS, Smith-Waterman), forming groups of agents exhibiting similar behavior. For each cluster, a centroid trajectory is computed where each timestep is associated with an average observation. For each average observation in the centroid, we evaluate the variance as \textbf{representativeness score}. A \textbf{global variance score} aggregates this over the entire centroid.
+Observation trajectories are clustered using distance-based metrics (e.g., LCS, Smith-Waterman), forming groups of agents exhibiting similar behavior. For each cluster, a centroid trajectory is computed where each timestep is associated with an average observation. For each average observation in the centroid, we evaluate the normalized inverted variance as the \textbf{representativeness}. A high representativeness at a given step is likely to indicate the step average observation is close to the surrounding real ones and therefore often received by agents A low representativeness at a given step is likely to indicate the average observation is not representativeness of the surrounding ones for they are sparsely distributed for instance. The regular \textbf{variance} is also computed along the entire centroid.
 %
-Using the representativeness score, a sampling mechanism selects the most salient observations from each trajectory (those most frequently visited by agents across successful runs). These are interpreted as \textbf{intermediate goals}, reflecting key milestones agents must reach en route to achieving the global objective. These sets of representative observations form the basis for goal inference. Assigning semantic labels to each goal set is left as a manual post-processing step.
+Using a minimal representativeness, a sampling mechanism selects the most salient observations from each trajectory (those most frequently visited by agents across successful runs). These are grouped and interpreted into \textbf{intermediate goals}, reflecting key milestones agents must reach en route to achieving the global objective. These sets of representative observations form the basis for goal inference. If the minimal representativeness is high, only very frequent and representative observations will be selected and grouped into goals. If the minimal representativeness is low, all observation and possibly sparsely distributed observation could be grouped into goals, leading to poorly representative and overfitting goals. Finally, assigning semantic labels to each goal set of observations is left as a manual post-processing step. Indeed a goal is a set of observations which are the union of all real observations for each wisely sampled time step along all observation trajectory.
 
 Similarly, agent trajectories composed of transitions $(\omega, a) \in \Omega \times A$ are clustered, optionally using one-hot encodings for categorical actions. Each cluster yields a transition centroid with average transitions per timestep. Step and global variances are again computed to assess the representativeness of each transition and the whole centroid respectively.
 %
-A selection process based on representativeness identifies the most recurrent transitions, assumed to reflect behavioral "rules" followed by agents playing a consistent functional role. These rules form the basis for inferring implicit roles. Again, naming and interpreting each set semantically is left to manual intervention.
+Using a minimal representativeness, a selection process selects the transitions having a minimal representativeness, assumed to reflect behavioral "rules" followed by agents playing a consistent functional role. These rules form the basis for inferring implicit roles. A low representativeness may lead to include all transitions at every step instead of retaining the most salient ones as in the case of a high representativeness. Again, naming and interpreting each set semantically is left to manual intervention. Indeed a role is a set of rules which are the union of all real transitions for each wisely sampled time step along all transition trajectory.
 
 To quantify how closely the learned policy aligns with an implicit organization, we leverage the concept of \textbf{organizational fit}, decomposed into two components:
 %
@@ -955,41 +959,87 @@ The overall \textbf{organizational fit} is then defined as the mean of these two
 
 A high organizational fit value indicates that the inferred specifications (roles and goals) extracted through TEMM are highly representative of the actual learned behaviors. Conversely, a low organizational fit suggests that the learned behaviors are inconsistent or weakly structured, implying that the extracted specifications may not faithfully reflect the agents' implicit strategies.
 
-A significant problem we encountered is the empiricality of the current TEMM method that imply designers to manually check which hyper-parameters are better to use to get more accurate and consistent organizational specifications and organizational fit. Such parameters include the distance metrics (LCS, Smith-Waterman, Euclidian, etc.), cluster distance threshold to determine clusters, structural and functional representativeness thresholds to get the most relevant set of transitions and observations likely that determine roles and goals, the inclusion radius that determines how far from centroids real observations or transitions are to be included into output sets. Determining such hyper-parameters by hand is time-consuming while hinder automating the analyzing process.
+A significant problem we encountered is the empiricality of the current TEMM method that imply designers to manually check which hyper-parameters are better to use to get more accurate and consistent organizational specifications and organizational fit. Such parameters include the \textbf{distance metrics} (LCS, Smith-Waterman, Euclidian, etc.), \textbf{minimal cluster distance} to determine clusters, structural and functional \textbf{minimal representativeness} to get the most relevant set of transitions and observations likely to determine roles and goals throughout steps. Having low minimal representativeness may result in overfitting roles and goals since they include all real observations and transitions while having high minimal representativeness may increase the convergence time since agents are less guided or constrained since they include a reduced number of transitions and observations. Determining such hyper-parameters by hand is time-consuming while hinder automating the analyzing process.
 
-To address this issue, we propose an Hyper-parameter Optimization (HPO) process for the Analyzing process consists in a grid search of all hyper-parameters to maximize. This HPO process follows: (i) for observations and transitions, respectively apply a joint grid search on the distance metrics, cluster distance threshold to determine clusters so that we maximize the organizational fit (i.e minimizing the variance among automatically determined clusters); (ii) we assume the inclusion radius to be 1 since we better cover the maximum of observations, transitions for each sets in goals and roles since we want a better robustness. Therefore, we also need to find the appropriate sampling approach for observation and transition trajectories using the representativeness thresholds. If we have to many observations or transitions inside goals and roles, we may reduce the robustness of agents. We assume when the percentage of transitions and observations increases in roles and goals, the convergence time is first important (since it is close to pure MARL) and then rapidly decreases to a plateau until slowing reaching almost 0 (since it is fully covered). We propose to find the point of representativeness leading to the very begining of this plateau, hence enabling minimizing the percentage of transitions and observations inside roles and goals while ensuring to have a convergence time to cumulated reward equivalent to the one of the fully covering roles and goals.
+To address this issue, we propose an Hyper-parameter Optimization (HPO) process for the Analyzing process consists in a grid search of all hyper-parameters to maximize. This HPO process follows:
+%
+(i) for observations and transitions, respectively apply a joint grid search on the distance metrics, minimal cluster distance to determine clusters so that we minimize the number of cluster and maximize the organizational fit (i.e trying to minimizing the variance among automatically determined clusters);
+%
+(ii) we also need to determine the appropriate structural and function minimal representativeness for sampling transition and observation trajectories. As illustrated in \autoref{fig:conv_time_repr}, decreasing the minimal representativeness leads to a larger set of observations and transitions being included in the inferred goals and roles. While this improves coverage, it can also reduce the robustness and generalizability of the learned specifications, as they may overfit to idiosyncratic behaviors.
+%
+Conversely when the minimal representativeness is high, very few observations or transitions are retained, which limits the guiding effect of organizational constraints—leading to convergence times comparable to unconstrained MARL. As the minimal representativeness decreases, convergence time decreases rapidly (due to stronger guidance threshold) until reaching a plateau, beyond which further decreases bring a slow convergence to a nul convergence time.
+%
+As a trade-off, for transition or observation trajectories, we select the representativeness value corresponding to the \textit{elbow point} at the onset of the convergence-time plateau. By default, we consider this is indeed the maximum representativeness giving a 3.5\% normalized convergence to get a minimal cumulated reward. By choosing this representativeness tradeoff, we assume to be enable not to generate overfitted but meaningful specification of roles (as rules) and goals (as states), achieving convergence performance close to that of fully covering specifications, but with lower complexity and improved interpretability.
 
-\begin{figure}
-    % TODO : Faire la figure avec l'évolution du temps de convergence par rapport au % de règles contenu dans les goals et roles
+This overall approach allows automatic calibration of the minimal cluster distance, the distance metric and the structural and functional minimal representativeness, enabling the extraction of concise and effective organizational specifications directly from agent trajectories.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[trim=0cm 0cm 0cm 0cm, clip, width=1.\linewidth]{figures/convergence_time_relative_to_representativeness.pdf}
+    \caption{Normalized time to converge to a minimal cumulated reward over minimal representativeness}
+    \label{fig:conv_time_repr}
 \end{figure}
-
-\subsubsection*{Analyzing Algorithm}
 
 \begin{algorithm}[H]
     \caption{Analyzing activity algorithm}
-    \label{alg:analyzing}
+    \label{alg:auto_temm}
     \DontPrintSemicolon
-    \KwIn{Dataset $\mathcal{D}$ of trajectories under $\pi^j_i$, organizational model $\mathcal{MM}_i$}
-    \KwOut{Inferred model $\mathcal{MM}_{i,\text{implicit}}$, Fit score}
-    
-    \tcp*[l]{1. Extract individual agent trajectories}
-    For each agent $a$, extract $(\omega_t^a, a_t^a)$ over episodes
-    
-    \tcp*[l]{2. Role inference via clustering}
-    Cluster sequences of actions to identify roles $\hat{\mathcal{R}}$
-    
-    \tcp*[l]{3. Goal inference via observation space}
-    Identify stable or converged observations to form $\hat{\mathcal{G}}$
-    
-    \tcp*[l]{4. Compute organizational fit}
-    Compute $\texttt{SOF}(\mathcal{MM}_i, \hat{\mathcal{R}})$ and $\texttt{FOF}(\mathcal{MM}_i, \hat{\mathcal{G}})$
-    
-    \tcp*[l]{5. Aggregate into global fit}
-    $\texttt{OF} = \alpha \cdot \texttt{SOF} + (1 - \alpha) \cdot \texttt{FOF}$
-    
-    \tcp*[l]{6. Construct inferred model}
-    $\mathcal{MM}_{i,\text{implicit}} \gets$ extracted roles and goals
-    
+
+    \KwIn{
+            Trained joint policy $\pi^j$;
+            ODec-POMDP $d_\Omega$;
+            Initial specification $\mathcal{MM}$;
+            Target normalized convergence threshold (default: 3.5\%) $\eta$
+    }
+
+    \KwOut{
+            Inferred organizational specification$\mathcal{MM}_{\text{implicit}}$;
+            Organizational Fit score $\text{OF}$
+    }
+
+    \tcp*[l]{1. Collect trajectories}
+    Generate individual histories $\mathcal{D}_{\text{trans}}$ from $d_\Omega$ under $\pi^j$ \;
+    $\mathcal{D}_{\text{obs}} \gets$ individual observation trajectories from $\mathcal{D}_{\text{full}}$ \;
+
+    \tcp*[l]{2. HPO on clustering distance and threshold}
+    \For{$t \in \{obs,trans\}$}{
+        \ForEach{distance metric $\delta_t \in \{0.0, 0.1, ..., 1.0\}$}{
+            \ForEach{minimal cluster distance $\tau_t \in \{0.0, 0.1, ..., 1.0\}$}{
+                Cluster $\mathcal{D}_{\text{obs}}$ and $\mathcal{D}_{\text{trans}}$ using $(\delta_t, \tau_t)$ \;
+                Compute: $\sigma_{\text{obs}}, \sigma_{\text{trans}}, N_{\text{clusters}}$ \;
+                Score $\gets \alpha (\sigma_{\text{obs}} + \sigma_{\text{trans}}) + \beta N_{\text{clusters}}$ \tcp*[l]{default: $\alpha=0.4,\beta=0.6$}
+                Retain $(\delta_t^*, \tau_t^*)$ with minimal Score \;
+            }
+        }
+    }
+
+    \tcp*[l]{3. Apply clustering with optimal HPO parameters}
+    Cluster $\mathcal{D}_{\text{obs}}$ into $C_{obs}$ clusters $(\delta_{trans}^*, \tau_{trans}^*)$ \;
+    Cluster $\mathcal{D}_{\text{trans}}$ into $C_{trans}$ clusters using $(\delta_{trans}^*, \tau_{trans}^*)$ \;
+
+    \tcp*[l]{4. Sweep on repr. to evaluate convergence times as func. $ct_t$}
+    \For{$t \in \{obs,trans\}$}{
+        \ForEach{representativeness $\rho_t \in \{0.0, 0.1, ..., 1.0\}$}{
+            Infer org. spec. $\mathcal{MM}_{\rho_t}$ from clusters using $\rho_t$ \;
+            Initialize empty joint policy $\pi^j_{\rho_t}$ \;
+            Train $\pi^j_{\rho_t}$ on $(d_\Omega, \mathcal{MM}_{\rho_t})$ until $R_{cum} \geq R_{\min}$ \;
+            Record normalized conv. time $c_{\rho_t}$ so that $ct_t(\rho_t) = c_{\rho_t}$ \;
+        }
+
+        \tcp*[l]{5. Select representativeness corresponding to threshold $\eta$ $(=3.5\%)$}
+        $\rho_t^* \gets \arg_{ct_t }(\eta)$ \tcp*[r]{Elbow point or exact threshold}
+
+    }
+
+    \tcp*[l]{6. Final role/goal inference using $\rho^*$}
+    Infer roles from $\mathcal{D}_{\text{trans}}, \delta^*, \tau^*, \rho^*$ \;
+    Infer goals from $\mathcal{D}_{\text{obs}}, \delta^*, \tau^*, \rho^*$ \;
+
+    \tcp*[l]{7. Compute Organizational Fit (OF)}
+    Compute SOF (structural) and FOF (functional) from intra-cluster variances \;
+    $\text{OF} \gets \frac{1}{2}(\text{SOF} + \text{FOF})$ \;
+
+    \Return{$\mathcal{MM}_{\text{implicit}}, \text{OF}$}
 \end{algorithm}
 
 
