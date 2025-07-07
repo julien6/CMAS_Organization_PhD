@@ -354,7 +354,7 @@ However, these approaches generally remain limited to local or agent-level insig
 
 To our knowledge, the only framework that explicitly addresses organizational-level explainability is the TEMM (Trajectory-based Evaluation in MOISE+MARL) method~\cite{soule2025moisemarl}, developed as part of the MOISE+MARL framework. TEMM is based on the hypothesis that, over time, trained agents tend to converge toward idealized, regular behaviors viewed as making up an implicit organization. While individual trajectories may exhibit noise, the presence of recurring patterns across many trajectories makes it possible to filter out this noise through averaging.
 
-To operationalize this idea, TEMM uses trajectory clustering and symbolic projection to infer implicit roles and goals from observed agent behaviors. This enables the evaluation of the system’s organizational fit that is, how closely the learned behaviors align with those expected in a well-structured (either implicit or predefined) organization.
+To operationalize this idea, TEMM uses trajectory clustering and symbolic projection to infer implicit roles and goals from observed agent behaviors. This enables the evaluation of the system's organizational fit that is, how closely the learned behaviors align with those expected in a well-structured (either implicit or predefined) organization.
 
 Yet, TEMM is not fully integrated within a broader design-oriented perspective, as it currently lacks mechanisms to assist designers in deriving suitable organizational specifications that could be re-injected as additional design requirements. Enabling such capabilities would support an iterative refinement process, progressively narrowing the policy search space toward more structured and context-relevant behaviors, while remaining agnostic to both the deployment environment and prior expert knowledge.
 
@@ -571,7 +571,7 @@ where $f(\cdot)$ typically corresponds to a recurrent neural network (e.g., LSTM
 
 The predicted latent state is then decoded via $Dec: Z \rightarrow \Omega$ into the predicted observation $\hat{\omega}_{t+1} = Dec(z_{t+1})$. The entire model is jointly trained to minimize both the \emph{reconstruction loss} $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$ in observation space, and optionally, a \emph{latent prediction loss} to stabilize latent dynamics learning.
 
-The recurrent hidden state $h_t$ serves as a compact summary of the full interaction history up to time $t$, avoiding the need to explicitly store long observation-action trajectories.
+The recurrent hidden state $\tilde{h}_t$ serves as a compact summary of the full interaction history up to time $t$, avoiding the need to explicitly store long observation-action trajectories.
 For simplicity of notation, we define the full composition that directly maps current observation, action, and recurrent state to the next predicted observation as the \textbf{Observation Prediction Model}:
 \[
     \mathcal{T}(h_{t-1}, \omega_t, a_t) := Dec(g(f(h_{t-1}, Enc(\omega_t), a_t))) = \hat{\omega}_{t+1}.
@@ -610,7 +610,7 @@ This process is always active while the MAS is operating in the real environment
 
 \paragraph{MTA process: policy optimization and organizational refinement}
 
-This process models the current design problem and improves the MAS policy and associated organizational specifications. It first builds a JOPM $T^j$ using extended World Models with the collected trajectories. Design requirements are formalized as MOISE+MARL organizational specifications $\mathcal{MM}$ and the ultimate goal is formalized as an observation-based reward function $R_H$ as well.
+This process models the current design problem and improves the MAS policy and associated organizational specifications. It first builds a JOPM $T^j$ using extended World Models with the collected trajectories. Design requirements are formalized as MOISE+MARL organizational specifications $\mathcal{MM}$ and the ultimate goal is formalized as an History-based Reward Function $R^j_H$ as well.
 %
 Then, a Markovian model is built out of previously modeled elements so that agents can be trained with organizational specifications using the MOISE+MARL framework. Once training is completed, the resulting joint policy $\pi^j$ is analyzed using TEMM to infer implicit organizational specifications $\mathcal{MM}_{\text{imp}}$ and compute the organizational fit score.
 
@@ -654,7 +654,7 @@ The refinement loop is particularly useful in complex environments where prior k
     $\texttt{running\_MTA} \gets True$ \tcp*[l]{Global variable assignment}
     
     \tcp*[l]{Modeling: model the real environment into a simulated model}
-    $\mathcal{T}^j, R_{H^j}, \mathcal{MM} \gets \texttt{model}(\mathcal{E}, \mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}}, \gamma, A, \Omega)$ \;
+    $\mathcal{T}^j, R^j_H, \mathcal{MM} \gets \texttt{model}(\mathcal{E}, \mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}}, \gamma, A, \Omega)$ \;
     
     \While{$i < n_{refine}$}{
 
@@ -699,12 +699,12 @@ The refinement loop is particularly useful in complex environments where prior k
 
 The \textbf{Modelling activity} addresses the following formal component:
 \begin{displaymath}
-\texttt{model}(\mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}}, \gamma, A, \Omega) = \mathcal{T}^j, R_{H^j}, \mathcal{MM} 
+\texttt{model}(\mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}}, \gamma, A, \Omega) = \mathcal{T}^j, R^j_H, \mathcal{MM} 
 \end{displaymath}
 
-\noindent The \textit{Modelling activity} aims to model the design problem as a constrained optimization problem. To do that, it first generates a high-fidelity simulated environment using the Joint-observation Prediciton Model (JOPM) $\mathcal{T}^j: H^j \times \Omega^j \times A^j \rightarrow \mathcal{H} \times \hat{\Omega^j}$ derived from real-world interaction traces $\mathcal{D}_{H^j}$. At time step $t \in \mathbb{N}$, for any recurrent hidden state $\tilde{h}_{t-1} \in \mathcal{H}$ representing joint-history until $t-1$, the currently received joint-observation $\omega_t^j \in H^j$ and the joint-action to be applied $a_t^j \in A^j$, $\mathcal{T}^j$ gives the next recurrent hidden state $\tilde{h}_t \in \mathcal{H}$ and the predicted next joint-observation $\omega^j \in \hat{\Omega}^j$. This way, MAMAD enables building the environment from scratch. In addition to the simulated environment, the optimization problem also formalizes the informal goal description $\mathcal{G}_{\text{inf}}$ into $R_{H^j}: H^j \times \Omega^j \rightarrow \mathbb{R}$ the History-based Reward Function (HRF). Finally, the \textit{Modelling activity} also aims to formalize constraint stemming from informal design requirements as MOISE+MARL organizational specifications $\mathcal{MM}$ from $\mathcal{C}_{\text{inf}}$.
+\noindent The \textit{Modelling activity} aims to model the design problem as a constrained optimization problem. To do that, it first generates a high-fidelity simulated environment using the Joint-observation Prediciton Model (JOPM) $\mathcal{T}^j: H^j \times \Omega^j \times A^j \rightarrow \mathcal{H} \times \hat{\Omega^j}$ derived from real-world interaction traces $\mathcal{D}_{H^j}$. At time step $t \in \mathbb{N}$, for any recurrent hidden state $\tilde{h}_{t-1} \in \mathcal{H}$ representing joint-history until $t-1$, the currently received joint-observation $\omega_t^j \in H^j$ and the joint-action to be applied $a_t^j \in A^j$, $\mathcal{T}^j$ gives the next recurrent hidden state $\tilde{h}_t \in \mathcal{H}$ and the predicted next joint-observation $\hat{\omega}^j \in \hat{\Omega}^j$. This way, MAMAD enables building the environment from scratch. In addition to the simulated environment, the optimization problem also formalizes the informal goal description $\mathcal{G}_{\text{inf}}$ into $R^j_H: H^j \times \Omega^j \rightarrow \mathbb{R}$ the History-based Reward Function. Finally, the \textit{Modelling activity} also aims to formalize constraint stemming from informal design requirements as MOISE+MARL organizational specifications $\mathcal{MM}$ from $\mathcal{C}_{\text{inf}}$.
 
-We assume to leave the work of formalizing informal design requirements into MOISE+MARL organizational specifications and informal goal description into an HRF.
+We assume to leave the work of formalizing informal design requirements into MOISE+MARL organizational specifications and informal goal description into an History-based Reward Function.
 
 Since we are not able to access the real environment's state, we have to rely on stored joint-histories hence the idea to use World Models for its capability to generalize from a large amount of histories to compute hidden state transitions and observations transitions.
 A major gap we encountered when willing to implement this function with World Models is the absence of explicitely defined World Models for Multi-Agent settings. Below, we propose an extension of the World Model framework for Multi-Agent settings.
@@ -713,7 +713,7 @@ A major gap we encountered when willing to implement this function with World Mo
 
 In multi-agent settings, joint-observations rapidly become high-dimensional as the number of agents increases. To address this, joint encoding functions are introduced for both observations and actions.
 
-Specifically, joint-observations $\omega_t^{j} = (\omega_t^1, \dots, \omega_t^n) \in \Omega^{j}$ are mapped to compact latent representations using an joint-observation encoder $Enc_{\omega_j}: \Omega^{j} \rightarrow z$, yielding $z_t = Enc_{\omega_j}(\omega_t^{j})$. The joint-observation decoder $Dec_{z}: z \rightarrow \hat{\Omega}^{j}$ allows reconstruction of the joint-observation if needed.
+Specifically, joint-observations $\omega_t^{j} = (\omega_t^1, \dots, \omega_t^n) \in \Omega^{j}$ are mapped to compact latent representations using an joint-observation encoder $Enc_{\omega^j}: \Omega^{j} \rightarrow z$, yielding $z_t = Enc_{\omega^j}(\omega_t^{j})$. The joint-observation decoder $Dec_{z}: z \rightarrow \hat{\Omega}^{j}$ allows reconstruction of the joint-observation if needed.
 %
 MLPs or attention-based architectures are typically employed for these encoders to aggregate multi-agent information into fixed-size feature vectors while capturing relevant inter-agent dependencies.
 
@@ -722,16 +722,16 @@ Once joint encoding is performed, the multi-agent world model operates analogous
 \
 
 \begin{algorithm}[H]
-\caption{Modeling the Design Problem as a Constrained Optimization}
+\caption{Modeling activity algorithm}
 \label{alg:modeling}
 \DontPrintSemicolon
 
 \KwIn{Joint histories $\mathcal{D}_{H^j}$, informal goal $\mathcal{G}_{\text{inf}}$, informal constraints $\mathcal{C}_{\text{inf}}$, discount factor $\gamma$, action space $A$, observation space $\Omega$}
-\KwOut{JOPM $\mathcal{T}^j$, HRF $R_{H^j}$, MOISE+MARL specifications $\mathcal{MM}$}
+\KwOut{JOPM $\mathcal{T}^j$, History-based Reward Function $R^j_H$, MOISE+MARL specifications $\mathcal{MM}$}
 
 \vspace{0.5em}
 \tcp{1. Manual formalization of symbolic requirements}
-$R_H \gets \texttt{manual\_formalize}(\mathcal{G}_{\text{inf}})$ \;
+$R^j_H \gets \texttt{manual\_formalize}(\mathcal{G}_{\text{inf}})$ \;
 $\mathcal{MM} \gets \texttt{manual\_formalize}(\mathcal{C}_{\text{inf}})$ \;
 
 \vspace{0.5em}
@@ -741,14 +741,14 @@ Train auto-encoder $(Enc_{\omega^j}, Dec_{\omega^j})$ on $\Omega^j$ minimizing r
 
 \vspace{0.5em}
 \tcp{3. Encode joint-observations in joint-history}
-For each joint-history $h^j = \{\omega_t^j, a_t^j\} \in \mathcal{D}_{H^j}$, encode each joint-observation ${z}_t = Enc_{\omega_j}(\omega^j_t)$ to build training set $\mathcal{B} = \{ \{(z_t,a_t, z_{t+1})\} = h_z^j, h_z^j \in \mathcal{D}_{H^j}\}$
+For each joint-history $h^j = \{\omega_t^j, a_t^j\} \in \mathcal{D}_{H^j}$, encode each joint-observation ${z}_t = Enc_{\omega^j}(\omega^j_t)$ to build training set $\mathcal{B} = \{ \{(z_t,a^j_t, z_{t+1})\} = h_z^j, h_z^j \in \mathcal{D}_{H^j}\}$
 
 \vspace{0.5em}
 \tcp{4. Train the RLDM}
 Initialize the RLDM (f and g function) $\mathcal{T}^z = f(g)$
 
 \For{$h_z^j \in \mathcal{B}$}{
-    \For{$(z_t,a_t, z_{t+1}) \in h^j$}{
+    \For{$(z_t,a^j_t, z_{t+1}) \in h^j$}{
         Train RLDM $\mathcal{T}^{z}$ minimizing the MSE of predicted joint-observation $\hat{z}_{t+1}$ from the real one $z_{t+1}$.
     }
 }
@@ -758,11 +758,11 @@ Initialize the RLDM (f and g function) $\mathcal{T}^z = f(g)$
 
 $\Omega^{\mathcal{T}^j}_0 \gets \{\omega^j_0\}$ from joint-histories $\mathcal{D}_{H^j}$
 
-$\mathcal{T}^j(h_{t-1}, \omega_t, a_t) = \langle f(h_{t-1}, Enc(\omega_t), a_t), Dec(\mathcal{T}^{z}(h_{t-1}, Enc(\omega_t), a_t)) \rangle$ \;
+$\mathcal{T}^j(h_{t-1}, \omega_t, a_t) = \langle f(h_{t-1}, Enc(\omega^j_t), a^j_t), Dec(\mathcal{T}^{z}(h_{t-1}, Enc(\omega^j_t), a^j_t)) \rangle$ \;
 
 \vspace{0.5em}
 \tcp{6. Return modelled elements}
-\Return{$\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R_H, \mathcal{MM}$}
+\Return{$\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, \mathcal{MM}$}
 \end{algorithm}
 
 
@@ -772,10 +772,10 @@ $\mathcal{T}^j(h_{t-1}, \omega_t, a_t) = \langle f(h_{t-1}, Enc(\omega_t), a_t),
 The \textbf{Training activity} addresses the following formal component:
 %
 \begin{displaymath}
-    \pi^j_i \gets \texttt{train}(\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, \gamma, R_H, \Omega, A, \mathcal{MM})
+    \pi^j_i \gets \texttt{train}(\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, \gamma, R^j_H, \Omega, A, \mathcal{MM})
 \end{displaymath}
 
-The \textit{Training activity} aims to solve the modeled design problem as a constrained optimization task under the MOISE+MARL framework. However, a key limitation arises from the fact that MOISE+MARL operates under the Dec-POMDP formalism, which assumes full access to the true underlying state of the environment. In contrast, our approach relies exclusively on observable data (namely, agents’ joint histories) without assuming access to real environmental states. To bridge this gap, a new Markovian formalism is needed, one that operates over observable sequences via the JOPM, while remaining compatible with existing MARL algorithmic frameworks.
+The \textit{Training activity} aims to solve the modeled design problem as a constrained optimization task under the MOISE+MARL framework. However, a key limitation arises from the fact that MOISE+MARL operates under the Dec-POMDP formalism, which assumes full access to the true underlying state of the environment. In contrast, our approach relies exclusively on observable data (namely, agents' joint histories) without assuming access to real environmental states. To bridge this gap, a new Markovian formalism is needed, one that operates over observable sequences via the JOPM, while remaining compatible with existing MARL algorithmic frameworks.
 
 
 \subsubsection{Extension of MOISE+MARL to Multi-Agent World Models}
@@ -784,7 +784,7 @@ The \textit{Training activity} aims to solve the modeled design problem as a con
 %
 An ODec-POMDP $d_\Omega \in OD_\Omega$ (with $OD_\Omega$ the set of all Observation-based Dec-POMDPs) is defined as a 5-tuple:
 %
-$d_\Omega = \left(\Omega, A, \mathcal{T}^j, R_H, \gamma \right)$
+$d_\Omega = \left(\Omega, A, \mathcal{T}^j, R^j_H, \gamma \right)$
 %
 where:
 \begin{itemize}
@@ -792,7 +792,7 @@ where:
     \item $\Omega$: the observation space.
     \item $\Omega^{\mathcal{T}^j}_0$: the recorded initial joint observation.
     \item $\mathcal{T}^j(h, \omega, a) = \langle {\tilde{h}}', \mathbb{P}(\omega' \mid h, \omega, a) \rangle$ the JOPM estimating the next joint-observation $\omega'$ based on the previous joint-history $\tilde{h} \in \mathcal{H}$, the most recent joint-observation $\omega$, and the current joint-action to be applied $a$. The JOPM also outputs the updated recurrent hidden state $\tilde{h}'$.
-    \item $R_H: H \times \Omega \rightarrow \mathbb{R}$ is the Observation-based Reward function, returning the reward based on the joint-history and the next joint-observation.
+    \item $R^j_H: H \times \Omega \times A \times \Omega \rightarrow \mathbb{R}$ is the History-based Reward Function, returning the reward based on the previous joint-history, the last observation used to select last joint-action and the resulting next joint-observation.
     \item $\gamma \in [0, 1]$ is the discount factor.
 \end{itemize}
 
@@ -800,113 +800,173 @@ where:
 
 \paragraph{\textbf{Resolving the ODec-POMDP with MOISE+MARL}}
 
-Solving a ODec-POMDP with $mm \in \mathcal{MM}$ consists in finding a joint policy $\pi^j = {\pi^j_0, \pi^j_1, \dots, \pi^j_n}$ that maximizes the expected cumulative reward (or satisfies a minimal threshold), represented by the JOPM-based value function $V_{\mathcal{T}^j}^{\pi^j}$. This value reflects the cumulated return from an initial observation $\omega^j \in \Omega^{\mathcal{T}^j}_0$ (stemming from hidden initial states) when applying successive joint actions $a^j \in A^n$ under the additional organizational constraints $\mathcal{MM}$ using the JOPM $\mathcal{T}^j$ instead of unknown observation and state transition functions.
+Solving a ODec-POMDP with $mm \in \mathcal{MM}$ consists in finding a joint policy $\pi^j = {\pi^j_0, \pi^j_1, \dots, \pi^j_n}$ that maximizes the expected cumulative reward (or satisfies a minimal threshold), represented by the observation-based value function $V_{\mathcal{T}^j}^{\pi^j}$. This value reflects the cumulated return from an initial joint-observation $\omega^j \in \Omega^{\mathcal{T}^j}_0$, joint-history $h^j$ and reccurent hidden state $\tilde{h}$ when applying successive joint actions $a^j \in A^n$ under the additional organizational constraints $\mathcal{MM}$ using the JOPM $\mathcal{T}^j$ instead of unknown observation and state transition functions.
 %
-The definition of $V_{\mathcal{T}^j}^{\pi^j}$ follows the sequential and cyclic agent execution scheme (AEC mode), and is formalized in \hyperref[eq:single_value_function]{Definition 2}, incorporating role-based (in red) and mission-based (in blue) adaptations that influence both the action space and the reward.
+The definition of $V_{\mathcal{T}^j}^{\pi^j}$ follows a parallel mode formalized in \hyperref[eq:single_value_function]{Definition 2}, incorporating role-based (in red) and mission-based (in blue) adaptations that influence both the joint-action space and the reward.
 \autoref{fig:mm_synthesis} illustrates how the MOISE+ specifications are integrated into the ODec-POMDP resolution via the MOISE+MARL framework.
 
 \begin{figure*}[h!]
     \label{eq:single_value_function}
     \raggedright
-    \textbf{\textit{Definition 1} \quad Observation-Value function adapted to constraint guides in AEC:}
+    \textbf{\textit{Definition 2} \quad Observation-Value function adapted to constraint guides in parallel mode:}
     
     \begin{scriptsize}
         \vspace{-0.6cm}
         \begin{gather*}
-            V^{\pi^j}(\tilde{h}_{t-1},\tilde{\omega}^j_t) = \hspace{-0.95cm}
+            V^{\pi^j}(\tilde{h}_{t-1},h^j_{t-1},\hat{\omega}^j_t) = \hspace{-0.95cm}
             %
-            \sum_{\textcolor{red}{ \substack{a_{t} \in A \text{ if } rn() < ch_{t}, \\
-                        a_{t} \in A_{t} \text{ else}}
-                }}{\hspace{-0.7cm} \pi_i(a_{t} | \tilde{\omega}_t)}
+            \sum_{\textcolor{red}{ \substack{a^j_{t} \in A^j \text{ if } rn() < ch_{t}, \\
+                        a^j_{t} \in A^j_{t} \text{ else}}
+                }}{\hspace{-0.9cm} \pi_i(a^j_{t} | \hat{\omega}^j_t)}
             %
-            \sum_{s_{t+1} \in S}
+            \hspace{-1.2cm}
+            \sum_{\phantom{XXXX}(\tilde{h}_t,\hat{\omega}^j_{t+1}) \in \mathcal{H} \times \hat{\Omega}^j}
             %
-            {\hspace{-0.1cm} \mathcal{T}^j(\langle \tilde{h}_t,\tilde{\omega}_{t+1} \rangle | \tilde{h}_{t-1}, \omega_t, a_{t})
-            \Bigl[R_H(h_{t},\tilde{\omega}_{t+1}) + \hspace{-0.1cm} } \\
-            { \textcolor{blue}{ \sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \frac{grg_m(h_{t+1})}{1 - p + \epsilon} } }
-            +
-            \textcolor{red}{(1-ch_t) \times rrg(\tilde{\omega}_t,a_{t+1})} + V^{\pi^j_{i+1 \ mod \ n}}(\tilde{h}_{t}, \tilde{\omega}_{t+1})\Bigr]}
+            {\hspace{-1.2cm} \mathcal{T}^j(\langle \tilde{h}_t,\hat{\omega}^j_{t+1} \rangle | \tilde{h}_{t-1}, \hat{\omega}_t, a^j_{t})
+            \Bigl[R^j_H(h^j_{t-1},\hat{\omega}^j_t,a^j_t,\hat{\omega}^j_{t+1}) \hspace{-0.1cm} }
         \end{gather*}
         %
+        \vspace{-1.1cm}
+        \begin{gather*}
+            \hspace{4.5cm}
+            {+ \  \textcolor{blue}{grg^j_m(h^j_t)}
+            +
+            \textcolor{red}{(1-ch_t) \times rrg^j(\hat{\omega}^j_t,a^j_{t+1})} + V^{\pi^j}(\tilde{h}_{t}, h^j_t, \hat{\omega}^j_{t+1})\Bigr]}
+        \end{gather*}
+        %
+        \vspace{-0.15cm}
+        %
+        \[\hspace{-0.9cm}\text{With \ } \tilde{h}_{-1} = \mathbf{0} \text{ and } \tilde{\omega}^j_0 \in \Omega_0^{\mathcal{T}^j} \text{ ; } a^j_t = \langle a_{t,0}, a_{t,1} \dots a_{t,|\mathcal{A}|} \rangle \text{ ; } \omega^j_t = \langle \omega_{t,0}, \omega_{t,1} \dots \omega_{t,|\mathcal{A}|} \rangle \text{ ; }\]
+        %
         \vspace{-0.25cm}
+        \[\hspace{-5.85cm} h^j_t = \langle h_{t,0}, h_{t,1} \dots h_{t,|\mathcal{A}|} \rangle = \langle \langle h_{t-1,i}, \omega_{t,i}, a_{t,i} \rangle \rangle_{i \in \mathcal{A}}\]
         %
-        \[\hspace{-8.5cm}\text{With \ } \tilde{h}_{-1} = \mathbf{0} \text{ and } \tilde{\omega}_0 \in \Omega_0^{\mathcal{T}^j}\]
         \vspace{-0.2cm}
-        \textcolor{red}{\[\text{ \hspace{-0.1cm} With } rag(h_t, \tilde{\omega}_t) = A_{t} \times \mathbb{R} \text{, } \langle a_t, ch_{t} \rangle \in A_{t} \times \mathbb{R} \text{ ; } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
+        \textcolor{red}{\[\hspace{-2.6cm}\text{ \hspace{-0.1cm} With } \langle rag_i, rrg_i \rangle = rcg(ar(i)) \text{ ; } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
         %
-        \vspace{-0.6cm}
+        \vspace{-0.3cm}
+        \textcolor{red}{\[A^j_t \times \mathbf{R}^{|\mathcal{A}|} = rag^j(h^j_t, \tilde{\omega}^j_t) = \langle rag_i(h_{t,i}, \omega_{t,i}) \rangle_{i \in \mathcal{A}} \text{ ; } rrg^j(h^j_t, \tilde{\omega}^j_t, a^j_t) = \sum_{i \in \mathcal{A}}{rrg_i(h_{t,i}, \omega_{t,i}, a_{t,i})}\]}
+        %
+        \vspace{-0.75cm}
         \textcolor{blue}{
             \begin{gather*}
-                \hspace{-2.5cm}
-                \text{With } h_t = \{h_0 = \langle \rangle, h_{t+1} = \langle h_t, \langle \tilde{\omega}_{t+1}, a_{t+1} \rangle \rangle \} \text{ ; } \epsilon \in \mathbb{R}_{>0} \text{ ; } grg_m(h) = 
+                \hspace{-1.7cm} grg_m(h) = \hspace{-1cm} \sum_{\hspace{0.3cm}(grg_i,w_i) \in mo(m)}{\hspace{-1.1cm} w_i \times grg_i(h)}
+                \text{ ; }
+                grg^j_m(h^j_t) = \hspace{-0.1cm} \sum_{i \in \mathcal{A}}{\sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \frac{grg_m(h_{t,i})}{1 - p + \epsilon} }} \text{ ; } \epsilon \in \mathbb{R}_{>0} \text{ ; }
             \end{gather*}
         }
-        \vspace{-0.95cm}
+        \vspace{-0.9cm}
         \textcolor{blue}{
             \begin{gather*}
-                \hspace{-0.5cm} \sum_{\hspace{0.3cm}(grg_i,w_i) \in mo(m)}{\hspace{-0.9cm} w_i \times grg_i(h)}
-                \text{ ; } v_m(t) = \{ 1 \text{ if } t \in t_c \text{ ; else } 0 \} \text{ ; } \mathcal{M}_i = \{m_j | \langle ar(i),m_j,t_c,p \rangle \in \mathcal{M}\}
+                \hspace{-4cm}
+                v_m(t) = \{ 1 \text{ if } t \in t_c \text{ ; else } 0 \} \text{ ; } \mathcal{M}_i = \{m_j | \langle ar(i),m_j,t_c,p \rangle \in \mathcal{M}\}
             \end{gather*}
         }
-        \vspace{-0.6cm}
     \end{scriptsize}
     
 \end{figure*}
 
-\noindent At each time step $t \in \mathbb{N}$ (starting from $t=0$), agent $i = t \bmod n$ is assigned to role $\rho_i = ar(i)$. For each temporally valid deontic specification $d_i = rds(\rho_i) = \langle tc_i, y_i, m_i \rangle$, the agent is permitted ($y_i = 0$) or obligated ($y_i = 1$) to commit to mission $m_i \in \mathcal{M}$, with goal set $\mathcal{G}_{m_i} = mo(m_i)$ and $n \in \mathbb{N}$ agents.
+\noindent Considering a parallel mode, at each time step $t \in \mathbb{N}$ (starting from $t=0$), an agent $i \in \mathcal{A}$ is assigned to role $\rho_i = ar(i)$. For each temporally valid deontic specification $d_i = rds(\rho_i) = \langle tc_i, y_i, m_i \rangle$, the agent is permitted ($y_i = 0$) or obligated ($y_i = 1$) to commit to mission $m_i \in \mathcal{M}$, with goal set $\mathcal{G}_{m_i} = mo(m_i)$ and $n \in \mathbb{N}$ agents.
 %
-Upon observing $\tilde{\omega}_t$, the agent selects an action  from $A_t$ (the role-expected actions) with probability $ch_t$, or from $A$ otherwise. If $ch_t = 1$, the agent is strictly constrained by its role.
+Upon observing $\tilde{\omega}^j_t$, each agent $i \in \mathcal{A}$ select an action from $A_{i,t} \text{ with } A^j_t = \langle A_{0,t}, A_{1,t}, A_{|\mathcal{A}|,t}\rangle$ (from Role Reward Guides) with probability $ch_t$, or from $A^t$ otherwise. If $ch_t = 1$, the agent is strictly constrained by its role.
 %
-The state transition due to the application of the selected actions are approximated via the JOPM transitions the system from hidden state $s_t$ to $s_{t+1}$ whose approximated joint-observation $\tilde{\omega_{t+1}}$ is obtained via the JOPM $\mathcal{T}^j$, and returns a reward composed of:
-i) bonuses for achieved goals in valid missions (via Goal Reward Guides), weighted by $\frac{1}{1 - p + \epsilon}$;
-ii) penalties from the Role Reward Guide, scaled by $ch_t$.
-%
-The process continues in state $s_{t+1}$ with agent $(i + 1) \bmod n$.
-
+The state and observation transitions due to the application of the selected actions are both approximated via the JOPM function $\mathcal{T}^j$ that takes the previous reccurrent hidden state up to $t-1$ $\tilde{h}_{t-1}$, the lastly received joint-observation $\hat{\omega}_t^j$ and lastly chosen joint-action $a_t^j$ to get the next predicted joint-observation $\hat{\omega}_{t+1}^j$ and the updated reccurrent hidden state up to $t$ $\tilde{h}_t$. The History-based Reward Function uses the last joint-history $h^j_{t-1}$, the last joint-observation $\hat{\omega}_t^j$, the chosen joint-action $a_t^j$ and the next joint-observation $\hat{\omega}^j_{t+1}$ to get the next reward. The reward is also updated by adding bonus/malus for:
+i) achieving goals in valid missions (via Goal Reward Guides), weighted by $\frac{1}{1 - p + \epsilon}$;
+ii) aligning with roles (via the Role Reward Guide), scaled by $(1-ch_t)$.
 
 \begin{algorithm}[H]
-    \caption{MAMAD Training activity}
-    \label{alg:training}
+    \caption{Training activity algorithm}
+    \label{alg:training_mamad}
     \DontPrintSemicolon
-    \KwIn{Simulated env $d_i = (\Omega, A, \mathcal{T}_i, R_H, \gamma)$, MOISE+ model $\mathcal{MM}_i$}
-    \KwOut{Joint policy $\pi^j_i$}
-    
-    \tcp*[l]{1. Derive constraint mappings}
-    Compute $\texttt{PAC}_r$, $\texttt{TRF}_g$ from $\mathcal{MM}_i$
-    
-    \tcp*[l]{2. Initialize MARL algorithm}
-    Select algorithm (e.g., MAPPO, QMIX, MADDPG) and initialize parameters
-    
-    \For{$k \gets 1$ \KwTo $K$ training steps}{
-        Sample episode $(\omega^j_0, a^j_0, \omega^j_1, ..., \omega^j_T)$ via policy $\pi^j_i$
-        
-        \tcp*[l]{3. Apply hard constraints}
-        Mask actions at each step with $\texttt{PAC}_r(\omega^j_t)$
-        
-        \tcp*[l]{4. Compute rewards}
-        Use $R_H(\omega^j_t, a^j_t)$ and $\texttt{TRF}_g(h_t)$
-        
-        \tcp*[l]{5. Update policy}
-        Use standard MARL update step (policy gradient, Q-learning, etc.)
+
+    \KwIn{
+        Joint-Observation Prediction Model (JOPM) $\mathcal{T}^j$,
+        Initial joint observations $\Omega_0^{\mathcal{T}^j}$,
+        History-based Reward Function $R_H^j$,
+        Organizational specification $\mathcal{MM}$,
+        Discount factor $\gamma$
     }
+    \KwOut{$\pi^j$ : Trained joint policy}
+
+    \vspace{0.3em}
+
+    Initialize parameters of policy $\pi^j$ and replay buffer $\mathcal{B}$ \;
+
+    \ForEach{episode $e = 1 \dots N$}{
+        Sample $\omega_0^j \sim \Omega_0^{\mathcal{T}^j}$, set $\tilde{h}_{-1} \gets \mathbf{0}$ \;
+        Initialize joint history $h_{-1}^j \gets \emptyset$ \;
+
+        \ForEach{step $t = 0 \dots T$}{
+            Compute $A_t^j = rag^j(h^j_t, \omega^j_t)$ via role reward guides from $\mathcal{MM}$ \;
+            \If{$rn() < ch_t$}{
+                Select $a_t^j \sim \pi^j(\cdot | \omega_t^j)$ within constrained $A_t^j$ \;
+            }
+            \Else{
+                Select $a_t^j \sim \pi^j(\cdot | \omega_t^j)$ within $A_t$ \;
+            }
+
+            $(\tilde{h}_t, \omega_{t+1}^j) \gets \mathcal{T}^j(\tilde{h}_{t-1}, \omega_t^j, a_t^j)$ \tcp*{JOPM prediction}
+
+            $r_t \gets \gamma^t \times R_H^j(h^j_{t-1}, \omega_t^j, a_t^j, \omega_{t+1}^j)$ \tcp*{Base reward}
+
+            $r_t \gets r_t + grg^j(h^j_t)$ \tcp*{Goal Rew. Guides}
+
+
+            $r_t \gets r_t + (1 - ch_t) \times rrg^j(h^j_t, \omega_t^j, a_t^j)$ \tcp*{Role Rew. Guides}
+
+            Append $(\omega_t^j, a_t^j, r_t, \omega_{t+1}^j)$ to $\mathcal{B}$ \;
+            Update $h^j_t \gets \langle \langle h_{t-1,i}, \omega_{t,i}, a_{t,i} \rangle \rangle_{i \in \mathcal{A}}$ \;
+
+            Train $\pi^j$ with minibatches from $\mathcal{B}$ using any MARL method \;
+        }
+    }
+
+    \Return{$\pi^j$}
 \end{algorithm}
 
 
 \subsection{Analyzing}\label{sec:analyzing}
 
-\subsubsection*{goal and Context}
-
-The \textbf{Analyzing activity} aims to assess whether the learned joint policy aligns with the intended organizational specification, and optionally refine or infer missing structural elements. This corresponds to the third component of the MAMAD loop:
+\noindent The \textbf{Analyzing activity} addresses the following formal component:
 \[
-    (\mathcal{MM}_{i,\text{implicit}}, \text{fit}) \gets \texttt{analyze}(d_i, \mathcal{MM}_i, \pi^j_i)
+    (\mathcal{MM}_{i,\text{implicit}}, \text{OF}) \gets \texttt{analyze}(d_i, \mathcal{MM}_i, \pi^j_i, d_\Omega)
 \]
 
-It supports the user in verifying organizational coherence and, if needed, refining the constraints for the next iteration.
+\noindent The objective of this phase is twofold: (i) to provide an explanation of the learned joint policy in terms of MOISE+MARL organizational specifications (roles, goals, missions), and (ii) to compute the organizational fit, which quantifies the alignment between the learned behaviors and a regular organization whether explicit or inferred.
+%
+To achieve this, we rely on the \textbf{TEMM} method~\cite{soule2025moisemarl}. TEMM assumes that agent behaviors (despite superficial variability) exhibit regularities when achieving comparable cumulative rewards. Thus, behaviors that appear different may be interpreted as noisy variations of a limited number of latent strategies. According to the law of large numbers, averaging over a sufficient set of successful joint histories can help filter out such noise, revealing typical strategies.
+
+Observation trajectories are clustered using distance-based metrics (e.g., LCS, Smith-Waterman), forming groups of agents exhibiting similar behavior. For each cluster, a centroid trajectory is computed where each timestep is associated with an average observation. For each average observation in the centroid, we evaluate the variance as \textbf{representativeness score}. A \textbf{global variance score} aggregates this over the entire centroid.
+%
+Using the representativeness score, a sampling mechanism selects the most salient observations from each trajectory (those most frequently visited by agents across successful runs). These are interpreted as \textbf{intermediate goals}, reflecting key milestones agents must reach en route to achieving the global objective. These sets of representative observations form the basis for goal inference. Assigning semantic labels to each goal set is left as a manual post-processing step.
+
+Similarly, agent trajectories composed of transitions $(\omega, a) \in \Omega \times A$ are clustered, optionally using one-hot encodings for categorical actions. Each cluster yields a transition centroid with average transitions per timestep. Step and global variances are again computed to assess the representativeness of each transition and the whole centroid respectively.
+%
+A selection process based on representativeness identifies the most recurrent transitions, assumed to reflect behavioral "rules" followed by agents playing a consistent functional role. These rules form the basis for inferring implicit roles. Again, naming and interpreting each set semantically is left to manual intervention.
+
+To quantify how closely the learned policy aligns with an implicit organization, we leverage the concept of \textbf{organizational fit}, decomposed into two components:
+%
+\begin{itemize}
+    \item \textbf{Structural Organizational Fit (SOF)} reflects how consistently agents adhere to implicit role-based behaviors. We propose to compute SOF as the normalized inverse of the average global variance of transition-based trajectories within each role cluster. Lower variance implies stronger behavioral regularity, and hence greater alignment with an underlying role structure.
+    \item \textbf{Functional Organizational Fit (FOF)} captures the coherence of agents' behaviors in terms of reaching intermediate goals. It is computed as the normalized inverse of the average global variance of observation-based trajectories within each goal cluster. Low variance here indicates that agents consistently follow similar paths toward achieving functional objectives.
+\end{itemize}
+%
+The overall \textbf{organizational fit} is then defined as the mean of these two scores: $\text{OF} = \frac{1}{2} \left( \text{SOF} + \text{FOF} \right)$
+
+A high organizational fit value indicates that the inferred specifications (roles and goals) extracted through TEMM are highly representative of the actual learned behaviors. Conversely, a low organizational fit suggests that the learned behaviors are inconsistent or weakly structured, implying that the extracted specifications may not faithfully reflect the agents' implicit strategies.
+
+A significant problem we encountered is the empiricality of the current TEMM method that imply designers to manually check which hyper-parameters are better to use to get more accurate and consistent organizational specifications and organizational fit. Such parameters include the distance metrics (LCS, Smith-Waterman, Euclidian, etc.), cluster distance threshold to determine clusters, structural and functional representativeness thresholds to get the most relevant set of transitions and observations likely that determine roles and goals, the inclusion radius that determines how far from centroids real observations or transitions are to be included into output sets. Determining such hyper-parameters by hand is time-consuming while hinder automating the analyzing process.
+
+To address this issue, we propose an Hyper-parameter Optimization (HPO) process for the Analyzing process consists in a grid search of all hyper-parameters to maximize. This HPO process follows: (i) for observations and transitions, respectively apply a joint grid search on the distance metrics, cluster distance threshold to determine clusters so that we maximize the organizational fit (i.e minimizing the variance among automatically determined clusters); (ii) we assume the inclusion radius to be 1 since we better cover the maximum of observations, transitions for each sets in goals and roles since we want a better robustness. Therefore, we also need to find the appropriate sampling approach for observation and transition trajectories using the representativeness thresholds. If we have to many observations or transitions inside goals and roles, we may reduce the robustness of agents. We assume when the percentage of transitions and observations increases in roles and goals, the convergence time is first important (since it is close to pure MARL) and then rapidly decreases to a plateau until slowing reaching almost 0 (since it is fully covered). We propose to find the point of representativeness leading to the very begining of this plateau, hence enabling minimizing the percentage of transitions and observations inside roles and goals while ensuring to have a convergence time to cumulated reward equivalent to the one of the fully covering roles and goals.
+
+\begin{figure}
+    % TODO : Faire la figure avec l'évolution du temps de convergence par rapport au % de règles contenu dans les goals et roles
+\end{figure}
 
 \subsubsection*{Analyzing Algorithm}
 
 \begin{algorithm}[H]
-    \caption{MAMAD Analyzing activity (TEMM)}
+    \caption{Analyzing activity algorithm}
     \label{alg:analyzing}
     \DontPrintSemicolon
     \KwIn{Dataset $\mathcal{D}$ of trajectories under $\pi^j_i$, organizational model $\mathcal{MM}_i$}
