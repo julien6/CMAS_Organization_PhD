@@ -961,6 +961,7 @@ A high organizational fit value indicates that the inferred specifications (role
 
 A significant problem we encountered is the empiricality of the current TEMM method that imply designers to manually check which hyper-parameters are better to use to get more accurate and consistent organizational specifications and organizational fit. Such parameters include the \textbf{distance metrics} (LCS, Smith-Waterman, Euclidian, etc.), \textbf{minimal cluster distance} to determine clusters, structural and functional \textbf{minimal representativeness} to get the most relevant set of transitions and observations likely to determine roles and goals throughout steps. Having low minimal representativeness may result in overfitting roles and goals since they include all real observations and transitions while having high minimal representativeness may increase the convergence time since agents are less guided or constrained since they include a reduced number of transitions and observations. Determining such hyper-parameters by hand is time-consuming while hinder automating the analyzing process.
 
+\subsubsection{Extended TEMM method with HPO}
 To address this issue, we propose an Hyper-parameter Optimization (HPO) process for the Analyzing process consists in a grid search of all hyper-parameters to maximize. This HPO process follows:
 %
 (i) for observations and transitions, respectively apply a joint grid search on the distance metrics, minimal cluster distance to determine clusters so that we minimize the number of cluster and maximize the organizational fit (i.e trying to minimizing the variance among automatically determined clusters);
@@ -976,7 +977,7 @@ This overall approach allows automatic calibration of the minimal cluster distan
 \begin{figure}[h!]
     \centering
     \includegraphics[trim=0cm 0cm 0cm 0cm, clip, width=1.\linewidth]{figures/convergence_time_relative_to_representativeness.pdf}
-    \caption{Normalized time to converge to a minimal cumulated reward over minimal representativeness}
+    \caption{General normalized time to converge to a minimal cumulated reward over minimal representativeness}
     \label{fig:conv_time_repr}
 \end{figure}
 
@@ -1003,8 +1004,8 @@ This overall approach allows automatic calibration of the minimal cluster distan
 
     \tcp*[l]{2. HPO on clustering distance and threshold}
     \For{$t \in \{obs,trans\}$}{
-        \ForEach{distance metric $\delta_t \in \{0.0, 0.1, ..., 1.0\}$}{
-            \ForEach{minimal cluster distance $\tau_t \in \{0.0, 0.1, ..., 1.0\}$}{
+        \ForEach{distance metric $\delta_t \in \{0.0\dots\frac{i}{n}\dots1.0\}_{i \in \{0\dots n\}}$}{
+            \ForEach{minimal cluster distance $\tau_t \in \{0.0\dots\frac{i}{n}\dots1.0\}_{i \in \{0\dots n\}}$}{
                 Cluster $\mathcal{D}_{\text{obs}}$ and $\mathcal{D}_{\text{trans}}$ using $(\delta_t, \tau_t)$ \;
                 Compute: $\sigma_{\text{obs}}, \sigma_{\text{trans}}, N_{\text{clusters}}$ \;
                 Score $\gets \alpha (\sigma_{\text{obs}} + \sigma_{\text{trans}}) + \beta N_{\text{clusters}}$ \tcp*[l]{default: $\alpha=0.4,\beta=0.6$}
@@ -1017,21 +1018,21 @@ This overall approach allows automatic calibration of the minimal cluster distan
     Cluster $\mathcal{D}_{\text{obs}}$ into $C_{obs}$ clusters $(\delta_{trans}^*, \tau_{trans}^*)$ \;
     Cluster $\mathcal{D}_{\text{trans}}$ into $C_{trans}$ clusters using $(\delta_{trans}^*, \tau_{trans}^*)$ \;
 
-    \tcp*[l]{4. Sweep on repr. to evaluate convergence times as func. $ct_t$}
+    \tcp*[l]{4. HPO on repr. to evaluate convergence times as func. $ct_t$}
     \For{$t \in \{obs,trans\}$}{
-        \ForEach{representativeness $\rho_t \in \{0.0, 0.1, ..., 1.0\}$}{
+        \ForEach{representativeness $\rho_t \in \{0.0\dots\frac{i}{n}\dots1.0\}_{i \in \{0\dots n\}}$}{
             Infer org. spec. $\mathcal{MM}_{\rho_t}$ from clusters using $\rho_t$ \;
             Initialize empty joint policy $\pi^j_{\rho_t}$ \;
             Train $\pi^j_{\rho_t}$ on $(d_\Omega, \mathcal{MM}_{\rho_t})$ until $R_{cum} \geq R_{\min}$ \;
             Record normalized conv. time $c_{\rho_t}$ so that $ct_t(\rho_t) = c_{\rho_t}$ \;
         }
 
-        \tcp*[l]{5. Select representativeness corresponding to threshold $\eta$ $(=3.5\%)$}
-        $\rho_t^* \gets \arg_{ct_t }(\eta)$ \tcp*[r]{Elbow point or exact threshold}
+        \tcp*[l]{5. Select repr. for threshold $\eta$ (by default $3.5\%$)}
+        $\rho_t^* \gets max(\{\rho_t \in \{0.0\dots\frac{i}{n}\dots1.0\}_{i \in \{0\dots n\}} | ct_t(\rho_t) < \eta \})$ \tcp*[r]{Elbow point}
 
     }
 
-    \tcp*[l]{6. Final role/goal inference using $\rho^*$}
+    \tcp*[l]{6. Final role/goal inference using TEMM}
     Infer roles from $\mathcal{D}_{\text{trans}}, \delta^*, \tau^*, \rho^*$ \;
     Infer goals from $\mathcal{D}_{\text{obs}}, \delta^*, \tau^*, \rho^*$ \;
 
@@ -1045,128 +1046,161 @@ This overall approach allows automatic calibration of the minimal cluster distan
 
 \subsection{Transferring}\label{sec:transferring}
 
-\subsubsection*{goal and Context}
-
-The \textbf{Transferring activity} closes the MAMAD design loop by operationalizing the trained policies in the real environment. It corresponds to:
+\noindent The \textbf{Transferring activity} addresses the following formal component:
 \[
-    \mathcal{E}_{i+1} \gets \texttt{transfer}(\mathcal{E}_i, \pi^j_i)
+\mathcal{D}_{H^j}, \texttt{need\_update} \gets \texttt{transfer}(\pi^j_{\text{latest}}, \mathcal{E}, \mathcal{D}_{H^j})
 \]
-This activity serves two purposes:
-\begin{enumerate}
-    \item Deploy the latest trained policies in the real environment for execution;
-    \item Collect new data from this deployment, used to update the environment model or trigger new MAMAD cycles.
-\end{enumerate}
 
-Unlike the previous activities, which primarily rely on simulated data, this activity ensures alignment with the operational reality.
 
-\subsubsection*{Transfer Algorithm}
+\subsection{Transferring}\label{sec:transferring}
 
+The \textbf{Transferring activity} addresses the following formal component of the MAMAD loop:
+\[
+    (\mathcal{D}_{H^j}, \texttt{need\_update}) \gets \texttt{transfer}(\pi^j_{\text{latest}}, \mathcal{E}, \mathcal{D}_{H^j})
+\]
+
+The \textit{Transferring activity} fulfills two main goals: (1) continuously deploy the most recent joint policy $\pi^j_{\text{latest}}$ into the real environment $\mathcal{E}$ to ensure agents act and interact effectively, and (2) collect fresh real-world joint trajectories $(\omega^j_t, a^j_t, \omega^j_{t+1})$ to enrich the trajectory dataset $\mathcal{D}_{H^j}$ used for updating the simulated environment and organizational specifications.
+
+To the best of our knowledge, no framework exists that provides both asynchronous policy deployment and automatic, threshold-triggered joint-history collection in a closed-loop manner while enabling synchronization with the learning pipeline. The lack of such infrastructure hampers automation of MAS design cycles in real environments.
+
+\paragraph{Transferring framework}
+We propose a general theoretical framework that implements an asynchronous and event-driven control system responsible for policy execution and trace harvesting. It maintains a buffer of trajectories, triggers the retraining pipeline once a size threshold is met, and ensures the most recent policy is continuously applied. This control logic is structured around two mechanisms:
+(i) a \texttt{Transfer Loop} that handles real-time deployment and data collection, and
+(ii) an \texttt{Update Trigger} that launches the full design process once sufficient data is available. The system avoids launching multiple parallel updates and guarantees synchronization between transfer and modeling phases.
+
+\vspace{-0.3em}
 \begin{algorithm}[H]
-    \caption{MAMAD Transfer activity}
+    \caption{Transferring activity}
     \label{alg:transferring}
     \DontPrintSemicolon
-    \KwIn{Real environment $\mathcal{E}_i$, policy $\pi^j_i$, mode $\in$ \{centralized, decentralized\}, threshold $\theta$}
-    \KwOut{Updated environment $\mathcal{E}_{i+1}$, data batch $\mathcal{H}_{i+1}$}
+    \KwIn{Current policy $\pi^j_{\text{latest}}$, real environment $\mathcal{E}$, trajectory store $\mathcal{D}_{H^j}$}
+    \KwOut{Updated trajectory dataset $\mathcal{D}_{H^j}$, update signal $\texttt{need\_update}$}
     
-    Initialize connection with real environment via interface $\mathcal{I}$\;
-    Deploy policy $\pi^j_i$ according to selected mode\;
-    
-    \While{process is active}{
-        \eIf{mode == centralized}{
-            Observe $\omega_t^j$ from $\mathcal{E}_i$\;
-            Compute $a_t^j \gets \pi^j_i(\omega_t^j)$\;
-            Send $a_t^j$ to actuators via $\mathcal{I}$\;
-            Observe $\omega_{t+1}^j$ and store $(\omega_t^j, a_t^j, \omega_{t+1}^j)$ in $\mathcal{H}_i$\;
-        }{
-            Agents act autonomously and store local transitions\;
-            Periodically upload new data $(\omega_t^a, a_t^a, \omega_{t+1}^a)$ via $\mathcal{I}$\;
-        }
-        
-        \If{new data batch size $> \theta$}{
-            Save $\mathcal{H}_i$ to persistent storage\;
-            \textbf{Trigger a new MAMAD cycle}
+    \vspace{0.3em}
+    \SetKwProg{Transfer}{Procedure \normalfont TransferLoop}{}{}
+    \Transfer{}{
+
+        \While{MAS is active in environment $\mathcal{E}$}{
+            \tcp*[l]{Execute latest policy in environment}
+            $\omega^j_t \gets \texttt{observe}(\mathcal{E})$ \;
+            $a^j_t \gets \pi^j_{\text{latest}}(\omega^j_t)$ \;
+            $\omega^j_{t+1} \gets \texttt{apply}(\mathcal{E}, a^j_t)$ \;
+            Append $(\omega^j_t, a^j_t, \omega^j_{t+1})$ to temporary buffer $\mathcal{B}$ \;
+            
+            \tcp*[l]{Check whether retraining is needed}
+            \If{$|\mathcal{B}| \geq \texttt{batch\_size}$}{
+                Add $\mathcal{B}$ to $\mathcal{D}_{H^j}$ and clear $\mathcal{B}$ \;
+                $\texttt{need\_update} \gets \texttt{True}$ \;
+                \If{$\texttt{running\_update} = \texttt{False}$}{
+                    \texttt{launch\_update()} \tcp*[r]{Asynchronous call}
+                }
+            }
         }
     }
 \end{algorithm}
+
+This mechanism ensures (i) continuity of execution, (ii) reactivity to data freshness, and (iii) automation of update cycles. It forms the bridge between the simulated world and the deployment context by continually adjusting the design loop to the evolving environment, a core requirement for long-term MAS autonomy.
+
 
 \section{Experimental setup}
 \label{sec:experimental_setup}
 
 We developed a tool that we propose to facilitate the implementation of the MAMAD method through four environments following a proposed evaluation protocol.
 
-% \subsection{A development environment for the method}
+\subsection{CybMASDE: A Development Environment to Implement the MAMAD Method}
+\label{sec:cybmasde}
 
-% To support the implementation and evaluation of the MAMAD method, we developed the \textbf{Cyber Multi-agent System Development Environment}~\footnotemark[1], a dedicated framework that facilitates modeling, training, and deploying MAS. An visual overview of CybMASDE provided in \autoref{fig:cybmasde}.
+To support the implementation and execution of the MAMAD method in a reproducible and modular way, we developed the \textbf{Cyber Multi-Agent System Development Environment (CybMASDE)}~\footnotemark[1], a dedicated platform that orchestrates the modeling, training, analysis, and deployment of MAS driven by the MOISE+MARL framework.
 
-% \footnotetext[1]{Source code and details are freely available in \url{https://github.com/julien6/CybMASDE}} (\textbf{CybMASDE})
+\footnotetext[1]{Source code and documentation available at \url{https://github.com/julien6/CybMASDE}}
 
-% \begin{figure}[h!]
-%     \centering
-%     \includegraphics[width=0.7\linewidth]{figures/CybMASDE.png}
-%     \caption{A screenshot of the \href{https://github.com/julien6/CybMASDE}{CybMASDE} tool. CybMASDE integrates several state-of-the-art libraries and tools to provide a flexible, scalable, and user-friendly environment for MARL-driven MAS design.}
-%     \label{fig:cybmasde}
-% \end{figure}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\linewidth]{figures/CybMASDE.png}
+    \caption{Overview of the CybMASDE platform. It supports the four MAMAD phases via modular APIs and tools, integrating simulation, MARL, organizational modeling, HPO and evaluation.}
+    \label{fig:cybmasde}
+\end{figure}
+
+\paragraph{General Architecture.}
+CybMASDE is implemented in Python 3.10 and built around four core modules matching the MAMAD phases: \texttt{Modeling}, \texttt{Training}, \texttt{Analyzing}, and \texttt{Transferring}. Each module is modular, extensible, and interoperable via a shared file store and API endpoints, enabling both standalone execution and asynchronous pipelines. Execution is containerized via Docker or Singularity for cross-platform reproducibility.
+
+\subsubsection*{Modeling}
+
+This module constructs a high-fidelity simulation environment (JOPM), and formalizes the goal and constraints of the optimization problem.
+
+\begin{itemize}
+    \item \textbf{World Models:} Joint Observation Prediction Model (JOPM) implemented using PyTorch with LSTM-based dynamics trained from joint histories $\mathcal{D}_{H^j}$.
+    \item \textbf{Encoders:} VAE-based encoders for joint observations and MLP encoders for joint actions.
+        \begin{itemize}
+            \item Observation latent dim $\in \{16, 32, 64\}$, decoder architecture: 2-layer MLP
+            \item LSTM hidden size: 64 or 128; optimizer: Adam, learning rate $\in [1e^{-4}, 5e^{-4}]$
+        \end{itemize}
+    \item \textbf{Goal Function:} A history-based reward function $R^j_H$ manually derived from $\mathcal{G}_{\text{inf}}$.
+    \item \textbf{Organizational Specification:} MOISE+MARL specifications $\mathcal{MM}$ are manually encoded from $\mathcal{C}_{\text{inf}}$ using the \textbf{MOISE+MARL API (MMA)}.
+\end{itemize}
+
+\subsubsection*{Training}
+
+This module solves the modeled problem via MOISE+MARL using ODec-POMDP.
+
+\begin{itemize}
+    \item \textbf{MARL Algorithms:} Implemented via the MARLlib~\cite{hu2022marllib} library.
+        \begin{itemize}
+            \item Supported: MAPPO, MADDPG, QMix, IQL, VDN, ROMA
+        \end{itemize}
+    \item \textbf{Constraint Integration:} MMA applies role-based action masking and reward shaping at runtime via wrappers.
+    \item \textbf{Training Backends:} Based on Ray RLlib for distributed training.
+    \item \textbf{Hyper-parameters:}
+        \begin{itemize}
+            \item Learning rate: $[1e^{-4}, 5e^{-4}]$
+            \item PPO clip: $[0.1, 0.3]$
+            \item Discount factor: $[0.9, 0.99]$
+            \item Batch size: $\{64, 128\}$; MLP layer sizes: $\{64, 128, 256\}$
+        \end{itemize}
+\end{itemize}
+
+\subsubsection*{Analyzing}
+
+This module implements the Auto-TEMM method for inferring roles and goals and computing organizational fit.
+
+\begin{itemize}
+    \item \textbf{Clustering:} Trajectories are clustered using hierarchical clustering and DTW, LCS, Smith-Waterman or Euclidean distances.
+    \item \textbf{Hyper-Parameter Optimization:} \textbf{Optuna} is used to:
+        \begin{itemize}
+            \item Select optimal \texttt{distance\_metric} $\in$ \{LCS, DTW, Smith-Waterman\}
+            \item Tune \texttt{min\_cluster\_distance} $\in [0.1, 0.5]$ to minimize intra-cluster variance and number of clusters
+            \item Determine \texttt{min\_representativeness} via sweep $[0.0, 1.0]$ to minimize convergence time to a target reward threshold (default: 3.5\%)
+        \end{itemize}
+    \item \textbf{Metrics:}
+        \begin{itemize}
+            \item Structural Organizational Fit (SOF): based on average transition cluster variance
+            \item Functional Organizational Fit (FOF): based on observation cluster variance
+        \end{itemize}
+\end{itemize}
+
+\subsubsection*{Transferring}
+
+This module asynchronously deploys trained policies and collects trajectories from the real environment.
+
+\begin{itemize}
+    \item \textbf{Deployment:} Real agents are interfaced via PettingZoo API or external APIs (e.g., WebSocket for Kubernetes, UDP for CybORG).
+    \item \textbf{Trajectory Store:} Episodes are saved to disk when a batch threshold is reached (default: 512 steps).
+    \item \textbf{Triggering:} When buffer is full, the Modeling–Training–Analyzing loop is triggered.
+    \item \textbf{Policy Update:} The most recent policy $\pi^j_{\text{latest}}$ is deployed continuously in the environment.
+\end{itemize}
+
+\paragraph{Environments and Interfaces.}
+CybMASDE supports:
+\begin{itemize}
+    \item Standard MARL benchmarks: Overcooked-AI, MPE, Predator-Prey
+    \item Cyber-defense environments: CybORG (CAGE challenge)
+    \item Custom APIs (e.g., Kubernetes cluster control)
+\end{itemize}
+
+\paragraph{Extensibility.}
+Users can plug new algorithms, clustering techniques, visualization tools, or organizational formalisms via well-documented interfaces. YAML-based configuration ensures full experiment reproducibility.
 
 
-% CybMASDE leverages the \textbf{PettingZoo}~\cite{Terry2021} library, which offers a standardized API for MARL environments, ensuring interoperability with various MARL algorithms. This allows seamless integration of different multi-agent environments without the need for extensive custom modifications.
-
-% At the core of CybMASDE's learning capabilities lies \textbf{MARLlib}~\cite{hu2022marllib}, a comprehensive library providing access to a wide range of MARL algorithms. MARLlib ensures optimized implementations of cutting-edge MARL techniques and fine-tuned policy models, enabling efficient training across diverse environments. CybMASDE fully supports MARLlib's algorithms, offering users the flexibility to select, experiment with, and compare different approaches based on environment dynamics and learning goals.
-
-% \paragraph{Supported MARL algorithms}
-% CybMASDE supports the full range of MARL algorithms provided by MARLlib, including:
-% \begin{itemize}
-%     \item \textbf{Value-based methods:}
-%           \begin{itemize}
-%               \item Independent Q-Learning ;
-%               \item VDN (Value-Decomposition Networks)~\cite{sunehag2018vdn} ;
-%               \item QMIX~\cite{rashid2018qmix} ;
-%               \item QTRAN~\cite{son2019qtran}.
-%           \end{itemize}
-%     \item \textbf{Policy-based methods:}
-%           \begin{itemize}
-%               \item Independent PPO ;
-%               \item MAPPO (Multi-Agent Proximal Policy Optimization)~\cite{yu2021mappo} ;
-%               \item MADDPG (Multi-Agent Deep Deterministic Policy Gradient)~\cite{lowe2017multi} ;
-%               \item HATRPO (Heterogeneous-Agent Trust Region Policy Optimization)~\cite{kuba2022}.
-%           \end{itemize}
-%     \item \textbf{Actor-Critic methods:}
-%           \begin{itemize}
-%               \item COMA (Counterfactual Multi-Agent Policy Gradients)~\cite{foerster2018counterfactual} ;
-%               \item MAVEN (Multi-Agent Variational Exploration)~\cite{mahajan2019maven} ;
-%               \item ROMA (Role-Oriented Multi-Agent RL)~\cite{wang2020roma}.
-%           \end{itemize}
-%     \item \textbf{Model-based methods:}
-%           \begin{itemize}
-%               \item Dyna-Q and Dyna-Q+ (planning-based approaches) ;
-%               \item MB-MARL (Model-Based MARL variants).
-%           \end{itemize}
-% \end{itemize}
-
-% This extensive support ensures that CybMASDE can accommodate different MARL paradigms, including \textbf{Centralized Training with Decentralized Execution} (CTDE), fully decentralized learning, and explicit coordination mechanisms. Users can easily compare different MARL strategies to determine the most suitable algorithm for a given MAS scenario.
-
-% \paragraph{Environment simulation and hyperparameter optimization}
-% CybMASDE incorporates \textbf{TensorFlow} to enable automated environment modeling, allowing users to generate and refine environment models via deep learning-based function approximation. This is particularly useful for cases where the environment's transition dynamics are unknown or difficult to model manually. The system supports \textbf{world-model-based learning}, where agents are trained using a learned simulation of the environment, reducing dependence on real-world interaction data.
-
-% Additionally, CybMASDE provides \textbf{Hyper-Parameter Optimization (HPO)}, allowing users to fine-tune crucial training parameters such as:
-% \begin{itemize}
-%     \item \textbf{Learning rate schedules:} Control how quickly the learning algorithm updates its parameters. Adaptive or decaying schedules can help improve convergence stability and performance over time.
-%     \item \textbf{Discount factor} ($\gamma$): Determines the agent's preference between short-term and long-term rewards. A lower $\gamma$ encourages myopic behavior (favoring immediate rewards), whereas a higher $\gamma$ promotes planning for delayed gains.
-%     \item \textbf{Exploration-exploitation balance:} Typically managed via $\epsilon$-greedy or entropy-based strategies. It regulates the trade-off between discovering new behaviors (exploration) and exploiting current knowledge (exploitation).
-%     \item \textbf{Policy gradient update parameters:} Include settings like the PPO clipping factor, which prevents excessively large updates to the policy. This helps maintain training stability and avoid policy collapse.
-%     \item \textbf{Reward shaping configurations:} Involves adding auxiliary rewards to guide learning more effectively. Proper shaping can accelerate convergence by making useful intermediate states more attractive.
-% \end{itemize}
-
-
-% This feature ensures that trained policies are not only effective but also stable across different environments and organizational constraints.
-
-% \paragraph{User interface and deployment capabilities}
-% CybMASDE provides:
-% \begin{itemize}
-%     \item A \textbf{full-featured API} for advanced users, enabling fine-grained control over environment configurations, learning parameters, and agent interactions ;
-%     \item A \textbf{graphical user interface (GUI)} for simplified access to key functionalities, allowing non-experts to configure and launch MARL training sessions with minimal setup ;
-%     \item \textbf{Support for multi-environment benchmarking}, where multiple training runs can be executed in parallel, enabling systematic comparison of different MARL methods ;
-%     \item \textbf{Automated policy deployment}, where trained agents can be directly transferred to real or simulated environments for validation and real-world execution.
-% \end{itemize}
 
 
 \subsection{Computing resources}
