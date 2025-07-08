@@ -1114,92 +1114,22 @@ To support the implementation and execution of the MAMAD method in a reproducibl
 
 \footnotetext[1]{Source code and documentation available at \url{https://github.com/julien6/CybMASDE}}
 
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.7\linewidth]{figures/CybMASDE.png}
-    \caption{Overview of the CybMASDE platform. It supports the four MAMAD phases via modular APIs and tools, integrating simulation, MARL, organizational modeling, HPO and evaluation.}
-    \label{fig:cybmasde}
-\end{figure}
+% \begin{figure}[h!]
+%     \centering
+%     \includegraphics[width=0.7\linewidth]{figures/CybMASDE.png}
+%     \caption{Overview of the CybMASDE platform. It supports the four MAMAD phases via modular APIs and tools, integrating simulation, MARL, organizational modeling, HPO and evaluation.}
+%     \label{fig:cybmasde}
+% \end{figure}
 
-\paragraph{General Architecture.}
-CybMASDE is implemented in Python 3.10 and built around four core modules matching the MAMAD phases: \texttt{Modeling}, \texttt{Training}, \texttt{Analyzing}, and \texttt{Transferring}. Each module is modular, extensible, and interoperable via a shared file store and API endpoints, enabling both standalone execution and asynchronous pipelines. Execution is containerized via Docker or Singularity for cross-platform reproducibility.
+The modeling module builds a Joint Observation Prediction Model (JOPM) using PyTorch with LSTM dynamics trained from real joint histories $\mathcal{D}_{H^j}$. Observations are compressed using VAE encoders (latent dimensions 16-64), while actions are encoded via MLPs. The LSTM uses hidden sizes of 64 or 128, optimized with Adam (learning rate $[1e^{-4}, 5e^{-4}]$). The reward function $R^j_H$ is manually derived from $\mathcal{G}_{\text{inf}}$, and organizational constraints $\mathcal{C}_{\text{inf}}$ are formalized into MOISE+MARL specifications $\mathcal{MM}$ using the MMA API.
 
-\subsubsection*{Modeling}
+Training is performed with MARLlib~\cite{hu2022marllib}, supporting MAPPO, MADDPG, QMix, IQL, VDN, and ROMA. MOISE+MARL constraints are enforced through role-based action masking and reward shaping. Training runs on Ray RLlib with learning rate $[1e^{-4}, 5e^{-4}]$, discount factor $[0.9, 0.99]$, PPO clip $[0.1, 0.3]$, and batch sizes $\{64, 128\}$, with policy networks using MLPs of 64-256 units.
 
-This module constructs a high-fidelity simulation environment (JOPM), and formalizes the goal and constraints of the optimization problem.
+Analysis implements the Auto-TEMM method, extending TEMM with full hyperparameter optimization via Optuna. Trajectories are clustered using hierarchical clustering with tunable distance metrics (e.g., DTW, LCS), and the minimal cluster distance is optimized to reduce intra-cluster variance and cluster count. A sweep over representativeness values (0.0-1.0) is performed to identify the one minimizing convergence time to a target reward (default threshold: 3.5\%). Organizational fit is computed by averaging Structural (SOF) and Functional (FOF) components derived from cluster variances.
 
-\begin{itemize}
-    \item \textbf{World Models:} Joint Observation Prediction Model (JOPM) implemented using PyTorch with LSTM-based dynamics trained from joint histories $\mathcal{D}_{H^j}$.
-    \item \textbf{Encoders:} VAE-based encoders for joint observations and MLP encoders for joint actions.
-        \begin{itemize}
-            \item Observation latent dim $\in \{16, 32, 64\}$, decoder architecture: 2-layer MLP
-            \item LSTM hidden size: 64 or 128; optimizer: Adam, learning rate $\in [1e^{-4}, 5e^{-4}]$
-        \end{itemize}
-    \item \textbf{Goal Function:} A history-based reward function $R^j_H$ manually derived from $\mathcal{G}_{\text{inf}}$.
-    \item \textbf{Organizational Specification:} MOISE+MARL specifications $\mathcal{MM}$ are manually encoded from $\mathcal{C}_{\text{inf}}$ using the \textbf{MOISE+MARL API (MMA)}.
-\end{itemize}
+The transferring module ensures continuous policy deployment and data collection. Policies $\pi^j_{\text{latest}}$ are deployed into real or simulated environments via PettingZoo or environment-specific APIs (e.g., WebSocket or UDP). Once trajectory buffers reach a predefined threshold (e.g., 512 steps), they trigger a full Modeling (Training) Analyzing cycle.
 
-\subsubsection*{Training}
-
-This module solves the modeled problem via MOISE+MARL using ODec-POMDP.
-
-\begin{itemize}
-    \item \textbf{MARL Algorithms:} Implemented via the MARLlib~\cite{hu2022marllib} library.
-        \begin{itemize}
-            \item Supported: MAPPO, MADDPG, QMix, IQL, VDN, ROMA
-        \end{itemize}
-    \item \textbf{Constraint Integration:} MMA applies role-based action masking and reward shaping at runtime via wrappers.
-    \item \textbf{Training Backends:} Based on Ray RLlib for distributed training.
-    \item \textbf{Hyper-parameters:}
-        \begin{itemize}
-            \item Learning rate: $[1e^{-4}, 5e^{-4}]$
-            \item PPO clip: $[0.1, 0.3]$
-            \item Discount factor: $[0.9, 0.99]$
-            \item Batch size: $\{64, 128\}$; MLP layer sizes: $\{64, 128, 256\}$
-        \end{itemize}
-\end{itemize}
-
-\subsubsection*{Analyzing}
-
-This module implements the Auto-TEMM method for inferring roles and goals and computing organizational fit.
-
-\begin{itemize}
-    \item \textbf{Clustering:} Trajectories are clustered using hierarchical clustering and DTW, LCS, Smith-Waterman or Euclidean distances.
-    \item \textbf{Hyper-Parameter Optimization:} \textbf{Optuna} is used to:
-        \begin{itemize}
-            \item Select optimal \texttt{distance\_metric} $\in$ \{LCS, DTW, Smith-Waterman\}
-            \item Tune \texttt{min\_cluster\_distance} $\in [0.1, 0.5]$ to minimize intra-cluster variance and number of clusters
-            \item Determine \texttt{min\_representativeness} via sweep $[0.0, 1.0]$ to minimize convergence time to a target reward threshold (default: 3.5\%)
-        \end{itemize}
-    \item \textbf{Metrics:}
-        \begin{itemize}
-            \item Structural Organizational Fit (SOF): based on average transition cluster variance
-            \item Functional Organizational Fit (FOF): based on observation cluster variance
-        \end{itemize}
-\end{itemize}
-
-\subsubsection*{Transferring}
-
-This module asynchronously deploys trained policies and collects trajectories from the real environment.
-
-\begin{itemize}
-    \item \textbf{Deployment:} Real agents are interfaced via PettingZoo API or external APIs (e.g., WebSocket for Kubernetes, UDP for CybORG).
-    \item \textbf{Trajectory Store:} Episodes are saved to disk when a batch threshold is reached (default: 512 steps).
-    \item \textbf{Triggering:} When buffer is full, the Modeling–Training–Analyzing loop is triggered.
-    \item \textbf{Policy Update:} The most recent policy $\pi^j_{\text{latest}}$ is deployed continuously in the environment.
-\end{itemize}
-
-\paragraph{Environments and Interfaces.}
-CybMASDE supports:
-\begin{itemize}
-    \item Standard MARL benchmarks: Overcooked-AI, MPE, Predator-Prey
-    \item Cyber-defense environments: CybORG (CAGE challenge)
-    \item Custom APIs (e.g., Kubernetes cluster control)
-\end{itemize}
-
-\paragraph{Extensibility.}
-Users can plug new algorithms, clustering techniques, visualization tools, or organizational formalisms via well-documented interfaces. YAML-based configuration ensures full experiment reproducibility.
-
+CybMASDE thus offers a complete, extensible toolchain for executing the MAMAD method, integrating simulation, MARL training, organizational inference, and deployment in a unified development environment.
 
 
 
