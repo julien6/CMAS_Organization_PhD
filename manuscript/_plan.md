@@ -141,7 +141,7 @@ Etat actuel du manuscrit
 
 ### 6.4 Un scénario d’essaim de drones
 
-### 6.5 Un scénario d’orchestration Kubernetes
+### 6.5 Un scénario d’Architecture de microservices
 
 ## 5.6 Résultats et discussion
 

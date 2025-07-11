@@ -109,7 +109,7 @@
 
 * 13.1 Scénario 1 : Infrastructure d’entreprise
 * 13.2 Scénario 2 : Essaim de drones
-* 13.3 Scénario 3 : Orchestration Kubernetes
+* 13.3 Scénario 3 : Architecture de microservices
 
 ## Chapitre 14 : Résultats et synthèse
 
