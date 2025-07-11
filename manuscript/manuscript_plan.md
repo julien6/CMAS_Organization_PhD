@@ -71,13 +71,13 @@
 
 * 7.1 Reconstruction partielle de l’environnement
 * 7.2 Apprentissage de la dynamique observable
-* 7.3 Intégration des contraintes de déploiement
+* 7.3 Modélisation des exigences de conception et de l'objectif
 
 ## Chapitre 8 : Phase 2 — Apprentissage guidé (MARL contraint)
 
-* 8.1 Cadres d’entraînement MARL utilisés
+* 8.1 Cadres Markoviens utilisés
 * 8.2 Contraintes organisationnelles dans MARL (OAC, TRF)
-* 8.3 Politique composite et filtrage d’actions
+* 8.3 Une politique conjointe composite pour l'incertitude
 
 ## Chapitre 9 : Phase 3 — Analyse post-entraînement
 
