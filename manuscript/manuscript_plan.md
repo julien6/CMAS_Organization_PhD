@@ -8,7 +8,7 @@
 
 * 1.1 Évolution des menaces et besoins en cyberdéfense autonome
 * 1.2 Vers une architecture agentielle (cadre AICA)
-* 1.3 Problématique de conception d’un SMA de cyberdéfense
+* 1.3 Problématique de conception d'un SMA de cyberdéfense
 * 1.4 Question de recherche et objectifs scientifiques
 
 ## Chapitre 2 — Revue critique et émergence de l'approche
@@ -19,7 +19,7 @@
 * 2.2 SMA en cybersécurité et cyberdéfense : état de l'art
 * 2.3 Limites identifiées des approches existantes
 * 2.4 Concepts clés pour une nouvelle approche : auto-organisation, adaptabilité, explicabilité
-* 2.5 Recentrage vers l’apprentissage : RL/MARL et inférence non supervisée
+* 2.5 Recentrage vers l'apprentissage : RL/MARL et inférence non supervisée
 * 2.6 Vers une structuration en 4 axes : modélisation, entraînement, analyse, transfert
 
 ## Chapitre 3 — Méthode, hypothèses et organisation du manuscrit
@@ -46,12 +46,12 @@
 * 4.3 Apprentissage par renforcement multi-agent (MARL)
 * 4.4 Intégration organisation-apprentissage
 
-## Chapitre 5 — Analyse des hypothèses : état de l’art, verrou, formulation
+## Chapitre 5 — Analyse des hypothèses : état de l'art, verrou, formulation
 
-**Objectif :** pour chaque hypothèse H1–H5, analyser le domaine lié, identifier un manque, et formuler l’hypothèse comme réponse.
+**Objectif :** pour chaque hypothèse H1–H5, analyser le domaine lié, identifier un manque, et formuler l'hypothèse comme réponse.
 
 * 5.1 H1 : Formalisation du problème (Dec-POMDP contraint)
-* 5.2 H2 : Modélisation par apprentissage de l’environnement (World Models)
+* 5.2 H2 : Modélisation par apprentissage de l'environnement (World Models)
 * 5.3 H3 : Résolution par MARL adaptatif
 * 5.4 H4 : Guidage organisationnel via contraintes MOISE+ (OAC/TRF)
 * 5.5 H5 : Analyse organisationnelle (rôles/objectifs émergents)
@@ -69,7 +69,7 @@
 
 ## Chapitre 7 : Phase 1 — Modélisation
 
-* 7.1 Reconstruction partielle de l’environnement
+* 7.1 Reconstruction partielle de l'environnement
 * 7.2 Apprentissage de la dynamique observable
 * 7.3 Modélisation des exigences de conception et de l'objectif
 
@@ -81,9 +81,9 @@
 
 ## Chapitre 9 : Phase 3 — Analyse post-entraînement
 
-* 9.1 Méthodes d’inférence des rôles et objectifs
+* 9.1 Méthodes d'inférence des rôles et objectifs
 * 9.2 Indicateurs : SOF, FOF, OF
-* 9.3 Outil TEMM : fonctionnement, cas d’usage
+* 9.3 Outil TEMM : fonctionnement, cas d'usage
 
 ## Chapitre 10 : Phase 4 — Transfert et supervision
 
@@ -102,12 +102,12 @@
 
 ## Chapitre 11 : Protocole expérimental
 
-* 12.1 Objectifs d’évaluation
+* 12.1 Objectifs d'évaluation
 * 12.2 Configuration, métriques, baselines
 
 ## Chapitre 13 : Études de cas
 
-* 13.1 Scénario 1 : Infrastructure d’entreprise
+* 13.1 Scénario 1 : Infrastructure d'entreprise
 * 13.2 Scénario 2 : Essaim de drones
 * 13.3 Scénario 3 : Architecture de microservices
 
@@ -120,7 +120,7 @@
 ## Chapitre 15 : Analyse croisée des contributions
 
 * 15.1 Conditions de validité et généralité
-* 15.2 Positionnement dans l’écosystème de recherche
+* 15.2 Positionnement dans l'écosystème de recherche
 
 ---
 

@@ -10,7 +10,7 @@
 
 * Période estimée : 19 juin au 30 juin
 * Durée estimée : entre 10 et 12 jours
-* Objectif : introduire les notions fondamentales (SMA, MARL, MOISE+), puis analyser pour chaque hypothèse le champ scientifique associé, identifier un manque et justifier l’hypothèse comme réponse.
+* Objectif : introduire les notions fondamentales (SMA, MARL, MOISE+), puis analyser pour chaque hypothèse le champ scientifique associé, identifier un manque et justifier l'hypothèse comme réponse.
 
 ## Partie III — Méthodologie de conception : MAMAD
 
@@ -28,7 +28,7 @@
 
 * Période estimée : 18 juillet au 22 juillet
 * Durée estimée : 4 à 5 jour
-* Objectif : analyser les apports de manière transversale, discuter des limites, et positionner la thèse par rapport à l’état de l’art.
+* Objectif : analyser les apports de manière transversale, discuter des limites, et positionner la thèse par rapport à l'état de l'art.
 
 ## Partie VI — Conclusion et perspectives
 

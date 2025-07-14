@@ -25,11 +25,11 @@ Objectifs:
 
 ---
 
-### 🔹 Étape 1 — Modélisation : Construction d’un Observation-based MDP (OMDP)
+### 🔹 Étape 1 — Modélisation : Construction d'un Observation-based MDP (OMDP)
 
-Cette étape introduit une première contribution centrée sur la **modélisation automatisée de l’environnement de déploiement**, en s’appuyant sur les approches dites *World Model*. À ce stade, on dispose d’un **ensemble conséquent de trajectoires** (ou historiques) d’agents, collectées lors de phases d’exploration avec la politique conjointe courante — initialisée de manière aléatoire à la première itération. Ces trajectoires sont stockées dans une base de données et exploitées pour construire un **Observation-based Markov Decision Process (OMDP)**, qui joue le rôle de **modèle de simulation**.
+Cette étape introduit une première contribution centrée sur la **modélisation automatisée de l'environnement de déploiement**, en s'appuyant sur les approches dites *World Model*. À ce stade, on dispose d'un **ensemble conséquent de trajectoires** (ou historiques) d'agents, collectées lors de phases d'exploration avec la politique conjointe courante — initialisée de manière aléatoire à la première itération. Ces trajectoires sont stockées dans une base de données et exploitées pour construire un **Observation-based Markov Decision Process (OMDP)**, qui joue le rôle de **modèle de simulation**.
 
-Dans ce OMDP, les **nœuds** correspondent à des **observations conjointes** $o_{\text{joint}} \in \Omega_1 \times \cdots \times \Omega_n$, et les **arêtes dirigées** représentent les **actions conjointes** $a_{\text{joint}} \in A_1 \times \cdots \times A_n$, donnant lieu à une dynamique $o^t_{\text{joint}} \xrightarrow{a^t_{\text{joint}}} o^{t+1}_{\text{joint}}$. À partir de cette structure, deux types de **fonctions prédictives d’observation** (Predictive Observation Functions, ou POF) sont dérivées :
+Dans ce OMDP, les **nœuds** correspondent à des **observations conjointes** $o_{\text{joint}} \in \Omega_1 \times \cdots \times \Omega_n$, et les **arêtes dirigées** représentent les **actions conjointes** $a_{\text{joint}} \in A_1 \times \cdots \times A_n$, donnant lieu à une dynamique $o^t_{\text{joint}} \xrightarrow{a^t_{\text{joint}}} o^{t+1}_{\text{joint}}$. À partir de cette structure, deux types de **fonctions prédictives d'observation** (Predictive Observation Functions, ou POF) sont dérivées :
 
 #### a) Fonction prédictive exacte mais partielle :
 
@@ -39,7 +39,7 @@ $$
 \mathcal{O}_{\text{partielle}} : H_{joint} \times A_{joint} \rightarrow \Omega
 $$
 
-qui, pour un historique partiel $h_i^t$ et une action $a_i^t$, retourne une observation probable $o_i^{t+1}$ **si** une trajectoire identique ou très proche a déjà été observée dans l’OMDP. Cette fonction s’appuie sur la recherche de sous-trajectoires similaires dans la base, et permet de prédire l’observation suivante **lorsque la situation a déjà été rencontrée**.
+qui, pour un historique partiel $h_i^t$ et une action $a_i^t$, retourne une observation probable $o_i^{t+1}$ **si** une trajectoire identique ou très proche a déjà été observée dans l'OMDP. Cette fonction s'appuie sur la recherche de sous-trajectoires similaires dans la base, et permet de prédire l'observation suivante **lorsque la situation a déjà été rencontrée**.
 
 #### b) Fonction prédictive généralisée :
 
@@ -49,7 +49,7 @@ $$
 \mathcal{O}_{\text{approx}} : H_{joint} \times A_{joint} \rightarrow \Omega
 $$
 
-à l’aide d’un modèle basé sur une architecture de **réseau de neurones récurrent (RNN)**, capable d’apprendre la dynamique de génération des observations à partir d’un grand nombre d’historiques. Cette fonction vise à **généraliser au-delà des trajectoires déjà vues**, en capturant les régularités dans la structure de l’environnement à travers l’évolution des observations conditionnées aux actions.
+à l'aide d'un modèle basé sur une architecture de **réseau de neurones récurrent (RNN)**, capable d'apprendre la dynamique de génération des observations à partir d'un grand nombre d'historiques. Cette fonction vise à **généraliser au-delà des trajectoires déjà vues**, en capturant les régularités dans la structure de l'environnement à travers l'évolution des observations conditionnées aux actions.
 
 ### 🔹 Étape 2 — Entrainement : 
 
@@ -69,7 +69,7 @@ Etat actuel du manuscrit
 ### Section 1.1 : Un contexte de Cyberdéfense avec des défis futurs et nouveaux 
 % Contexte général : Présenter le contexte dans lequel le sujet de la thèse s'inscrit
 
-### Section 1.2 : L’idée d’un système multi-agents de Cyberdéfense
+### Section 1.2 : L'idée d'un système multi-agents de Cyberdéfense
 % Contexte spécifique : Présenter le SMA de Cyberdéfense et son histoire comme point de départ du sujet de thèse
 
 ### Section 1.3 : Question de recherche
@@ -89,9 +89,9 @@ Etat actuel du manuscrit
 
 ## Chapitre 2 : Vers un système multi-agents de cyberdéfense
 
-### Section 2.1 : Concepts dans les systèmes multi-agents et l’organisation
+### Section 2.1 : Concepts dans les systèmes multi-agents et l'organisation
 
-### Section 2.2 : Un état de l’art en matière de Cyberdéfense distribuée ou décentralisée
+### Section 2.2 : Un état de l'art en matière de Cyberdéfense distribuée ou décentralisée
 
 ### Section 2.3 : Synthèse et identification des verrous théoriques
 
@@ -137,11 +137,11 @@ Etat actuel du manuscrit
 
 ### 6.2 Expériences à travers trois études de cas
 
-### 6.3 Un scénario d’infrastructure d’entreprise
+### 6.3 Un scénario d'infrastructure d'entreprise
 
-### 6.4 Un scénario d’essaim de drones
+### 6.4 Un scénario d'essaim de drones
 
-### 6.5 Un scénario d’Architecture de microservices
+### 6.5 Un scénario d'Architecture de microservices
 
 ## 5.6 Résultats et discussion
 
