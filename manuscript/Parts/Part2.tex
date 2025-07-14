@@ -4,7 +4,7 @@
 % \addcontentsline{toc}{part}{Etat de l'art}
 \markboth{\spacedlowsmallcaps{Etat de l'art}}{\spacedlowsmallcaps{Etat de l'art}}
 \part{Etat de l'art}
-\label{part:methode}
+\label{part:etat_art}
 
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{\textbf{Introduction}}
@@ -24,17 +24,160 @@ Cette partie a pour but de fournir les bases et concepts nécéssaires à la com
 
 \section{SMA et modèles organisationnels}
 
+
+\subsection{The $\mathcal{M}OISE^+$ organizational model}
+
+The $\mathcal{M}OISE^+$ model~\cite{Hubner2002, Hubner2007} provides a comprehensive formal framework for specifying multi-agent organizations. While $\mathcal{M}OISE^+$ offers a comprehensive set of structural, functional, and deontic specifications, we show notation for the core components directly relevant to our approach: \textit{roles}, \textit{missions} (goals), and \textit{permissions/obligations}.
+
+\
+
+\noindent \textbf{Structural specifications} \quad
+%
+The structural specifications of the $\mathcal{M}OISE^+$ model include the roles, denoted $\mathcal{R}$ (with $\rho \in \mathcal{R}$).
+%
+Structural specifications also contain inheritance relation, the definition of groups and sub-groups, interconnected via links that encode various inter-role relationships such as acquaintance, communication, and authority, as well as compatibility relations defining which roles can be played simultaneously by the same agent, and cardinality constraints specifying the allowed number of agents assigned to roles and groups.
+
+\
+
+\noindent \textbf{Functional specifications} \quad
+%
+The functional specifications of the $\mathcal{M}OISE^+$ model include:
+%
+\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+    \item global goals, denoted $\mathcal{G}$ (with $g \in \mathcal{G}$), decomposed into hierarchical structures through plans, where decomposition operators specify how sub-goals contribute to higher-level goals;
+    \item missions that contain assigned goals, denoted $\mathcal{M}$ (with $m \in \mathcal{M}$)
+    \item a goal to mission mapping, denoted $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$.
+\end{enumerate*}
+%
+Functional specifications also include mission cardinalities indicating how many agents may commit to each mission (fixed to one in our contribution), and complemented by preference orders expressing social priorities when multiple missions are simultaneously available.
+
+\
+
+\noindent \textbf{Deontic specifications} \quad
+%
+The deontic specifications of the $\mathcal{M}OISE^+$ model define the agents' normative constraints through:
+%
+\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+    \item permissions, denoted $\mathcal{PER} = (\rho_a,m,tc)$ (aslo denoted $per(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is permitted to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+    \item and obligations, denoted $\mathcal{OBL} = (\rho_a,m,tc)$ (aslo denoted $obl(\rho_a,m,tc)$) meaning an agent playing role $\rho_a \in \mathcal{R}$ is obliged to commit on mission $m \in \mathcal{M}$ for a given time constraint $tc \in \mathcal{TC}$;
+\end{enumerate*}
+%
+A time constraint $tc \in \mathcal{TC}$ specifies a set of periods during which a permission or obligation is valid ($Any \in \mathcal{TC}$ means everytime);
+
+\
+
+\noindent Organizational specifications applied to agents are roles and goals (as missions) through permissions or obligations. Indeed, the other structural specifications such as compatibilities or links are inherent to roles. Similarly, we consider that the goals, the missions, and their mapping ($mo$) are enough to also link all of the other functional specifications such as plans, cardinalities, or preference orders.
+Consequently, we consider it is sufficient to take into account roles, missions (goal and mapping) and permissions/obligations when linking $\mathcal{M}OISE^+$ with Dec-POMDP. 
+
+For this reason, we adopt a minimal but sufficient formalization focused on the following organizational specification set $\mathcal{OS} = \langle \mathcal{R}, \mathcal{M}, \mathcal{PER}, \mathcal{OBL}, mo \rangle$ to guide organizational policy learning within our $\mathcal{M}OISE^+$ MARL framework.
+
+
+
 \section{Apprentissage par renforcement multi-agent}
 
+\subsection{Markov framework for MARL}
+
+To apply MARL techniques, we rely on Markovian models. The most commonly used among them is the \textbf{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP)~\cite{Oliehoek2016}. Dec-POMDPs model decentralized multi-agent coordination under partial observability, making them particularly suitable for integrating organizational constraints. Compared to \textbf{Partially Observable Stochastic Games} (POSGs), Dec-POMDPs assume a shared reward function among agents, thus promoting collaborative behaviors~\cite{Matignon2007}. Both Dec-POMDPs and POSGs typically presuppose access to the true state of the environment, which limits their applicability in realistic, opaque systems.
+%
+Formally, a Dec-POMDP is defined as a 7-tuple:
+%
+$\left(S, \{A_i\}, T, R, \{\Omega_i\}, O, \gamma \right)$
+%
+where:
+\begin{itemize}
+    \item $S = \{s_1, \dots, s_{|S|}\}$ is the set of possible environment states.
+    \item $A_i = \{a_1^i, \dots, a_{|A_i|}^i\}$ is the set of actions available to agent $i$.
+    \item $T(s, a, s') = \mathbb{P}(s' \mid s, a)$ defines the state transition probabilities.
+    \item $R: S \times A \times S \rightarrow \mathbb{R}$ is the reward function.
+    \item $\Omega_i = \{o_1^i, \dots, o_{|\Omega_i|}^i\}$ is the set of possible observations for agent $i$.
+    \item $O(s', a, o) = \mathbb{P}(o \mid s', a)$ specifies the observation probabilities.
+    \item $\gamma \in [0, 1]$ is the discount factor.
+\end{itemize}
+
+\noindent Considering $m$ \textbf{teams} each containing several agents among $\mathcal{A}$, we also detail the minimal formalism notation we re-used for solving the Dec-POMDP for a given team $i, 0 \leq i \leq m$ containing $n$ agents~\cite{Matignon2007,Yuan2023}:
+
+\begin{itemize}
+
+    \item $\Pi$: the set of policies. A \textbf{policy} $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action. It represents the agent's internal logic;
+    \item $\Pi^{j}$: the set of joint-policies. A \textbf{joint-policy} $\pi^{j} \in \Pi^{j}, \pi^{j}: \Omega^n \rightarrow A^n = \Pi^n$ chooses an action for each agent regarding their respective observation. It can be viewed as a set of the policies used in agents;
+    \item $H$: the set of histories. A \textbf{history} (we also interchangeably call \textbf{trajectory}) over $z \in \mathbb{N}$ steps (where $z$ is generally the maximum number of steps for an episode) is the $z$-tuple $h = ((\omega_{k}, a_{k}) | k \leq z, \omega \in \Omega, a \in A)$
+    \item $H^{j}$: the set of joint-histories. A \textbf{joint-history} over $z \in \mathbb{N}$ steps $h^{j} \in H^{j}, h^{j} = \{h_1,h_2..h_n\}$ is the set of the agents' histories.
+    \item $U^{j}_{i}(<\pi^{j}_{i}, \pi^{j}_{-i}>): \Pi^{j} \rightarrow \mathbb{R}$: gives the \textbf{expected cumulative reward} over a finite horizon (if $\gamma < 1$ or the number of steps in an episode is finite), with $\pi^{j}_{i}$ the joint policy for team $i$ and $\pi^{j}_{-i}$ all of the other concatenated joint-policies (considered as fixed);
+    \item $SR^{j}_{i}(\pi^{j}_{i}, s) = \{\pi^{j}_{i} | U(<\pi^{j}_{i},\pi^{j}_{-i}>) \geq s\}$: gives the \textbf{sufficient response} as the set of joint-policies getting at least $s \in \mathbb{R}, s \leq U_i^*$ as expected cumulative reward.
+\end{itemize}
+
+\noindent We refer to \textbf{solving} the Dec-POMDP at $s$ expectancy as finding a the joint policies $\pi^{j}_{i} \in \Pi^{j}, \pi^{j}_{i} = SR^{j}_{i}(\pi^{j}_{i}, s)$ that gets the expected cumulative reward over a finite horizon at least at $s \in \mathbb{R}, s \leq U_i^*$.
+
+
+
 \section{Modéliser un environnement simulé : les techniques \textquote{World Models}}
+
+
+In Reinforcement Learning (RL), particularly under partial observability, \textbf{World Models}~\cite{ha2018recurrent, hafner2020dream} aim to learn internal models approximating both the environment's transition and observation dynamics. Such models enable agents to perform planning, improve sample efficiency, and facilitate safe exploration. This modeling approach belongs to the \textit{model-based RL} (MBRL) paradigm~\cite{moerland2020model}, and is especially useful for automatically constructing high-fidelity simulation models even when explicit environment representations are unavailable.
+
+Formally, at each time step $t$, let $\omega_t \in \Omega$ denote the current high-dimensional observation, $a_t \in A$ the action taken, and $\tilde{h}_{t-1} \in \mathcal{H}$ the recurrent hidden state summarizing the interaction history up to $t-1$. Since observations are typically high-dimensional (e.g., images, complex state vectors), an encoder $Enc: \Omega \rightarrow Z$ is first applied to project observations into a compact latent space $Z$ with $z_t = Enc(\omega_t)$, where $\dim(Z) \ll \dim(\Omega)$.
+
+The core temporal structure is modeled using a \textbf{Recurrent Latent Dynamics Model (RLDM)}~\cite{hafner2020dream} $\mathcal{T}^{z} = f(g(h_{t-1},z_t, a_t))$, which predicts the next latent state $z_{t+1}$ by updating the recurrent hidden state with $f$ and applying latent dynamics with $g$:
+$h_t = f(h_{t-1}, z_t, a_t), z_{t+1} = g(h_t)$
+where $f(\cdot)$ typically corresponds to a recurrent neural network (e.g., LSTM~\cite{hochreiter1997long}) applied to the concatenation of $h_{t-1}$, $z_t$, and $a_t$, and $g(\cdot)$ maps the recurrent state to the next observation latent representation (often implmented as an MLP~\cite{hochreiter1997long}).
+
+The predicted latent state is then decoded via $Dec: Z \rightarrow \Omega$ into the predicted observation $\hat{\omega}_{t+1} = Dec(z_{t+1})$. The entire model is jointly trained to minimize both the \emph{reconstruction loss} $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$ in observation space, and optionally, a \emph{latent prediction loss} to stabilize latent dynamics learning.
+
+The recurrent hidden state $\tilde{h}_t$ serves as a compact summary of the full interaction history up to time $t$, avoiding the need to explicitly store long observation-action trajectories.
+For simplicity of notation, we define the full composition that directly maps current observation, action, and recurrent state to the next predicted observation as the \textbf{Observation Prediction Model}:
+\[
+    \mathcal{T}(h_{t-1}, \omega_t, a_t) := Dec(g(f(h_{t-1}, Enc(\omega_t), a_t))) = \hat{\omega}_{t+1}.
+\]
+
+
 
 \chapter{Les verrous vers une méthode de conception}
 % Objectif : pour chaque hypothèse H1-H5, analyser le domaine lié, identifier un manque, et formuler l'hypothèse comme réponse.
 
-\section{Un cadre Markovien pour formaliser le problème de conception et sa résolution en MARL}
 \section{Les Worlds Models pour simuler des environnement multi-agents}
+
+Several advanced AOSE approaches have attempted to improve automation in MAS design. For example, INGENIAS adopts a model-driven engineering paradigm, offering meta-models and tooling to automatically generate code, documentation, and tests from high-level specifications, thereby streamlining MAS development~\cite{Pavon2003}. Similarly, the KB-ORG framework employs a knowledge-based approach to organizational design, using predefined templates and domain-specific knowledge to automate the assignment of roles and responsibilities~\cite{Sims2008}. More recently, the field of Automated Design of Agentic Systems has emerged, focusing on the automatic generation and composition of agentic components into functional MAS with minimal human intervention~\cite{smith2024automated}. Taking this idea further, AutoGenesisAgent proposes a fully autonomous pipeline in which MAS can design and deploy new MAS tailored to specific tasks, covering the full lifecycle from initial concept to deployment~\cite{harper2024autogenesisagent}. Likewise, the BMW Agents framework illustrates how collaborative agent architectures can support scalable task automation through planning and execution in complex industrial environments~\cite{crawford2024bmw}.
+
+Despite these advances, such approaches typically assume symbolic inputs and predefined environments. They do not support the dynamic modeling of complex or unknown environments, nor do they integrate learning-based policy optimization. Moreover, they lack closed-loop design mechanisms capable of refining agent specifications based on the analysis of emergent behaviors, an essential capability for scalable and adaptive MAS development.
+
+\
+
+\noindent In parallel, some of the most promising advances in MAS automation have emerged from the field of Machine Learning. A notable example is the \textit{Cyber Security Learning Environment}~\cite{hammar2023scalable}, an \textbf{online framework} for cybersecurity applications in which agents are trained using RL techniques in automatically generated, near-realistic simulations to dynamically acquire task-specific behaviors. This framework constitutes a significant step toward \textbf{end-to-end MAS design automation}, offering an almost fully or partly automated pipeline (from environment modeling to policy learning and deployment) while minimizing manual effort. It also provides visualization tools for monitoring agent behavior, though it does not incorporate organizational modeling.
+
+More broadly, ML-based paradigms offer critical capabilities that could benefit MAS design. In particular, the World Models framework~\cite{Ha2018} proposes to first learn a compressed latent representation of the environment, which is then used as a high-fidelity simulation for policy training or planning. Although effective in single-agent contexts, World Models remain underexplored in multi-agent scenarios, particularly in settings involving partial observability, interaction complexity, and the need for coordination at scale.
+%
+To date, no existing framework provides a fully or partly automated, iterative MAS design pipeline that connects to a real-world deployment environment while orchestrating multiple ML techniques within a unified process.
+
 \section{L'intégration de contraintes/guidages organisationnelles dans le processus MARL}
+
+
+The MARL literature has primarily focused on optimizing coordination and cooperation among agents in complex and uncertain environments~\cite{Zhang2021, Papoudakis2021}. However, most approaches overlook the incorporation of symbolic or organizational constraints into the learning process. Agents typically learn through trial and error, without guarantees that their emergent behaviors will satisfy critical design requirements such as safety rules, role adherence, or structured team hierarchies. Several recent works have attempted to address this limitation by introducing constraint-aware reinforcement learning techniques.
+
+Constraint-Guided Reinforcement Learning~\cite{spieker2021constraint} incorporates explicit constraint models into the agent-environment interaction, enabling agents to learn policies that remain within predefined behavioral bounds. Similarly, Deep Constrained Q-Learning~\cite{kalweit2020deep} introduces both single-step and approximate multi-step constraints into the Q-value update process to ensure compliance with safety and performance criteria. Constrained Policy Optimization (CPO)\cite{achiam2017constrained} provides theoretical guarantees for near-constraint satisfaction throughout policy search, making it particularly appealing for safety-critical applications. Beyond safety, MENTOR\cite{zhou2025mentor} integrates human feedback into hierarchical RL, guiding agents through dynamically constrained subgoal selection to promote more stable learning. Other approaches such as reward-free constrained learning~\cite{miryoosefi2022} circumvent the need for hand-crafted reward functions by directly optimizing constraint satisfaction.
+
+While these approaches enhance safety and control at the policy level, they do not integrate with symbolic design models such as those used in AOSE. A notable exception is MOISE+MARL~\cite{soule2025moisemarl}, which bridges the gap by extending the $\mathcal{M}OISE^+$ organizational framework~\cite{Hubner2002} into MARL, allowing agents to learn while respecting organizational roles, missions, and behavioral constraints. However, MOISE+MARL remains focused on execution-time control and post-hoc analysis, lacking a full design pipeline or environment modeling capability. In particular, it assumes access to a manually specified environment modeled as a Dec-POMDP, whereas our approach is to operate within environments that are automatically modeled from agent interactions, following the World Models paradigm.
+
+
+
 \section{L'extraction automatisée des spécifications organisationnelles émergentes}
+
+While the AOSE tradition ensures explainability through structured design artifacts (such as protocols, roles, missions, or goals) these symbolic elements are typically lost in standard MARL approaches. Learned policies are often represented as opaque neural networks, making it difficult to assess how well agent behaviors align with the original design intent or organizational principles. Although explainability in MARL has gained attention, most existing efforts focus on individual agent behavior or internal policy mechanisms, rather than on collective or organizational alignment.
+
+A growing body of work seeks to improve interpretability through model design and post-hoc analysis. Zabounidis et al.\cite{zabounidis2023concept} incorporate interpretable concepts into the training loop, requiring agents to predict human-understandable concepts before acting. This encourages transparency and enables expert corrections. Iturria-Rivera et al.\cite{iturria2024explainable} use reward decomposition in factorized value functions (e.g., VDN, QMIX) to expose the contribution of each component to agent decisions. Liu et al.\cite{liu2025} propose MIXRTs, a hybrid architecture combining recurrent neural networks with decision trees for interpretable policy learning. Other efforts like Poupart et al.\cite{poupart2025perspectives} introduce post-hoc methods such as relevance backpropagation and activation patching to explain behavior without modifying the learned models. Similarly, Li et al.~\cite{li2025from} employ Shapley-value-based approximations to transform deep policies into interpretable structures applicable across different RL settings.
+
+However, these approaches generally remain limited to local or agent-level insights, without addressing collective dynamics or alignment with high-level symbolic models. Only a few works attempt role or goal inference that could be interpreted organizationally. For example, Berenji and Vengerov~\cite{berenji2000learning} improve coordination by modeling agent dependencies in UAV missions, while Yusuf and Baber~\cite{yusuf2020inferential} use Bayesian reasoning to support dynamic coordination, yet neither provides mechanisms for abstract organizational role inference. Serrino et al.~\cite{serrino2019finding} investigate emergent roles through social interactions but focus on operational rather than organizational roles.
+
+To our knowledge, the only framework that explicitly addresses organizational-level explainability is the TEMM (Trajectory-based Evaluation in MOISE+MARL) method~\cite{soule2025moisemarl}, developed as part of the MOISE+MARL framework. TEMM is based on the hypothesis that, over time, trained agents tend to converge toward idealized, regular behaviors viewed as making up an implicit organization. While individual trajectories may exhibit noise, the presence of recurring patterns across many trajectories makes it possible to filter out this noise through averaging.
+
+To operationalize this idea, TEMM uses trajectory clustering and symbolic projection to infer implicit roles and goals from observed agent behaviors. This enables the evaluation of the system's organizational fit that is, how closely the learned behaviors align with those expected in a well-structured (either implicit or predefined) organization.
+
+Yet, TEMM is not fully integrated within a broader design-oriented perspective, as it currently lacks mechanisms to assist designers in deriving suitable organizational specifications that could be re-injected as additional design requirements. Enabling such capabilities would support an iterative refinement process, progressively narrowing the policy search space toward more structured and context-relevant behaviors, while remaining agnostic to both the deployment environment and prior expert knowledge.
+
+
+
+\section{Un cadre Markovien pour formaliser le problème de conception et sa résolution en MARL}
+
+
 
 \chapter*{Conclusion}
 \addcontentsline{toc}{chapter}{\textbf{Conclusion}}
