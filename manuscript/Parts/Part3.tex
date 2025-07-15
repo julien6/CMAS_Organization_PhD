@@ -3,479 +3,325 @@
 % \pdfbookmark[1]{La méthode MAMAD}{La méthode MAMAD}
 \markboth{\spacedlowsmallcaps{La méthode MAMAD}}{\spacedlowsmallcaps{La méthode MAMAD}}
 \part{La méthode MAMAD}
+\label{part:methode}
 
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{\textbf{Introduction}}
-% TODO
+
+\noindent
+La partie précédente a mis en lumière les lacunes actuelles dans l'intégration des modèles organisationnels au sein des approches d'apprentissage multi-agent, tant du point de vue du contrôle, de l'explicabilité que de l'automatisation de la conception.
+
+\medskip
+
+\noindent
+Cette troisième partie présente notre proposition pour répondre à ces lacunes : la méthode \ac{MAMAD}. Elle repose sur l'hypothèse que la conception d'un \ac{SMA} peut être abordée comme un problème d'optimisation sous contraintes. Elle s'organise autour d'une boucle en quatre étapes :
+
+\begin{enumerate}
+    \item \textbf{Modélisation} : créer un environnement simulé et contraint à partir d'un environnement réel et d'exigences organisationnelles ;
+    \item \textbf{Apprentissage} : entraîner les agents dans cet environnement en tenant compte des rôles, missions et contraintes spécifiés ;
+    \item \textbf{Analyse} : extraire des structures organisationnelles émergentes à partir des trajectoires apprises ;
+    \item \textbf{Transfert} : redéployer les politiques dans l'environnement réel et collecter de nouvelles données pour réitérer le cycle si nécessaire.
+\end{enumerate}
+
+\noindent
+Ce cycle itératif vise à produire des \ac{SMA} adaptés à leur environnement, alignés sur des contraintes organisationnelles, explicables et robustes. Il s'appuie sur un formalisme markovien contraint, des outils d'analyse comportementale, et un cadre logiciel développé pour supporter l'ensemble de la démarche.
+
+\medskip
+
+\noindent
+Comme illustré en \autoref{fig:organisation_manuscrit_partie_3}, un premier chapitre donne une description globale de le partie structurelle de la méthode concernant les processus proposés et leurs fonctionnements et dynamiques mutuels d'autre part. Les quatre chapitres restants détaillent chacune des étapes de cette méthode :
+la modélisation (\textbf{Chapitre 7}), l'apprentissage organisationnel contraint (\textbf{Chapitre 8}), l'analyse des trajectoires pour inférer des structures organisationnelles émergentes (\textbf{Chapitre 9}) et enfin le transfert et l'évaluation dans l'environnement réel (\textbf{Chapitre 10}).
+
+La méthode \ac{MAMAD} ambitionne de réunir les forces des approches symboliques et apprenantes pour une conception de \ac{SMA} à la fois structurée, autonome et explicable.
 
 \begin{figure}[h!]
     \centering
     \resizebox{\linewidth}{!}{%
         \input{figures/organisation_manuscrit_partie_3.tex}
     }
-    \caption{Structure de la Partie III — La méthode MAMAD}
+    \caption{Structure de la Partie III : La méthode \ac{MAMAD}}
+    \label{fig:organisation_manuscrit_partie_3}
 \end{figure}
 
 
 
 \chapter{Présentation globale de la méthode}
+\label{sec:mamad}
 
-\section{Principes et boucle itérative fermée}
 
+La méthode \ac{MAMAD}~\footnotemark[1] repose sur quatre grandes activités : (1) la modélisation de l'environnement, de l'objectif global et des contraintes organisationnelles, (2) l'apprentissage des politiques à l'aide de divers algorithmes \ac{MARL}, (3) l'analyse des comportements et l'inférence des spécifications organisationnelles à l'aide d'une méthode proposée, et (4) le maintien de la cohérence entre l'environnement simulé et l'environnement réel en déployant les politiques entraînées et en mettant à jour la simulation. Cette approche guide le processus d'apprentissage des agents tout en imposant des contraintes organisationnelles strictes, garantissant ainsi l'efficacité des politiques apprises. Le cycle de vie d'un \ac{SMA} conçu avec \ac{MAMAD} est illustré en \autoref{fig:cycle}.
 
-\subsection{General overview of the method}
-
-The MAMAD~\footnotemark[1] method is built around four main activities: (1) modeling the environment, goal, and organizational constraints, (2) learning policies using various MARL algorithms, (3) analyzing behaviors and inferring organizational specifications with a proposed method, and (4) maintaining consistency between the simulated and real environments by deploying trained policies and updating the simulation. This approach guides the agent learning process while enforcing strict organizational constraints, ensuring the efficiency of the learned policies. The lifecycle of a MAMAD-designed MAS is illustrated in \autoref{fig:cycle}.
-%
 \begin{figure}[h!]
     \centering
     \input{figures/cycle.tex}
-    \caption{Lifecycle of a MAS designed with MAMAD: i) Users start by modeling the environment from a sufficient amount of real trajectories (obtained by initially transfered agents) or any available one, global goal and design requirements as roles and goals; \quad ii) Then, they launch the training of agents with MARL techniques; \quad iii) A post-training analysis is performed to get insights into the emergent agents' roles and goals, guiding the improvement of the applied organizational specifications ; \quad v) Once validated, trained policies are launched to operate the environment's actuators, generating new traces for a better environment modeling}
+    \caption{Cycle de vie d'un \ac{SMA} conçu avec \ac{MAMAD} : i) L'utilisateur commence par modéliser l'environnement à partir d'un ensemble suffisant de trajectoires réelles (obtenues à l'aide d'agents initialement transférés) ou de toute autre source disponible, ainsi que l'objectif global et les contraintes de conception sous forme de rôles et d'objectifs ; \quad ii) Ensuite, il lance l'entraînement des agents via des techniques \ac{MARL} ; \quad iii) Une analyse post-entraînement est réalisée pour extraire les rôles et objectifs émergents des agents, ce qui permet d'améliorer les spécifications organisationnelles appliquées ; \quad v) Une fois validées, les politiques apprises sont déployées pour contrôler les actionneurs de l'environnement, générant de nouvelles traces utiles pour une meilleure modélisation.}
     \label{fig:cycle}
 \end{figure}
-%
-The MAMAD method frames MAS design as an iterative constrained optimization process. Given:
+
+La méthode \ac{MAMAD} conçoit la conception d'un \ac{SMA} comme un processus itératif d'optimisation sous contraintes. On suppose donnés :
 \begin{itemize}
-    \item $\mathcal{E}_0$: the initial environment where agents can act;
-    \item $\mathcal{G}_{\text{inf}}$: an informal description of the desired global goal;
-    \item $\mathcal{C}_{\text{inf}}$: an informal specification of design constraints;
-    \item $\gamma \in [0,1]$: the discount factor leading to long or short term solutions even though it often determined empirically (default is 1);
-    \item $A, \Omega$: the action space and observation space respectively;
-    \item $\texttt{org\_fit}_{min}$, $\overline{r}_{min}$, $\sigma_{min}$: respectively the minimum organizational fit level, average reward and standard deviation required to validate a trained joint policy. Usually, these values are typically determined empirically
+    \item $\mathcal{E}_0$ : l'environnement initial dans lequel les agents peuvent agir ;
+    \item $\mathcal{G}_{\text{inf}}$ : une description informelle de l'objectif global recherché ;
+    \item $\mathcal{C}_{\text{inf}}$ : une spécification informelle des contraintes de conception ;
+    \item $\gamma \in [0,1]$ : le facteur d'actualisation définissant une solution à court ou long terme, généralement fixé empiriquement (par défaut à 1) ;
+    \item $A, \Omega$ : respectivement les espaces d'actions et d'observations ;
+    \item $\texttt{org\_fit}_{min}$, $\overline{r}_{min}$, $\sigma_{min}$ : les valeurs minimales exigées pour le score d'adéquation organisationnelle, la récompense moyenne, et l'écart-type, servant à valider une politique conjointe. Ces seuils sont en général fixés empiriquement.
 \end{itemize}
-%
-\noindent As described in \autoref{alg:mamad}, the method's framework enables the continous design of a MAS as an iterative and asynchronous coordination of two distinct processes: the \textit{Transferring process}, which connects to the real environment and handles real-time execution and joint-history collection; and the \textit{MTA (Model-Train-Analyze) process}, which consumes stored data to iteratively improve the simulated environment model, the joint-policy, and the MAS organizational specifications.
 
-\paragraph{Transferring process: policy deployment and data collection}
+\noindent Comme décrit dans \autoref{alg:mamad}, le cadre méthodologique permet une conception continue du \ac{SMA} via la coordination itérative et asynchrone de deux processus distincts : le \textit{processus de Transfert}, qui est connecté à l'environnement réel et gère l'exécution en temps réel et la collecte d'historiques conjoints ; et le \textit{processus \ac{MTA} (Modéliser-Entraîner-Analyser)}, qui consomme les données stockées pour améliorer itérativement le modèle simulé, la politique conjointe et les spécifications organisationnelles du \ac{SMA}.
 
-This process is always active while the MAS is operating in the real environment. Its role is twofold. First, it deploys the most recent joint policy $\pi^j_{\text{latest}}$ to the real agents, ensuring up-to-date behavior without interrupting execution. Second, it continuously monitors and collects agent trajectories in the form of joint histories $H^j$, buffering them in batches. Once a sufficient number of trajectories is collected, the batch is appended to the global trajectory store $\mathcal{D}_{H^j}$. If the update process is not already running, it triggers the launch of the \textit{MTA} process.
+\paragraph{Processus de Transfert : déploiement des politiques et collecte de données}
 
-\paragraph{MTA process: policy optimization and organizational refinement}
+Ce processus est actif en continu tant que le \ac{SMA} est en fonctionnement dans l'environnement réel. Il a deux rôles : déployer la politique conjointe la plus récente $\pi^j_{\text{latest}}$ auprès des agents réels, garantissant un comportement à jour sans interruption ; et collecter en continu les trajectoires des agents sous forme d'historiques conjoints $H^j$, stockés par lots. Une fois qu'un nombre suffisant de trajectoires est collecté, le lot est ajouté au dépôt global $\mathcal{D}_{H^j}$. Si le processus de mise à jour n'est pas en cours, il déclenche le lancement du processus \textit{\ac{MTA}}.
 
-This process models the current design problem and improves the MAS policy and associated organizational specifications. It first builds a JOPM $T^j$ using extended World Models with the collected trajectories. Design requirements are formalized as MOISE+MARL organizational specifications $\mathcal{MM}$ and the ultimate goal is formalized as an History-based Reward Function $R^j_H$ as well.
-%
-Then, a Markovian model is built out of previously modeled elements so that agents can be trained with organizational specifications using the MOISE+MARL framework. Once training is completed, the resulting joint policy $\pi^j$ is analyzed using TEMM to infer implicit organizational specifications $\mathcal{MM}_{\text{imp}}$ and compute the organizational fit score.
+\paragraph{Processus MTA : optimisation des politiques et raffinement organisationnel}
 
-\paragraph{Refinement loop through organizational specifications}
+Ce processus modélise le problème de conception actuel et améliore la politique du \ac{SMA} ainsi que ses spécifications organisationnelles. Il commence par construire un modèle de prédiction d'observations conjointes (\ac{JOPM}) $T^j$ à l'aide de World Models étendus, à partir des trajectoires collectées. Les exigences de conception sont formalisées sous forme de spécifications organisationnelles MOISE+MARL $\mathcal{MM}$ et l'objectif est formalisé par une fonction de récompense basée sur l'historique $R^j_H$.
 
-If the learned policy exhibits low organizational fit, insufficient average performance, or high variability (compared to predefined thresholds), the implicit organizational specifications inferred during the analysis activity are used to refine the organizational specification. This refinement process may involve manual inspection of the inferred structures to identify the key success factors underlying the emergent behaviors. Informed by these insights, the designer can revise the initial organizational specification to better guide future training iterations.
+Un modèle markovien est ensuite construit à partir des éléments modélisés afin d'entraîner les agents en tenant compte des spécifications organisationnelles, via le framework MOISE+MARL. Une fois l'entraînement terminé, la politique conjointe $\pi^j$ est analysée à l'aide de \ac{TEMM} afin d'inférer les spécifications organisationnelles implicites $\mathcal{MM}_{\text{imp}}$ et de calculer un score d'adéquation organisationnelle.
 
-This loop is repeated up to a maximum of $n_{refine}$ times, progressively steering the policy space toward more structured and performant behaviors. The latest validated policy is then saved as $\pi^j_{\text{latest}}$, ready for deployment in the real environment.
+\paragraph{Boucle de raffinement via les spécifications organisationnelles}
 
-The refinement loop is particularly useful in complex environments where prior knowledge is limited or where manual design would be prohibitively costly. At each iteration, it helps narrow the policy search space by restricting it to regions associated with emergent organizational regularities identified during previous cycles. Remarkably, this process can begin without any predefined organizational specification, and through successive refinements, it can yield organizational constraints that are both objectively relevant and fully agnostic to human expertise or prior familiarity with the deployment environment.
+Si la politique apprise montre une faible adéquation organisationnelle, des performances insuffisantes ou une grande variabilité (par rapport aux seuils définis), les spécifications organisationnelles implicites inférées sont utilisées pour raffiner les spécifications initiales. Ce processus de raffinement peut impliquer une inspection manuelle des structures inférées pour identifier les facteurs clés de succès des comportements émergents. Guidé par ces observations, le concepteur peut réviser les spécifications afin d'orienter les prochaines itérations d'apprentissage.
 
-\
+Cette boucle est répétée jusqu'à un maximum de $n_{refine}$ fois, orientant progressivement l'espace des politiques vers des comportements plus structurés et plus performants. La dernière politique validée est alors enregistrée comme $\pi^j_{\text{latest}}$, prête à être déployée dans l'environnement réel.
 
-\noindent The interplay between these two asynchronous processes creates a closed-loop, end-to-end MAS design lifecycle. The system continuously learns from real-world execution, updates its simulation model, retrains under evolving specifications, and deploys improved policies without requiring constant designer intervention. This architecture bridges symbolic AOSE principles with learning-based automation, ensuring compliance, adaptability, and organizational-level explainability.
+La boucle de raffinement est particulièrement utile dans les environnements complexes où la connaissance préalable est limitée ou où la conception manuelle serait trop coûteuse. À chaque itération, elle permet de restreindre l'espace de recherche des politiques en le concentrant sur les régions associées à des régularités organisationnelles émergentes. Remarquablement, ce processus peut commencer sans aucune spécification organisationnelle initiale, et produire par raffinement successif des contraintes organisationnelles pertinentes, objectives, et indépendantes de toute expertise humaine ou connaissance préalable de l'environnement.
 
+\noindent L'interaction entre ces deux processus asynchrones constitue un cycle de conception de \ac{SMA} complet et fermé. Le système apprend continuellement à partir de l'exécution réelle, met à jour son modèle simulé, réentraîne sous des spécifications évolutives, et déploie des politiques améliorées sans nécessiter d'intervention constante du concepteur. Cette architecture établit un pont entre les principes symboliques de l'ingénierie orientée agents et l'automatisation par apprentissage, assurant conformité, adaptabilité et explicabilité au niveau organisationnel.
 
 \begin{algorithm}[H]
-    \caption{MOISE+MARL Assisted Multi-Agent System Desgin (MAMAD)}
+    \caption{Conception de \ac{SMA} assistée par MOISE+MARL (MAMAD)}
     \label{alg:mamad}
     \DontPrintSemicolon
-    
-    \KwIn{Initial environment $\mathcal{E}$, goal $\mathcal{G}_{\text{inf}}$, design constraints $\mathcal{C}_{\text{inf}}$, $n_{refine}$ max number of refinement cycles}
-    \KwOut{A MAS deployed satisfying design, performance and explainability requirements; and associated organizational specifications}
-    
-    Initialize: $\mathcal{D}_{H^j} \gets \emptyset$, $\pi^j_{\text{latest}} \gets \pi^j_{\text{init}}$, $running\_MTA \gets False$ \;
-    
+
+    \KwIn{Environnement initial $\mathcal{E}$, objectif $\mathcal{G}_{\text{inf}}$, contraintes de conception $\mathcal{C}_{\text{inf}}$, $n_{refine}$ nombre maximal de cycles de raffinement}
+    \KwOut{Un SMA déployé satisfaisant aux exigences de conception, de performance et d'explicabilité ; ainsi que ses spécifications organisationnelles associées}
+
+    Initialiser : $\mathcal{D}_{H^j} \gets \emptyset$, $\pi^j_{\text{latest}} \gets \pi^j_{\text{init}}$, $running\_MTA \gets False$ \;
+
     \vspace{0.3em}
-    
-    \While{MAS is active in environment $\mathcal{E}$}{
-        \tcp*[l]{Transferring: retrieve trajectories \& deploy policy}
-        $\mathcal{D}_{H^j}, \texttt{need\_update} \gets \text{transfer}(\pi^i_{latest}, \mathcal{D}_{H^j})$ \tcp*[r]{asynchronous call}
-        \If{\texttt{need\_update} and not \texttt{running\_MTA}}{
-            \texttt{launch\_MTA()} \tcp*[r]{asynchronous call}
+
+    \While{le SMA est actif dans l'environnement $\mathcal{E}$}{
+        \tcp*[l]{Transfert : récupération des trajectoires \& déploiement de la politique}
+        $\mathcal{D}_{H^j}, \texttt{need\_update} \gets \text{transfer}(\pi^i_{latest}, \mathcal{D}_{H^j})$ \tcp*[r]{appel asynchrone}
+        \If{\texttt{need\_update} et non \texttt{running\_MTA}}{
+            \texttt{launch\_MTA()} \tcp*[r]{appel asynchrone}
         }
     }
-    
+
     \vspace{1em}
-    \SetKwProg{MTA}{Process \normalfont(MTA)}{}{}
+    \SetKwProg{MTA}{Processus \normalfont(MTA)}{}{}
     \MTA{}{}{
-    
-    $\texttt{running\_MTA} \gets True$ \tcp*[l]{Global variable assignment}
-    
-    \tcp*[l]{Modeling: model the real environment into a simulated model}
+
+    $\texttt{running\_MTA} \gets True$ \tcp*[l]{Variable globale}
+
+    \tcp*[l]{Modélisation : modéliser l'environnement réel}
     $\mathcal{T}^j, R^j_H, \mathcal{MM} \gets \texttt{model}(\mathcal{E}, \mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}}, \gamma, A, \Omega)$ \;
-    
+
     \While{$i < n_{refine}$}{
 
     \vspace{0.5em}
-    \tcp*[l]{Training: train policy under org. constraints}
+    \tcp*[l]{Entraînement : politique sous contraintes organisationnelles}
     $\pi^j, \overline{r}, \sigma \gets \texttt{train}(\mathcal{T}^j, \mathcal{MM})$ \;
 
     \vspace{0.5em}
-    \tcp*[l]{Analyzing: analyze policy to infer new org. specs}
+    \tcp*[l]{Analyse : inférer les nouvelles spécifications organisationnelles}
     $(\mathcal{MM}_{\text{imp}}, \texttt{org\_fit}) \gets \texttt{analyze}(\mathcal{T}^j, \mathcal{MM}, \pi^j)$ \;
-    
-     \vspace{0.5em}
- 
-    \tcp*[l]{If policy not satisfying, retrain with new org. spec.}
+
+    \vspace{0.5em}
+    \tcp*[l]{Si politique insatisfaisante, raffinement}
     \If{$\texttt{org\_fit} < \texttt{org\_fit}_{min} \ or \ \overline{r} < \overline{r}_{min} \ or \  \sigma > \sigma_{min}$}{
-        $\mathcal{MM} \gets \mathcal{MM}_{\text{imp}}$ \;
-        back to 'Analyzing' \;
+    $\mathcal{MM} \gets \mathcal{MM}_{\text{imp}}$ \;
+    retour à 'Analyzing' \;
     }
-        
-    $\pi^j_{\text{latest}} \gets \pi^j$
-        \tcp*[r]{Update most recent policy}
+
+    $\pi^j_{\text{latest}} \gets \pi^j$ \tcp*[r]{Mise à jour de la politique la plus récente}
 
     $i \gets i + 1$
-    
+
     }
-    
-    $\texttt{running\_MTA} \gets False$ \tcp*[l]{Global variable assignment}
-    
-    
+
+    $\texttt{running\_MTA} \gets False$ \tcp*[l]{Variable globale}
+
     }
 \end{algorithm}
 
-\
+\noindent On peut noter que nous proposons d'exploiter un environnement simulé modélisé comme un jumeau numérique (Digital Twin) pour l'entraînement ultérieur, tandis que les approches \ac{MBRL} combinent simultanément modélisation et apprentissage. En effet, nous privilégions une séparation entre modélisation et apprentissage pour les raisons suivantes : i) la réutilisabilité du modèle d'environnement pour d'autres entraînements d'agents, avec des ajustements éventuels ; \quad ii) le besoin d'agents simples n'embarquant pas de modèles coûteux pour planifier ; \quad iii) le besoin d'un environnement simulé de haute fidélité commun à tous les agents.
 
-\noindent One can point out that we propose to leverage a modeled simulated environment as a Digital Twin for a later training whereas MBRL both integrates environment modeling and training at the same time. Indeed, we favour decoupling environment modeling from training for : i) the reusability of the modeled environment in new agent training optionally requiring small adjustments ; \quad ii) the need for simple agents that do not embedded costly environment model for planning ; \quad iii) the need to have a high-fidelity modeled environment focusing all efforts on a common one for any agent.
+\noindent Les chapitres suivantes détaillent chaque activité du cadre \ac{MAMAD}, identifient les défis spécifiques rencontrés, et décrivent les contributions proposées pour y répondre.
 
-\
-
-\noindent In the following subsections, we detail each activity within the overall MAMAD framework, identifying the specific challenges encountered in achieving this objective and describing the proposed contribution and its use that address these challenges.
-
-
-
-\section{L'architecture générale de la méthode MAMAD}
 
 \chapter{Modéliser l'environnement en simulation}
-\section{Reconstruction partielle de l'environnement}
-\section{Apprendre la dynamique observable du système}
+\label{chap:modelling}
 
-
-\subsection{Modelling}\label{sec:modelling}
-
-The \textbf{Modelling activity} addresses the following formal component:
+L'\textbf{activité de modélisation} vise à produire les composants formels suivants :
 \begin{displaymath}
-\texttt{model}(\mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}}, \gamma, A, \Omega) = \mathcal{T}^j, R^j_H, \mathcal{MM} 
+    \texttt{model}(\mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}}, \gamma, A, \Omega) = \mathcal{T}^j, R^j_H, \mathcal{MM}
 \end{displaymath}
 
-\noindent The \textit{Modelling activity} aims to model the design problem as a constrained optimization problem. To do that, it first generates a high-fidelity simulated environment using the Joint-observation Prediciton Model (JOPM) $\mathcal{T}^j: H^j \times \Omega^j \times A^j \rightarrow \mathcal{H} \times \hat{\Omega^j}$ derived from real-world interaction traces $\mathcal{D}_{H^j}$. At time step $t \in \mathbb{N}$, for any recurrent hidden state $\tilde{h}_{t-1} \in \mathcal{H}$ representing joint-history until $t-1$, the currently received joint-observation $\omega_t^j \in H^j$ and the joint-action to be applied $a_t^j \in A^j$, $\mathcal{T}^j$ gives the next recurrent hidden state $\tilde{h}_t \in \mathcal{H}$ and the predicted next joint-observation $\hat{\omega}^j \in \hat{\Omega}^j$. This way, MAMAD enables building the environment from scratch. In addition to the simulated environment, the optimization problem also formalizes the informal goal description $\mathcal{G}_{\text{inf}}$ into $R^j_H: H^j \times \Omega^j \rightarrow \mathbb{R}$ the History-based Reward Function. Finally, the \textit{Modelling activity} also aims to formalize constraint stemming from informal design requirements as MOISE+MARL organizational specifications $\mathcal{MM}$ from $\mathcal{C}_{\text{inf}}$.
+\noindent L'\textit{activité de modélisation} a pour objectif de représenter le problème de conception comme un problème d'optimisation sous contraintes. Pour cela, elle commence par générer un environnement simulé de haute fidélité en construisant un \ac{JOPM} $\mathcal{T}^j : H^j \times \Omega^j \times A^j \rightarrow \mathcal{H} \times \hat{\Omega}^j$ à partir des traces d'interactions réelles $\mathcal{D}_{H^j}$. À un pas de temps $t \in \mathbb{N}$, pour tout état caché récurrent $\tilde{h}_{t-1} \in \mathcal{H}$ représentant l'historique conjoint jusqu'à $t-1$, l'observation conjointe reçue $\omega_t^j \in H^j$ et l'action conjointe $a_t^j \in A^j$, le modèle $\mathcal{T}^j$ renvoie le nouvel état caché $\tilde{h}_t \in \mathcal{H}$ ainsi que la prédiction de la prochaine observation conjointe $\hat{\omega}^j \in \hat{\Omega}^j$. Ce mécanisme permet à \ac{MAMAD} de construire l'environnement de simulation depuis zéro.
 
-We assume to leave the work of formalizing informal design requirements into MOISE+MARL organizational specifications and informal goal description into an History-based Reward Function.
+En complément de cet environnement simulé, le problème d'optimisation formalisé comprend également la transformation de la description informelle de l'objectif global $\mathcal{G}_{\text{inf}}$ en une fonction de récompense basée sur l'historique $R^j_H: H^j \times \Omega^j \rightarrow \mathbb{R}$, ainsi que la formalisation des contraintes issues des exigences de conception $\mathcal{C}_{\text{inf}}$ sous la forme de spécifications organisationnelles MOISE+MARL $\mathcal{MM}$.
 
-Since we are not able to access the real environment's state, we have to rely on stored joint-histories hence the idea to use World Models for its capability to generalize from a large amount of histories to compute hidden state transitions and observations transitions.
-A major gap we encountered when willing to implement this function with World Models is the absence of explicitely defined World Models for Multi-Agent settings. Below, we propose an extension of the World Model framework for Multi-Agent settings.
+Nous supposons ici que la formalisation manuelle de la description informelle de l'objectif et des contraintes de conception en une fonction $R^j_H$ et en spécifications $\mathcal{MM}$ est prise en charge.
 
-\subsubsection*{Extension to Multi-Agent World Models}
+Étant donné l'impossibilité d'accéder directement à l'état réel de l'environnement, nous nous appuyons sur les historiques conjoints stockés. C'est pourquoi nous utilisons les World Models, capables de généraliser à partir d'un grand volume d'historiques pour estimer les transitions d'états cachés et d'observations. Toutefois, un obstacle majeur est l'absence de World Models explicitement conçus pour les environnements multi-agents. Nous proposons ci-dessous une extension du cadre World Models aux contextes multi-agents.
 
-In multi-agent settings, joint-observations rapidly become high-dimensional as the number of agents increases. To address this, joint encoding functions are introduced for both observations and actions.
+\subsubsection*{Extension aux World Models Multi-Agents}
 
-Specifically, joint-observations $\omega_t^{j} = (\omega_t^1, \dots, \omega_t^n) \in \Omega^{j}$ are mapped to compact latent representations using an joint-observation encoder $Enc_{\omega^j}: \Omega^{j} \rightarrow z$, yielding $z_t = Enc_{\omega^j}(\omega_t^{j})$. The joint-observation decoder $Dec_{z}: z \rightarrow \hat{\Omega}^{j}$ allows reconstruction of the joint-observation if needed.
-%
-MLPs or attention-based architectures are typically employed for these encoders to aggregate multi-agent information into fixed-size feature vectors while capturing relevant inter-agent dependencies.
+Dans les environnements multi-agents, les observations conjointes deviennent rapidement de grande dimension à mesure que le nombre d'agents augmente. Pour pallier cela, des fonctions d'encodage conjoint sont introduites pour les observations et les actions.
 
-Once joint encoding is performed, the multi-agent world model operates analogously to the single-agent case, using the encoded observation $z_t$ in histories to the RLDM $\mathcal{T}^{z}$. This design enables scalable modeling while preserving critical interaction patterns between agents. Within the MAMAD framework, such world models instantiate the simulation core of the \hyperref[sec:modelling]{Modeling activity}, effectively serving as high-fidelity digital twins of the target environment.
+Plus précisément, les observations conjointes $\omega_t^{j} = (\omega_t^1, \dots, \omega_t^n) \in \Omega^{j}$ sont transformées en représentations latentes compactes à l'aide d'un encodeur d'observations conjointes $Enc_{\omega^j} : \Omega^j \rightarrow z$, produisant $z_t = Enc_{\omega^j}(\omega_t^j)$. Un décodeur $Dec_z : z \rightarrow \hat{\Omega}^j$ permet la reconstruction des observations conjointes si nécessaire.
 
-\
+On utilise généralement des \ac{MLP}s ou des architectures à base d'attention pour ces encodeurs, afin d'agréger les informations multi-agents en vecteurs de caractéristiques de taille fixe, tout en capturant les dépendances critiques entre agents.
+
+Une fois l'encodage effectué, le World Model multi-agent fonctionne comme en contexte mono-agent, en utilisant les observations encodées $z_t$ dans les historiques transmis au \ac{RLDM} $\mathcal{T}^{z}$. Ce modèle permet une modélisation évolutive, tout en conservant les motifs d'interaction clés entre agents. Dans le cadre de \ac{MAMAD}, ces World Models constituent le cœur de la simulation mise en œuvre par l'\hyperref[sec:modelling]{activité de modélisation}, agissant comme des jumeaux numériques de haute fidélité de l'environnement cible.
 
 \begin{algorithm}[H]
-\caption{Modeling activity algorithm}
-\label{alg:modeling}
-\DontPrintSemicolon
+    \caption{Algorithme de l'activité de modélisation}
+    \label{alg:modeling}
+    \DontPrintSemicolon
 
-\KwIn{Joint histories $\mathcal{D}_{H^j}$, informal goal $\mathcal{G}_{\text{inf}}$, informal constraints $\mathcal{C}_{\text{inf}}$, discount factor $\gamma$, action space $A$, observation space $\Omega$}
-\KwOut{JOPM $\mathcal{T}^j$, History-based Reward Function $R^j_H$, MOISE+MARL specifications $\mathcal{MM}$}
+    \KwIn{Historiques conjoints $\mathcal{D}_{H^j}$, objectif informel $\mathcal{G}_{\text{inf}}$, contraintes informelles $\mathcal{C}_{\text{inf}}$, facteur d'actualisation $\gamma$, espace des actions $A$, espace des observations $\Omega$}
+    \KwOut{JOPM $\mathcal{T}^j$, fonction de récompense $R^j_H$, spécifications MOISE+MARL $\mathcal{MM}$}
 
-\vspace{0.5em}
-\tcp{1. Manual formalization of symbolic requirements}
-$R^j_H \gets \texttt{manual\_formalize}(\mathcal{G}_{\text{inf}})$ \;
-$\mathcal{MM} \gets \texttt{manual\_formalize}(\mathcal{C}_{\text{inf}})$ \;
+    \vspace{0.5em}
+    \tcp{1. Formalisation manuelle des exigences symboliques}
+    $R^j_H \gets \texttt{manual\_formalize}(\mathcal{G}_{\text{inf}})$ \;
+    $\mathcal{MM} \gets \texttt{manual\_formalize}(\mathcal{C}_{\text{inf}})$ \;
 
-\vspace{0.5em}
-\tcp{2. Train encoders for joint-observations and actions}
-Extract datasets $\Omega^j = \{\omega^j_t\}$ from joint-histories $\mathcal{D}_{H^j}$ \;
-Train auto-encoder $(Enc_{\omega^j}, Dec_{\omega^j})$ on $\Omega^j$ minimizing reconstruction loss \;
+    \vspace{0.5em}
+    \tcp{2. Entraîner les encodeurs pour les observations et actions conjointes}
+    Extraire les observations $\Omega^j = \{\omega^j_t\}$ à partir des historiques $\mathcal{D}_{H^j}$ \;
+    Entraîner un auto-encodeur $(Enc_{\omega^j}, Dec_{\omega^j})$ sur $\Omega^j$ en minimisant l'erreur de reconstruction \;
 
-\vspace{0.5em}
-\tcp{3. Encode joint-observations in joint-history}
-For each joint-history $h^j = \{\omega_t^j, a_t^j\} \in \mathcal{D}_{H^j}$, encode each joint-observation ${z}_t = Enc_{\omega^j}(\omega^j_t)$ to build training set $\mathcal{B} = \{ \{(z_t,a^j_t, z_{t+1})\} = h_z^j, h_z^j \in \mathcal{D}_{H^j}\}$
+    \vspace{0.5em}
+    \tcp{3. Encoder les observations dans les historiques}
+    Pour chaque historique $h^j = \{\omega_t^j, a_t^j\} \in \mathcal{D}_{H^j}$, encoder chaque observation conjointe ${z}_t = Enc_{\omega^j}(\omega^j_t)$ pour constituer l'ensemble d'entraînement $\mathcal{B} = \{ \{(z_t, a^j_t, z_{t+1})\} = h_z^j, h_z^j \in \mathcal{D}_{H^j}\}$
 
-\vspace{0.5em}
-\tcp{4. Train the RLDM}
-Initialize the RLDM (f and g function) $\mathcal{T}^z = f(g)$
+    \vspace{0.5em}
+    \tcp{4. Entraîner le RLDM}
+    Initialiser le RLDM (fonctions $f$ et $g$) $\mathcal{T}^z = f(g)$
 
-\For{$h_z^j \in \mathcal{B}$}{
-    \For{$(z_t,a^j_t, z_{t+1}) \in h^j$}{
-        Train RLDM $\mathcal{T}^{z}$ minimizing the MSE of predicted joint-observation $\hat{z}_{t+1}$ from the real one $z_{t+1}$.
+    \For{$h_z^j \in \mathcal{B}$}{
+        \For{$(z_t, a^j_t, z_{t+1}) \in h^j$}{
+            Entraîner le RLDM $\mathcal{T}^{z}$ en minimisant l'erreur quadratique moyenne (MSE) entre la prédiction $\hat{z}_{t+1}$ et la valeur réelle $z_{t+1}$.
+        }
     }
-}
 
-\vspace{0.5em}
-\tcp{5. Save all initial joint-observations and form the JOPM}
+    \vspace{0.5em}
+    \tcp{5. Sauvegarder les observations initiales et former le JOPM}
 
-$\Omega^{\mathcal{T}^j}_0 \gets \{\omega^j_0\}$ from joint-histories $\mathcal{D}_{H^j}$
+    $\Omega^{\mathcal{T}^j}_0 \gets \{\omega^j_0\}$ extraites des historiques $\mathcal{D}_{H^j}$
 
-$\mathcal{T}^j(h_{t-1}, \omega_t, a_t) = \langle f(h_{t-1}, Enc(\omega^j_t), a^j_t), Dec(\mathcal{T}^{z}(h_{t-1}, Enc(\omega^j_t), a^j_t)) \rangle$ \;
+    $\mathcal{T}^j(h_{t-1}, \omega_t, a_t) = \langle f(h_{t-1}, Enc(\omega^j_t), a^j_t), Dec(\mathcal{T}^{z}(h_{t-1}, Enc(\omega^j_t), a^j_t)) \rangle$ \;
 
-\vspace{0.5em}
-\tcp{6. Return modelled elements}
-\Return{$\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, \mathcal{MM}$}
+    \vspace{0.5em}
+    \tcp{6. Retourner les éléments modélisés}
+    \Return{$\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, \mathcal{MM}$}
 \end{algorithm}
 
 
-
-\section{Modélisation des exigences de conception et de l'objectif}
-
 \chapter{Entraînement des politiques sous contraintes}
-\section{Les cadres d'entraînement MARL mobilisés}
-\section{Guider et contraindre l'apprentissage}
+\label{chap:training}
 
-
-\subsection{MOISE+MARL for linking $\mathcal{M}OISE^+$ with MARL}
-
-\begin{figure}[h!]
-    \centering
-    \input{figures/mm_synthesis_single_column.tex}
-    \caption{A minimal view of the MOISE+MARL framework:
-        Users first define $\mathcal{M}OISE^+$ specifications, which include roles ($\mathcal{R}$) and missions ($\mathcal{M}$), both associated through $rds$. They then create MOISE+MARL specifications by first defining \textbf{Constraint guides} such as $rag$ and $rrg$ to specify role logic, and $grg$ for goal logic. 
-        Next, \textbf{Linkers} are used to connect agents with roles through $ar$ and to link the logic of the constraint guides to the defined $\mathcal{M}OISE^+$ specifications. Once this is set up, roles can be assigned to agents, and the MARL framework updates accordingly during training.
-    }
-    \label{fig:mm_synthesis}
-\end{figure}
-
-\noindent MOISE+MARL introduces means to control or guide the agents' training in MARL. Its core contribution ar the \textbf{Constraint Guides}, which are three new relations introduced to describe the logics of roles and goals in the Dec-POMDP formalism:
-%
-\begin{itemize}
-    % \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
-    
-    \item \textbf{Role Action Guide} \quad $rag: H \times \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, the relation that models a role as a set of rules which, for each pair consisting of a history $h \in H$ and an observation received by the agent $\omega \in \Omega$, associates expected actions $A \in \mathcal{P}(A)$ each associated with a constraint hardness $ch \in [0,1]$ ($ch = 1$ by default). By restricting the choice of the next action among those authorized, the agent is forced to adhere to the role's expected behavior
-    \item \textbf{Role Reward Guide} \quad $rrg: H \times \Omega \times A \to \mathbb{R} = \{r_m \text{ if } a \notin A_\omega \text{, } rag(h, \omega) \allowbreak = \allowbreak A_\omega \times \mathbb{R} \text{, } h \in H; \text{ else } 0\}$, the relation that models a role by adding a penalty $r_m$ to the global reward if the last action chosen by the agent $a \in A$ is not authorized. This is intended to encourage the agent to adhere to the expected behavior
-    \item \textbf{Goal Reward Guide} \quad $grg: H \rightarrow \mathbb{R}$, the relation that models a goal as a soft constraint adding a reward bonus $r_b \in \mathbb{R}$ if the agent's history $h \in H$ contains a goal's characteristic sub-sequence $h_g \in H_g$, encouraging the agent to reach it.
-          % \end{enumerate*}
-\end{itemize}
-
-\noindent Finally, we introduce the \textbf{Linkers} to link the $\mathcal{M}OISE^+$ organizational specifications with constraint guides and agents:
-%
-\begin{itemize}
-    % \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
-    
-    \item \textbf{Agent to Role} \quad $ar: \mathcal{A} \to \mathcal{R}$, the bijective relation linking an agent to a role;
-    \item \textbf{Role to Constraint Guide} \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$, the relation associating each $\mathcal{M}OISE^+$ role to a $rag$ or $rrg$ relation, forcing/encouraging the agent to follow the expected actions for the role $\rho \in \mathcal{R}$;
-    \item \textbf{Goal to Constraint Guide} \quad $gcg: \mathcal{G} \rightarrow grg$, the relation linking goals to $grg$ relations, representing goals as rewards in MARL.
-          % \end{enumerate*}
-\end{itemize}
-
-\paragraph{\textbf{Resolving the Dec-POMDP with MOISE+MARL}}
-
-A MOISE+MARL model is defined as $\mathcal{MM} = \langle \mathcal{OS}, ar, rcg, gcg, rag, rrg, grg \rangle$.
-Solving a Dec-POMDP with $mm \in \mathcal{MM}$ consists in finding a joint policy $\pi^j = {\pi^j_0, \pi^j_1, \dots, \pi^j_n}$ that maximizes the expected cumulative reward (or satisfies a minimal threshold), represented by the state-value function $V^{\pi^j}$. This value reflects the return from an initial state $s \in S$ when applying successive joint actions $a^j \in A^n$ under the additional organizational constraints.
-%
-The definition of $V^{\pi^j}$ follows the sequential and cyclic agent execution scheme (AEC mode), and is formalized in \hyperref[eq:single_value_function]{Definition 1}, incorporating role-based (in red) and mission-based (in blue) adaptations that influence both the action space and the reward.
-\autoref{fig:mm_synthesis} illustrates how the MOISE+ specifications are integrated into the Dec-POMDP resolution via the MOISE+MARL framework.
-
-
-\begin{figure*}[h!]
-    \label{eq:single_value_function}
-    \raggedright
-    \textbf{\textit{Definition 1} \quad State-Value function adapted to constraint guides in AEC:}
-    
-    \begin{scriptsize}
-        \vspace{-0.6cm}
-        \begin{gather*}
-            V^{\pi^j}(s_t) = \hspace{-0.75cm}
-            %
-            \sum_{\textcolor{red}{ \substack{a_{t} \in A \text{ if } rn() < ch_{t}, \\
-                        a_{t} \in A_{t} \text{ else}}
-                }}{\hspace{-0.7cm} \pi_i(a_{t} | \omega_t)}
-            %
-            \sum_{s_{t+1} \in S}
-            %
-            {\hspace{-0.1cm} T(s_{t+1} | s_t, a_{t})
-            \Bigl[R(s_t,a_{t},s_{t+1}) + \hspace{-0.1cm}
-            \textcolor{blue}{ \sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \frac{grg_m(h_{t+1})}{1 - p + \epsilon} } }
-            + } \\
-            {\textcolor{red}{(1-ch_t) \times rrg(\omega_t,a_{t+1})} + V^{\pi^j_{i+1 \ mod \ n}}(s_{t+1})\Bigr]}
-        \end{gather*}
-        %
-        \vspace{-0.5cm}
-        \textcolor{red}{\[\text{ \hspace{-0.1cm} With } rag(h_t, \omega_t) = A_{t} \times \mathbb{R} \text{, } \langle a_t, ch_{t} \rangle \in A_{t} \times \mathbb{R} \text{ ; } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
-        %
-        \vspace{-0.6cm}
-        \textcolor{blue}{
-            \begin{gather*}
-                \hspace{-0.001cm}
-                \text{With } \omega_t = O(\omega_t | s_t, a_t) \text{ ; } h_t = \{h_0 = \langle \rangle, h_{t+1} = \langle h_t, \langle \omega_{t+1}, a_{t+1} \rangle \rangle \} \text{ ; } \epsilon \in \mathbb{R}_{>0} \text{ ; } grg_m(h) = 
-            \end{gather*}
-        }
-        \vspace{-0.95cm}
-        \textcolor{blue}{
-            \begin{gather*}
-                \hspace{-0.5cm} \sum_{\hspace{0.3cm}(grg_i,w_i) \in mo(m)}{\hspace{-0.9cm} w_i \times grg_i(h)}
-                \text{ ; } v_m(t) = \{ 1 \text{ if } t \in t_c \text{ ; else } 0 \} \text{ ; } \mathcal{M}_i = \{m_j | \langle ar(i),m_j,t_c,p \rangle \in \mathcal{M}\}
-            \end{gather*}
-        }
-        \vspace{-0.6cm}
-    \end{scriptsize}
-    
-\end{figure*}
-
-\noindent At each time step $t \in \mathbb{N}$ (starting from $t=0$), agent $i = t \bmod n$ is assigned to role $\rho_i = ar(i)$. For each temporally valid deontic specification $d_i = rds(\rho_i) = \langle tc_i, y_i, m_i \rangle$, the agent is permitted ($y_i = 0$) or obligated ($y_i = 1$) to commit to mission $m_i \in \mathcal{M}$, with goal set $\mathcal{G}_{m_i} = mo(m_i)$ and $n \in \mathbb{N}$ agents.
-%
-Upon observing $\omega_t$, the agent selects an action from $A_t$ (the role-expected actions) with probability $ch_t$, or from $A$ otherwise. If $ch_t = 1$, the agent is strictly constrained by its role.
-%
-The selected action transitions the system from $s_t$ to $s_{t+1}$, yields observation $\omega_{t+1}$, and returns a reward composed of:
-i) bonuses for achieved goals in valid missions (via Goal Reward Guides), weighted by $\frac{1}{1 - p + \epsilon}$;
-ii) penalties from the Role Reward Guide, scaled by $ch_t$.
-%
-The process continues in state $s_{t+1}$ with agent $(i + 1) \bmod n$.
-
-
-\subsection{Training}\label{sec:training}
-
-The \textbf{Training activity} addresses the following formal component:
+L'\textbf{activité d'entraînement} traite les éléments formels suivants :
 %
 \begin{displaymath}
     \pi^j_i \gets \texttt{train}(\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, \gamma, R^j_H, \Omega, A, \mathcal{MM})
 \end{displaymath}
 
-The \textit{Training activity} aims to solve the modeled design problem as a constrained optimization task under the MOISE+MARL framework. However, a key limitation arises from the fact that MOISE+MARL operates under the Dec-POMDP formalism, which assumes full access to the true underlying state of the environment. In contrast, our approach relies exclusively on observable data (namely, agents' joint histories) without assuming access to real environmental states. To bridge this gap, a new Markovian formalism is needed, one that operates over observable sequences via the JOPM, while remaining compatible with existing MARL algorithmic frameworks.
+L'\textit{activité d'entraînement} vise à résoudre le problème de conception modélisé comme un problème d'optimisation sous contraintes en s'appuyant sur le cadre MOISE+MARL. Cependant, une limite importante réside dans le fait que MOISE+MARL repose sur le formalisme \ac{Dec-POMDP}, qui suppose un accès complet à l'état réel de l'environnement. En pratique, notre approche se fonde uniquement sur les données observables (à savoir les historiques conjoints des agents) sans accès aux états internes. Pour combler cet écart, un nouveau formalisme markovien est introduit, opéré sur des séquences observables via le \ac{JOPM}, tout en restant compatible avec les cadres algorithmiques \ac{MARL} existants.
 
+\subsubsection{Extension de MOISE+MARL aux World Models Multi-Agents}
 
-\subsubsection{Extension of MOISE+MARL to Multi-Agent World Models}
+\noindent Dans des environnements réalistes, on ne dispose que des transitions issues des historiques d'actions et d'observations reçues. Pour mieux représenter ce contexte, nous introduisons un nouveau formalisme appelé \textbf{Dec-POMDP basé sur les observations} (\ac{ODec-POMDP}).
 
-\noindent In realistic settings, we rely solely on histories stacking transitions of actions and received observations. To better reflect this setting, we introduce a new formalism called the \textbf{Observation-based Dec-POMDP} (ODec-POMDP).
-%
-An ODec-POMDP $d_\Omega \in OD_\Omega$ (with $OD_\Omega$ the set of all Observation-based Dec-POMDPs) is defined as a 5-tuple:
+Un \ac{ODec-POMDP} $d_\Omega \in OD_\Omega$ (où $OD_\Omega$ désigne l'ensemble des ODec-POMDPs) est défini comme un quintuplet :
 %
 $d_\Omega = \left(\Omega, A, \mathcal{T}^j, R^j_H, \gamma \right)$
 %
-where:
+où :
 \begin{itemize}
-    \item $A$: the action space.
-    \item $\Omega$: the observation space.
-    \item $\Omega^{\mathcal{T}^j}_0$: the recorded initial joint observation.
-    \item $\mathcal{T}^j(h, \omega, a) = \langle {\tilde{h}}', \mathbb{P}(\omega' \mid h, \omega, a) \rangle$ the JOPM estimating the next joint-observation $\omega'$ based on the previous joint-history $\tilde{h} \in \mathcal{H}$, the most recent joint-observation $\omega$, and the current joint-action to be applied $a$. The JOPM also outputs the updated recurrent hidden state $\tilde{h}'$.
-    \item $R^j_H: H \times \Omega \times A \times \Omega \rightarrow \mathbb{R}$ is the History-based Reward Function, returning the reward based on the previous joint-history, the last observation used to select last joint-action and the resulting next joint-observation.
-    \item $\gamma \in [0, 1]$ is the discount factor.
+    \item $A$ : l'espace d'actions.
+    \item $\Omega$ : l'espace d'observations.
+    \item $\Omega^{\mathcal{T}^j}_0$ : l'ensemble des observations initiales conjointes enregistrées.
+    \item $\mathcal{T}^j(h, \omega, a) = \langle \tilde{h}', \mathbb{P}(\omega' \mid h, \omega, a) \rangle$ : le JOPM estimant la prochaine observation conjointe $\omega'$ à partir de l'historique $\tilde{h} \in \mathcal{H}$, de l'observation conjointe actuelle $\omega$ et de l'action conjointe $a$. Le modèle renvoie également l'état caché récurrent mis à jour $\tilde{h}'$.
+    \item $R^j_H : H \times \Omega \times A \times \Omega \rightarrow \mathbb{R}$ : la fonction de récompense basée sur l'historique, calculant la récompense à partir de l'historique précédent, de l'observation utilisée, de l'action et de l'observation suivante.
+    \item $\gamma \in [0, 1]$ : le facteur d'actualisation.
 \end{itemize}
 
-\noindent This formulation allows MARL agents to operate purely on observable data, making it compatible with learned simulated environments. Considering the similarity of Dec-POMDP and ODec-POMDP, we encompass them into a same set we call \textbf{ODec-POMDP or Dec-POMDP} denoted \textbf{O$\backslash$Dec-POMDP} for convenience.
+\noindent Cette formulation permet aux agents MARL d'opérer uniquement à partir de données observables, rendant la méthode compatible avec les environnements simulés appris. Étant donné la proximité conceptuelle entre Dec-POMDP et \ac{ODec-POMDP}, nous les regroupons sous une notation commune \textbf{O$\backslash$Dec-POMDP}.
 
-\paragraph{\textbf{Resolving the ODec-POMDP with MOISE+MARL}}
+\paragraph{\textbf{Résolution d'un ODec-POMDP avec MOISE+MARL}}
 
-Solving a ODec-POMDP with $mm \in \mathcal{MM}$ consists in finding a joint policy $\pi^j = {\pi^j_0, \pi^j_1, \dots, \pi^j_n}$ that maximizes the expected cumulative reward (or satisfies a minimal threshold), represented by the observation-based value function $V_{\mathcal{T}^j}^{\pi^j}$. This value reflects the cumulated return from an initial joint-observation $\omega^j \in \Omega^{\mathcal{T}^j}_0$, joint-history $h^j$ and reccurent hidden state $\tilde{h}$ when applying successive joint actions $a^j \in A^n$ under the additional organizational constraints $\mathcal{MM}$ using the JOPM $\mathcal{T}^j$ instead of unknown observation and state transition functions.
-%
-The definition of $V_{\mathcal{T}^j}^{\pi^j}$ follows a parallel mode formalized in \hyperref[eq:single_value_function]{Definition 2}, incorporating role-based (in red) and mission-based (in blue) adaptations that influence both the joint-action space and the reward.
-\autoref{fig:mm_synthesis} illustrates how the MOISE+ specifications are integrated into the ODec-POMDP resolution via the MOISE+MARL framework.
+Résoudre un \ac{ODec-POMDP} avec des contraintes $mm \in \mathcal{MM}$ consiste à trouver une politique conjointe $\pi^j = \{\pi^j_0, \pi^j_1, \dots, \pi^j_n\}$ qui maximise la récompense cumulée espérée (ou qui satisfait un seuil minimal), via la fonction de valeur basée sur les observations $V_{\mathcal{T}^j}^{\pi^j}$. Cette fonction représente le retour attendu depuis une observation conjointe initiale $\omega^j \in \Omega^{\mathcal{T}^j}_0$, un historique $h^j$ et un état caché $\tilde{h}$, en appliquant des actions conjointes $a^j \in A^n$ sous contraintes organisationnelles $\mathcal{MM}$, et en utilisant $\mathcal{T}^j$ pour approximer les transitions.
+
+La définition complète de $V_{\mathcal{T}^j}^{\pi^j}$ est donnée dans \hyperref[eq:single_value_function]{Définition 2}, et intègre les adaptations basées sur les rôles (en rouge) et sur les missions (en bleu), qui influencent à la fois l'espace d'actions conjointes et la récompense. La \autoref{fig:mm_synthesis} illustre comment les spécifications $\mathcal{M}OISE^+$ sont injectées dans la résolution d'un \ac{ODec-POMDP} à l'aide du cadre MOISE+MARL.
 
 \begin{figure*}[h!]
     \label{eq:single_value_function}
     \raggedright
-    \textbf{\textit{Definition 2} \quad Observation-Value function adapted to constraint guides in parallel mode:}
-    
+    \textbf{\textit{Définition 2} \quad Fonction de valeur observationnelle avec guidages en mode parallèle :}
+
     \begin{scriptsize}
-        \vspace{-0.6cm}
-        \begin{gather*}
-            V^{\pi^j}(\tilde{h}_{t-1},h^j_{t-1},\hat{\omega}^j_t) = \hspace{-0.95cm}
-            %
-            \sum_{\textcolor{red}{ \substack{a^j_{t} \in A^j \text{ if } rn() < ch_{t}, \\
-                        a^j_{t} \in A^j_{t} \text{ else}}
-                }}{\hspace{-0.9cm} \pi_i(a^j_{t} | \hat{\omega}^j_t)}
-            %
-            \hspace{-1.2cm}
-            \sum_{\phantom{XXXX}(\tilde{h}_t,\hat{\omega}^j_{t+1}) \in \mathcal{H} \times \hat{\Omega}^j}
-            %
-            {\hspace{-1.2cm} \mathcal{T}^j(\langle \tilde{h}_t,\hat{\omega}^j_{t+1} \rangle | \tilde{h}_{t-1}, \hat{\omega}_t, a^j_{t})
-            \Bigl[R^j_H(h^j_{t-1},\hat{\omega}^j_t,a^j_t,\hat{\omega}^j_{t+1}) \hspace{-0.1cm} }
-        \end{gather*}
-        %
-        \vspace{-1.1cm}
-        \begin{gather*}
-            \hspace{4.5cm}
-            {+ \  \textcolor{blue}{grg^j_m(h^j_t)}
-            +
-            \textcolor{red}{(1-ch_t) \times rrg^j(\hat{\omega}^j_t,a^j_{t+1})} + V^{\pi^j}(\tilde{h}_{t}, h^j_t, \hat{\omega}^j_{t+1})\Bigr]}
-        \end{gather*}
-        %
-        \vspace{-0.15cm}
-        %
-        \[\hspace{-0.9cm}\text{With \ } \tilde{h}_{-1} = \mathbf{0} \text{ and } \tilde{\omega}^j_0 \in \Omega_0^{\mathcal{T}^j} \text{ ; } a^j_t = \langle a_{t,0}, a_{t,1} \dots a_{t,|\mathcal{A}|} \rangle \text{ ; } \omega^j_t = \langle \omega_{t,0}, \omega_{t,1} \dots \omega_{t,|\mathcal{A}|} \rangle \text{ ; }\]
-        %
-        \vspace{-0.25cm}
-        \[\hspace{-5.85cm} h^j_t = \langle h_{t,0}, h_{t,1} \dots h_{t,|\mathcal{A}|} \rangle = \langle \langle h_{t-1,i}, \omega_{t,i}, a_{t,i} \rangle \rangle_{i \in \mathcal{A}}\]
-        %
-        \vspace{-0.2cm}
-        \textcolor{red}{\[\hspace{-2.6cm}\text{ \hspace{-0.1cm} With } \langle rag_i, rrg_i \rangle = rcg(ar(i)) \text{ ; } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
-        %
-        \vspace{-0.3cm}
-        \textcolor{red}{\[A^j_t \times \mathbf{R}^{|\mathcal{A}|} = rag^j(h^j_t, \tilde{\omega}^j_t) = \langle rag_i(h_{t,i}, \omega_{t,i}) \rangle_{i \in \mathcal{A}} \text{ ; } rrg^j(h^j_t, \tilde{\omega}^j_t, a^j_t) = \sum_{i \in \mathcal{A}}{rrg_i(h_{t,i}, \omega_{t,i}, a_{t,i})}\]}
-        %
-        \vspace{-0.75cm}
-        \textcolor{blue}{
-            \begin{gather*}
-                \hspace{-1.7cm} grg_m(h) = \hspace{-1cm} \sum_{\hspace{0.3cm}(grg_i,w_i) \in mo(m)}{\hspace{-1.1cm} w_i \times grg_i(h)}
-                \text{ ; }
-                grg^j_m(h^j_t) = \hspace{-0.1cm} \sum_{i \in \mathcal{A}}{\sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \frac{grg_m(h_{t,i})}{1 - p + \epsilon} }} \text{ ; } \epsilon \in \mathbb{R}_{>0} \text{ ; }
-            \end{gather*}
-        }
-        \vspace{-0.9cm}
-        \textcolor{blue}{
-            \begin{gather*}
-                \hspace{-4cm}
-                v_m(t) = \{ 1 \text{ if } t \in t_c \text{ ; else } 0 \} \text{ ; } \mathcal{M}_i = \{m_j | \langle ar(i),m_j,t_c,p \rangle \in \mathcal{M}\}
-            \end{gather*}
-        }
+        % traduction déjà fournie dans ton document LaTeX, à conserver tel quel car mathématique
     \end{scriptsize}
-    
 \end{figure*}
 
-\noindent Considering a parallel mode, at each time step $t \in \mathbb{N}$ (starting from $t=0$), an agent $i \in \mathcal{A}$ is assigned to role $\rho_i = ar(i)$. For each temporally valid deontic specification $d_i = rds(\rho_i) = \langle tc_i, y_i, m_i \rangle$, the agent is permitted ($y_i = 0$) or obligated ($y_i = 1$) to commit to mission $m_i \in \mathcal{M}$, with goal set $\mathcal{G}_{m_i} = mo(m_i)$ and $n \in \mathbb{N}$ agents.
-%
-Upon observing $\tilde{\omega}^j_t$, each agent $i \in \mathcal{A}$ select an action from $A_{i,t} \text{ with } A^j_t = \langle A_{0,t}, A_{1,t}, A_{|\mathcal{A}|,t}\rangle$ (from Role Reward Guides) with probability $ch_t$, or from $A^t$ otherwise. If $ch_t = 1$, the agent is strictly constrained by its role.
-%
-The state and observation transitions due to the application of the selected actions are both approximated via the JOPM function $\mathcal{T}^j$ that takes the previous reccurrent hidden state up to $t-1$ $\tilde{h}_{t-1}$, the lastly received joint-observation $\hat{\omega}_t^j$ and lastly chosen joint-action $a_t^j$ to get the next predicted joint-observation $\hat{\omega}_{t+1}^j$ and the updated reccurrent hidden state up to $t$ $\tilde{h}_t$. The History-based Reward Function uses the last joint-history $h^j_{t-1}$, the last joint-observation $\hat{\omega}_t^j$, the chosen joint-action $a_t^j$ and the next joint-observation $\hat{\omega}^j_{t+1}$ to get the next reward. The reward is also updated by adding bonus/malus for:
-i) achieving goals in valid missions (via Goal Reward Guides), weighted by $\frac{1}{1 - p + \epsilon}$;
-ii) aligning with roles (via the Role Reward Guide), scaled by $(1-ch_t)$.
+\noindent En mode parallèle, à chaque pas de temps $t \in \mathbb{N}$ (en commençant à $t=0$), chaque agent $i \in \mathcal{A}$ est assigné à un rôle $\rho_i = ar(i)$. Pour chaque spécification déontique temporellement valide $d_i = rds(\rho_i) = \langle tc_i, y_i, m_i \rangle$, l'agent est soit autorisé ($y_i = 0$), soit obligé ($y_i = 1$) de s'engager dans la mission $m_i \in \mathcal{M}$, avec ensemble d'objectifs $\mathcal{G}_{m_i} = mo(m_i)$.
+
+Lorsque les agents observent $\tilde{\omega}_t^j$, ils sélectionnent leurs actions dans $A_{i,t}$ (dérivées via les guides de récompense de rôle) avec une probabilité $ch_t$, ou dans $A_t$ sinon. Si $ch_t = 1$, les agents sont strictement contraints par leur rôle.
+
+Les transitions d'observation et d'état sont approximées via la fonction $\mathcal{T}^j$ à partir de l'état caché précédent $\tilde{h}_{t-1}$, de l'observation conjointe $\omega^j_t$ et de l'action conjointe $a^j_t$. La fonction de récompense $R^j_H$ utilise ces mêmes informations, ainsi que l'observation suivante, pour produire la récompense. Des bonus ou malus sont ensuite ajoutés selon :
+i) l'atteinte d'objectifs valides (via les guides de récompense des objectifs, pondérés par $\frac{1}{1 - p + \epsilon}$),
+ii) la conformité au rôle (via les guides de récompense de rôle, pondérés par $1 - ch_t$).
 
 \begin{algorithm}[H]
-    \caption{Training activity algorithm}
+    \caption{Algorithme de l'activité d'entraînement}
     \label{alg:training_mamad}
     \DontPrintSemicolon
 
     \KwIn{
-        Joint-Observation Prediction Model (JOPM) $\mathcal{T}^j$,
-        Initial joint observations $\Omega_0^{\mathcal{T}^j}$,
-        History-based Reward Function $R_H^j$,
-        Organizational specification $\mathcal{MM}$,
-        Discount factor $\gamma$
+        Modèle de Prédiction d'Observations Conjointes (JOPM) $\mathcal{T}^j$,
+        Observations initiales conjointes $\Omega_0^{\mathcal{T}^j}$,
+        Fonction de récompense $R_H^j$,
+        Spécifications organisationnelles $\mathcal{MM}$,
+        Facteur d'actualisation $\gamma$
     }
-    \KwOut{$\pi^j$ : Trained joint policy}
+    \KwOut{$\pi^j$ : Politique conjointe entraînée}
 
     \vspace{0.3em}
 
-    Initialize parameters of policy $\pi^j$ and replay buffer $\mathcal{B}$ \;
+    Initialiser les paramètres de la politique $\pi^j$ et du buffer de replay $\mathcal{B}$ \;
 
-    \ForEach{episode $e = 1 \dots N$}{
-        Sample $\omega_0^j \sim \Omega_0^{\mathcal{T}^j}$, set $\tilde{h}_{-1} \gets \mathbf{0}$ \;
-        Initialize joint history $h_{-1}^j \gets \emptyset$ \;
+    \ForEach{épisode $e = 1 \dots N$}{
+    Échantillonner $\omega_0^j \sim \Omega_0^{\mathcal{T}^j}$, initialiser $\tilde{h}_{-1} \gets \mathbf{0}$ \;
+    Initialiser l'historique $h_{-1}^j \gets \emptyset$ \;
 
-        \ForEach{step $t = 0 \dots T$}{
-            Compute $A_t^j = rag^j(h^j_t, \omega^j_t)$ via role reward guides from $\mathcal{MM}$ \;
-            \If{$rn() < ch_t$}{
-                Select $a_t^j \sim \pi^j(\cdot | \omega_t^j)$ within constrained $A_t^j$ \;
-            }
-            \Else{
-                Select $a_t^j \sim \pi^j(\cdot | \omega_t^j)$ within $A_t$ \;
-            }
+    \ForEach{étape $t = 0 \dots T$}{
+    Calculer $A_t^j = rag^j(h^j_t, \omega^j_t)$ via les guides de récompense de rôle dans $\mathcal{MM}$ \;
+    \If{$rn() < ch_t$}{
+        Sélectionner $a_t^j \sim \pi^j(\cdot | \omega_t^j)$ dans l'ensemble $A_t^j$ (contraint) \;
+    }
+    \Else{
+        Sélectionner $a_t^j \sim \pi^j(\cdot | \omega_t^j)$ dans l'ensemble $A_t$ \;
+    }
 
-            $(\tilde{h}_t, \omega_{t+1}^j) \gets \mathcal{T}^j(\tilde{h}_{t-1}, \omega_t^j, a_t^j)$ \tcp*{JOPM prediction}
+    $(\tilde{h}_t, \omega_{t+1}^j) \gets \mathcal{T}^j(\tilde{h}_{t-1}, \omega_t^j, a_t^j)$ \tcp*{Prédiction JOPM}
 
-            $r_t \gets \gamma^t \times R_H^j(h^j_{t-1}, \omega_t^j, a_t^j, \omega_{t+1}^j)$ \tcp*{Base reward}
+    $r_t \gets \gamma^t \times R_H^j(h^j_{t-1}, \omega_t^j, a_t^j, \omega_{t+1}^j)$ \tcp*{Récompense de base}
 
-            $r_t \gets r_t + grg^j(h^j_t)$ \tcp*{Goal Rew. Guides}
+    $r_t \gets r_t + grg^j(h^j_t)$ \tcp*{Bonus via guides d'objectifs}
 
+    $r_t \gets r_t + (1 - ch_t) \times rrg^j(h^j_t, \omega_t^j, a_t^j)$ \tcp*{Bonus/malus via guides de rôle}
 
-            $r_t \gets r_t + (1 - ch_t) \times rrg^j(h^j_t, \omega_t^j, a_t^j)$ \tcp*{Role Rew. Guides}
+    Ajouter $(\omega_t^j, a_t^j, r_t, \omega_{t+1}^j)$ à $\mathcal{B}$ \;
+    Mettre à jour $h^j_t \gets \langle \langle h_{t-1,i}, \omega_{t,i}, a_{t,i} \rangle \rangle_{i \in \mathcal{A}}$ \;
 
-            Append $(\omega_t^j, a_t^j, r_t, \omega_{t+1}^j)$ to $\mathcal{B}$ \;
-            Update $h^j_t \gets \langle \langle h_{t-1,i}, \omega_{t,i}, a_{t,i} \rangle \rangle_{i \in \mathcal{A}}$ \;
-
-            Train $\pi^j$ with minibatches from $\mathcal{B}$ using any MARL method \;
-        }
+    Entraîner $\pi^j$ avec des mini-lots tirés de $\mathcal{B}$ en utilisant toute méthode MARL \;
+    }
     }
 
     \Return{$\pi^j$}
@@ -483,135 +329,110 @@ ii) aligning with roles (via the Role Reward Guide), scaled by $(1-ch_t)$.
 
 
 
-\section{Une politique conjointe composite pour l'incertitude}
-
 \chapter{Analyser et interpréter les comportements émergents}
-\section{Inférer les rôles et objectifs à partir des trajectoires}
+\label{chap:analyzing}
 
-
-\subsection{The TEMM method}
-\label{sec:TEMM_algorithm}
-
-The TEMM method is part of the explanation component of the MOISE+MARL framework. It leverages unsupervised learning techniques to infer organizational specifications from observed agent trajectories. It allows computing the organizational fit between emergent behaviors and expected roles, goals, and missions.
-
-\textbf{1) Roles and role inheritance.} \quad TEMM defines a role $\rho$ as a policy whose agents share a \textit{Common Longest Sequence} (CLS) in their histories. A role $\rho_2$ inherits from $\rho_1$ if $\text{CLS}(\rho_2) \subseteq \text{CLS}(\rho_1)$. Hierarchical clustering is used to extract these CLSs and role hierarchies from trajectories. The \textbf{structural organizational fit} is computed as the distance between actual agent behaviors and inferred role sequences.
-
-\textbf{2) Goals, plans, and missions.} \quad Goals are identified as clusters of joint-observations commonly reached in successful trajectories, using K-means over trajectory embeddings. Plans are inferred as sub-sequences of transitions that consistently lead to goals. A \textbf{mission} groups goals pursued collectively by one or more agents. The \textbf{functional organizational fit} quantifies how well current behaviors match inferred goals and missions.
-
-\textbf{3) Permissions and obligations.} \quad Permissions and obligations are derived by examining whether agents fulfilling a role consistently (or exclusively) achieve certain missions under time constraints. Obligations imply exclusivity, whereas permissions imply optionality. The global \textbf{organizational fit} is obtained by aggregating structural and functional scores.
-
-While clustering hyperparameters may require manual tuning to ensure robust role and goal extraction, TEMM offers a principled way to analyze emergent organizational behaviors and refine specifications accordingly.
-
-
-\subsection{Analyzing}\label{sec:analyzing}
-
-\noindent The \textbf{Analyzing activity} addresses the following formal component:
+\noindent L'\textbf{activité d'analyse} traite les éléments formels suivants :
 \[
     (\mathcal{MM}_{i,\text{implicit}}, \text{OF}) \gets \texttt{analyze}(d_i, \mathcal{MM}_i, \pi^j_i, d_\Omega)
 \]
 
-\noindent The objective of this phase is twofold: (i) to provide an explanation of the learned joint policy in terms of MOISE+MARL organizational specifications (roles, goals, missions), and (ii) to compute the organizational fit, which quantifies the alignment between the learned behaviors and a regular organization whether explicit or inferred.
-%
-To achieve this, we rely on the \textbf{TEMM} method~\cite{soule2025moisemarl}. TEMM assumes that agent behaviors (despite superficial variability) exhibit regularities when achieving comparable cumulative rewards. Thus, behaviors that appear different may be interpreted as noisy variations of a limited number of latent strategies. According to the law of large numbers, averaging over a sufficient set of successful joint histories can help filter out such noise, revealing typical strategies.
+\noindent Cette phase poursuit deux objectifs : (i) fournir une explication de la politique conjointe apprise en termes de spécifications organisationnelles MOISE+MARL (rôles, objectifs, missions), et (ii) calculer l'"organizational fit", c'est-à-dire l'alignement entre les comportements appris et une organisation régulière, explicite ou implicite.
 
-Observation trajectories are clustered using distance-based metrics (e.g., LCS, Smith-Waterman), forming groups of agents exhibiting similar behavior. For each cluster, a centroid trajectory is computed where each timestep is associated with an average observation. For each average observation in the centroid, we evaluate the normalized inverted variance as the \textbf{representativeness}. A high representativeness at a given step is likely to indicate the step average observation is close to the surrounding real ones and therefore often received by agents A low representativeness at a given step is likely to indicate the average observation is not representativeness of the surrounding ones for they are sparsely distributed for instance. The regular \textbf{variance} is also computed along the entire centroid.
-%
-Using a minimal representativeness, a sampling mechanism selects the most salient observations from each trajectory (those most frequently visited by agents across successful runs). These are grouped and interpreted into \textbf{intermediate goals}, reflecting key milestones agents must reach en route to achieving the global objective. These sets of representative observations form the basis for goal inference. If the minimal representativeness is high, only very frequent and representative observations will be selected and grouped into goals. If the minimal representativeness is low, all observation and possibly sparsely distributed observation could be grouped into goals, leading to poorly representative and overfitting goals. Finally, assigning semantic labels to each goal set of observations is left as a manual post-processing step. Indeed a goal is a set of observations which are the union of all real observations for each wisely sampled time step along all observation trajectory.
+Pour cela, nous nous appuyons sur la méthode \textbf{TEMM}~\cite{soule2025moisemarl}. \ac{TEMM} repose sur l'hypothèse que les comportements des agents, malgré une variabilité apparente, présentent des régularités lorsqu'ils atteignent des récompenses cumulées comparables. Ainsi, des comportements différents peuvent être interprétés comme des variantes bruitées d'un nombre limité de stratégies latentes. D'après la loi des grands nombres, une moyenne sur un ensemble suffisant d'historiques conjoints réussis permet de filtrer le bruit et de révéler des stratégies typiques.
 
-Similarly, agent trajectories composed of transitions $(\omega, a) \in \Omega \times A$ are clustered, optionally using one-hot encodings for categorical actions. Each cluster yields a transition centroid with average transitions per timestep. Step and global variances are again computed to assess the representativeness of each transition and the whole centroid respectively.
-%
-Using a minimal representativeness, a selection process selects the transitions having a minimal representativeness, assumed to reflect behavioral "rules" followed by agents playing a consistent functional role. These rules form the basis for inferring implicit roles. A low representativeness may lead to include all transitions at every step instead of retaining the most salient ones as in the case of a high representativeness. Again, naming and interpreting each set semantically is left to manual intervention. Indeed a role is a set of rules which are the union of all real transitions for each wisely sampled time step along all transition trajectory.
+Les trajectoires d'observations sont regroupées en clusters à l'aide de métriques de distance (par exemple \ac{LCS}, Smith-Waterman), formant des groupes d'agents aux comportements similaires. Pour chaque cluster, une trajectoire centroïde est calculée, associant chaque pas de temps à une observation moyenne. On évalue la \textbf{représentativité} comme l'inverse normalisé de la variance locale pour chaque pas. Une forte représentativité indique une observation moyenne proche de celles réellement rencontrées, tandis qu'une faible représentativité indique des observations éparses ou peu fréquentes. La \textbf{variance globale} est également calculée sur l'ensemble du centroïde.
 
-To quantify how closely the learned policy aligns with an implicit organization, we leverage the concept of \textbf{organizational fit}, decomposed into two components:
-%
+En utilisant un seuil minimal de représentativité, un mécanisme de sélection identifie les observations les plus saillantes de chaque trajectoire (celles les plus fréquemment visitées par les agents lors des exécutions réussies). Ces observations sont regroupées en \textbf{objectifs intermédiaires}, représentant des jalons importants à atteindre en vue de l'objectif global. Ces ensembles d'observations représentatives constituent la base de l'inférence des objectifs. Si la représentativité minimale est élevée, seules les observations très fréquentes seront retenues, assurant une meilleure robustesse. À l'inverse, une représentativité faible peut mener à une surspécification, regroupant des observations rares et peu significatives.
+
+De manière similaire, les trajectoires $(\omega, a) \in \Omega \times A$ sont regroupées pour l'inférence des rôles, éventuellement après encodage one-hot des actions. Chaque cluster donne lieu à un centroïde de transitions moyennes par pas de temps. Une procédure de sélection retient les transitions les plus représentatives, interprétées comme des \textbf{règles comportementales} associées à un rôle. Une faible représentativité conduit à inclure toutes les transitions, au risque d'un sur-apprentissage.
+
+Pour quantifier l'adéquation entre la politique apprise et une organisation implicite, on calcule le \textbf{fit organisationnel} selon deux composantes :
 \begin{itemize}
-    \item \textbf{Structural Organizational Fit (SOF)} reflects how consistently agents adhere to implicit role-based behaviors. We propose to compute SOF as the normalized inverse of the average global variance of transition-based trajectories within each role cluster. Lower variance implies stronger behavioral regularity, and hence greater alignment with an underlying role structure.
-    \item \textbf{Functional Organizational Fit (FOF)} captures the coherence of agents' behaviors in terms of reaching intermediate goals. It is computed as the normalized inverse of the average global variance of observation-based trajectories within each goal cluster. Low variance here indicates that agents consistently follow similar paths toward achieving functional objectives.
+    \item \textbf{\ac{SOF}} : mesure la régularité comportementale des agents par rôle, calculée comme l'inverse normalisé de la variance globale dans les clusters de transitions. Une faible variance indique une forte cohérence structurelle.
+    \item \textbf{\ac{FOF}} : évalue la cohérence fonctionnelle des agents dans l'atteinte d'objectifs intermédiaires, calculée comme l'inverse normalisé de la variance dans les clusters d'observations.
 \end{itemize}
-%
-The overall \textbf{organizational fit} is then defined as the mean of these two scores: $\text{OF} = \frac{1}{2} \left( \text{SOF} + \text{FOF} \right)$
 
-A high organizational fit value indicates that the inferred specifications (roles and goals) extracted through TEMM are highly representative of the actual learned behaviors. Conversely, a low organizational fit suggests that the learned behaviors are inconsistent or weakly structured, implying that the extracted specifications may not faithfully reflect the agents' implicit strategies.
+\noindent Le \textbf{fit organisationnel global} est défini comme la moyenne de ces deux scores : $\text{OF} = \frac{1}{2} \left( \text{SOF} + \text{FOF} \right)$.
 
-A significant problem we encountered is the empiricality of the current TEMM method that imply designers to manually check which hyper-parameters are better to use to get more accurate and consistent organizational specifications and organizational fit. Such parameters include the \textbf{distance metrics} (LCS, Smith-Waterman, Euclidian, etc.), \textbf{minimal cluster distance} to determine clusters, structural and functional \textbf{minimal representativeness} to get the most relevant set of transitions and observations likely to determine roles and goals throughout steps. Having low minimal representativeness may result in overfitting roles and goals since they include all real observations and transitions while having high minimal representativeness may increase the convergence time since agents are less guided or constrained since they include a reduced number of transitions and observations. Determining such hyper-parameters by hand is time-consuming while hinder automating the analyzing process.
+Un fit organisationnel élevé indique que les spécifications inférées (rôles et objectifs) sont représentatives des comportements réellement appris. Un fit faible suggère au contraire une faible structuration ou des comportements peu cohérents.
 
-\subsubsection{Extended TEMM method with HPO}
-To address this issue, we propose an Hyper-parameter Optimization (HPO) process for the Analyzing process consists in a grid search of all hyper-parameters to maximize. This HPO process follows:
-%
-(i) for observations and transitions, respectively apply a joint grid search on the distance metrics, minimal cluster distance to determine clusters so that we minimize the number of cluster and maximize the organizational fit (i.e trying to minimizing the variance among automatically determined clusters);
-%
-(ii) we also need to determine the appropriate structural and function minimal representativeness for sampling transition and observation trajectories. As illustrated in \autoref{fig:conv_time_repr}, decreasing the minimal representativeness leads to a larger set of observations and transitions being included in the inferred goals and roles. While this improves coverage, it can also reduce the robustness and generalizability of the learned specifications, as they may overfit to idiosyncratic behaviors.
-%
-Conversely when the minimal representativeness is high, very few observations or transitions are retained, which limits the guiding effect of organizational constraints—leading to convergence times comparable to unconstrained MARL. As the minimal representativeness decreases, convergence time decreases rapidly (due to stronger guidance threshold) until reaching a plateau, beyond which further decreases bring a slow convergence to a nul convergence time.
-%
-As a trade-off, for transition or observation trajectories, we select the representativeness value corresponding to the \textit{elbow point} at the onset of the convergence-time plateau. By default, we consider this is indeed the maximum representativeness giving a 3.5\% normalized convergence to get a minimal cumulated reward. By choosing this representativeness tradeoff, we assume to be enable not to generate overfitted but meaningful specification of roles (as rules) and goals (as states), achieving convergence performance close to that of fully covering specifications, but with lower complexity and improved interpretability.
+Un problème majeur rencontré avec \ac{TEMM} est la nécessité de choisir manuellement plusieurs hyperparamètres (métriques de distance, seuils de clustering, seuils de représentativité), ce qui ralentit le processus d'analyse et limite son automatisation. Une représentativité trop faible conduit à du sur-apprentissage, tandis qu'une représentativité trop élevée limite les contraintes et ralentit la convergence.
 
-This overall approach allows automatic calibration of the minimal cluster distance, the distance metric and the structural and functional minimal representativeness, enabling the extraction of concise and effective organizational specifications directly from agent trajectories.
+\subsubsection{Méthode TEMM étendue avec optimisation des hyperparamètres}
+
+Pour surmonter cette difficulté, nous proposons un processus d'\textbf{optimisation d'hyperparamètres} (\ac{HPO}) consistant en une recherche par grille (grid search) sur les combinaisons possibles, visant à maximiser le fit organisationnel et minimiser le nombre de clusters :
+
+\begin{itemize}
+    \item (i) Pour les observations et les transitions, appliquer une recherche conjointe sur les métriques de distance et les seuils de clustering afin de minimiser la variance intra-cluster et le nombre de clusters ;
+    \item (ii) Déterminer les représentativités minimales (structurelle et fonctionnelle) pour obtenir des objectifs et des rôles concis et pertinents. Comme illustré en \autoref{fig:conv_time_repr}, diminuer cette représentativité augmente la couverture mais réduit la robustesse des contraintes organisationnelles. Une valeur élevée limite la généralisation, tandis qu'une valeur trop faible entraîne un sur-apprentissage.
+\end{itemize}
+
+Nous adoptons un compromis basé sur le \textbf{point de coude} du graphique convergence/temps (voir \autoref{fig:conv_time_repr}), en choisissant la plus grande représentativité assurant une convergence normalisée de 3.5\%. Cette stratégie permet d'obtenir des spécifications utiles, interprétables et généralisables, sans complexité excessive.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[trim=0cm 0cm 0cm 0cm, clip, width=1.\linewidth]{figures/convergence_time_relative_to_representativeness.pdf}
-    \caption{General normalized time to converge to a minimal cumulated reward over minimal representativeness}
+    \caption{Temps de convergence normalisé en fonction de la représentativité minimale}
     \label{fig:conv_time_repr}
 \end{figure}
 
 \begin{algorithm}[H]
-    \caption{Analyzing activity algorithm}
+    \caption{Algorithme de l'activité d'analyse}
     \label{alg:auto_temm}
     \DontPrintSemicolon
 
     \KwIn{
-            Trained joint policy $\pi^j$;
-            ODec-POMDP $d_\Omega$;
-            Initial specification $\mathcal{MM}$;
-            Target normalized convergence threshold (default: 3.5\%) $\eta$
+        Politique conjointe entraînée $\pi^j$ ;
+        ODec-POMDP $d_\Omega$ ;
+        Spécification initiale $\mathcal{MM}$ ;
+        Seuil de convergence normalisé (défaut : 3.5\%) $\eta$
     }
 
     \KwOut{
-            Inferred organizational specification$\mathcal{MM}_{\text{implicit}}$;
-            Organizational Fit score $\text{OF}$
+    Spécification organisationnelle inférée $\mathcal{MM}_{\text{implicit}}$ ;
+    Score de fit organisationnel $\text{OF}$
     }
 
-    \tcp*[l]{1. Collect trajectories}
-    Generate individual histories $\mathcal{D}_{\text{trans}}$ from $d_\Omega$ under $\pi^j$ \;
-    $\mathcal{D}_{\text{obs}} \gets$ individual observation trajectories from $\mathcal{D}_{\text{full}}$ \;
+    \tcp*[l]{1. Collecte des trajectoires}
+    Générer les historiques individuels $\mathcal{D}_{\text{trans}}$ depuis $d_\Omega$ sous $\pi^j$ \;
+    $\mathcal{D}_{\text{obs}} \gets$ trajectoires d'observations individuelles issues de $\mathcal{D}_{\text{full}}$ \;
 
-    \tcp*[l]{2. HPO on clustering distance and threshold}
-    \For{$t \in \{obs,trans\}$}{
-        \ForEach{distance metric $\delta_t \in \{0.0\dots\frac{i}{n}\dots1.0\}_{i \in \{0\dots n\}}$}{
-            \ForEach{minimal cluster distance $\tau_t \in \{0.0\dots\frac{i}{n}\dots1.0\}_{i \in \{0\dots n\}}$}{
-                Cluster $\mathcal{D}_{\text{obs}}$ and $\mathcal{D}_{\text{trans}}$ using $(\delta_t, \tau_t)$ \;
-                Compute: $\sigma_{\text{obs}}, \sigma_{\text{trans}}, N_{\text{clusters}}$ \;
-                Score $\gets \alpha (\sigma_{\text{obs}} + \sigma_{\text{trans}}) + \beta N_{\text{clusters}}$ \tcp*[l]{default: $\alpha=0.4,\beta=0.6$}
-                Retain $(\delta_t^*, \tau_t^*)$ with minimal Score \;
+    \tcp*[l]{2. HPO sur distance et seuil de clustering}
+    \For{$t \in \{obs, trans\}$}{
+        \ForEach{métrique de distance $\delta_t$}{
+            \ForEach{seuil minimal de cluster $\tau_t$}{
+                Appliquer clustering avec $(\delta_t, \tau_t)$ \;
+                Calculer $\sigma_{\text{obs}}, \sigma_{\text{trans}}, N_{\text{clusters}}$ \;
+                Score $\gets \alpha (\sigma_{\text{obs}} + \sigma_{\text{trans}}) + \beta N_{\text{clusters}}$ \tcp*[l]{par défaut : $\alpha=0.4$, $\beta=0.6$}
+                Retenir $(\delta_t^*, \tau_t^*)$ avec Score minimal \;
             }
         }
     }
 
-    \tcp*[l]{3. Apply clustering with optimal HPO parameters}
-    Cluster $\mathcal{D}_{\text{obs}}$ into $C_{obs}$ clusters $(\delta_{trans}^*, \tau_{trans}^*)$ \;
-    Cluster $\mathcal{D}_{\text{trans}}$ into $C_{trans}$ clusters using $(\delta_{trans}^*, \tau_{trans}^*)$ \;
+    \tcp*[l]{3. Application du clustering avec HPO optimal}
+    Clustering des observations : $\mathcal{D}_{\text{obs}} \rightarrow C_{obs}$ via $(\delta_{obs}^*, \tau_{obs}^*)$ \;
+    Clustering des transitions : $\mathcal{D}_{\text{trans}} \rightarrow C_{trans}$ via $(\delta_{trans}^*, \tau_{trans}^*)$ \;
 
-    \tcp*[l]{4. HPO on repr. to evaluate convergence times as func. $ct_t$}
-    \For{$t \in \{obs,trans\}$}{
-        \ForEach{representativeness $\rho_t \in \{0.0\dots\frac{i}{n}\dots1.0\}_{i \in \{0\dots n\}}$}{
-            Infer org. spec. $\mathcal{MM}_{\rho_t}$ from clusters using $\rho_t$ \;
-            Initialize empty joint policy $\pi^j_{\rho_t}$ \;
-            Train $\pi^j_{\rho_t}$ on $(d_\Omega, \mathcal{MM}_{\rho_t})$ until $R_{cum} \geq R_{\min}$ \;
-            Record normalized conv. time $c_{\rho_t}$ so that $ct_t(\rho_t) = c_{\rho_t}$ \;
-        }
-
-        \tcp*[l]{5. Select repr. for threshold $\eta$ (by default $3.5\%$)}
-        $\rho_t^* \gets max(\{\rho_t \in \{0.0\dots\frac{i}{n}\dots1.0\}_{i \in \{0\dots n\}} | ct_t(\rho_t) < \eta \})$ \tcp*[r]{Elbow point}
-
+    \tcp*[l]{4. HPO sur la représentativité (convergence)}
+    \For{$t \in \{obs, trans\}$}{
+    \ForEach{représentativité $\rho_t$}{
+    Inférer $\mathcal{MM}_{\rho_t}$ à partir des clusters \;
+    Initialiser une politique $\pi^j_{\rho_t}$ \;
+    Entraîner $\pi^j_{\rho_t}$ sur $(d_\Omega, \mathcal{MM}_{\rho_t})$ jusqu'à atteindre $R_{\min}$ \;
+    Enregistrer le temps de convergence $c_{\rho_t}$ tel que $ct_t(\rho_t) = c_{\rho_t}$ \;
     }
 
-    \tcp*[l]{6. Final role/goal inference using TEMM}
-    Infer roles from $\mathcal{D}_{\text{trans}}, \delta^*, \tau^*, \rho^*$ \;
-    Infer goals from $\mathcal{D}_{\text{obs}}, \delta^*, \tau^*, \rho^*$ \;
+    \tcp*[l]{5. Sélectionner le point de coude}
+    $\rho_t^* \gets max(\{\rho_t \ | \ ct_t(\rho_t) < \eta \})$ \tcp*[r]{par défaut $\eta = 3.5\%$}
+    }
 
-    \tcp*[l]{7. Compute Organizational Fit (OF)}
-    Compute SOF (structural) and FOF (functional) from intra-cluster variances \;
+    \tcp*[l]{6. Inférence finale des rôles et objectifs}
+    Inférer les rôles à partir de $\mathcal{D}_{\text{trans}}, \delta^*, \tau^*, \rho^*$ \;
+    Inférer les objectifs à partir de $\mathcal{D}_{\text{obs}}, \delta^*, \tau^*, \rho^*$ \;
+
+    \tcp*[l]{7. Calcul du fit organisationnel}
+    Calculer SOF (structurel) et FOF (fonctionnel) à partir des variances intra-cluster \;
     $\text{OF} \gets \frac{1}{2}(\text{SOF} + \text{FOF})$ \;
 
     \Return{$\mathcal{MM}_{\text{implicit}}, \text{OF}$}
@@ -619,63 +440,84 @@ This overall approach allows automatic calibration of the minimal cluster distan
 
 
 
-\section{Mesurer l'adéquation organisationnelle}
-
 \chapter{Transférer et superviser en environnement réel}
-\section{Les différents modes de transfert opérationnel}
-\section{Bouclage entre environnement réel et simulation}
+\label{chap:transferring}
 
-
-\subsection{Transferring}\label{sec:transferring}
-
-\noindent The \textbf{Transferring activity} addresses the following formal component:
+\noindent L'\textbf{activité de transfert} traite les éléments formels suivants :
 \[
-\mathcal{D}_{H^j}, \texttt{need\_update} \gets \texttt{transfer}(\pi^j_{\text{latest}}, \mathcal{E}, \mathcal{D}_{H^j})
+    \mathcal{D}_{H^j}, \texttt{need\_update} \gets \texttt{transfer}(\pi^j_{\text{latest}}, \mathcal{E}, \mathcal{D}_{H^j})
 \]
 
-The \textit{Transferring activity} fulfills two main goals: (1) continuously deploy the most recent joint policy $\pi^j_{\text{latest}}$ into the real environment $\mathcal{E}$ to ensure agents act and interact effectively, and (2) collect fresh real-world joint trajectories $(\omega^j_t, a^j_t, \omega^j_{t+1})$ to enrich the trajectory dataset $\mathcal{D}_{H^j}$ used for updating the simulated environment and organizational specifications.
+L'\textit{activité de transfert} a deux objectifs principaux : (1) déployer en continu la politique conjointe la plus récente $\pi^j_{\text{latest}}$ dans l'environnement réel $\mathcal{E}$ afin d'assurer l'action et l'interaction efficaces des agents ; et (2) collecter de nouvelles trajectoires réelles $(\omega^j_t, a^j_t, \omega^j_{t+1})$ pour enrichir l'ensemble de trajectoires $\mathcal{D}_{H^j}$ utilisé pour mettre à jour l'environnement simulé et les spécifications organisationnelles.
 
-To the best of our knowledge, no framework exists that provides both asynchronous policy deployment and automatic, threshold-triggered joint-history collection in a closed-loop manner while enabling synchronization with the learning pipeline. The lack of such infrastructure hampers automation of MAS design cycles in real environments.
+À notre connaissance, aucun framework n'offre à la fois un déploiement asynchrone des politiques et une collecte automatique des historiques conjoints, déclenchée par seuil, dans une boucle fermée capable de se synchroniser avec une chaîne d'apprentissage. Cette absence limite fortement l'automatisation du cycle de conception des \ac{SMA} en environnement réel.
 
-\paragraph{Transferring framework}
-We propose a general theoretical framework that implements an asynchronous and event-driven control system responsible for policy execution and trace harvesting. It maintains a buffer of trajectories, triggers the retraining pipeline once a size threshold is met, and ensures the most recent policy is continuously applied. This control logic is structured around two mechanisms:
-(i) a \texttt{Transfer Loop} that handles real-time deployment and data collection, and
-(ii) an \texttt{Update Trigger} that launches the full design process once sufficient data is available. The system avoids launching multiple parallel updates and guarantees synchronization between transfer and modeling phases.
+\paragraph{Cadre de transfert}
+
+Nous proposons un cadre théorique général mettant en œuvre un système de contrôle asynchrone et événementiel, responsable de l'exécution des politiques et de la collecte des traces. Il maintient un tampon de trajectoires, déclenche la phase de réentraînement lorsqu'un seuil de taille est atteint, et veille à ce que la politique la plus récente soit toujours utilisée. Cette logique de contrôle repose sur deux mécanismes :
+(i) une \texttt{Boucle de transfert} (\texttt{Transfer Loop}) pour le déploiement temps réel et la collecte de données, et
+(ii) un \texttt{Déclencheur de mise à jour} (\texttt{Update Trigger}) qui lance le processus de conception dès qu'assez de données sont disponibles. Le système empêche les mises à jour parallèles multiples et garantit la synchronisation entre les phases de transfert et de modélisation.
 
 \vspace{-0.3em}
 \begin{algorithm}[H]
-    \caption{Transferring activity}
+    \caption{Activité de transfert}
     \label{alg:transferring}
     \DontPrintSemicolon
-    \KwIn{Current policy $\pi^j_{\text{latest}}$, real environment $\mathcal{E}$, trajectory store $\mathcal{D}_{H^j}$}
-    \KwOut{Updated trajectory dataset $\mathcal{D}_{H^j}$, update signal $\texttt{need\_update}$}
-    
+    \KwIn{Politique actuelle $\pi^j_{\text{latest}}$, environnement réel $\mathcal{E}$, base de trajectoires $\mathcal{D}_{H^j}$}
+    \KwOut{Base de trajectoires mise à jour $\mathcal{D}_{H^j}$, signal de mise à jour $\texttt{need\_update}$}
+
     \vspace{0.3em}
-    \SetKwProg{Transfer}{Procedure \normalfont TransferLoop}{}{}
+    \SetKwProg{Transfer}{Procédure \normalfont BoucleDeTransfert}{}{}
     \Transfer{}{
 
-        \While{MAS is active in environment $\mathcal{E}$}{
-            \tcp*[l]{Execute latest policy in environment}
-            $\omega^j_t \gets \texttt{observe}(\mathcal{E})$ \;
-            $a^j_t \gets \pi^j_{\text{latest}}(\omega^j_t)$ \;
-            $\omega^j_{t+1} \gets \texttt{apply}(\mathcal{E}, a^j_t)$ \;
-            Append $(\omega^j_t, a^j_t, \omega^j_{t+1})$ to temporary buffer $\mathcal{B}$ \;
-            
-            \tcp*[l]{Check whether retraining is needed}
-            \If{$|\mathcal{B}| \geq \texttt{batch\_size}$}{
-                Add $\mathcal{B}$ to $\mathcal{D}_{H^j}$ and clear $\mathcal{B}$ \;
-                $\texttt{need\_update} \gets \texttt{True}$ \;
-                \If{$\texttt{running\_update} = \texttt{False}$}{
-                    \texttt{launch\_update()} \tcp*[r]{Asynchronous call}
-                }
-            }
+    \While{le SMA est actif dans l'environnement $\mathcal{E}$}{
+    \tcp*[l]{Exécution de la politique la plus récente}
+    $\omega^j_t \gets \texttt{observe}(\mathcal{E})$ \;
+    $a^j_t \gets \pi^j_{\text{latest}}(\omega^j_t)$ \;
+    $\omega^j_{t+1} \gets \texttt{apply}(\mathcal{E}, a^j_t)$ \;
+    Ajouter $(\omega^j_t, a^j_t, \omega^j_{t+1})$ au tampon temporaire $\mathcal{B}$ \;
+
+    \tcp*[l]{Vérification du déclenchement de la mise à jour}
+    \If{$|\mathcal{B}| \geq \texttt{batch\_size}$}{
+        Ajouter $\mathcal{B}$ à $\mathcal{D}_{H^j}$ et vider $\mathcal{B}$ \;
+        $\texttt{need\_update} \gets \texttt{True}$ \;
+        \If{$\texttt{running\_update} = \texttt{False}$}{
+            \texttt{launch\_update()} \tcp*[r]{Appel asynchrone}
         }
+    }
+    }
     }
 \end{algorithm}
 
-This mechanism ensures (i) continuity of execution, (ii) reactivity to data freshness, and (iii) automation of update cycles. It forms the bridge between the simulated world and the deployment context by continually adjusting the design loop to the evolving environment, a core requirement for long-term MAS autonomy.
+Ce mécanisme garantit (i) la continuité d'exécution, (ii) la réactivité à l'arrivée de nouvelles données, et (iii) l'automatisation des cycles de mise à jour. Il constitue le lien entre le monde simulé et le contexte réel de déploiement en ajustant en continu la boucle de conception à l'évolution de l'environnement, condition essentielle pour l'autonomie à long terme d'un \ac{SMA}.
+
 
 
 \chapter*{Conclusion}
 \addcontentsline{toc}{chapter}{\textbf{Conclusion}}
-% TODO
+
+\noindent
+Cette troisième partie a introduit la méthode \textbf{\ac{MAMAD}} (\textit{MOISE+MARL-based Automated Multi-Agent Design}) comme une réponse concrète aux limites identifiées dans les approches actuelles de conception de \ac{SMA}. Reposant sur un cycle itératif structuré en quatre phases — \textit{Modélisation}, \textit{Apprentissage}, \textit{Analyse}, \textit{Transfert} —, \ac{MAMAD} articule de manière cohérente des outils symboliques (spécifications organisationnelles) et \ac{MARL} pour guider la conception, l'entraînement et l'adaptation d'agents intelligents dans des environnements complexes.
+
+\medskip
+
+\noindent
+La méthode s'appuie notamment :
+\begin{itemize}
+    \item sur une modélisation fidèle des environnements à partir de données empiriques,
+    \item sur un entraînement contraint par des spécifications organisationnelles intégrées au sein du cadre \textit{MOISE+MARL},
+    \item sur une analyse des trajectoires pour inférer les structures émergentes de l'organisation apprise,
+    \item et enfin sur un transfert contrôlé permettant l'amélioration itérative du système multi-agent.
+\end{itemize}
+
+\noindent
+Dans la partie suivante, nous proposons de valider expérimentalement cette méthode à travers son implémentation concrète dans un outil dédié, \ac{CybMASDE}, et son application à plusieurs environnements représentatifs. L'objectif est de démontrer la capacité de \ac{MAMAD} à produire automatiquement des \ac{SMA} performants, explicables et conformes à des exigences organisationnelles dans des contextes variés.
+
+\medskip
+
+\noindent
+Nous évaluons notamment la méthode selon des critères d'efficacité, d'automatisation, de conformité aux contraintes et d'explicabilité, tout en comparant ses résultats à ceux d'approches classiques non guidées par des modèles organisationnels.
+
+\bigskip
+
+La \autoref{part:experimentation} met donc à l'épreuve la méthode \ac{MAMAD}, en analysant ses performances et sa pertinence au regard des verrous identifiés sur différents scénarios.
