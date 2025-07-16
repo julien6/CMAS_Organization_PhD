@@ -167,9 +167,9 @@ $\mathcal{M}OISE^+$ permet de spécifier ces exigences à un niveau abstrait, fa
 
 \subsection{Rappels sur l'apprentissage par renforcement}
 
-L'apprentissage par renforcement (\ac{RL}) est un cadre formel dans lequel un agent apprend à agir dans un environnement inconnu en interagissant avec lui. À chaque étape, l'agent observe un état (ou une observation partielle), exécute une action, reçoit une récompense, et perçoit un nouvel état. L'objectif est de maximiser la récompense cumulée à long terme, généralement modélisée par une fonction de retour espéré.
+L'apprentissage par renforcement (\acparen{RL}) est un cadre formel dans lequel un agent apprend à agir dans un environnement inconnu en interagissant avec lui. À chaque étape, l'agent observe un état (ou une observation partielle), exécute une action, reçoit une récompense, et perçoit un nouvel état. L'objectif est de maximiser la récompense cumulée à long terme, généralement modélisée par une fonction de retour espéré.
 
-Formellement, le problème est souvent représenté comme un processus de décision de Markov (\ac{MDP}), défini par un quintuplet $\langle S, A, T, R, \gamma \rangle$, où :
+Formellement, le problème est souvent représenté comme un processus de décision de Markov (\acparen{MDP}), défini par un quintuplet $\langle S, A, T, R, \gamma \rangle$, où :
 \begin{itemize}
     \item $S$ est l'ensemble des états ;
     \item $A$ est l'ensemble des actions possibles ;
@@ -178,7 +178,7 @@ Formellement, le problème est souvent représenté comme un processus de décis
     \item $\gamma \in [0,1]$ est le facteur d'actualisation.
 \end{itemize}
 
-L'agent apprend une politique $\pi : S \rightarrow A$ (ou stochastique) qui maximise la somme des récompenses escomptées. Dans le cas partiellement observable (\ac{POMDP}), les états sont inaccessibles, et l'agent agit à partir d'observations et d'un historique.
+L'agent apprend une politique $\pi : S \rightarrow A$ (ou stochastique) qui maximise la somme des récompenses escomptées. Dans le cas partiellement observable (\acparen{POMDP}), les états sont inaccessibles, et l'agent agit à partir d'observations et d'un historique.
 
 \subsection{Spécificités du MARL}
 
@@ -192,14 +192,14 @@ Dans le cas multi-agent, plusieurs agents interagissent simultanément avec l'en
 Le \ac{MARL} (Multi-Agent Reinforcement Learning) traite de ces difficultés en adaptant les méthodes de \ac{RL} à ce contexte. Deux grandes approches peuvent être distinguées :
 \begin{itemize}
     \item \textbf{Apprentissage indépendant (Independent Learners)} : chaque agent apprend sa politique en considérant les autres comme partie de l'environnement (simplifie la mise en œuvre mais génère de l'instabilité) ;
-    \item \textbf{Apprentissage centralisé avec exécution décentralisée (\ac{CTDE})} : l'apprentissage est fait de manière coordonnée, avec accès à des informations globales (états, récompenses), mais les politiques finales doivent pouvoir s'exécuter de façon autonome.
+    \item \textbf{Apprentissage centralisé avec exécution décentralisée (\acparen{CTDE})} : l'apprentissage est fait de manière coordonnée, avec accès à des informations globales (états, récompenses), mais les politiques finales doivent pouvoir s'exécuter de façon autonome.
 \end{itemize}
 
 \subsection{Un cadre markovien pour le MARL}
 
 Pour appliquer des techniques \ac{MARL}, nous nous appuyons sur le cadre du \ac{Dec-POMDP}~\cite{Oliehoek2016}. Les \ac{Dec-POMDP} permettent de modéliser la coordination décentralisée entre agents dans des contextes à observabilité partielle, ce qui les rend particulièrement adaptés à l'intégration de contraintes organisationnelles. Contrairement aux \ac{POSG}, le \ac{Dec-POMDP} utilise une fonction de récompense commune, favorisant ainsi la collaboration~\cite{Beynier2013}.
 
-Un \ac{Dec-POMDP} $d \in D$ (avec $D$ l'ensemble des \ac{Dec-POMDP}) est défini par un 7-uplet $d = (S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$ où :
+Un \ac{Dec-POMDP} $d \in D$ (avec $D$ l'ensemble des \acparen{Dec-POMDP}) est défini par un 7-uplet $d = (S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$ où :
 \begin{itemize}
     \item $S = \{s_1, ..., s_{|S|}\}$ : l'ensemble des états possibles.
     \item $A_i = \{a_1^i, ..., a_{|A_i|}^i\}$ : l'ensemble des actions possibles pour l'agent $i$.
@@ -240,7 +240,7 @@ Cependant, plusieurs limites persistent :
 Ces limitations motivent une intégration plus étroite entre méthodes d'apprentissage et modèles organisationnels, ce que nous explorerons dans les parties suivantes.
 
 
-\section{Modéliser un environnement simulé : les techniques \textquote{World Models}}
+\section{Modéliser un environnement simulé : les techniques \textit{World Models}}
 
 
 \subsection{Pourquoi simuler l'environnement ?}
@@ -261,11 +261,11 @@ En \ac{RL}, et en particulier en contexte d'observabilité partielle, les \textb
 
 Formellement, à chaque pas de temps $t$, on note $\omega_t \in \Omega$ l'observation courante (souvent de haute dimension), $a_t \in A$ l'action réalisée, et $\tilde{h}_{t-1} \in \mathcal{H}$ l'état caché récurrent résumant l'historique d'interaction jusqu'à $t-1$. Étant donné que les observations sont généralement de grande dimension (par exemple, des images ou des vecteurs d'état complexes), un encodeur $Enc: \Omega \rightarrow Z$ est appliqué pour projeter les observations dans un espace latent compact $Z$, avec $z_t = Enc(\omega_t)$, où $\dim(Z) \ll \dim(\Omega)$.
 
-La structure temporelle principale est modélisée à l'aide d'un \textbf{Modèle Dynamique Latent Récurrent (\ac{RLDM})}~\cite{hafner2020dream} $\mathcal{T}^{z} = f(g(h_{t-1}, z_t, a_t))$, qui prédit le prochain état latent $z_{t+1}$ en mettant à jour l'état récurrent via $f$ et en appliquant une dynamique latente via $g$ :
+La structure temporelle principale est modélisée à l'aide d'un \textbf{Modèle Dynamique Latent Récurrent (\acparen{RLDM})}~\cite{hafner2020dream} $\mathcal{T}^{z} = f(g(h_{t-1}, z_t, a_t))$, qui prédit le prochain état latent $z_{t+1}$ en mettant à jour l'état récurrent via $f$ et en appliquant une dynamique latente via $g$ :
 \[
 h_t = f(h_{t-1}, z_t, a_t), \quad z_{t+1} = g(h_t)
 \]
-où $f(\cdot)$ correspond typiquement à un réseau de neurones récurrent (par exemple un \ac{LSTM}~\cite{hochreiter1997long}) appliqué à la concaténation de $h_{t-1}$, $z_t$ et $a_t$, et $g(\cdot)$ est une fonction (souvent implémentée par un \ac{MLP}) mappant l'état récurrent vers la représentation latente de la prochaine observation.
+où $f(\cdot)$ correspond typiquement à un réseau de neurones récurrent (par exemple un \acparen{LSTM}~\cite{hochreiter1997long}) appliqué à la concaténation de $h_{t-1}$, $z_t$ et $a_t$, et $g(\cdot)$ est une fonction (souvent implémentée par un \acparen{MLP}) mappant l'état récurrent vers la représentation latente de la prochaine observation.
 
 L'état latent prédit est ensuite décodé par $Dec: Z \rightarrow \Omega$ pour produire l'observation prédite $\hat{\omega}_{t+1} = Dec(z_{t+1})$. L'ensemble du modèle est entraîné conjointement pour minimiser à la fois la \emph{perte de reconstruction} $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$ dans l'espace d'observation, et éventuellement une \emph{perte de prédiction latente} pour stabiliser l'apprentissage de la dynamique latente.
 
@@ -397,11 +397,11 @@ Alors que la tradition \ac{AOSE} garantit l'explicabilité à travers des artefa
 
 Un nombre croissant de recherches cherche à améliorer l'interprétabilité via la conception de modèles ou l'analyse post-hoc. Zabounidis et al.~\cite{zabounidis2023concept} intègrent des concepts interprétables dans la boucle d'apprentissage, en forçant les agents à prédire des concepts compréhensibles par un humain avant d'agir. Cela favorise la transparence et permet des corrections par des experts. Iturria-Rivera et al.~\cite{iturria2024explainable} utilisent la décomposition de la récompense dans les fonctions de valeur factorisées (par exemple VDN, QMIX) pour exposer la contribution de chaque composante aux décisions de l'agent. Liu et al.~\cite{liu2025} proposent MIXRTs, une architecture hybride combinant réseaux neuronaux récurrents et arbres de décision pour l'apprentissage de politiques interprétables. D'autres efforts comme ceux de Poupart et al.~\cite{poupart2025perspectives} introduisent des méthodes post-hoc telles que la rétropropagation de la pertinence (relevance backpropagation) ou le patching d'activations. Li et al.~\cite{li2025from} emploient des approximations basées sur la valeur de Shapley pour transformer des politiques de type deep \ac{RL} en structures interprétables.
 
-Cependant, ces approches restent principalement limitées à des analyses locales ou centrées sur un seul agent. Elles ne permettent pas d'interpréter le comportement collectif d'un système multi-agent ni de relier ces dynamiques à des structures organisationnelles symboliques. Très peu d'études abordent explicitement la possibilité d'inférer des rôles, objectifs ou structures émergentes à partir de trajectoires observées.
+Cependant, ces approches restent principalement limitées à des analyses locales ou centrées sur un seul agent. Elles ne permettent pas d'interpréter le comportement collectif d'un \ac{SMA} ni de relier ces dynamiques à des structures organisationnelles symboliques. Très peu d'études abordent explicitement la possibilité d'inférer des rôles, objectifs ou structures émergentes à partir de trajectoires observées.
 
 Certains travaux connexes offrent néanmoins des pistes intéressantes. Berenji et Vengerov~\cite{berenji2000learning} modélisent les dépendances entre agents dans des missions de drones afin d'améliorer leur coordination, et Yusuf et Baber~\cite{yusuf2020inferential} proposent un raisonnement bayésien pour soutenir une coordination dynamique. Bien que ces contributions soulignent l'intérêt d'une modélisation symbolique à partir de comportements, elles ne fournissent pas de mécanismes pour inférer explicitement des rôles ou objectifs organisationnels à partir des trajectoires. De leur côté, Serrino et al.~\cite{serrino2019finding} analysent les interactions sociales pour identifier des rôles émergents, mais leur approche reste centrée sur des dynamiques sociales informelles sans formalisation organisationnelle.
 
-En résumé, aucune méthode existante ne permet actuellement d'extraire automatiquement des spécifications organisationnelles (telles que des structures de rôles, des missions ou des objectifs collectifs) à partir de trajectoires d'agents entraînés. Or, une telle capacité permettrait de combler le fossé entre les approches symboliques prescriptives de l'\ac{AOSE} et les approches apprenantes fondées sur l'émergence. Elle offrirait un cadre pour évaluer l'organisation implicite d'un système multi-agent, identifier des écarts avec un modèle attendu, et potentiellement réinjecter ces connaissances dans une boucle de conception organisationnelle itérative. Cette hypothèse ouvre la voie à une nouvelle génération de méthodes de diagnostic, de rétro-ingénierie et d'adaptation des \ac{SMA} entraînés par apprentissage.
+En résumé, aucune méthode existante ne permet actuellement d'extraire automatiquement des spécifications organisationnelles (telles que des structures de rôles, des missions ou des objectifs collectifs) à partir de trajectoires d'agents entraînés. Or, une telle capacité permettrait de combler le fossé entre les approches symboliques prescriptives de l'\ac{AOSE} et les approches apprenantes fondées sur l'émergence. Elle offrirait un cadre pour évaluer l'organisation implicite d'un \ac{SMA}, identifier des écarts avec un modèle attendu, et potentiellement réinjecter ces connaissances dans une boucle de conception organisationnelle itérative. Cette hypothèse ouvre la voie à une nouvelle génération de méthodes de diagnostic, de rétro-ingénierie et d'adaptation des \ac{SMA} entraînés par apprentissage.
 
 \medskip
 
@@ -479,7 +479,7 @@ Ces lacunes justifient la nécessité d'une approche intégrée, qui articule ap
 \medskip
 
 \noindent
-La partie suivante introduit la méthode \textbf{\ac{MAMAD}} (\textit{$\mathcal{M}OISE^+$MARL-based Automated Design}), développée précisément pour répondre à ces besoins. Cette méthode repose sur une formalisation unifiée du processus de conception comme un problème d'optimisation organisationnelle sous contraintes, résolu par apprentissage, simulé via un World Model, et analysé en retour pour guider les itérations futures.
+La partie suivante introduit la méthode \textbf{\ac{MAMAD}} (\acparen{SMA}), développée précisément pour répondre à ces besoins. Cette méthode repose sur une formalisation unifiée du processus de conception comme un problème d'optimisation organisationnelle sous contraintes, résolu par apprentissage, simulé via un World Model, et analysé en retour pour guider les itérations futures.
 
 
 \input{tables/gap_coverage.tex}
@@ -494,7 +494,7 @@ Cette deuxième partie a posé les fondations théoriques et critiques nécessai
 \medskip
 
 \noindent
-Le chapitre~\autoref{chap:concepts} a introduit les trois piliers conceptuels sur lesquels s'appuie notre démarche : (1) les modèles organisationnels, en particulier \textit{$\mathcal{M}OISE^+$}, qui offrent une structuration explicite du système multi-agent ; (2) Le \ac{MARL}, qui permet une acquisition autonome de politiques dans des environnements complexes ; et (3) les \textit{World Models}, qui fournissent un moyen de simuler un environnement à partir de données, ouvrant la voie à une exploration sécurisée et accélérée.
+Le chapitre~\autoref{chap:concepts} a introduit les trois piliers conceptuels sur lesquels s'appuie notre démarche : (1) les modèles organisationnels, en particulier \textit{$\mathcal{M}OISE^+$}, qui offrent une structuration explicite du \ac{SMA} ; (2) Le \ac{MARL}, qui permet une acquisition autonome de politiques dans des environnements complexes ; et (3) les \textit{World Models}, qui fournissent un moyen de simuler un environnement à partir de données, ouvrant la voie à une exploration sécurisée et accélérée.
 
 \noindent
 Le chapitre~\autoref{chap:verrous} a prolongé cette analyse en examinant les limites de l'état de l'art face aux exigences soulevées par notre problématique. Chaque hypothèse de recherche (H1 à H4) a été replacée dans son contexte scientifique, discutée à la lumière des travaux existants, et reliée à un verrou spécifique :

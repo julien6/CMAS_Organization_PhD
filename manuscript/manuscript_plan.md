@@ -16,7 +16,7 @@
 **Objectif :** présenter la revue de littérature réalisée au début de la thèse, mettre en évidence les limites des approches existantes et motiver le recentrage vers le MARL guidé par organisation.
 
 * 2.1 Conception classique des SMA : modèles symboliques, AOSE, architectures fixes
-* 2.2 SMA en cybersécurité et cyberdéfense : état de l'art
+* 2.2 SMA en Cybersécurité et cyberdéfense : état de l'art
 * 2.3 Limites identifiées des approches existantes
 * 2.4 Concepts clés pour une nouvelle approche : auto-organisation, adaptabilité, explicabilité
 * 2.5 Recentrage vers l'apprentissage : RL/MARL et inférence non supervisée
