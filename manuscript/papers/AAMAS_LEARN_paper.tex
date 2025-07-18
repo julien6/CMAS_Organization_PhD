@@ -10,7 +10,7 @@
 % \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 % \definecolor{codepurple}{rgb}{0.58,0,0.82}
 % \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
- 
+
 % \lstdefinestyle{mystyle}{
 %     backgroundcolor=\color{backcolour},   
 %     commentstyle=\color{codegreen},
@@ -29,7 +29,7 @@
 %     showtabs=false,                  
 %     tabsize=2
 % }
- 
+
 % \lstset{style=mystyle}
 
 % % --- Tickz
@@ -90,451 +90,478 @@
 
 
 
-
 \section{Introduction}
 
-% Context
-Multi-Agent Reinforcement Learning (MARL) enables the discovery of a joint policy that controls agents' behaviors so they can achieve a global goal within a specific environment. 
-This joint policy not only dictates the individual actions of agents but also manages their interactions with one another, and potentially with all other agents, without any preconceived notion of a predefined organization.
+% Contexte
+L'apprentissage par renforcement multi-agents (MARL) permet de découvrir une politique commune qui contrôle les comportements des agents afin qu'ils puissent atteindre un objectif global dans un environnement spécifique.
+Cette politique commune dicte non seulement les actions individuelles des agents, mais gère également leurs interactions entre eux, et potentiellement avec tous les autres agents, sans aucune notion préconçue d'une organisation prédéfinie.
 
-In environments that require social interaction among agents to optimally achieve the global goal, agents may converge in such a way that they exhibit recurring sets of similar behaviors across different testing episodes. 
-These distinct sets of behaviors can demonstrate properties of specialization, complementarity, and stability, making them akin to implicit roles. Moreover, the trajectories of agents assuming these "implicit" roles may display similarities, such as recurrent observations at the end of each episode. These recurring patterns in agent histories can be interpreted as "implicit" goals, suggesting that agents may aim to pursue these as intermediate goals before reaching the global goal. These implicit roles and implicit goals form the foundation of an "implicit" structural and functional organization as defined in $\mathcal{M}OISE^+$~\cite{Hubner2007}.
+Dans les environnements qui nécessitent une interaction sociale entre les agents pour atteindre de manière optimale l'objectif global, les agents peuvent converger de telle sorte qu'ils présentent des ensembles récurrents de comportements similaires au cours de différents épisodes de test.
+Ces ensembles distincts de comportements peuvent présenter des propriétés de spécialisation, de complémentarité et de stabilité, ce qui les rend similaires à des rôles implicites. De plus, les trajectoires des agents assumant ces rôles « implicites » peuvent présenter des similitudes, telles que des observations récurrentes à la fin de chaque épisode. Ces modèles récurrents dans l'historique des agents peuvent être interprétés comme des objectifs « implicites », suggérant que les agents peuvent chercher à les atteindre comme objectifs intermédiaires avant d'atteindre l'objectif global. Ces rôles implicites et ces objectifs implicites constituent le fondement d'une organisation structurelle et fonctionnelle « implicite » telle que définie dans $\mathcal{M}OISE^+$~\cite{Hubner2007}.
 
-However, it would be misleading to assume that all trained agents in any environment can be faithfully compared to a structural and functional organization. Indeed, we can interpret the behaviors of trained agents concerning their similarity to the potential vision of an implicit structural and functional organization, which we define as \textbf{organizational fit}.
-While evaluating organizational fit would be useful to assess to what extent trained agents can naturally be explained as roles and goals, one could also consider the reverse approach. By guiding or encouraging agents to converge towards structural and functional organizations with higher organizational fit, we aim to enhance explainability and control in MARL.
+Cependant, il serait trompeur de supposer que tous les agents formés dans n'importe quel environnement peuvent être fidèlement comparés à une organisation structurelle et fonctionnelle. En effet, nous pouvons interpréter les comportements des agents formés en fonction de leur similitude avec la vision potentielle d'une organisation structurelle et fonctionnelle implicite, que nous définissons comme l'« adéquation organisationnelle ».
+Si l'évaluation de l'adéquation organisationnelle serait utile pour déterminer dans quelle mesure les agents entraînés peuvent être naturellement expliqués en termes de rôles et d'objectifs, on pourrait également envisager l'approche inverse. En guidant ou en encourageant les agents à converger vers des organisations structurelles et fonctionnelles présentant une meilleure adéquation organisationnelle, nous visons à améliorer l'explicabilité et le contrôle dans le MARL.
 
 \
 
-% Problem
-Building on these assumptions, this paper aims to further explore two key aspects:
+% Problème
+Partant de ces hypothèses, cet article vise à explorer plus en détail deux aspects clés :
 \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
-    \item The \textbf{evaluation of organizational fit}, which seeks to measure how closely a joint policy aligns with a structural and functional organization. A significant challenge here is to understand under what conditions agents can be considered to form a structural and functional organization, given constraints imposed by the environment, goals, and other optional factors.
-    Existing literature often addresses policy evaluation in terms of roles or goals~\cite{Isakov2024, Wen2024, Xie2024}, but these works generally lack a systematic and comprehensive approach. Current methods offer few clear tools for quantitatively and qualitatively measuring this organizational fit.
-    \item The \textbf{control of organizational fit}, which aims to guide agents towards policies that conform to a structural and functional organization through user-defined constraints or incentives that implement roles and goals.
-    The primary challenges include reducing the policy search space, improving convergence, and ensuring compliance with safety constraints.
-    Existing approaches in this field often fall short in terms of enabling users to easily define and manage the application of organizational specifications in a practical manner within a standard MARL framework, without relying on paradigms such as Hierarchical Reinforcement Learning (HRL).
+    \item L'\textbf{évaluation de l'adéquation organisationnelle}, qui cherche à mesurer dans quelle mesure une politique commune s'aligne sur une organisation structurelle et fonctionnelle. Un défi important consiste ici à comprendre dans quelles conditions les agents peuvent être considérés comme formant une organisation structurelle et fonctionnelle, compte tenu des contraintes imposées par l'environnement, les objectifs et d'autres facteurs facultatifs.
+    La littérature existante aborde souvent l'évaluation des politiques en termes de rôles ou d'objectifs~\cite{Isakov2024, Wen2024, Xie2024}, mais ces travaux manquent généralement d'une approche systématique et globale. Les méthodes actuelles offrent peu d'outils clairs pour mesurer quantitativement et qualitativement cette adéquation organisationnelle.
+    \item Le \textbf{contrôle de l'adéquation organisationnelle}, qui vise à guider les agents vers des politiques conformes à une organisation structurelle et fonctionnelle grâce à des contraintes ou des incitations définies par l'utilisateur qui mettent en œuvre des rôles et des objectifs.
+    Les principaux défis consistent à réduire l'espace de recherche des politiques, à améliorer la convergence et à garantir le respect des contraintes de sécurité.
+    Les approches existantes dans ce domaine sont souvent insuffisantes pour permettre aux utilisateurs de définir et de gérer facilement l'application des spécifications organisationnelles de manière pratique dans un cadre MARL standard, sans s'appuyer sur des paradigmes tels que l'apprentissage par renforcement hiérarchique (HRL).
 \end{enumerate*}
 
 \
 
 % Contribution
-\noindent We introduce the \textbf{MOISE+MARL} framework, which integrates the Decentralized Partially Observable Markov Decision Process (Dec-POMDP) MARL framework with the $\mathcal{M}OISE^+$~\cite{Hubner2007} organizational model through proposed relationships. This framework allows users to manually define the logic of a role or a goal by relying on trajectory-based patterns to describe the expected behavior of an agent that has adopted a goal or mission. Once configured, they allow users to apply a role to an agent, adding constraints that automatically influence agents' policies by dynamically updating both the action space and reshaping the reward function. This framework also includes a method called \textbf{Trajectory-based Evaluation in MOISE+MARL} (TEMM), which uses unsupervised learning techniques to generalize implicit roles and implicit missions from observed trajectories across multiple test episodes. By measuring the gap between inferred implicit organizational specifications and actual behaviors, this method allows for a quantitative assessment of organizational fit. It is worth noting that unlike hierarchical reinforcement learning, which decomposes tasks into subtasks~\cite{Qi2024, Matsuyama2025, SaoMai2024}, our approach relies on explicit organizational roles and missions to guide agent coordination externally.
+\noindent Nous présentons le cadre \textbf{MOISE+MARL}, qui intègre le cadre MARL du processus de décision markovien partiellement observable décentralisé (Dec-POMDP) avec le modèle organisationnel $\mathcal{M}OISE^+$~\cite{Hubner2007} grâce à des relations proposées. Ce cadre permet aux utilisateurs de définir manuellement la logique d'un rôle ou d'un objectif en s'appuyant sur des modèles basés sur des trajectoires pour décrire le comportement attendu d'un agent qui a adopté un objectif ou une mission. Une fois configurés, ils permettent aux utilisateurs d'appliquer un rôle à un agent, en ajoutant des contraintes qui influencent automatiquement les politiques des agents en mettant à jour dynamiquement l'espace d'action et en remodelant la fonction de récompense. Ce cadre comprend également une méthode appelée « évaluation basée sur la trajectoire dans MOISE+MARL » (TEMM), qui utilise des techniques d'apprentissage non supervisé pour généraliser les rôles implicites et les missions implicites à partir de trajectoires observées au cours de plusieurs épisodes de test. En mesurant l'écart entre les spécifications organisationnelles implicites déduites et les comportements réels, cette méthode permet une évaluation quantitative de l'adéquation organisationnelle. Il convient de noter que contrairement à l'apprentissage par renforcement hiérarchique, qui décompose les tâches en sous-tâches~\cite{Qi2024, Matsuyama2025, SaoMai2024}, notre approche s'appuie sur des rôles et des missions organisationnels explicites pour guider la coordination des agents de manière externe.
 
 \
 
-% Evaluation & Findings
-We evaluated the MOISE+MARL framework in the following scenarios:
+% Évaluation et conclusions
+Nous avons évalué le cadre MOISE+MARL dans les scénarios suivants :
 \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
-  \item Four distinct environments, each expected to result in the training of joint policies with different implicit organizations, to assess the generalizability of MOISE+ MARL's applicability
-  \item Four MARL algorithms from the several families to assess their suitability with MOISE+ MARL during training and post-analysis
-  \item Four sets of organizational specifications, one for each environment, to constrain agents in a manner that either enforces conformity intended for both manual and quantitative evaluation.
+    \item Quatre environnements distincts, chacun devant aboutir à la formation de politiques conjointes avec différentes organisations implicites, afin d'évaluer la généralisation de l'applicabilité de MOISE+ MARL
+    \item Quatre algorithmes MARL issus de plusieurs familles afin d'évaluer leur adéquation avec MOISE+ MARL pendant la formation et l'analyse postérieure
+    \item Quatre ensembles de spécifications organisationnelles, un pour chaque environnement, afin de contraindre les agents de manière à imposer la conformité prévue pour l'évaluation manuelle et quantitative.
+    \item Quatre ensembles de spécifications organisationnelles, un pour chaque environnement, afin de contraindre les agents de manière à garantir la conformité visée pour l'évaluation manuelle et quantitative.
 \end{enumerate*}
 
-In all environments, we observed that agents having adopted roles do behave as expected according to their roles in a correlated way with a quantitative measure of the organizational fit by TEMM. The roles and missions inferred by TEMM closely align with the predefined specifications, demonstrating the internal consistency of MOISE+MARL, as the policy modifications introduced by organizational specifications are effectively captured by TEMM.
-The results also indicate that policy-based and actor-critic algorithms are particularly well-suited for guiding agents towards stable policies. This stability allows agents to maintain consistent and coherent behaviors across episodes, which is essential for TEMM's generation of a stable implicit organization. In contrast, value-based algorithms showed greater variability in agent behaviors.
+
+Dans tous les environnements, nous avons observé que les agents ayant adopté des rôles se comportent comme prévu en fonction de leurs rôles, de manière corrélée avec une mesure quantitative de l'adéquation organisationnelle par TEMM. Les rôles et les missions déduits par TEMM correspondent étroitement aux spécifications prédéfinies, ce qui démontre la cohérence interne de MOISE+MARL, car les modifications de politique introduites par les spécifications organisationnelles sont efficacement capturées par TEMM.
+Les résultats indiquent également que les algorithmes basés sur des politiques et sur la critique des acteurs sont particulièrement bien adaptés pour guider les agents vers des politiques stables. Cette stabilité permet aux agents de maintenir des comportements cohérents et cohérents d'un épisode à l'autre, ce qui est essentiel pour la génération d'une organisation implicite stable par TEMM. En revanche, les algorithmes basés sur la valeur ont montré une plus grande variabilité dans les comportements des agents.
 
 \
 
-% Structure of the paper
-\noindent The rest of the paper is organized as follows: \autoref{sec:related_works} presents works relative to evaluating and controlling organizational fit. \autoref{sec:moise_marl_framework} introduces the MOISE+MARL framework. \autoref{sec:TEMM_algorithm} describes the TEMM method. \autoref{sec:experimental_setup} describes the experimental protocol, particularly the environments and MARL algorithms. \autoref{sec:results} presents the experimental results. Finally, \autoref{sec:discussion_conclusion_future_work} discusses and concludes on the evaluation and control of organizational fit.
+% Structure de l'article
+\noindent Le reste de l'article est organisé comme suit : \autoref{sec:related_works} présente des travaux relatifs à l'évaluation et au contrôle de l'adéquation organisationnelle. \autoref{sec:moise_marl_framework} présente le cadre MOISE+MARL. \autoref{sec:TEMM_algorithm} décrit la méthode TEMM. \autoref{sec:experimental_setup} décrit le protocole expérimental, en particulier les environnements et les algorithmes MARL. \autoref{sec:results} présente les résultats expérimentaux. Enfin, \autoref{sec:discussion_conclusion_future_work} discute et conclut sur l'évaluation et le contrôle de l'adéquation organisationnelle.
 
 
-\section{Related works}
-\label{sec:related_works}
+\section{Travaux connexes}
+\label{sec:travaux_connexes}
 
-This section explores works related to organizational fit, as framed by the two core issues introduced.
+Cette section explore les travaux liés à l'adéquation organisationnelle, tels que définis par les deux questions fondamentales présentées.
 
-\subsection{Evaluating organizational fit}
+\subsection{Évaluation de l'adéquation organisationnelle}
 
-Some works may be related to role or goal inference regarding the need to compute organizational fit or close concepts.
+Certains travaux peuvent être liés à l'inférence de rôles ou d'objectifs concernant la nécessité de calculer l'adéquation organisationnelle ou des concepts proches.
 %
-Wilson et al.~\cite{wilson2008learning} develop a method for transferring roles in Multi-Agent MDPs, which helps agents adapt by transferring roles across different environments. However, their model lacks the role abstraction as it focuses on specific, task-related roles.
+Wilson et al.~\cite{wilson2008learning} développent une méthode de transfert de rôles dans les MDP multi-agents, qui aide les agents à s'adapter en transférant des rôles entre différents environnements. Cependant, leur modèle manque d'abstraction des rôles, car il se concentre sur des rôles spécifiques liés à des tâches.
 %
-Berenji and Vengerov~\cite{berenji2000learning} investigate coordination and role inference in UAV missions, enhancing cooperation through modeling agent dependencies. While useful for cooperation, their approach remains task-specific and does not provide the implicit role computation needed for organizational fit.
+Berenji et Vengerov~\cite{berenji2000learning} étudient la coordination et l'inférence des rôles dans les missions de drones, améliorant la coopération grâce à la modélisation des dépendances entre agents. Bien qu'utile pour la coopération, leur approche reste spécifique à une tâche et ne fournit pas le calcul implicite des rôles nécessaire à l'adéquation organisationnelle.
 %
-Yusuf and Baber~\cite{yusuf2020inferential} use inferential reasoning and Bayesian methods to facilitate task coordination among diverse agents. Though effective in dynamic coordination, their framework lacks role abstraction and does not measure alignment with an broader organizational structure either.
+Yusuf et Baber~\cite{yusuf2020inferential} utilisent le raisonnement inférentiel et les méthodes bayésiennes pour faciliter la coordination des tâches entre divers agents. Bien qu'efficace dans la coordination dynamique, leur cadre manque d'abstraction des rôles et ne mesure pas non plus l'alignement avec une structure organisationnelle plus large.
 %
-Serrino et al.~\cite{serrino2019finding} examine dynamic role inference in social settings, where agents deduce roles through interactions. While they enable flexible role understanding, their approach focuses on immediate operational roles rather than implicit roles that align with organizational models.
+Serrino et al.~\cite{serrino2019finding} examinent l'inférence dynamique des rôles dans des contextes sociaux, où les agents déduisent les rôles à travers leurs interactions. Bien qu'ils permettent une compréhension flexible des rôles, leur approche se concentre sur les rôles opérationnels immédiats plutôt que sur les rôles implicites qui s'alignent sur les modèles organisationnels.
 
-While some works explore organizational concepts in MARL, none explicitly address the computation of organizational alignment as we define it. Our concept of organizational fit requires a framework that assesses alignment with implicit goals.
-
-
-\subsection{Controlling organizational fit}
-Controlling organizational fit involves aligning the agents' policies with a predefined organization, often using constraints or incentives.
-%
-Achiam et al.~\cite{achiam2017cpo} introduce CPO, adjusting policies with safety constraints while maximizing rewards. MOISE+MARL, however, introduces constraints beyond safety to shape behavior toward organizational expectations by externally guiding agent learning.
-%
-Ray et al.~\cite{ray2019benchmarking} use Lagrange multipliers to integrate constraints into the reward function, balancing reward and constraint adherence. MOISE+MARL extends this by dynamically modifying the action space to enforce constraint adherence at various levels, offering flexible control over agent behaviors.
-%
-Safe exploration ensures agents learn while adhering to safety constraints. Garcia et al.~\cite{garcia2015comprehensive} overview methods for maintaining safe exploration, and Alshiekh et al.~\cite{alshiekh2018safe} propose shielding to block unsafe actions. MOISE+MARL goes further by using constraints to guide agents toward behaviors that align with organizational roles.
-%
-HRL breaks tasks into subtasks, aligning with organizational hierarchies. Ghavamzadeh et al.~\cite{ghavamzadeh2006hrl} illustrate that HRL can improve coordination. MOISE+MARL constrains MARL externally, offering a modular granularity and generating refined behaviors under organizational constraints.
-%
-Controlling Communication and Coordination is essential for ensuring organizational fit, especially in large-scale systems. Foerster et al.~\cite{foerster2018communication} propose decentralized coordination through shared knowledge, allowing agents to operate without centralized control.
-
-Unlike HRL, the MOISE+MARL framework stands out for incorporating external organizational constraints that influence agents within a standard MARL framework, enabling modular granularity. Unlike Shielding or CPO, which typically focus on safety constraints, MOISE+MARL goes further by relying on actions and reward modifications to align with roles. % MOISE+MARL aims to handles scalability and adaptability by simplifying users interactions to defining and applying a smaller amount of organizational specifications.
+Si certains travaux explorent les concepts organisationnels dans le MARL, aucun ne traite explicitement du calcul de l'alignement organisationnel tel que nous le définissons. Notre concept d'adéquation organisationnelle nécessite un cadre qui évalue l'alignement avec des objectifs implicites.
 
 
-\section{The MOISE+MARL framework}
+\subsection{Contrôle de l'adéquation organisationnelle}
+Le contrôle de l'adéquation organisationnelle implique d'aligner les politiques des agents sur une organisation prédéfinie, souvent à l'aide de contraintes ou d'incitations.
+%
+Achiam et al.~\cite{achiam2017cpo} introduisent le CPO, qui ajuste les politiques en tenant compte des contraintes de sécurité tout en maximisant les récompenses. MOISE+MARL, cependant, introduit des contraintes allant au-delà de la sécurité afin de façonner le comportement en fonction des attentes organisationnelles en guidant de manière externe l'apprentissage des agents.
+%
+Ray et al.~\cite{ray2019benchmarking} utilisent des multiplicateurs de Lagrange pour intégrer les contraintes dans la fonction de récompense, équilibrant ainsi la récompense et le respect des contraintes. MOISE+MARL étend cette approche en modifiant dynamiquement l'espace d'action afin de faire respecter les contraintes à différents niveaux, offrant ainsi un contrôle flexible sur les comportements des agents.
+%
+Une exploration sûre garantit que les agents apprennent tout en respectant les contraintes de sécurité. Garcia et al.~\cite{garcia2015comprehensive} présentent des méthodes pour maintenir une exploration sûre, et Alshiekh et al.~\cite{alshiekh2018safe} proposent un bouclier pour bloquer les actions dangereuses. MOISE+MARL va plus loin en utilisant des contraintes pour guider les agents vers des comportements qui correspondent aux rôles organisationnels.
+%
+Le HRL divise les tâches en sous-tâches, en fonction des hiérarchies organisationnelles. Ghavamzadeh et al.~\cite{ghavamzadeh2006hrl} illustrent que le HRL peut améliorer la coordination. MOISE+MARL impose des contraintes externes au MARL, offrant une granularité modulaire et générant des comportements affinés dans le respect des contraintes organisationnelles.
+%
+Le contrôle de la communication et de la coordination est essentiel pour garantir l'adéquation organisationnelle, en particulier dans les systèmes à grande échelle. Foerster et al.~\cite{foerster2018communication} proposent une coordination décentralisée grâce au partage des connaissances, permettant aux agents de fonctionner sans contrôle centralisé.
+
+Contrairement au HRL, le cadre MOISE+MARL se distingue par l'intégration de contraintes organisationnelles externes qui influencent les agents dans un cadre MARL standard, permettant ainsi une granularité modulaire. Contrairement au Shielding ou au CPO, qui se concentrent généralement sur les contraintes de sécurité, MOISE+MARL va plus loin en s'appuyant sur des actions et des modifications de récompenses pour s'aligner sur les rôles. % MOISE+MARL vise à gérer l'évolutivité et l'adaptabilité en simplifiant les interactions des utilisateurs pour définir et appliquer un nombre réduit de spécifications organisationnelles.
+
+
+\section{Le cadre MOISE+MARL}
 \label{sec:moise_marl_framework}
 
-This section introduces the formalism used to describe the functioning framework of the MOISE+MARL framework.
+Cette section présente le formalisme utilisé pour décrire le fonctionnement du cadre MOISE+MARL.
 
-\subsection{Markov framework for MARL}
+\subsection{Cadre de Markov pour MARL}
 
-To apply MARL techniques, we rely on the \textit{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP) \cite{Oliehoek2016}. Dec-POMDPs naturally model decentralized multi-agent coordination under partial observability, making them well suited for integrating organizational constraints. Unlike \textit{Partially Observable Stochastic Games} (POSG), the Dec-POMDP allows for a common reward function for agents, which promotes collaboration~\cite{Beynier2013}.
+Pour appliquer les techniques MARL, nous nous appuyons sur le \textit{processus de décision markovien décentralisé partiellement observable} (Dec-POMDP) \cite{Oliehoek2016}. Les Dec-POMDP modélisent naturellement la coordination décentralisée de plusieurs agents dans un contexte de partialité d'observabilité, ce qui les rend particulièrement adaptés à l'intégration de contraintes organisationnelles. Contrairement aux \textit{Jeux stochastiques partiellement observables} (POSG), les Dec-POMDP permettent d'utiliser une fonction de récompense commune pour tous les agents, ce qui favorise la collaboration~\cite{Beynier2013}.
 
-A Dec-POMDP $d \in D$ (where $D$ is the set of Dec-POMDPs) is defined as a 7-tuple $d = \langle S, \{A_i\}, T, R, \{\Omega_i\}, O, \gamma \rangle$, where $S = \{s_1,\dots,s_{|S|}\}$ is the set of possible states; $A_{i} = \{a_{1}^{i},\dots,a_{|A_{i}|}^{i}\}$ is the set of possible actions for agent $i$; $T$ represents the set of transition probabilities, with $T(s,a,s') = \probP(s'|s,a)$ as the probability of transitioning from state $s$ to state $s'$ following action $a$; $R: S \times A \times S \rightarrow \mathbb{R}$ is the reward function, assigning a reward based on the initial state, the action taken, and the resulting state; $\Omega_{i} = \{o_{1}^{i},\dots,o_{|\Omega_{i}|}^{i}\}$ is the set of possible observations for agent $i$; $O$ represents the set of observation probabilities, where $O(s',a,o) = \probP(o|s',a)$ is the probability of obtaining observation $o$ after performing action $a$ and reaching state $s'$; and $\gamma \in [0,1]$ is the discount factor
-%, used to weight future rewards.
+Un Dec-POMDP $d \in D$ (où $D$ est l'ensemble des Dec-POMDP) est défini comme un 7-uplet $d = \langle S, \{A_i\}, T, R, \{\Omega_i\}, O, \gamma \rangle$, où $S = \{s_1,\dots,s_{|S|}\}$ est l'ensemble des états possibles ; $A_{i} = \{a_{1}^{i},\dots,a_{|A_{i}|}^{i}\}$ est l'ensemble des actions possibles pour l'agent $i$ ; $T$ représente l'ensemble des probabilités de transition, avec $T(s,a,s') = \probP(s'|s,a)$ comme probabilité de passer de l'état $s$ à l'état $s'$ après l'action $a$ ; $R: S \times A \times S \rightarrow \mathbb{R}$ est la fonction de récompense, qui attribue une récompense en fonction de l'état initial, de l'action effectuée et de l'état résultant ; $\Omega_{i} = \{o_{1}^{i},\dots,o_{|\Omega_{i}|}^{i}\}$ est l'ensemble des observations possibles pour l'agent $i$ ; $O$ représente l'ensemble des probabilités d'observation, où $O(s',a,o) = \probP(o|s',a)$ est la probabilité d'obtenir l'observation $o$ après avoir effectué l'action $a$ et atteint l'état $s'$ ; et $\gamma \in [0,1]$ est le facteur de réduction
+%, utilisé pour pondérer les récompenses futures.
 
-The following formalism is used with MOISE+MARL to solve the Dec-POMDP~\cite{Beynier2013,Albrecht2024}: $\mathcal{A}$ represents the set of $n$ \textbf{agents}; $\Pi$ denotes the set of \textbf{policies}, where a policy $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action, representing the agent's internal strategy; $\Pi_{joint}$ represents the set of \textbf{joint policies}, with a joint policy $\pi_{joint} \in \Pi_{joint}, \pi_{joint}: \Omega^n \rightarrow A^n = \Pi^n$, which selects an action for each agent based on their respective observations, acting as a collection of policies used by agents within a team; $H$ is the set of \textbf{histories}, where a history (or trajectory) over $z \in \mathbb{N}$ steps (typically the maximum number of steps in an episode) is represented as the $z$-tuple $h = \langle \langle \omega_{k}, a_{k}\rangle | k \leq z, \omega \in \Omega, a \in A\rangle$, capturing successive observations and actions; $H_{joint}$ stands for the set of \textbf{joint histories}, with a joint history $h_{joint} \in H_{joint}$ over $z$ steps defined as the set of agent histories: $h_{joint} = \{h_1, h_2, \dots, h_n\}$; and finally, $V_{joint}(\pi_{joint}): \Pi_{joint} \rightarrow \mathbb{R}$ denotes the \textbf{expected cumulative reward} over a finite horizon (assuming $\gamma < 1$ or if the number of steps in an episode is finite), where $\pi_{joint}$ represents the joint policy for team $i$, with $\pi_{joint,-i}$ being the joint policies of other teams, considered as fixed.
+Le formalisme suivant est utilisé avec MOISE+MARL pour résoudre le Dec-POMDP~\cite{Beynier2013,Albrecht2024} : $\mathcal{A}$ représente l'ensemble des $n$ \textbf{agents} ; $\Pi$ désigne l'ensemble des \textbf{politiques}, où une politique $\pi \in \Pi, \pi: \Omega \rightarrow A$ mappe de manière déterministe une observation à une action, représentant la stratégie interne de l'agent ; $\Pi_{joint}$ représente l'ensemble des \textbf{politiques conjointes}, avec une politique conjointe $\pi_{joint} \in \Pi_{joint}, \pi_{joint}: \Omega^n \rightarrow A^n = \Pi^n$, qui sélectionne une action pour chaque agent en fonction de leurs observations respectives, agissant comme un ensemble de politiques utilisées par les agents au sein d'une équipe ; $H$ est l'ensemble des \textbf{histories}, où une histoire (ou trajectoire) sur $z \in \mathbb{N}$ étapes (généralement le nombre maximal d'étapes dans un épisode) est représentée par le $z$-tuple $h = \langle \langle \omega_{k}, a_{k}\rangle | k \leq z, \omega \in \Omega, a \in A\rangle$, capturant les observations et les actions successives ; $H_{joint}$ représente l'ensemble des \textbf{historiques conjoints}, avec un historique conjoint $h_{joint} \in H_{joint}$ sur $z$ étapes défini comme l'ensemble des historiques des agents : $h_{joint} = \{h_1, h_2, \dots, h_n\}$ ; et enfin, $V_{joint}(\pi_{joint}): \Pi_{joint} \rightarrow \mathbb{R}$ désigne la \textbf{récompense cumulative attendue} sur un horizon fini (en supposant que $\gamma \leq 1$ ou si le nombre d'étapes dans un épisode est fini), où $\pi_{joint}$ représente la politique conjointe pour l'équipe $i$, avec $\pi_{joint,-i}$ étant les politiques conjointes des autres équipes, considérées comme fixes.
 
 
-% We refer to \textbf{solving the Dec-POMDP} as the search for a joint policy $\pi_{joint} \in \Pi_{joint}$ such that $\pi_{joint}s)$, achieving at least an expected cumulative reward of $s$, where $s \in \mathbb{R}$.
+% Nous appelons « résolution du Dec-POMDP » la recherche d'une politique conjointe $\pi_{joint} \in \Pi_{joint}$ telle que $\pi_{joint}s)$, permettant d'obtenir au moins une récompense cumulative attendue de $s$, où $s \in \mathbb{R}$.
 
-\subsection{The $\mathcal{M}OISE^+$ organizational model}
+\subsection{Le modèle organisationnel $\mathcal{M}OISE^+$}
 
 \begin{figure}[h!]
     \input{figures/moise_model.tex}
-    \caption{A synthetic view of the $\mathcal{M}OISE^+$ model}
+    \caption{Vue synthétique du modèle $\mathcal{M}OISE^+$}
     \label{fig:moise_model}
 \end{figure}
 
-As illustrated in \autoref{fig:moise_model}, $\mathcal{M}OISE^+$ comprises three types of organizational specifications:
+Comme illustré dans \autoref{fig:moise_model}, $\mathcal{M}OISE^+$ comprend trois types de spécifications organisationnelles :
 
-\noindent \paragraph{\textbf{Structural Specifications (SS)}} define how agents are structured, expressed as $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$. $\mathcal{R}_{ss}$ is the set of roles ($\rho \in \mathcal{R}$) with an inheritance relation $\mathcal{IR}$ where $\rho_1 \sqsubset \rho_2$ if $\rho_1$ inherits from $\rho_2$. $\mathcal{GR}$ includes groups $\langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \allowbreak \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$. Links ($\mathcal{L}$) define connections between roles: acquaintance, communication, or authority. Compatibilities $\mathcal{C}$ denote roles that agents can play together. Intra- and inter-group links and compatibilities are shown by $\mathcal{L}^{intra}$, $\mathcal{L}^{inter}$, $\mathcal{C}^{intra}$, and $\mathcal{C}^{inter}$, with $np$ and $ng$ defining role and subgroup counts.
+\noindent \paragraph{\textbf{Spécifications structurelles (SS)}} définissent la manière dont les agents sont structurés, exprimées sous la forme $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$. $\mathcal{R}_{ss}$ est l'ensemble des rôles ($\rho \in \mathcal{R}$) avec une relation d'héritage $\mathcal{IR}$ où $\rho_1 \sqsubset \rho_2$ si $\rho_1$ hérite de $\rho_2$. $\mathcal{GR}$ comprend les groupes $\langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \allowbreak \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$. Les liens ($\mathcal{L}$) définissent les connexions entre les rôles : connaissance, communication ou autorité. Les compatibilités $\mathcal{C}$ désignent les rôles que les agents peuvent jouer ensemble. Les liens et les compatibilités intra- et inter-groupes sont représentés par $\mathcal{L}^{intra}$, $\mathcal{L}^{inter}$, $\mathcal{C}^{intra}$ et $\mathcal{C}^{inter}$, où $np$ et $ng$ définissent le nombre de rôles et de sous-groupes.
 
-\noindent \paragraph{\textbf{Functional Specifications (FS)}} describe the agents' goals, represented as $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$. The social scheme $\mathcal{SCH}$ includes global goals $\mathcal{G}$, missions $\mathcal{M}$, and plans $\mathcal{P}$ that organize goals in a tree structure. Plans link goals with an operator ($op$) indicating sequence, choice, or parallel completion. Missions map to goal sets ($mo$), and agent counts per mission are specified by $nm$. Preferences $\mathcal{PO}$ indicate which missions agents prefer, denoted as $m_1 \prec m_2$.
+\noindent \paragraph{\textbf{Spécifications fonctionnelles (FS)}} décrivent les objectifs des agents, représentés par $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$. Le schéma social $\mathcal{SCH}$ comprend les objectifs globaux $\mathcal{G}$, les missions $\mathcal{M}$ et les plans $\mathcal{P}$ qui organisent les objectifs dans une structure arborescente. Les plans relient les objectifs à un opérateur ($op$) indiquant la séquence, le choix ou l'achèvement parallèle. Les missions sont mappées à des ensembles d'objectifs ($mo$), et le nombre d'agents par mission est spécifié par $nm$. Les préférences $\mathcal{PO}$ indiquent les missions préférées des agents, notées $m_1 \prec m_2$.
 
-\noindent \paragraph{\textbf{Deontic Specifications (DS)}} indicate the relationship between roles goals, given by $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$. Time constraints $\mathcal{TC}$ set periods for permissions or obligations ($Any$ for any time). Obligations ($\mathcal{OBL}$) require agents in role $\rho_a$ to undertake mission $m$ at times $tc$, while permissions ($\mathcal{PER}$) allow it. The $rds$ function maps roles to their deontic specifications as $\langle tc, y, m \rangle$ where $y$ distinguishes permission (0) from obligation (1).
+\noindent \paragraph{\textbf{Spécifications déontiques (DS)}} indiquent la relation entre les rôles et les objectifs, donnée par $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$. Les contraintes temporelles $\mathcal{TC}$ fixent les périodes pour les autorisations ou les obligations ($Any$ pour n'importe quel moment). Les obligations ($\mathcal{OBL}$) exigent que les agents dans le rôle $\rho_a$ entreprennent la mission $m$ aux moments $tc$, tandis que les autorisations ($\mathcal{PER}$) le permettent. La fonction $rds$ mappe les rôles à leurs spécifications déontiques sous la forme $\langle tc, y, m \rangle$, où $y$ distingue l'autorisation (0) de l'obligation (1).
 
 \
 
-\noindent Organizational specifications applied to agents are roles and goals (as missions) through permissions or obligations. Indeed, the other structural specifications such as compatibilities or links are inherent to roles. Similarly, we consider that the goals, the missions, and their mapping ($mo$) are enough to also link all of the other functional specifications such as plans, cardinalities, or preference orders.
-Consequently, we consider it is sufficient to take into account roles, missions (goal and mapping) and permissions/obligations when linking $\mathcal{M}OISE^+$ with Dec-POMDP. 
+\noindent Les spécifications organisationnelles appliquées aux agents sont des rôles et des objectifs (sous forme de missions) via des autorisations ou des obligations. En effet, les autres spécifications structurelles telles que les compatibilités ou les liens sont inhérentes aux rôles. De même, nous considérons que les objectifs, les missions et leur mappage ($mo$) suffisent pour relier également toutes les autres spécifications fonctionnelles telles que les plans, les cardinalités ou les ordres de préférence.
+Par conséquent, nous considérons qu'il suffit de prendre en compte les rôles, les missions (objectif et mappage) et les permissions/obligations pour relier $\mathcal{M}OISE^+$ à Dec-POMDP.
+
 
 \begin{figure*}[t]
+
     \label{eq:single_value_function}
     \raggedright
-    \textbf{\textit{Definition 1} \quad Sate-Value function adapted to constraint guides in AEC mode:}
-    \begin{gather*}
-      \text{\quad \quad} V^{\pi^j}(s_t) = \hspace{-0.75cm} \sum_{\textcolor{red}{ \substack{a_{t} \in A \text{ if } rn() < ch_{t}, \\ 
-      a_{t} \in A_{t} \text{ else}}
-      }}{\hspace{-0.7cm} \pi_i(a_{t} | \omega_t)} \sum_{s_{t+1} \in S}{\hspace{-0.1cm} T(s_{t+1} | s_t, a_{t})[R(s_t,a_{t},s_{t+1}) + \hspace{-0.1cm} \textcolor{blue}{ \sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \frac{grg_m(h_{t+1})}{1 - p + \epsilon} } } + \textcolor{red}{(1-ch_t) \times rrg(\omega_t,a_{t+1})} + V^{\pi^j_{i+1 \ mod \ n}}(s_{t+1})]}
-    \end{gather*}  
-    %
-    \textcolor{red}{\[\text{With } rag(h_t, \omega_t) = A_{t} \times \mathbb{R} \text{, } \langle a_t, ch_{t} \rangle \in A_{t} \times \mathbb{R} \text{ ; } \text{ and } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
-    %
-    \vspace{-0.5cm}
-    \textcolor{blue}{
-    \begin{gather*}
-    \text{With } \omega_t = O(\omega_t | s_t, a_t) \text{ ; } h_t = \{h_0 = \langle \rangle, h_{t+1} = \langle h_t, \langle \omega_{t+1}, a_{t+1} \rangle \rangle \} \text{ ; } grg_m(h) = \hspace{-0.8cm} \sum_{(grg_i,w_i) \in mo(m)}{\hspace{-0.8cm} w_i \times grg_i(h)} \text{ ; } \epsilon \in \mathbb{R}_{>0} \text{ ; }
-    \end{gather*}
-    }
-    \vspace{-0.75cm}
-    \textcolor{blue}{
-    \begin{gather*}
-    v_m(t) = \{ 1 \text{ if } t \in t_c \text{ ; else } 0 \} \text{ ; } \text{ and } \mathcal{M}_i = \{m_j | \langle ar(i),m_j,t_c,p \rangle \in \mathcal{M}\}
-    \end{gather*}
-    }
-    \vspace{-0.6cm}
+    \textbf{\textit{Définition 1} \quad Fonction de valeur d'état adaptée aux \textbf{Guide de Contrainte} en mode AEC :}
+
+    \begin{scriptsize}
+        \vspace{-0.3cm}
+        \begin{gather*}
+            V^{\pi^j}(s_t) = \hspace{-0.75cm} \sum_{\textcolor{red}{ \substack{a_{t} \in A \text{ si } rn() < ch_{t}, \\
+                        a_{t} \in A_{t} \text{ sinon}}
+                }}{\hspace{-0.7cm} \pi_i(a_{t} | \omega_t)} \sum_{s_{t+1} \in S}{\hspace{-0.1cm} T(s_{t+1} | s_t, a_{t})\Bigl[R(s_t,a_{t},s_{t+1}) + \hspace{-0.1cm} \textcolor{blue}{ \sum_{m \in \mathcal{M}_i}{ \hspace{-0.1cm} v_m(t) \frac{grg_m(h_{t+1})}{1 - p + \epsilon} } } + \textcolor{red}{(1-ch_t) \times rrg(\omega_t,a_{t+1})} + V^{\pi^j_{i+1 \ mod \ n}}(s_{t+1})\Bigr]}
+        \end{gather*}
+        %
+        \vspace{-0.3cm}
+        %
+        \textcolor{red}{$\hspace{0cm}\text{Avec } rag(h_t, \omega_t) = A_{t} \times \mathbb{R} \text{, } \langle a_t, ch_{t} \rangle \in A_{t} \times \mathbb{R} \text{ ; et } rn: \emptyset \to [0,1[ \text{, une fonction aléatoire uniforme}$}
+        %
+        \vspace{-0cm}
+        \textcolor{blue}{
+            \begin{gather*}
+                \hspace{-4.1cm}\text{Avec } \omega_t = O(\omega_t | s_t, a_t) \text{ ; } h_t = \{h_0 = \langle \rangle, h_{t+1} = \langle h_t, \langle \omega_{t+1}, a_{t+1} \rangle \rangle \} \text{ ; } grg_m(h) = \hspace{-0.8cm} \sum_{(grg_i,w_i) \in mo(m)}{\hspace{-0.8cm} w_i \times grg_i(h)} \text{ ; } \epsilon \in \mathbb{R}_{>0} \text{ ; }
+            \end{gather*}
+        }
+        \vspace{-1.05cm}
+        \textcolor{blue}{
+            \begin{gather*}
+                \hspace{-8.5cm}
+                v_m(t) = \{ 1 \text{ si } t \in t_c \text{ ; sinon } 0 \} \text{ ; et } \mathcal{M}_i = \{m_j \mid \langle ar(i),m_j,t_c,p \rangle \in \mathcal{M}\}
+            \end{gather*}
+        }
+        \vspace{-0.6cm}
+
+    \end{scriptsize}
+
 \end{figure*}
 
-\subsection{Linking $\mathcal{M}OISE^+$ with MARL}
+
+\subsection{Lien entre $\mathcal{M}OISE^+$ et MARL}
 
 \begin{figure}[h!]
     \centering
     \input{figures/mm_synthesis_single_column.tex}
-    \caption{A minimal view of the MOISE+MARL framework: 
-    Users first define $\mathcal{M}OISE^+$ specifications, which include roles ($\mathcal{R}$) and missions ($\mathcal{M}$), both associated through $rds$. They then create MOISE+MARL specifications by first defining \textbf{Constraint guides} such as $rag$ and $rrg$ to specify role logic, and $grg$ for goal logic. 
-    Next, \textbf{Linkers} are used to connect agents with roles through $ar$ and to link the logic of the constraint guides to the defined $\mathcal{M}OISE^+$ specifications. Once this is set up, roles can be assigned to agents, and the MARL framework updates accordingly during training.
+    \caption{Une vue minimale du cadre MOISE+MARL :
+        Les utilisateurs définissent d'abord les spécifications $\mathcal{M}OISE^+$, qui comprennent les rôles ($\mathcal{R}$) et les missions ($\mathcal{M}$), tous deux associés via $rds$. Ils créent ensuite les spécifications MOISE+MARL en définissant d'abord des \textbf{guides de contraintes} tels que $rag$ et $rrg$ pour spécifier la logique des rôles, et $grg$ pour la logique des objectifs.
+        Ensuite, des \textbf{Linkers} sont utilisés pour connecter les agents aux rôles via $ar$ et pour relier la logique des guides de contraintes aux spécifications $\mathcal{M}OISE^+$ définies. Une fois cette configuration effectuée, les rôles peuvent être attribués aux agents et le cadre MARL se met à jour en conséquence pendant la formation.
     }
     \label{fig:mm_synthesis}
 \end{figure}
 
-We identified the \textit{AGR}~\cite{ferber2003} (Agent Group Role) and the $\mathcal{M}OISE^+$~\cite{Hubner2007} organizational models. Unlike AGR which is an informal framework introducing roles according to groups, $\mathcal{M}OISE^+$ provides a more detailed and flexible description of the structures and functions of a MAS, easing a formal description of agents' policies in MARL.
+Nous avons identifié les modèles organisationnels \textit{AGR}~\cite{ferber2003} (Agent Group Role) et $\mathcal{M}OISE^+$~\cite{Hubner2007}. Contrairement à l'AGR, qui est un cadre informel introduisant des rôles en fonction des groupes, $\mathcal{M}OISE^+$ fournit une description plus détaillée et plus flexible des structures et des fonctions d'un MAS, facilitant ainsi la description formelle des politiques des agents dans le MARL.
 
 \
 
-\noindent The \textbf{Constraint Guides} are three new relations introduced to describe the logic of the roles and goals of $\mathcal{M}OISE^+$ in the Dec-POMDP formalism:
+\noindent Les \textbf{guides de contraintes} sont trois nouvelles relations introduites pour décrire la logique des rôles et des objectifs de $\mathcal{M}OISE^+$ dans le formalisme Dec-POMDP :
 %
 % \begin{itemize}
 \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
 
-    \item \textbf{Role Action Guide} \quad $rag: H \times \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, the relation that models a role as a set of rules which, for each pair consisting of a history $h \in H$ and an observation received by the agent $\omega \in \Omega$, associates expected actions $A \in \mathcal{P}(A)$ each associated with a constraint hardness $ch \in [0,1]$ ($ch = 1$ by default). By restricting the choice of the next action among those authorized, the agent is forced to adhere to the expected behavior of the role
-    \item \textbf{Role Reward Guide} \quad $rrg: H \times \Omega \times A \to \mathbb{R} = \{r_m \text{ if } a \notin A_\omega \text{, } rag(h, \omega) \allowbreak = \allowbreak A_\omega \times \mathbb{R} \text{, } h \in H; \text{ else } 0\}$, the relation that models a role by adding a penalty $r_m$ to the global reward if the last action chosen by the agent $a \in A$ is not authorized. This is intended to encourage the agent to adhere to the expected behavior of a role
-    \item \textbf{Goal Reward Guide} \quad $grg: H \rightarrow \mathbb{R}$, the relation that models a goal as a soft constraint by adding a bonus $r_b \in \mathbb{R}$ to the global reward if the agent's history $h \in H$ contains a characteristic sub-sequence $h_g \in H_g$ of the goal, encouraging the agent to reach it.
+    \item \textbf{Guide d'action des rôles} \quad $rag : H \times \Omega \rightarrow \mathcal{P}(A \times \mathbb{R})$, la relation qui modélise un rôle comme un ensemble de règles qui, pour chaque paire constituée d'un historique $h \in H$ et d'une observation reçue par l'agent $\omega \in \Omega$, associe des actions attendues $A \in \mathcal{P}(A)$ chacune associée à une contrainte de difficulté $ch \in [0,1]$ ($ch = 1$ par défaut). En limitant le choix de l'action suivante parmi celles autorisées, l'agent est contraint d'adhérer au comportement attendu du rôle
+    \item \textbf{Guide de récompense des rôles} \quad $rrg: H \times \Omega \times A \to \mathbb{R} = \{r_m \text{ si } a \notin A_\omega \text{, } rag(h, \omega) \allowbreak = \allowbreak A_\omega \times \mathbb{R} \text{, } h \in H; \text{ sinon } 0\}$, la relation qui modélise un rôle en ajoutant une pénalité $r_m$ à la récompense globale si la dernière action choisie par l'agent $a \in A$ n'est pas autorisée. Cela vise à encourager l'agent à respecter le comportement attendu d'un rôle
+    \item \textbf{Guide de récompense d'objectif} \quad $grg: H \rightarrow \mathbb{R}$, la relation qui modélise un objectif comme une contrainte souple en ajoutant un bonus $r_b \in \mathbb{R}$ à la récompense globale si l'historique de l'agent $h \in H$ contient une sous-séquence caractéristique $h_g \in H_g$ de l'objectif, encourageant ainsi l'agent à l'atteindre.
 \end{enumerate*}
 % \end{itemize}
 
 \
 
-\noindent Finally, we introduce the \textbf{Linkers} to link the $\mathcal{M}OISE^+$ organizational specifications with constraint guides and agents:
+\noindent Enfin, nous introduisons les \textbf{Linkers} pour relier les spécifications organisationnelles $\mathcal{M}OISE^+$ aux guides de contraintes et aux agents :
 %
 % \begin{itemize}
 \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
 
-    \item \textbf{Agent to Role} \quad $ar: \mathcal{A} \to \mathcal{R}$, the bijective relation linking an agent to a role;
-    \item \textbf{Role to Constraint Guide} \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$, the relation associating each $\mathcal{M}OISE^+$ role to a $rag$ or $rrg$ relation, forcing/encouraging the agent to follow the expected actions for the role $\rho \in \mathcal{R}$;
-    \item \textbf{Goal to Constraint Guide} \quad $gcg: \mathcal{G} \rightarrow grg$, the relation linking goals to $grg$ relations, representing goals as rewards in MARL.
+    \item \textbf{Agent à rôle} \quad $ar : \mathcal{A} \to \mathcal{R}$, relation bijective reliant un agent à un rôle ;
+    \item \textbf{Guide rôle-contrainte} \quad $rcg: \mathcal{R} \rightarrow rag \cup rrg$, la relation associant chaque rôle $\mathcal{M}OISE^+$ à une relation $rag$ ou $rrg$, forçant/encourageant l'agent à suivre les actions attendues pour le rôle $\rho \in \mathcal{R}$ ;
+    \item \textbf{Guide objectif-contrainte} \quad $gcg : \mathcal{G} \rightarrow grg$, la relation reliant les objectifs aux relations $grg$, représentant les objectifs comme des récompenses dans MARL.
 \end{enumerate*}
 % \end{itemize}
 
-\paragraph{\textbf{Resolving the MOISE+MARL problem}}
-% formalized as $MM = \langle D, \mathcal{OS}\allowbreak, ar, rcg, \allowbreak gcg, rag, rrg, grg\rangle$
-involves finding a joint policy $\pi^{j} = \{\pi^j_0,\pi^j_1\dots\pi^j_n\}$ that maximizes the state-value function $V^{\pi^{j}}$ (or reaches a minimum threshold), which represents the expected cumulative reward starting from an initial state $s \in S$ and following the joint policy $\pi^{j}$, applying successive joint actions $a^{j} \in A^n$ under additional constraint guides. The state-value is described in the case where agents act sequentially and cyclically (Agent Environment Cycle - AEC mode) in \hyperref[eq:single_value_function]{Definition 1}, adapting its definition for roles (in red) and missions (in blue), impacting the action space and reward. \autoref{fig:mm_synthesis} illustrates the links between $\mathcal{M}OISE^+$ and Dec-POMDP via the MOISE+MARL framework.
+\paragraph{\textbf{Résolution du problème MOISE+MARL}}
+% formalisé comme $MM = \langle D, \mathcal{OS}\allowbreak, ar, rcg, \allowbreak gcg, rag, rrg, grg\rangle$
+implique de trouver une politique conjointe $\pi^{j} = \{\pi^j_0,\pi^j_1\dots\pi^j_n\}$ qui maximise la fonction de valeur d'état $V^{\pi^{j}}$ (ou atteint un seuil minimal), qui représente la récompense cumulative attendue à partir d'un état initial $s \in S$ et en suivant la politique conjointe $\pi^{j}$, en appliquant des actions conjointes successives $a^{j} \in A^n$ sous des contraintes supplémentaires. La valeur d'état est décrite dans le cas où les agents agissent de manière séquentielle et cyclique (mode Agent Environment Cycle - AEC) dans \hyperref[eq:single_value_function]{Définition 1}, en adaptant sa définition pour les rôles (en rouge) et les missions (en bleu), ce qui a un impact sur l'espace d'action et la récompense. \autoref{fig:mm_synthesis} illustre les liens entre $\mathcal{M}OISE^+$ et Dec-POMDP via le cadre MOISE+MARL.
 
-At any time $t \in \mathbb{N}$ (initially $t = 0$), the agent $i = t \ mod \ n$ is constrained to a role $\rho_i = ar(i)$. For each temporally valid deontic specification $d_i = rds(\rho_i) = \langle tc_i,y_i, m_i \rangle$, the agent is permitted (if $y_i = 0$) or obligated (if $y_i = 1$) to commit in mission $m_i \in \mathcal{M}, \mathcal{G}_{m_i} = mo(m_i)$, and $n \in \mathbb{N}$ the number of agents.
+À tout moment $t \in \mathbb{N}$ (initialement $t = 0$), l'agent $i = t \ mod \ n$ est contraint à un rôle $\rho_i = ar(i)$. Pour chaque spécification déontique valide dans le temps $d_i = rds(\rho_i) = \langle tc_i,y_i, m_i \rangle$, l'agent est autorisé (si $y_i = 0$) ou obligé (si $y_i = 1$) de s'engager dans la mission $m_i \in \mathcal{M}, \mathcal{G}_{m_i} = mo(m_i)$, et $n \in \mathbb{N}$ le nombre d'agents.
 %
-First, based on the received observation $\omega_t$, the agent must choose an action either: within the expected actions of the role $A_t$ if a random value is below the role constraint hardness $ch_t$; or within the set of all actions $A$ otherwise. If $ch_t = 1$, the role is strongly constrained for the agent and weakly otherwise.
+Tout d'abord, sur la base de l'observation reçue $\omega_t$, l'agent doit choisir une action soit parmi les actions attendues du rôle $A_t$ si une valeur aléatoire est inférieure à la contrainte de rigidité du rôle $ch_t$, soit parmi l'ensemble de toutes les actions $A$ dans le cas contraire. Si $ch_t = 1$, le rôle est fortement contraignant pour l'agent et faiblement contraignant dans le cas contraire.
 %
-Then, the action is applied to the current state $s_t$ to transition to the next state $s_{t+1}$, generate the next observation $\omega_{t+1}$, and yield a reward. The reward is the sum of the global reward with penalties and bonuses obtained from the organizational specifications: \quad i) the sum of the bonuses for goals associated with each temporally valid mission (via Goal Reward Guides), weighted by the associated value ($\frac{1}{1-p+\epsilon}$); \quad ii) the penalty associated with the role (via "Role Reward Guides") weighted by the role constraint hardness.
+Ensuite, l'action est appliquée à l'état actuel $s_t$ pour passer à l'état suivant $s_{t+1}$, générer l'observation suivante $\omega_{t+1}$ et produire une récompense. La récompense est la somme de la récompense globale avec les pénalités et les bonus obtenus à partir des spécifications organisationnelles : \quad i) la somme des bonus pour les objectifs associés à chaque mission temporairement valide (via les guides de récompense des objectifs), pondérée par la valeur associée ($\frac{1}{1-p+\epsilon}$) ; \quad ii) la pénalité associée au rôle (via les « guides de récompense des rôles ») pondérée par la rigidité de la contrainte de rôle.
 %
-Finally, the cumulative reward calculation continues in the next state $s_{t+1} \in S$ with the next agent $(i+1) \ mod \ n$.
+Enfin, le calcul de la récompense cumulative se poursuit dans l'état suivant $s_{t+1} \in S$ avec l'agent suivant $(i+1) \ mod \ n$.
 
-\subsection{Easying constraint guides implementation}
+\subsection{Faciliter la mise en œuvre des guides de contraintes}
 
-Since roles, goals, and missions as simple labels, their definition is assumed. However, implementing a $rag$, $rrg$, or $grg$ relation requires defining a potentially large number of histories, possibly redundant. Therefore, an extensional definition of a set of histories can be tedious. Moreover, the logic of all constraint guides takes the agent trajectory as input to determine whether the trajectory belongs to a predefined history set. For example, a $rag$ relation can be seen as determining the next expected actions depending on whether the trajectory belongs to a given set and the new observation received.
+Les rôles, les objectifs et les missions étant de simples étiquettes, leur définition est supposée. Cependant, la mise en œuvre d'une relation $rag$, $rrg$ ou $grg$ nécessite de définir un nombre potentiellement important d'historiques, qui peuvent être redondants. Par conséquent, une définition extensionnelle d'un ensemble d'histoires peut s'avérer fastidieuse. De plus, la logique de tous les guides de contraintes prend la trajectoire de l'agent comme entrée pour déterminer si la trajectoire appartient à un ensemble d'histoires prédéfini. Par exemple, une relation $rag$ peut être considérée comme déterminant les prochaines actions attendues en fonction de l'appartenance de la trajectoire à un ensemble donné et de la nouvelle observation reçue.
 
-A first approach is to let users develop their constraint guides in an intensional way with custom logic (such as a script code) in order to analyse history and compute the output in a manageable way. In that case, the relation $b_g: H \to \{0,1\}$ formalizes how users propose to determine whether a history belongs to a predefined set $H_g$.
-To help implement this relation, we propose a \textbf{Trajectory-based Pattern} (TP) inspired by Natural Language Processing, denoted $p \in P$, as a way to define a set of histories in an intensional way.
+Une première approche consiste à laisser les utilisateurs développer leurs guides de contraintes de manière intensive avec une logique personnalisée (telle qu'un code script) afin d'analyser l'historique et de calculer le résultat de manière gérable. Dans ce cas, la relation $b_g: H \to \{0,1\}$ formalise la manière dont les utilisateurs proposent de déterminer si un historique appartient à un ensemble prédéfini $H_g$.
+Pour aider à mettre en œuvre cette relation, nous proposons un \textbf{modèle basé sur la trajectoire} (TP) inspiré du traitement du langage naturel, noté $p \in P$, comme moyen de définir un ensemble d'historiques de manière intensive.
 
-A TP implies that any considered real observation or action is known and mapped to a label $l \in L$ (through $l: \Omega \cup A \to L$) to be conveniently managed. A TP $p \in P$ is defined as follows: $p$ is: either a "leaf sequence" denoted as a couple of history-cardinality $s_l = \langle h, \{c_min,c_max\}\rangle$ (where $h \in H, c_{min} \in \mathbb{N}, c_{max} \in \mathbb{N} \cup "*")$; or a "node sequence" denoted as a couple of a tuple of concrete sequences and cardinality $s_n = \langle \langle s_{l_1}, s_{l_1}\dots \rangle, \{c_min,c_max\}\rangle$. For example, the pattern $p = \allowbreak "[o_1,a_1,[o_2,a_2]\langle0,2\rangle]\langle1,*\rangle"$ can be formalized as the node sequence $\allowbreak \langle \langle \langle o_1,a_1\rangle,\langle 1,1 \rangle \rangle, \langle \langle o_2,a_2 \rangle, \langle 0,2 \rangle \rangle \rangle \langle 1,"*" \rangle$, indicating the set of histories $H_p$ containing at least once the sub-sequence consisting of a first pair $\langle o_1,a_1\rangle$ and then at most two repetitions of the pair $\langle o_2,a_2 \rangle$.
-The relation $b_g$ then becomes $b_g(h) = m(p_g,h), \text{ with } m: P \times H \to \{0,1\}$ indicating if a history $h \in H$ matches a history pattern $p \in P$ describing a history set $H_g$.
+Un TP implique que toute observation ou action réelle considérée est connue et mappée à une étiquette $l \in L$ (via $l: \Omega \cup A \to L$) afin d'être facilement gérée. Un TP $p \in P$ est défini comme suit : $p$ est : soit une « séquence feuille » désignée par un couple d'histoire-cardinalité $s_l = \langle h, \{c_min,c_max\}\rangle$ (où $h \in H, c_{min} \in \mathbb{N}, c_{max} \in \mathbb{N} \cup "*")$ ; soit une « séquence de nœuds » désignée par un couple constitué d'un tuple de séquences concrètes et d'une cardinalité $s_n = \langle \langle s_{l_1}, s_{l_1}\dots \rangle, \{c_min,c_max\}\rangle$. Par exemple, le motif $p = \allowbreak "[o_1,a_1,[o_2,a_2]\langle0,2\rangle]\langle1,*\rangle"$ peut être formalisé comme la séquence de nœuds $\allowbreak \langle \langle \langle o_1,a_1\rangle,\langle 1,1 \rangle \rangle, \langle \langle o_2,a_2 \rangle, \langle 0,2 \rangle \rangle \rangle \langle 1,"*" \rangle$, indiquant l'ensemble des historiques $H_p$ contenant au moins une fois la sous-séquence composée d'une première paire $\langle o_1,a_1\rangle$ puis au plus deux répétitions de la paire $\langle o_2,a_2 \rangle$.
+La relation $b_g$ devient alors $b_g(h) = m(p_g,h), \text{ avec } m: P \times H \to \{0,1\}$ indiquant si une histoire $h \in H$ correspond à un modèle d'histoire $p \in P$ décrivant un ensemble d'histoires $H_g$.
 
-\section{The TEMM method}
+\section{La méthode TEMM}
 \label{sec:TEMM_algorithm}
 
-As presented in \autoref{sec:related_works}, we were unable to identify any available method that fully meets our requirements for determining implicit roles, implicit goals, or organizational fit. Therefore, we propose the \textbf{Trajectory-based Evaluation in MOISE+MARL} (TEMM) method for automatic inference and evaluation of roles and missions.
+Comme présenté dans \autoref{sec:related_works}, nous n'avons pas pu identifier de méthode disponible qui réponde pleinement à nos exigences en matière de détermination des rôles implicites, des objectifs implicites ou de l'adéquation organisationnelle. Nous proposons donc la méthode \textbf{Trajectory-based Evaluation in MOISE+MARL} (TEMM) pour l'inférence et l'évaluation automatiques des rôles et des missions.
 %
-TEMM uses unsupervised learning techniques to generalize roles and missions from the set of collected trajectories over multiple test episodes. By measuring the gap between inferred implicit organizational specifications and actual behaviors, we can also quantify the organizational fit as to how well a policy conforms to the inferred implicit organizational specifications.
+TEMM utilise des techniques d'apprentissage non supervisé pour généraliser les rôles et les missions à partir de l'ensemble des trajectoires collectées au cours de plusieurs épisodes de test. En mesurant l'écart entre les spécifications organisationnelles implicites déduites et les comportements réels, nous pouvons également quantifier l'adéquation organisationnelle, c'est-à-dire la conformité d'une politique aux spécifications organisationnelles implicites déduites.
 
-TEMM is based on proposed definitions for each $\mathcal{M}OISE^+$ organizational specification regarding joint-histories or other organizational specifications, using specific unsupervised lea-rning techniques to infer them progressively. Here, we provide an informal description of the method~\hyperref[fn:github]{\footnotemark[1]}.
+TEMM est basée sur des définitions proposées pour chaque spécification organisationnelle $\mathcal{M}OISE^+$ concernant les histoires communes ou d'autres spécifications organisationnelles, en utilisant des techniques d'apprentissage non supervisé spécifiques pour les déduire progressivement. Nous fournissons ici une description informelle de la méthode~\hyperref[fn:github]{\footnotemark[1]}.
 %
-\footnotetext[1]{ \label{fn:github} Additional details, developed code, datasets containing all the hyperparameters and details of the organizational specifications are available at \url{https://github.com/julien6/MOISE-MARL}}
+\footnotetext[1]{ \label{fn:github} Des détails supplémentaires, le code développé, les ensembles de données contenant tous les hyperparamètres et les détails des spécifications organisationnelles sont disponibles à l'adresse \url{https://github.com/julien6/MOISE-MARL}}
 
-\paragraph{\textbf{1) Inferring roles and their inheritance}}
+\paragraph{\textbf{1) Déduction des rôles et de leur héritage}}
 
-We introduce that a role $\rho$ is defined as a policy whose associated agents' histories all contain a Common Longest Sequence (CLS). We introduce that a role $\rho_2$ inherits from $\rho_1$ if the CLS of histories associated with $\rho_2$ is also contained within that of $\rho_1$.
-Based on these definitions, TEMM uses a "hierarchical clustering" technique to find the CLSs among agent histories. The results can be represented as a dendrogram, allowing inferring implicit roles and inheritance relationships, their respective relationships with histories.
-We measure the gap between current agents' sequence and inferred implicit roles' sequences, as the "structural organizational fit".
+Nous introduisons la notion de rôle $\rho$, défini comme une politique dont les historiques des agents associés contiennent tous une séquence commune la plus longue (CLS). Nous introduisons la notion de rôle $\rho_2$ qui hérite de $\rho_1$ si la CLS des historiques associés à $\rho_2$ est également contenue dans celle de $\rho_1$.
+Sur la base de ces définitions, TEMM utilise une technique de « regroupement hiérarchique » pour trouver les CLS parmi les historiques des agents. Les résultats peuvent être représentés sous forme de dendrogramme, ce qui permet de déduire les rôles implicites et les relations d'héritage, ainsi que leurs relations respectives avec les historiques.
+Nous mesurons l'écart entre la séquence des agents actuels et les séquences des rôles implicites déduits, que nous appelons « adéquation organisationnelle structurelle ».
 
-\paragraph{\textbf{2) Inferring goals, plans, and missions}}
+\paragraph{\textbf{2) Déduire les objectifs, les plans et les missions}}
 
-We introduce that a goal is a set of common joint-observation reached by following the histories of successful agents.
-For each joint-history, TEMM calculates the joint-observation transition graph, which is then merged into a general graph. By measuring the distance between two vectorized joint-observations with K-means, we can find trajectory clusters that some agents may follow. Then, we sample some sets of joint-observations for each trajectory as implicit goals. For example, we can select the narrowest set of joint-observations where agents seem to collectively transition at a given time to reach their goal. Otherwise, balanced sampling on low-variance trajectories could be performed. Knowing which trajectory a goal belongs to, TEMM infers plans based solely on choices and sequences.
+Nous introduisons la notion d'objectif, qui désigne un ensemble d'observations communes atteintes en suivant l'historique des agents performants.
+Pour chaque historique commun, TEMM calcule le graphe de transition des observations communes, qui est ensuite fusionné dans un graphe général. En mesurant la distance entre deux observations communes vectorisées à l'aide de la méthode K-means, nous pouvons trouver des groupes de trajectoires que certains agents sont susceptibles de suivre. Ensuite, nous échantillonnons certains ensembles d'observations conjointes pour chaque trajectoire en tant qu'objectifs implicites. Par exemple, nous pouvons sélectionner l'ensemble le plus restreint d'observations conjointes où les agents semblent passer collectivement à un moment donné pour atteindre leur objectif. Sinon, un échantillonnage équilibré sur des trajectoires à faible variance pourrait être effectué. En sachant à quelle trajectoire appartient un objectif, TEMM déduit des plans basés uniquement sur des choix et des séquences.
 
-We introduce that a mission is the set of goals that one or more agents are accomplishing.
-Knowing the shared goals achieved by the agents, TEMM determines representative goal sets as missions.
-By measuring the distance between inferred implicit goals which joint-observations with current agents' joint-observation, we compute the "structural organizational fit".
+Nous introduisons la notion de mission, qui désigne l'ensemble des objectifs qu'un ou plusieurs agents accomplissent.
+Connaissant les objectifs communs atteints par les agents, TEMM détermine des ensembles d'objectifs représentatifs en tant que missions.
+En mesurant la distance entre les objectifs implicites déduits et les observations conjointes des agents actuels, nous calculons l'« adéquation organisationnelle structurelle ».
 
-\paragraph{\textbf{3) Inferring obligations and permissions}}
+\paragraph{\textbf{3) Déduire les obligations et les autorisations}}
 
-We introduce that an obligation is when an agent playing the role $\rho$ fulfills the goals of a mission and no others during certain time constraints, while permission is when the agent playing the role $\rho$ may fulfill other goals during specific time constraints.
-TEMM determines which agents are associated with which mission and whether they are restricted to certain missions, making them obligations, or if they have permission.
-Having already computed structural organizational fit and functional organizational fit, the organizational fit is the sum of these two values.
+Nous introduisons le concept d'obligation, qui désigne le fait qu'un agent jouant le rôle $\rho$ remplit les objectifs d'une mission et aucun autre pendant certaines contraintes de temps, tandis que l'autorisation désigne le fait que l'agent jouant le rôle $\rho$ peut remplir d'autres objectifs pendant des contraintes de temps spécifiques.
+TEMM détermine quels agents sont associés à quelle mission et s'ils sont limités à certaines missions, ce qui en fait des obligations, ou s'ils ont une permission.
+Après avoir calculé l'adéquation organisationnelle structurelle et l'adéquation organisationnelle fonctionnelle, l'adéquation organisationnelle est la somme de ces deux valeurs.
 
 \
 
-Overall, the K-mean and hierarchical clustering techniques require manual configuration to obtain roles and goals, avoiding introducing perturbations that could lead to determining false organizational specifications. Despite this, the method recommends thoroughly understanding the obtained roles and goals to manually identify and remove any remaining perturbations.
+Dans l'ensemble, les techniques de regroupement hiérarchique et K-means nécessitent une configuration manuelle pour obtenir les rôles et les objectifs, afin d'éviter d'introduire des perturbations qui pourraient conduire à la détermination de spécifications organisationnelles erronées. Malgré cela, la méthode recommande de bien comprendre les rôles et les objectifs obtenus afin d'identifier et de supprimer manuellement toute perturbation restante.
 
-\section{Experimental framework}
+\section{Cadre expérimental}
 \label{sec:experimental_setup}
 
-This section details the experimental framework used to evaluate the MOISE+MARL framework.% We adapted existing tools to implement our approach. We then present the environments used, the MARL algorithms, the organizational specifications, and the evaluation metrics.
+Cette section détaille le cadre expérimental utilisé pour évaluer le cadre MOISE+MARL.% Nous avons adapté des outils existants pour mettre en œuvre notre approche. Nous présentons ensuite les environnements utilisés, les algorithmes MARL, les spécifications organisationnelles et les mesures d'évaluation.
 
-\subsection{Implementing MOISE+MARL}
+\subsection{Mise en œuvre de MOISE+MARL}
 
-We have developed an implementation of the MOISE+MARL framework called \textquote{MMA}~\hyperref[fn:github]{\footnotemark[1]} (MOISE+MARL API), which is a Python API that integrates all theoretical sets and relations to minimize user interactions. MMA uses an Object-oriented approach, structuring the $\mathcal{M}OISE^+$ model as nested data classes, with the "Moise" class at the root, enabling users to define organizational specifications, such as roles, goals, and permissions.
+Nous avons développé une implémentation du cadre MOISE+MARL appelée \textquote{MMA}~\hyperref[fn:github]{\footnotemark[1]} (API MOISE+MARL), qui est une API Python intégrant tous les ensembles et relations théoriques afin de minimiser les interactions avec l'utilisateur. MMA utilise une approche orientée objet, structurant le modèle $\mathcal{M}OISE^+$ en classes de données imbriquées, avec la classe « Moise » à la racine, permettant aux utilisateurs de définir des spécifications organisationnelles, telles que les rôles, les objectifs et les autorisations.
 
-To support Dec-POMDP environments, we utilized the \textit{PettingZoo} library \cite{terry2020pettingzoo}, which provides a standard API for multi-agent systems and ensures interoperability across various environments, similar to the Gymnasium framework \cite{kwiatkowski2024}. MMA incorporates a dictionary for observation/action label mapping ($l$), which users can customize, and it also supports Trajectory Patterns (TPs) to facilitate pattern definition and matching.
+Pour prendre en charge les environnements Dec-POMDP, nous avons utilisé la bibliothèque \textit{PettingZoo} \cite{terry2020pettingzoo}, qui fournit une API standard pour les systèmes multi-agents et garantit l'interopérabilité entre différents environnements, à l'instar du framework Gymnasium \cite{kwiatkowski2024}. MMA intègre un dictionnaire pour le mappage des étiquettes d'observation/action ($l$), que les utilisateurs peuvent personnaliser, et prend également en charge les modèles de trajectoire (TP) pour faciliter la définition et la correspondance des modèles.
 
-Each type of constraint guide, like $rag$, $rrg$, and $grg$, is implemented as a separate class. Users can define these guides with custom functions or JSON rules; for example, $rag$ can be instantiated by associating a $\langle \text{TP, last observation} \rangle$ pair with expected actions, while $grg$ can apply bonuses based on specific TPs. The global "MMA" class integrates these guides with user-defined relations, such as linking an agent to a role ($ar$) or associating a role with $rrg$ and $rag$, incorporating the organizational specifications defined in the $\mathcal{M}OISE^+$ structure.
+Chaque type de guide de contrainte, comme $rag$, $rrg$ et $grg$, est implémenté dans une classe distincte. Les utilisateurs peuvent définir ces guides à l'aide de fonctions personnalisées ou de règles JSON ; par exemple, $rag$ peut être instancié en associant une paire $\langle \text{TP, dernière observation} \rangle$ aux actions attendues, tandis que $grg$ peut appliquer des bonus en fonction de TP spécifiques. La classe globale « MMA » intègre ces guides avec des relations définies par l'utilisateur, telles que la liaison d'un agent à un rôle ($ar$) ou l'association d'un rôle à $rrg$ et $rag$, en incorporant les spécifications organisationnelles définies dans la structure $\mathcal{M}OISE^+$.
 
-Once set up, the MMA object is used to encapsulate the environment with a \textit{PettingZoo} wrapper. This wrapper applies action masks and modifies rewards at each step, ensuring that agents adhere to the organizational specifications throughout training. MMA also integrates \textit{MARLlib} \cite{hu2021marlib}, which provides access to state-of-the-art MARL algorithms, enabling training to be run on a high-performance computing cluster.
+Une fois configuré, l'objet MMA est utilisé pour encapsuler l'environnement avec un wrapper \textit{PettingZoo}. Ce wrapper applique des masques d'action et modifie les récompenses à chaque étape, garantissant que les agents respectent les spécifications organisationnelles tout au long de la formation. MMA intègre également \textit{MARLlib} \cite{hu2021marlib}, qui donne accès à des algorithmes MARL de pointe, permettant ainsi d'exécuter l'entraînement sur un cluster informatique haute performance.
 
-After training, the TEMM method is employed, using manually optimized hyperparameters to infer implicit roles and goals through hierarchical clustering and K-means. This analysis generates visual outputs, such as dendrograms for roles and joint-observation transition graphs for goals. The resulting implicit roles and goals can be exported as JSON trajectories, providing a structured view of the inferred organizational behaviors.
+Après l'entraînement, la méthode TEMM est utilisée, en utilisant des hyperparamètres optimisés manuellement pour déduire les rôles et les objectifs implicites grâce à un regroupement hiérarchique et à la méthode K-means. Cette analyse génère des résultats visuels, tels que des dendrogrammes pour les rôles et des graphiques de transition d'observation conjointe pour les objectifs. Les rôles et les objectifs implicites qui en résultent peuvent être exportés sous forme de trajectoires JSON, offrant une vue structurée des comportements organisationnels déduits.
 
 
-\subsection{Environments used}
+\subsection{Environnements utilisés}
 
-We test MOISE+MARL in four different MARL environments, each modeled as a Dec-POMDP simulation scenario. These environments were selected for their diversity in terms of collaboration and resource management. Here is a description of each:
+Nous testons MOISE+MARL dans quatre environnements MARL différents, chacun modélisé comme un scénario de simulation Dec-POMDP. Ces environnements ont été sélectionnés pour leur diversité en termes de collaboration et de gestion des ressources. En voici une description :
 
 \begin{itemize}
-% \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
+    % \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
 
-    \item \textbf{Predator-Prey}: A classic environment where several predators must cooperate to capture prey. This environment tests the agents' ability to coordinate their actions to achieve a collective goal\cite{lowe2017multi}
+    \item \textbf{Prédateur-Proie} : un environnement classique dans lequel plusieurs prédateurs doivent coopérer pour capturer une proie. Cet environnement teste la capacité des agents à coordonner leurs actions pour atteindre un objectif collectif\cite{lowe2017multi}
 
-    \item \textbf{Overcooked-AI}: A team cooking game where several agents must collaborate to prepare and serve dishes in increasingly complex kitchens\cite{overcookedai}. Agents must manage tasks such as chopping, cooking, assembling, and serving ingredients while optimizing their movements and avoiding obstacles. This environment is ideal for testing coordination and task allocation in dynamic, highly interdependent scenarios, where clear roles (such as "chef," "assistant," "server") can be defined via organizational specifications
-    
-    \item \textbf{Warehouse Management}: A proposed environment, where agents must manage a warehouse by coordinating resource deliveries to demand points. Roles and missions here influence agent specialization in specific tasks (transportation of products, inventory management)
-    
-    \item \textbf{Cyber-Defense Simulation}: A complex environment si-mulating network defense against cyberattacks. Agents must identify and counter threats while adhering to strict security rules, thus testing the safety of trained agents\cite{Maxwell2021}.
-% \end{enumerate*}
+    \item \textbf{Overcooked-AI} : Jeu de cuisine en équipe où plusieurs agents doivent collaborer pour préparer et servir des plats dans des cuisines de plus en plus complexes\cite{overcookedai}. Les agents doivent gérer des tâches telles que la découpe, la cuisson, l'assemblage et le service des ingrédients tout en optimisant leurs mouvements et en évitant les obstacles. Cet environnement est idéal pour tester la coordination et la répartition des tâches dans des scénarios dynamiques et hautement interdépendants, où des rôles clairs (tels que « chef », « assistant », « serveur ») peuvent être définis via des spécifications organisationnelles
+
+
+
+    \item \textbf{Gestion d'entrepôt} : un environnement proposé, dans lequel les agents doivent gérer un entrepôt en coordonnant les livraisons de ressources vers les points de demande. Les rôles et les missions influencent ici la spécialisation des agents dans des tâches spécifiques (transport de produits, gestion des stocks).
+
+
+
+    \item \textbf{Simulation de cyberdéfense} : environnement complexe simulant la défense d'un réseau contre des cyberattaques. Les agents doivent identifier et contrer les menaces tout en respectant des règles de sécurité strictes, ce qui permet de tester la sécurité des agents formés\cite{Maxwell2021}.
+          % \end{enumerate*}
 \end{itemize}
 
-These environments are encapsulable in the PettingZoo API, enabling seamless integration with our MOISE+MARL implementation and facilitating the application of organizational specifications.
+Ces environnements peuvent être encapsulés dans l'API PettingZoo, ce qui permet une intégration transparente avec notre implémentation MOISE+MARL et facilite l'application des spécifications organisationnelles.
 
-\subsection{MARL algorithms used}
+\subsection{Algorithmes MARL utilisés}
 
-We evaluated our framework with several MARL algorithms :
+Nous avons évalué notre cadre à l'aide de plusieurs algorithmes MARL :
 %
 \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
 
-    \item \textbf{MADDPG (Multi-Agent Deep Deterministic Policy Gradient)}~\cite{lowe2017multi}: A centralized learning, decentralized execution algorithm, allowing each agent to have a deterministic policy while using global information during training
-    
-    \item \textbf{MAPPO (Multi-Agent Proximal Policy Optimization)} \cite{yu2021mappo}: An adapted version of PPO for MAS, optimized for stable joint policy convergence in complex scenarios
-    
-    \item \textbf{Q-Mix}~\cite{rashid2018qmix}: A Q-value-based algorithm that learns to combine individual agents' Q-values into a joint value to optimize cooperation
-    
-    \item \textbf{COMA (Counterfactual Multi-Agent) }~\cite{foerster2018counterfactual} An actor-critic algorithm able to estimate the impact of an individual agent's actions on the team's overall reward.
+    \item \textbf{MADDPG (Multi-Agent Deep Deterministic Policy Gradient)}~\cite{lowe2017multi}: Un algorithme d'apprentissage centralisé et d'exécution décentralisée, permettant à chaque agent d'avoir une politique déterministe tout en utilisant des informations globales pendant l'entraînement
+
+
+
+    \item \textbf{MAPPO (Multi-Agent Proximal Policy Optimization)} \cite{yu2021mappo} : une version adaptée du PPO pour les MAS, optimisée pour une convergence stable des politiques conjointes dans des scénarios complexes
+
+
+
+    \item \textbf{Q-Mix}~\cite{rashid2018qmix} : un algorithme basé sur la valeur Q qui apprend à combiner les valeurs Q des agents individuels en une valeur conjointe afin d'optimiser la coopération
+
+
+
+    \item \textbf{COMA (Counterfactual Multi-Agent) }~\cite{foerster2018counterfactual} Un algorithme acteur-critique capable d'estimer l'impact des actions d'un agent individuel sur la récompense globale de l'équipe.
 \end{enumerate*}
 
-\subsection{Organizational specifications}
+\subsection{Spécifications organisationnelles}
 
-For each environment, we defined a set of organizational specifications. These specifications include roles, missions, as well as permissions and obligations. Here, we give an informal description of these~\hyperref[fn:github]{\footnotemark[1]}:
+Pour chaque environnement, nous avons défini un ensemble de spécifications organisationnelles. Ces spécifications comprennent les rôles, les missions, ainsi que les autorisations et les obligations. Nous en donnons ici une description informelle~\hyperref[fn:github]{\footnotemark[1]} :
 %
 % \begin{itemize}
 \begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
 
-    \item \textbf{Predator-Prey}: Predator and prey roles are defined, with each predator having specific goals such as "capture the prey" or "block escape routes."
+    \item \textbf{Prédateur-Proie} : Les rôles du prédateur et de la proie sont définis, chaque prédateur ayant des objectifs spécifiques tels que « capturer la proie » ou « bloquer les voies d'évasion ».
 
-    \item \textbf{Overcooked-AI}: Agents adopt three main roles: chef, assistant, and server. The Chef is responsible for cooking and assembling dishes, the Assistant handles ingredient chopping and supply, and the Server is in charge of delivering dishes to customers. Missions primarily involve preparing and serving a certain number of dishes within a given time.
-    
-    \item \textbf{Warehouse Management}: Agents adopt roles such as "transporter" and "inventory manager," with missions related to managing logistics flows and optimized delivery.
-    
-    \item \textbf{Cyber-Defense Simulation}: Agents have network defender roles, each with obligations such as intrusion detection or protecting specific drone swarm ad hoc networks.
+    \item \textbf{Overcooked-AI} : Les agents adoptent trois rôles principaux : chef, assistant et serveur. Le chef est chargé de cuisiner et de dresser les plats, l'assistant s'occupe de couper les ingrédients et de les approvisionner, et le serveur est chargé de servir les plats aux clients. Les missions consistent principalement à préparer et à servir un certain nombre de plats dans un temps donné.
+
+
+
+    \item \textbf{Gestion d'entrepôt} : les agents adoptent des rôles tels que « transporteur » et « gestionnaire des stocks », avec des missions liées à la gestion des flux logistiques et à l'optimisation des livraisons.
+
+
+
+    \item \textbf{Simulation de cyberdéfense} : les agents ont des rôles de défenseurs du réseau, chacun ayant des obligations telles que la détection des intrusions ou la protection de réseaux ad hoc spécifiques de essaims de drones.
 \end{enumerate*}
 % \end{itemize}
 
-\subsection{Computing resources and hyperparameters}
+\subsection{Ressources informatiques et hyperparamètres}
 
-All experiments were conducted on an academic high-performance computing cluster, utilizing various configurations of GPU nodes. Specifically, we employed nodes equipped with NVIDIA A100 and V100 GPUs, and AMD MI210 GPUs. Each algorithm-environment combination was executed on 5 parallel instances to ensure robust and consistent results.
+Toutes les expériences ont été menées sur un cluster informatique académique haute performance, utilisant différentes configurations de nœuds GPU. Plus précisément, nous avons utilisé des nœuds équipés de GPU NVIDIA A100 et V100, ainsi que de GPU AMD MI210. Chaque combinaison algorithme-environnement a été exécutée sur 5 instances parallèles afin de garantir des résultats robustes et cohérents.
 %
-Hyperparameters~\hyperref[fn:github]{\footnotemark[1]} for each algorithm, including learning rates, discount factors, and exploration rates, were either retrieved from MARLlib data banks or optimized for each environment through a grid search using the \textit{Optuna} tool~\cite{akiba2019optuna}.
+Les hyperparamètres~\hyperref[fn:github]{\footnotemark[1]} pour chaque algorithme, y compris les taux d'apprentissage, les facteurs de réduction et les taux d'exploration, ont été soit extraits des banques de données MARLlib, soit optimisés pour chaque environnement à l'aide d'une recherche par grille à l'aide de l'outil \textit{Optuna}~\cite{akiba2019optuna}.
 
-\subsection{Evaluation metrics and protocol}
+\subsection{Métriques d'évaluation et protocole}
 
-To measure the policy effectiveness and the impact of organizational specifications, we defined the following metrics:
+Pour mesurer l'efficacité des politiques et l'impact des spécifications organisationnelles, nous avons défini les indicateurs suivants :
 %
 \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-% \begin{itemize}
-    \item \textbf{Cumulative Reward}: Measures policy effectiveness in achieving environment goals
-    \item \textbf{Reward Standard Deviation}: Reflects the stability of learned policies over episodes
-    \item \textbf{Convergence Rate}: Indicates the speed at which policies achieve stable performance
-    \item \textbf{Constraint Violation Rate}: Assesses policy adherence to organizational constraints, critical for safety
-    \item \textbf{Consistency Score}: Evaluates alignment between trained behaviors and organizational specifications
-    \item \textbf{Robustness Score}: Measures agents' ability to maintain performance under a series of challenging scenarios
-    \item \textbf{Organizational Fit Level}: Quantifies the organizational fit.
-% \end{itemize}
+    % \begin{itemize}
+    \item \textbf{Récompense cumulative} : mesure l'efficacité des politiques dans la réalisation des objectifs environnementaux
+    \item \textbf{Écart type de la récompense} : reflète la stabilité des politiques apprises au fil des épisodes
+    \item \textbf{Taux de convergence} : indique la vitesse à laquelle les politiques atteignent des performances stables
+    \item \textbf{Taux de violation des contraintes} : Évalue le respect des contraintes organisationnelles par les politiques, ce qui est essentiel pour la sécurité
+    \item \textbf{Score de cohérence} : Évalue l'alignement entre les comportements appris et les spécifications organisationnelles
+    \item \textbf{Score de robustesse} : mesure la capacité des agents à maintenir leurs performances dans une série de scénarios difficiles
+    \item \textbf{Niveau d'adéquation organisationnelle} : quantifie l'adéquation organisationnelle.
+    % \end{itemize}
 \end{enumerate*}
 
 \
 
-\noindent Our protocol compares the \textit{Reference Baseline} (RB) without organizational constraints and the \textit{Organizationally Constrained Baseline} (OB) using MOISE+MARL.
+\noindent Notre protocole compare la \textit{référence de base} (RB) sans contraintes organisationnelles et la \textit{référence avec contraintes organisationnelles} (OB) à l'aide de MOISE+MARL.
 
-We use the MMA software to establish the RB with no organizational specifications. For each environment, we train agents with each algorithm until rewards converge or a maximum episode limit is reached. We record metrics and select the algorithm that achieves the highest Cumulative Reward as the RB (control scenario without constraints).
+Nous utilisons le logiciel MMA pour établir la RB sans spécifications organisationnelles. Pour chaque environnement, nous formons des agents avec chaque algorithme jusqu'à ce que les récompenses convergent ou qu'une limite maximale d'épisodes soit atteinte. Nous enregistrons les mesures et sélectionnons l'algorithme qui obtient la récompense cumulative la plus élevée comme RB (scénario de contrôle sans contraintes).
 %
-For the OB, we reset environments and agents, applying pre-defined organizational specifications using MMA so that each agent is assigned a role. We train these agents with the RB's highest-performing algorithm, again until convergence or the episode limit. After training, we compute all metrics, providing a scenario with organizational constraints as the OB.
+Pour l'OB, nous réinitialisons les environnements et les agents, en appliquant des spécifications organisationnelles prédéfinies à l'aide de MMA afin que chaque agent se voie attribuer un rôle. Nous formons ces agents avec l'algorithme le plus performant de la RB, là encore jusqu'à convergence ou jusqu'à la limite d'épisodes. Après la formation, nous calculons toutes les mesures, fournissant un scénario avec des contraintes organisationnelles comme OB.
 
-By comparing the RB and OB, we can validate the impact of MOISE+MARL on organizational fit. First, we check if the agents' behaviors align with the specified roles in the OB. We analyze manually or rely on reliable metrics like Reward Standard Deviation, Convergence Rate, and Robustness Score. If agents behave in ways that align with their roles, then we favor the idea that MOISE+MARL has influenced organizational fit.
+En comparant le RB et l'OB, nous pouvons valider l'impact de MOISE+MARL sur l'adéquation organisationnelle. Tout d'abord, nous vérifions si les comportements des agents correspondent aux rôles spécifiés dans l'OB. Nous analysons manuellement ou nous nous appuyons sur des mesures fiables telles que l'écart type de la récompense, le taux de convergence et le score de robustesse. Si les agents se comportent de manière conforme à leurs rôles, nous privilégions l'idée que MOISE+MARL a influencé l'adéquation organisationnelle.
 %
-Therefore, we should observe differences in the Organizational Fit Level metric between RB and OB. We can also push forward a correlation between fully/freely constraining roles and higher/lower Organizational Fit Level. If all of these observations hold, then the Organizational Fit Level may quantify the organizational fit, and the Consistency Score metric may be used to validate the effectiveness of MOISE+MARL in controlling organizational fit when roles are applied.
+Par conséquent, nous devrions observer des différences dans la métrique du niveau d'adéquation organisationnelle entre le RB et l'OB. Nous pouvons également mettre en avant une corrélation entre les rôles entièrement/librement contraints et un niveau d'adéquation organisationnelle plus élevé/plus faible. Si toutes ces observations se confirment, le niveau d'adéquation organisationnelle peut alors quantifier l'adéquation organisationnelle, et la métrique du score de cohérence peut être utilisée pour valider l'efficacité de MOISE+MARL dans le contrôle de l'adéquation organisationnelle lorsque des rôles sont appliqués.
 
-Finally, we also check the relevance of the $\mathcal{M}OISE^+$ by comparing MOISE+MARL with its AGR equivalent called AGR+MARL which only considers roles and  does not explicitly include goals.
+Enfin, nous vérifions également la pertinence du $\mathcal{M}OISE^+$ en comparant MOISE+MARL avec son équivalent AGR appelé AGR+MARL, qui ne tient compte que des rôles et  n'inclut pas explicitement les objectifs.
 
-\section{Results}
+\section{Résultats}
 \label{sec:results}
 
-This section presents and analyzes the experimental results from applying MOISE+MARL across the environments.%, highlighting key metrics and comparisons with AGR+MARL.
+Cette section présente et analyse les résultats expérimentaux obtenus en appliquant MOISE+MARL dans différents environnements, en mettant en évidence les indicateurs clés et les comparaisons avec AGR+MARL.
 
 \begin{table*}[h!]
     \centering
-    \caption{Detailed results for each environment and favored algorithm under both RB and OB.}
+    \caption{Résultats détaillés pour chaque environnement et algorithme privilégié sous RB et OB.}
     \label{tab:detailed_results}
     \small
     \renewcommand{\arraystretch}{1.2}
     \begin{tabular}{p{3.5cm}p{1.5cm}p{1.cm}p{1.3cm}p{1cm}p{1.3cm}p{1.3cm}p{1.2cm}p{1.2cm}p{1cm}}
         \hline
-        \textbf{Env.} & \textbf{Alg.} & \textbf{Org. Spec.} & \textbf{Cum. Rew.} & \textbf{STD} & \textbf{Conv. Rate} & \textbf{Viol. Rate} & \textbf{Cons. Score} & \textbf{Rob. Score} & \textbf{Org. Fit Lvl} \\ \hline
-        Predator-Prey & MADDPG &  & 200.1 & 21.5 & 0.65 & 12.3\% & - & 0.65 & 0.43 \\
-        Predator-Prey & MADDPG & Yes & 245.8 & 15.2 & 0.85 & .0\% & 0.81 & 0.83 & 0.87 \\
-        Overcooked-AI & MAPPO &  & 348.2 & 15.6 & 0.75 & 7.1\% & - & 0.71 & 0.48 \\
-        Overcooked-AI & MAPPO & Yes & 391.2 & 10.4 & 0.92 & .0\% & 0.89 & 0.89 & 0.91 \\
-        Warehouse Management & Q-Mix &  & 257.4 & 18.9 & 0.74 & 7.8\% & - & 0.68 & 0.50 \\
-        Warehouse Management & Q-Mix & Yes & 307.1 & 13.8 & 0.88 & .0\% & 0.88 & 0.86 & 0.90 \\
-        Cyber-Defense & COMA &  & 162.4 & 17.3 & 0.70 & 12.2\% & - & 0.67 & 0.45 \\
-        Cyber-Defense & COMA & Yes & 188.9 & 11.2 & 0.86 & .0\% & 0.76 & 0.80 & 0.83 \\ \hline
+        \textbf{Env.}               & \textbf{Alg.} & \textbf{Org. Spec.} & \textbf{Cum. Rew.} & \textbf{STD} & \textbf{Conv. Rate} & \textbf{Viol. Rate} & \textbf{Cons. Score} & \textbf{Score de vol} & \textbf{Niveau d'adéquation de l'organisation} \\ \hline
+        Prédateur-proie             & MADDPG        &                     & 200,1              & 21,5         & 0,65                & 12,3\%              & -                    & 0,65                  & 0,43                                           \\
+        Prédateur-Proie             & MADDPG        & Oui                 & 245,8              & 15,2         & 0,85                & 0,0\%               & 0,81                 & 0,83                  & 0,87                                           \\
+        Overcooked-AI               & MAPPO         &                     & 348,2              & 15,6         & 0,75                & 7,1\%               & -                    & 0,71                  & 0,48                                           \\
+        Overcooked-AI               & MAPPO         & Oui                 & 391,2              & 10,4         & 0,92                & 0,0\%               & 0,89                 & 0,89                  & 0,91                                           \\
+        Gestion d'entrepôt          & Q-Mix         &                     & 257,4              & 18,9         & 0,74                & 7,8\%               & -                    & 0,68                  & 0,50                                           \\
+        Gestion d'entrepôt et Q-Mix & Oui           & 307,1               & 13,8               & 0,88         & 0,0\%               & 0,88                & 0,86                 & 0,90                                                                   \\
+        Cyberdéfense                & COMA          &                     & 162,4              & 17,3         & 0,70                & 12,2\%              & -                    & 0,67                  & 0,45                                           \\
+        Cyberdéfense                & COMA          & Oui                 & 188,9              & 11,2         & 0,86                & 0,0\%               & 0,76                 & 0,80                  & 0,83                                           \\ \hline
     \end{tabular}
 \end{table*}
 
-\subsection{Quantitative organizational fit and consistency}
+\subsection{Adéquation et cohérence organisationnelles quantitatives}
 
-\autoref{tab:detailed_results} summarizes the performance metrics for each environment and the most efficient algorithm under both the RB and OB. Across all environments, the organizational fit metric is significantly higher under the OB, confirming that MOISE+MARL effectively aligns agent behaviors with organizational specifications.
+\autoref{tab:detailed_results} résume les mesures de performance pour chaque environnement et l'algorithme le plus efficace dans les deux cas, RB et OB. Dans tous les environnements, la mesure de l'adéquation organisationnelle est nettement plus élevée dans le cas OB, ce qui confirme que MOISE+MARL aligne efficacement les comportements des agents sur les spécifications organisationnelles.
 
-For example, in the \textbf{Predator-Prey} environment with \textbf{MADDPG}, agents in the OB configuration achieved an organizational fit level of 0.87, which represents a 44\% increase compared to the RB (0.43). Similarly, in the \textbf{Overcooked-AI} environment, \textbf{MAPPO} under the OB reached an organizational fit of 0.91 (an increase of 89\% over the RB's 0.48). These improvements are mirrored in the \textbf{Warehouse Management} environment with \textbf{Q-Mix}, where the organizational fit rose from 0.50 in the RB to 0.90 in the OB, suggesting a MOISE+MARL's consistent effectiveness.
+Par exemple, dans l'environnement \textbf{Predator-Prey} avec \textbf{MADDPG}, les agents dans la configuration OB ont atteint un niveau d'adéquation organisationnelle de 0,87, ce qui représente une augmentation de 44 % par rapport au RB (0,43). De même, dans l'environnement \textbf{Overcooked-AI}, \textbf{MAPPO} sous OB a atteint une adéquation organisationnelle de 0,91 (soit une augmentation de 89 % par rapport à 0,48 sous RB). Ces améliorations se reflètent dans l'environnement \textbf{Warehouse Management} avec \textbf{Q-Mix}, où l'adéquation organisationnelle est passée de 0,50 dans le RB à 0,90 dans l'OB, ce qui suggère une efficacité constante de MOISE+MARL.
 
-In general, agents constrained with organizational specifications show a lower reward deviation and a higher convergence rate that suggests an impact on their behavior. We manually observed agents' interactions in visualizable environments such as Predator-Prey and verified that trained agents' behaviors do align with the expected behavior of a structural and functional implicit organization.
+En général, les agents soumis à des contraintes organisationnelles présentent un écart de récompense plus faible et un taux de convergence plus élevé, ce qui suggère un impact sur leur comportement. Nous avons observé manuellement les interactions des agents dans des environnements visualisables tels que Predator-Prey et avons vérifié que les comportements des agents formés correspondent bien au comportement attendu d'une organisation implicite structurelle et fonctionnelle.
 %
-Indeed, the significant variation depending on the application of organizational specifications on agents, and the manually verified alignment of agents with roles suggests that organisational fit level correlates with the organizational fit.
+En effet, la variation significative en fonction de l'application des spécifications organisationnelles aux agents et l'alignement manuellement vérifié des agents avec leurs rôles suggèrent que le niveau d'adéquation organisationnelle est corrélé à l'adéquation organisationnelle.
 
-Considering organizational fit level reliable across all environments, the \textbf{consistency score} also shows important values with a minimal value of 0.76 for the \textbf{Cyber-Defense} environment. This suggests that despite a noisy environment that introduces some disturbance in agents' behavior, the inferred organizational specifications are still close to applied ones.
+Si l'on considère que le niveau d'adéquation organisationnelle est fiable dans tous les environnements, le \textbf{score de cohérence} affiche également des valeurs importantes, avec une valeur minimale de 0,76 pour l'environnement \textbf{Cyber-Defense}. Cela suggère que malgré un environnement bruyant qui introduit certaines perturbations dans le comportement des agents, les spécifications organisationnelles déduites restent proches de celles appliquées.
 
-\subsection{Performance and stability across algorithms}
+\subsection{Performances et stabilité des algorithmes}
 
-The results indicate that policy-based and actor-critic algorithms like \textbf{MADDPG} and \textbf{MAPPO} benefit substantially from the MOISE+ MARL framework, particularly in terms of consistency and stability. For example, \textbf{MAPPO} in the \textbf{Overcooked-AI} environment saw a reward standard deviation reduction from 15.6 (RB) to 10.4 (OB), reflecting a more stable policy with less behavioral fluctuation. \textbf{MADDPG} in \textbf{Predator-Prey} also showed a similar pattern, with a standard deviation drop from 21.5 in the RB to 15.2 in the OB, indicating increased reliability.
+Les résultats indiquent que les algorithmes basés sur des politiques et sur l'acteur-critique tels que \textbf{MADDPG} et \textbf{MAPPO} tirent largement parti du cadre MOISE+ MARL, notamment en termes de cohérence et de stabilité. Par exemple, \textbf{MAPPO} dans l'environnement \textbf{Overcooked-AI} a vu son écart type de récompense passer de 15,6 (RB) à 10,4 (OB), reflétant une politique plus stable avec moins de fluctuations comportementales. \textbf{MADDPG} dans \textbf{Predator-Prey} a également montré une tendance similaire, avec une baisse de l'écart type de 21,5 dans le RB à 15,2 dans l'OB, indiquant une fiabilité accrue.
 
-In contrast, value-based algorithms like \textbf{Q-Mix} maintained high performance in cumulative reward but displayed greater variability in consistency. For instance, in \textbf{Warehouse Management}, \textbf{Q-Mix} achieved a reward standard deviation of 13.8 in the OB, a notable improvement over 18.9 in the RB but still higher than the stability observed in policy-based algorithms. This suggests that while \textbf{Q-Mix} is effective for achieving task goals, it may require further tuning for roles with MOISE+MARL to enhance consistency.
+En revanche, les algorithmes basés sur la valeur, tels que \textbf{Q-Mix}, ont maintenu des performances élevées en termes de récompense cumulative, mais ont affiché une plus grande variabilité en termes de cohérence. Par exemple, dans \textbf{Warehouse Management}, \textbf{Q-Mix} a atteint un écart type de récompense de 13,8 dans l'OB, une amélioration notable par rapport à 18,9 dans le RB, mais toujours supérieure à la stabilité observée dans les algorithmes basés sur des politiques. Cela suggère que si \textbf{Q-Mix} est efficace pour atteindre les objectifs des tâches, il peut nécessiter un ajustement supplémentaire pour les rôles avec MOISE+MARL afin d'améliorer la cohérence.
 
-\subsection{Impact of organizational constraints on policy convergence, robustness and violation rates}
+\subsection{Impact des contraintes organisationnelles sur la convergence des politiques, la robustesse et les taux de violation}
 
-Applying organizational constraints resulted in faster convergence rates across all environments. In the \textbf{Cyber-Defense} environment, \textbf{COMA} with MOISE+MARL converged at a rate of 0.86, compared to 0.70 in the RB. Similar trends were observed in the \textbf{Warehouse Management} environment with \textbf{Q-Mix}, which showed an improvement from 0.74 in the RB to 0.88 in the OB. This expedited convergence can be attributed to the structured guidance of roles and missions, which narrows the policy search space.
+L'application de contraintes organisationnelles a entraîné des taux de convergence plus rapides dans tous les environnements. Dans l'environnement \textbf{Cyber-Defense}, \textbf{COMA} avec MOISE+MARL a convergé à un taux de 0,86, contre 0,70 dans le RB. Des tendances similaires ont été observées dans l'environnement \textbf{Gestion d'entrepôt} avec \textbf{Q-Mix}, qui a montré une amélioration de 0,74 dans le RB à 0,88 dans l'OB. Cette convergence accélérée peut être attribuée à l'orientation structurée des rôles et des missions, qui réduit l'espace de recherche des politiques.
 
-In addition to the presented results where constraint hardness is set to 1, we observed that constraint violation rates were consistently higher when organizational constraints were defined with a lower constraint hardness. In \textbf{Overcooked-AI}, \textbf{MAPPO} recorded a null violation rate with a constraint hardness of 1, compared to 7.1\% with a constraint hardness of 0. Similarly, in \textbf{Warehouse Management}, \textbf{Q-Mix} reduced the violation rate from 7.8\% to zero as constraint hardness increased. This further supports the framework's effectiveness in enhancing adherence to desired behaviors.
+Outre les résultats présentés où la dureté des contraintes est fixée à 1, nous avons observé que les taux de violation des contraintes étaient systématiquement plus élevés lorsque les contraintes organisationnelles étaient définies avec une dureté plus faible. Dans \textbf{Overcooked-AI}, \textbf{MAPPO} a enregistré un taux de violation nul avec une dureté des contraintes de 1, contre 7,1 % avec une dureté de 0. De même, dans \textbf{Warehouse Management}, \textbf{Q-Mix} a réduit le taux de violation de 7,8 % à zéro à mesure que la rigidité des contraintes augmentait. Cela confirme encore l'efficacité du cadre pour améliorer le respect des comportements souhaités.
 
-Additionally, we observed a consistent improvement in robustness when organizational specifications were applied to agents. For instance, \textbf{MADDPG} in \textbf{Predator-Prey} and \textbf{MAPPO} in \textbf{Overcooked-AI} achieved high consistency scores of 0.81 and 0.89, respectively, indicating that agents closely followed the inferred roles. Robustness also improved, with \textbf{MAPPO} in \textbf{Overcooked-AI} achieving a robustness score of 0.89, up from 0.71 in the RB, underscoring the framework's impact on agents' resilience to perturbations.
+De plus, nous avons observé une amélioration constante de la robustesse lorsque des spécifications organisationnelles ont été appliquées aux agents. Par exemple, \textbf{MADDPG} dans \textbf{Predator-Prey} et \textbf{MAPPO} dans \textbf{Overcooked-AI} ont obtenu des scores de cohérence élevés de 0,81 et 0,89, respectivement, indiquant que les agents ont suivi de près les rôles déduits. La robustesse s'est également améliorée, \textbf{MAPPO} dans \textbf{Overcooked-AI} obtenant un score de robustesse de 0,89, contre 0,71 dans le RB, ce qui souligne l'impact du cadre sur la résilience des agents face aux perturbations.
 
-However, one can point out a potential bias: organizational specifications were specifically designed to encompass all observations, avoiding non-handled new situations.
+Cependant, on peut souligner un biais potentiel : les spécifications organisationnelles ont été spécialement conçues pour englober toutes les observations, en évitant les nouvelles situations non gérées.
 
 
-\subsection{Comparison between MOISE+MARL and AGR+MARL}
+\subsection{Comparaison entre MOISE+MARL et AGR+MARL}
 
 \begin{table}[h!]
     \centering
-    \caption{Performance comparison between MOISE+MARL and AGR+MARL.}
+    \caption{Comparaison des performances entre MOISE+MARL et AGR+MARL.}
     \label{tab:ablation_study}
     \small
     \renewcommand{\arraystretch}{1.1}
     \begin{tabular}{p{2cm}p{0.5cm}p{0.6cm}p{1.3cm}p{0.6cm}p{1.3cm}}
         \hline
-        \textbf{Framework} & \textbf{Env.} & \textbf{Conv. Rate} & \textbf{Robustness Score} & \textbf{Org. Fit} & \textbf{Cumulative Reward} \\ \hline
-        MOISE+MARL & PP & 0.85 & 0.83 & 0.87 & 245.8 \\
-        AGR+MARL & PP & 0.75 & 0.69 & 0.56 & 208.4 \\
-        MOISE+MARL & OA & 0.92 & 0.89 & 0.91 & 391.2 \\
-        AGR+MARL & OA & 0.82 & 0.75 & 0.58 & 348.9 \\
-        MOISE+MARL & WM & 0.88 & 0.86 & 0.90 & 307.1 \\
-        AGR+MARL & WM & 0.76 & 0.72 & 0.61 & 278.6 \\ \hline
+        \textbf{Cadre} & \textbf{Env.} & \textbf{Taux de conversion} & \textbf{Score de robustesse} & \textbf{Adéquation organisationnelle} & \textbf{Récompense cumulative} \\ \hline
+        MOISE+MARL     & PP            & 0,85                        & 0,83                         & 0,87                                  & 245,8                          \\
+        AGR+MARL       & PP            & 0,75                        & 0,69                         & 0,56                                  & 208,4                          \\
+        MOISE+MARL     & OA            & 0,92                        & 0,89                         & 0,91                                  & 391,2                          \\
+        AGR+MARL       & OA            & 0,82                        & 0,75                         & 0,58                                  & 348,9                          \\
+        MOISE+MARL     & WM            & 0,88                        & 0,86                         & 0,90                                  & 307,1                          \\
+        AGR+MARL       & WM            & 0,76                        & 0,72                         & 0,61                                  & 278,6                          \\ \hline
     \end{tabular}
 \end{table}
 
-\noindent \autoref{tab:ablation_study} highlights the impact of intermediary goals within MOISE+ MARL. In \textbf{Overcooked-AI}, \textbf{MAPPO} under MOISE+MARL achieved a cumulative reward of 391.2, with an organizational fit of 0.91—33\% higher than AGR+MARL's 0.58. Similarly, in \textbf{Warehouse Management}, \textbf{Q-Mix} under MOISE+MARL attained a cumulative reward of 307.1, an increase of nearly 10\% over AGR+MARL's 278.6, with a higher robustness score (0.86 vs. 0.72).
+\noindent \autoref{tab:ablation_study} met en évidence l'impact des objectifs intermédiaires dans MOISE+ MARL. Dans \textbf{Overcooked-AI}, \textbf{MAPPO} sous MOISE+MARL a obtenu une récompense cumulative de 391,2, avec une adéquation organisationnelle de 0,91, soit 33 % de plus que les 0,58 de AGR+MARL. De même, dans \textbf{Warehouse Management}, \textbf{Q-Mix} sous MOISE+MARL a obtenu une récompense cumulative de 307,1, soit une augmentation de près de 10 % par rapport aux 278,6 de AGR+MARL, avec un score de robustesse plus élevé (0,86 contre 0,72).
 
-Overall, these results underscore the importance of intermediary goals in fostering more stable, goal-oriented behaviors. By facilitating a clearer path to the global goal, MOISE+MARL consistently outperforms AGR+MARL in achieving higher rewards, robustness, and organizational fit across Predator-Prey (PP), Warehouse Management (WM), and Overcooked-AI (OA).
-Finally, we analyzed the impact of increasing the number of organizational constraints on training time. Preliminary results suggest a nearly linear growth in training duration as the number of constraints increases~\footnotemark[1].
+Dans l'ensemble, ces résultats soulignent l'importance des objectifs intermédiaires pour favoriser des comportements plus stables et axés sur les objectifs. En facilitant la voie vers l'objectif global, MOISE+MARL surpasse systématiquement AGR+MARL en termes de récompenses, de robustesse et d'adéquation organisationnelle dans les domaines Predator-Prey (PP), Warehouse Management (WM) et Overcooked-AI (OA).
+Enfin, nous avons analysé l'impact de l'augmentation du nombre de contraintes organisationnelles sur la durée de la formation. Les résultats préliminaires suggèrent une croissance presque linéaire de la durée de la formation à mesure que le nombre de contraintes augmente~\footnotemark[1].
 
-\section{Conclusion and future works}
+\section{Conclusion et travaux futurs}
 \label{sec:discussion_conclusion_future_work}
 
-The MOISE+MARL framework introduced in this paper aims to enhance control and explainability in MARL by incorporating organizational models that define explicit roles and missions for agents. Experimental results across several environments indicate that this framework helps agents adhere to expected behaviors while facilitating better policy convergence by constraining the policy search space. The results also show that agents trained with roles and goals exhibit behaviors closely resembling those determined via the framework, suggesting coherence between the application of organizational specifications and their expected effects.
+Le cadre MOISE+MARL présenté dans cet article vise à améliorer le contrôle et l'explicabilité dans MARL en intégrant des modèles organisationnels qui définissent des rôles et des missions explicites pour les agents. Les résultats expérimentaux obtenus dans plusieurs environnements indiquent que ce cadre aide les agents à adhérer aux comportements attendus tout en facilitant une meilleure convergence des politiques en limitant l'espace de recherche des politiques. Les résultats montrent également que les agents formés avec des rôles et des objectifs présentent des comportements très similaires à ceux déterminés via le cadre, ce qui suggère une cohérence entre l'application des spécifications organisationnelles et leurs effets attendus.
 
-However, the framework's reliance on predefined organizational specifications means it may struggle to adapt in highly dynamic or unstructured environments where agent roles and missions are less defined or evolve over time.
-Moreover, the computational overhead associated with enforcing organizational constraints and dynamically modifying rewards and actions may pose scalability challenges. Additionally, TEMM can be computationally intensive, which may hinder its applicability in real-time scenarios.
+Cependant, la dépendance du cadre à des spécifications organisationnelles prédéfinies signifie qu'il peut avoir du mal à s'adapter à des environnements très dynamiques ou non structurés où les rôles et les missions des agents sont moins définis ou évoluent au fil du temps.
+De plus, la charge informatique associée à l'application des contraintes organisationnelles et à la modification dynamique des récompenses et des actions peut poser des problèmes d'évolutivité. En outre, le TEMM peut être très gourmand en ressources informatiques, ce qui peut nuire à son applicabilité dans des scénarios en temps réel.
 
-We are currently pursuing three main directions:
+Nous poursuivons actuellement trois axes principaux :
 %
 % \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
 \begin{itemize}
-    \item Developing adaptive mechanisms that allow roles and missions to evolve dynamically during training, enabling agents to respond to changes in real-time
-    \item Exploring automated methods, such as Large Language Models, for generating organizational specifications based on observed agent behaviors to help users on defining these specifications manually
-    \item Improving the computational efficiency of TEMM or exploring alternative evaluation methods for real-world applications with larger agent populations.
+    \item Développer des mécanismes adaptatifs qui permettent aux rôles et aux missions d'évoluer de manière dynamique pendant la formation, afin que les agents puissent réagir aux changements en temps réel
+    \item Explorer des méthodes automatisées, telles que les modèles linguistiques à grande échelle, pour générer des spécifications organisationnelles basées sur les comportements observés des agents afin d'aider les utilisateurs à définir manuellement ces spécifications
+    \item Améliorer l'efficacité computationnelle du TEMM ou explorer d'autres méthodes d'évaluation pour des applications concrètes avec des populations d'agents plus importantes.
 \end{itemize}

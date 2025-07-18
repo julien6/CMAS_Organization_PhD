@@ -1,0 +1,332 @@
+% \usepackage{amsmath,amssymb,amsfonts}
+% \usepackage{algorithmic}
+% \usepackage{graphicx}
+% \usepackage[inline]{enumitem}
+% \usepackage{tabularx}
+% \usepackage{caption}
+% \usepackage[T2A,T1]{fontenc}
+% \usepackage[french]{babel}
+% \captionsetup{font=it}
+% \usepackage{ragged2e}
+% \usepackage{hyperref}
+% \usepackage{footmisc}
+% \usepackage{booktabs}
+% \usepackage{smartdiagram}
+% \usepackage{textcomp}
+% \usepackage{xcolor}
+% \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+%     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+% \usepackage{cite}
+
+% \usepackage{etoolbox}
+% \patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
+
+% \setlength{\extrarowheight}{2.5pt}
+
+
+\section{Introduction}
+
+% Le contexte
+% Alors que de plus en plus de réseaux et d'appareils connectés sont utilisés, en particulier dans l'<<~Internet of Things~>> (IoT) et l'<<~Internet of Battle Things~>> (IoBT), le besoin de leur propre sécurité est devenu un défi très important. Les systèmes tels que les capteurs sans fil ou les véhicules autonomes ont une surface d'attaque accrue, car ils offrent de nouveaux vecteurs d'attaque pour corrompre, détruire et propager de nouvelles cyber-attaques sur les réseaux connectés.
+%\cite{ccdc_army_research_laboratory_internet_2017}.
+
+
+Le développement de l'<<~Internet of Things~>> et de l'<<~Internet of Battle Things~>>  a entrainé une augmentation de la surface d'attaque des systèmes en réseau permettant à des attaquants de s'y introduire en ciblant les nœuds les plus faiblement défendus. Tenant compte de ce contexte, le groupe de travail <<~AICA IWG~>>\footnote{Ce groupe de travail (voir \url{https://www.aica-iwg.org/}) s'appuie sur les résultats du \textit{Research Task Group IST-152} de l'OTAN qui a travaillé sur le concept des <<~Intelligent, Autonomous and Trusted Agents for Cyber Defense and Resilience~>>.} a poursuivi le développement des travaux concernant l'agent AICA (Autonomous Intelligent Cyber-defence Agent).
+Un agent est par définition une entité autonome capable de percevoir son environnement local grâce à des capteurs, et d’agir sur cet environnement à l'aide d'effecteurs\cite{russell1995modern}.
+L'agent AICA doit pouvoir être déployé sur un système hôte pour détecter, identifier et caractériser des anomalies/attaques, élaborer et piloter l’exécution de contre-mesures et dialoguer avec l'extérieur. À cette fin, il est conçu comme proactif, discret et capable d’apprendre.
+
+% \noindent
+
+
+
+L'agent AICA peut être vu comme un Système Multi-Agent (SMA). Le paradigme multi-agent offre des moyens de gérer l'ouverture, le passage à l'échelle et l'autonomie du système hôte en déléguant différents aspects de la cyber-défense à différents agents. L'agent AICA  est alors un système collectif décentralisé et distribué d'agents cyber-défenseurs déployés au plus près des composants du système\cite{ieeesp_KottT20}.
+%Évitant l'écueil d'un point de défaillance unique, ils contribuent aussi à opposer plusieurs couches de cyber-défense à un éventuel cyber-attaquant.
+
+Concevoir un tel SMA, nécessite de porter une attention particulière à son organisation. L'objectif de cet article est de discuter des mécanismes organisationnels d'un SMA de cyberdéfense.
+% Cet article aborde des mécanismes organisationnels disponibles pour concevoir un SMA qui répond à des objectifs de cyber-défense ainsi qu'aux contraintes du système hôte de déploiement.
+% Notre intérêt porte principalement sur la protection des systèmes en réseau dont les nœuds peuvent héberger des agents.% aussi bien sur des réseaux mobiles que sur des réseaux fixes.
+% La recherche de recommandations et/ou pistes de conception pour ce SMA s'appuie sur une revue des différentes organisations disponibles avec leurs objectifs de cyber-défense et systèmes hôtes associés.
+% Structure & Méthode
+La section II introduit un état de l'art de SMA existants assurant la cyber-défense sur leur système hôte. La section III identifie les verrous théoriques et techniques potentiels vers la conception d'un SMA de cyber-défense auto/ré-organisé et propose des préconisations.
+
+% REMARQUE : plutôt que edt mettre uniquement "Travaux liés"
+\section{\'Etat de l'art}
+
+\subsection{Vers des systèmes multi-agents de cyber-défense}
+
+
+% % Expliquer à quels défis de sécurité nous devons initialement faire face...
+% Le monde du cyber
+% % dans lequel opère tout système fournissant une couverture de sécurité
+% rassemble une grande variété de définitions et de termes issus de plusieurs domaines\cite{bjorck2015cyber}. Le terme \textbf{cyber} fait référence à toutes les activités liées à une utilisation offensive ou défensive du cyberespace\cite{nocetti2018darkening}.
+
+Nous inscrivant dans le prolongement des travaux menés dans le cadre de l'AICA IWG, nous considérons la \textbf{cyber-sécurité} comme l'ensemble des activités  consistant à se protéger de façon préventive contre les cyber-attaques\cite{theron_autonomous_2021}.
+
+
+Nous désignons par \textbf{cyber-défense}  l'ensemble des activités entreprises lorsqu'une cyber-attaque est détectée et qu'il faut réagir. Ces activités sont décrites dans le cadre du <<~P3R3 Resilience Engineering Framework~>>\cite{theron_p3r3_2021} et sont regroupées en trois fonctions de cyber-défense :
+
+\noindent
+\textit{\textbf{R1 - Detect and alarm}} : détection des cyber-attaques  et déclenchement des mécanismes de réponse; %Cela couvre également la surveillance du système à défendre et l'avertissement d'éventuelles cyber-attaques.
+
+\noindent
+\textit{\textbf{R2 - Respond and restore}} : mise en œuvre et suivi des réponses apportées aux cyber-attaques et l restauration des niveaux de services/activités minimaux. La gestion de la crise provoquée par l'attaque est au cœur de cette fonction;
+
+\noindent
+\textit{\textbf{R3 - Recover and rebound}} : rétablissement des parties endommagées du système à défendre et traitement final des conséquences. Ce point inclut une phase d'apprentissage permettant l'amélioration du système de cyber-défense.
+
+% \begin{figure}[ht!]
+%     \centering
+%     \smartdiagramset{back arrow disabled=true}
+%     \smartdiagram[flow diagram:horizontal]{\textbf{(R1)} Detecter \& Alarmer, \textbf{(R2)} Répondre \& Restaurer, \textbf{(R3)} Rétablir \& Rebondir}
+%     \caption{Cadre fondamental de travail pour la cyber-défense (tiré de \cite{theron_p3r3_2021})}
+%     \label{fig:framework_r3}
+% \end{figure}
+
+%(contrecarrer une cyber-attaque après qu'elle a réussi)
+
+%(en prévention d'une cyber-attaque) \cite{theron_autonomous_2021}.
+% Les deux sont importants pour assurer la \textbf{cyber résilience}\cite{theron_autonomous_2021}.
+% Nous choisissons d'inclure les objectifs de cyber-défense, de cyber-sécurité et de cyber résilience dans le même terme d'\textbf{objectif de cyber-défense}.
+
+Nous appelons \textbf{objectifs de cyber-défense}, tous les objectifs impliquant la mise en œuvre d'une ou plusieurs des %\old{activités} 
+fonctions de cyber-défense.
+
+% qui ont pour finalité de garantir des critères de sécurité sans perturber la productivité du système défendu dans le cas où une cyber-attaque a eu lieu\cite{keyser2018information}. Sur la base de la norme ISO 25010, des triades CIA (Confidentiality, Intégrity, Availability) et AAA (Authentication, Availability, Accountability), nous avons choisi la recherche de la confidentialité, l'intégrité, la disponibilité, la responsabilité et la non-répudiation comme cadre initial fondamental de nos objectifs de cyber-défense.%\cite{iso25010}.
+
+% Un tel système repose sur la répartition de la responsabilité de la sécurité entre plusieurs agents. Ces agents peuvent être conçus pour surveiller différents aspects du système, tels que le trafic réseau, l'activité des utilisateurs et les journaux système, et pour prendre les mesures appropriées lorsque des cyber-menaces sont détectées.
+% Un SMA peut inclure des agents chargés d'identifier et de bloquer le trafic malveillant, des agents qui surveillent l'activité des utilisateurs et détectent les comportements suspects, et des agents qui analysent les journaux système et alertent les administrateurs des problèmes de sécurité potentiels.
+% L'utilisation de plusieurs agents peut améliorer la sécurité du système hôte de plusieurs façons. Premièrement, cela permet une approche plus globale de la sécurité, car différents agents peuvent se concentrer sur différents aspects du système. Deuxièmement, cela peut réduire le risque d'un point de défaillance unique, car la défaillance d'un agent ne compromettra pas nécessairement la sécurité de l'ensemble du système. Enfin, l'utilisation de plusieurs agents peut rendre plus difficile pour un attaquant de compromettre le système, car il devrait contourner plusieurs couches de cyber-défense.
+
+% \textbf{La confidentialité} est la capacité d'un système à ne pas rendre les données accessibles aux personnes non autorisées\cite{noauthor_glossaire_nodate} ;
+% % (via le chiffrement, les règles et politiques de contrôle d'accès, l'authentification, la gestion des autorisations qui limite les actions possibles selon des règles).
+
+% \textbf{L'intégrité} est la capacité d'un système à se protéger des modifications non autorisées\cite{noauthor_glossaire_nodate} ;
+% % (via les sauvegardes, les sommes de contrôle, le contrôle de version, les journaux de données, les erreurs de données et les codes de correction).
+
+% \textbf{Disponibilité} est "la capacité d'un élément/entité à pouvoir exécuter une fonction requise dans des conditions données, à un moment donné ou pendant un intervalle de temps donné, en supposant que les ressources externes nécessaires sont fournies"\cite{ afnor_norme_nodate} ;
+% % (au travers des protections physiques, de la redondance et du plan de continuité et de reprise des données).
+
+% \textbf{Non-répudiation} qui est la capacité d'un système à prouver qu'une action a bien été appliquée\cite{25010_2011} ;
+
+% \textbf{Responsabilité} qui est la capacité d'un système à retracer les actions avec ceux qui sont derrière elles\cite{1400-1700_isoiec_nodate}.
+% elle inclut la \textbf{traçabilité} car c'est "la capacité à suivre la vie d'une exigence, depuis ses origines, en passant par son développement, ses spécifications, son déploiement et son utilisation"\cite {gotel_analysis_1994} ; et \textbf{authenticité} qui est la capacité d'un système à apporter la preuve de son identité\cite{noauthor_glossaire_nodate}.
+
+
+% montrant que ces problèmes sont résolus par la sécurité collaborative...
+% \subsection{cyber-sécurité collaborative via des SMA}
+
+
+% la sécurité collaborative qu'on défini comme...
+% notion de sécurité collaborative sujette à caution...
+%\old{[[Supprimé]]La littérature fournit le concept de \textbf{sécurité collaborative} impliquant plusieurs parties techniques et non techniques dans le processus d'identification, de prévention et de réponse aux cyber-menaces sur des infrastructures\cite{meng2015collaborative}.}
+% Cela implique, entre autres, le partage d'informations, de ressources et d'expertise afin d'améliorer l'efficacité et l'efficience des mesures de cyber-sécurité et cyber-défense\cite{meng2015collaborative}.
+
+% technique : logiciel et matériel
+% SOC central insuffisant...
+%\old{[[Supprimé:]]Inspirés par ce paradigme, nous définissons la \textbf{cyber-défense collaborative} comme la poursuite d'objectifs de cyber-défense par plusieurs entités logicielles réagissant aux cyber-attaques ciblant un système vu comme un réseau de nœuds.}
+% todo : expliciter la finalité
+
+Dans un \textbf{SMA de cyber-défense}, plusieurs agents atteignent un objectif global de cyber-défense par un comportement collectif résultant de la réalisation de sous-objectifs individuels et/ou de mécanismes locaux\cite{jamont2015meeting}. Des exemples de tels sous-objectifs pourraient être la détection des intrusions, la mise en œuvre d'un plan de récupération, la restauration d'une image, redirection des ports\dots
+
+% Selon la référence \cite{boissier2004caractéristiques}, les SMA sont :
+% autonome (la prise de décision ne dépend pas d'une entité externe) ; répartis (les connaissances ou les tâches sont réparties dans chaque agent) ; décentralisé (la responsabilité d'atteindre un objectif est confiée à tous les agents) ; situé dans l'environnement (espace commun où interagissent les agents \cite{odell2002modeling}) ; permettre des interactions entre agents (action réciproque de deux ou plusieurs entités\cite{noauthor_interaction_nodate} pouvant conduire à des stratégies de coopération, collaboration, compétition, négociation entre les agents) en utilisant la communication (assurer une cohérence globale malgré la décentralisation en utilisant un langage grammaticalement structuré, utiliser d'un protocole spécifique, utilisation d'un espace commun ou "tableau noir"); montrant l'émergence (résultat du comportement des agents individuels à travers leurs interactions\cite{di2005self}) ; et avoir une organisation (en tant que modèle global éventuellement défini a priori ou en tant que phénomène émergent\cite{salvador2019multi}).
+
+
+\subsection{Mécanismes organisationnels dynamiques}
+
+L'autonomie de fonctionnement du SMA de cyber-défense, obtenue  en déléguant aux agents certaines missions % avec peu d'interventions directes, 
+est une réponse face aux charges de travail des équipes cyber et à la rapidité des cyber-attaques\cite{ieeesp_KottT20}.
+Un tel SMA doit modifier sa structure et les relations entre ses agents pour continuellement s'adapter à son environnement \cite{theron_autonomous_2021}.
+%La réorganisation et l'auto-organisation sont alors des mécanismes clés  \cite{picard2009reorganisation}.
+
+% De plus, comme discuté dans \cite{theron_autonomous_2021}, nous avançons l'hypothèse que les mécanismes d'organisation assurant la sécurité sont susceptibles de nécessiter un bon niveau de représentation et de conscience de l'environnement pour un processus de prise de décision et d'apprentissage complexe précis.
+
+% La \textbf{réorganisation} est définie comme un processus descendant imposant une organisation (vue comme une entité distincte) aux agents. Ces mécanismes de réorganisation sont inclus dans l'Organisation-Centered Point Of View (OCPV)\cite{picard2009reorganisation}. Dans l'OCPV, la sécurité globale est une tâche commune partagée par tous les agents à travers leur organisation. Il s'avère être un moyen de basculer entre plusieurs organisations éprouvées qui semblent adaptées dans des circonstances données.
+% À une faible conscience environnementale/organisationnelle, une organisation basée sur OCPV peut être codée en dur en tant que règles de sécurité à suivre dans les agents eux-mêmes.
+% Avec un niveau de conscience environnementale et/ou organisationnelle plus élevée, une organisation basée sur l'OCPV est partagée comme une représentation globale (topologie) par tous les agents qui peuvent la modifier directement par des processus sociaux.
+% Selon \cite{picard2009reorganisation}, de tels SMA sont dits "\textbf{organization oriented}". Les rôles et cahiers des charges qui composent l'organisation sont à faire évoluer par les agents eux-mêmes (ou des entités extérieures) lorsque l'organisation n'est pas adaptée en travaillant directement sur des schémas de coopération et d'organisation \cite{picard2009reorganisation}.
+
+% \textbf{L'auto-organisation} est définie comme un processus ascendant où l'organisation résulte des interactions et des actions locales des agents comme un phénomène émergent. Les mécanismes d'auto-organisation appartiennent à l'Agent-Centered-Point-Of-View (ACPV)\cite{picard2009reorganisation}. Dans l'ACPV, la sécurité globale résulte des actions de sécurité locales et des interactions pair à pair entre les agents. C'est un moyen efficace de faire face aux cyber-menaces sans avoir besoin d'un contrôle ou d'un guidage central.
+% À une faible conscience environnementale/organisationnelle, une organisation basée sur l'ACPV est conçue pour réagir au déclenchement de combinaisons d'événements de sécurité pour appliquer des actions cartographiées. Il convient de noter que la notion récurrente d'"intelligence en essaim" est incluse dans ce cas car il n'y a aucune connaissance de l'organisation pour les agents.
+% Avec un niveau de conscience environnementale et/ou organisationnelle plus élevée, une organisation basée sur l'ACPV tire parti de la représentation locale intégrée de l'environnement direct de l'agent (agents cyber-défenseurs voisins, nœuds de réseau découverts, processus en cours d'exécution, etc.) pour un processus cognitif.
+% Selon \cite{picard2009reorganisation}, de tels SMA sont dits "\textbf{coalition based}". Les dépendances/relations inter-agents sont modifiées par les agents eux-mêmes en raison d'une inadéquation en modifiant les schémas de coopération ou indirectement l'organisation.
+
+En considérant un point de vue centré organisation, la cyber-défense globale est une tâche commune partagée par tous les agents à travers leur organisation. La \textbf{ré-organisation} est un moyen de basculer entre plusieurs organisations éprouvées qui semblent adaptées dans des circonstances données\cite{picard2009reorganisation}.
+
+En considérant un point de vue centré agent, l’\textbf{auto-organisation} est définie comme un processus ascendant où l’organisation émerge des interactions et des actions locales des agents. La cyber-défense globale résulte alors des actions de cyber-défense locales et des interactions pair à pair entre les agents\cite{picard2009reorganisation}. L'auto-organisation semble être un des moyens à mobiliser pour faire face aux cyber-menaces en évitant les écueils d'un contrôle centralisé.
+
+
+
+\begin{table*}[t!]
+
+    \caption{Un aperçu de quelques organisations et des environnement hôtes utilisés dans les SMA de cyber-défense étudiés}
+
+    \begin{tabularx}{\linewidth}{
+    >{\raggedright\arraybackslash\hsize=.3\hsize}X
+    >{\raggedright\arraybackslash\hsize=.6\hsize}X
+    >{\raggedright\arraybackslash\hsize=.6\hsize}X
+    >{\raggedright\arraybackslash\hsize=.6\hsize}X
+    % >{\raggedright\arraybackslash}X
+    >{\raggedright\arraybackslash\hsize=.2\hsize}X}
+    \toprule
+
+{ \textbf{Organisation}}
+& {  \textbf{Avantages principaux}}
+& {  \textbf{Inconvénients principaux}}
+& {  \textbf{Environnement}}
+% & {  \textbf{ Objectifs de cyber-défense suggerés }}
+&  {  \textbf{Travaux}}
+\\ \midrule
+
+{ Centralisé}
+& {  Haute précision pour l'analyse de la situation}
+& {  Single-Point-Of-Failure (SPOF), manque de scalabilité}
+& {  Petit à moyenne taille, non ouvert, petite entreprise}
+% & {  \textbf{Objectifs de type (R1)} : détection d'intrusion, surveillance du réseau}
+& {  \cite{vasilomanolakis2015taxonomy, gorodetski2003multi, de2017distributed}}
+\\
+
+{ Hiérarchique (distribué)}
+& {  Évolutivité, décomposition des tâches}
+& {  Perte d'informations, goulots d'étranglement, retards}
+& {  Taille moyenne à grande, ouvert, peu de variations}
+% & {  \textbf{Objectifs de type (R1) et (R2)} : surveillance du réseau, sauvegardes régulières, contrôles d'accès, correctifs de cyber-défense}
+& {  \cite{holloway2009self, lamont2009military}}
+\\
+
+{ Décentralisé (Peer-to-Peer)}
+& {  Structure non définie a priori, Hautement adaptatif}
+& {  Contrôle de l'organisation limitée, intensité de communication}
+& {  Ouvert, toute taille, fortes variations}
+% & {  \textbf{Objectifs de type (R3)} : reconnaissance de menaces, adaptation aux cyber-attaques}
+& {  \cite{holloway2019self, haack2011ant, morteza2015method}}
+\\
+
+{ Coalition}
+& {  Optimisation de l'organisation autour des tâches}
+& {  Peu adapté sur le long terme}
+& {  Toute taille, ouvert, peu de variations, peu de ressources}
+% & {  \textbf{Objectifs de type (R3)} : contre-mesures de sécurité adaptées, apprentissage des cyber-attaques}
+& {  \cite{carvalho2011evolutionary}}
+\\
+
+{ Équipes}
+& {  Bonne performance pour des tâches régulières}
+& {  Haute intensité de communication}
+& {  Ouvert, hétérogène, toute taille, peu de variations}
+% & {  \textbf{Objectifs de type (R1) et (R2)} : détection de menaces possibles, application de contre-mesures}
+& {  \cite{akandwanaho2018generic}}
+\\
+
+{ Marché}
+& {  Organisation optimisée par concurrence, bonne gestion des agents}
+& {  Processus d'allocation complexe et long}
+& {  Toute taille, ouvert, peu de variations, peu de ressources}
+% & {  \textbf{Objectifs de type (R3)} : investigations forensiques, stratégies de cyber-défense}
+& {  \cite{demir2021adaptive}}
+\\
+        \bottomrule
+        
+    \end{tabularx}
+    \label{tab:general-overview}
+\end{table*}
+
+
+\subsection{Organisations des SMA de cyber-défense}
+
+
+Le choix d'une organisation de SMA de cyber-défense implique de tenir compte des relations entre les objectifs de cyber-défense et l'environnement de déploiement. L'analyse des SMA de cyber-défense disponibles est susceptible d'indiquer des tendances pour ces relations. Cela permettrait de favoriser la mise en œuvre d'une organisation à partir des objectifs de cyber-défense et l'environnement de déploiement.
+
+%Pour établir cette revue de littérature, nous avons procédé à une recherche automatisée sur la base de mots clés liés, d'un côté, aux SMAs, et d'un autre côté, au monde de la sécurité logicielle s'inscrivant dans la définition donnée précédemment de la cyber-défense.
+% Nous avons utilisé plusieurs bases de donnée électroniques tels que \cite{ACM,IEEE,Elsevier,Springer}.
+%Puis nous avons effectué une lecture des résumés pour obtenir finalement une vingtaine de publications\footnote{Toutes les références n'ont pas pu être données en raison du format} s'inscrivant dans le cadre d'un SMA devant remplir un objectif de cyber-défense. Pour chaque proposition de SMA, nous avons suggéré une classification des informations en déterminant la caractéristique principale de l'organisation, l'environnement de déploiement ainsi que les objectifs de cyber-défense. Pour chacune des organisations identifiées, nous avons aussi suggéré des avantages et inconvénients généraux. Un aperçu de ce travail est à la table \ref{tab:general-overview}.
+
+%% MO: j'ai reformulé, car ça faisait vraiment amateur :))
+Notre revue de littérature s'est concentrée sur le rapprochement des notions des SMA et de la cyber-défense.
+
+Pour chacun des travaux de SMA de cyber-défense, nous nous sommes intéressés aux fonctions de cyber-défense couvertes. Un aperçu de cette classification est proposé en table \ref{tab:reference-cyberdefense}. %\footnote{Les références des travaux exploités ne sont pas citées dans ce tableau en raison du format.}\label{notallrefs. 
+ Nous avons constaté que la plupart des objectifs de cyber-défense des SMA se concentrent principalement sur la détection d'anomalies et d'intrusions (plus de 50\% des travaux de notre revue complète se focalisent ainsi sur la fonction R1).
+
+\begin{table}[htb]
+
+    \caption{Un aperçu des fonctions de cyber-défense prises en charge par les SMA de cyber-défense étudiés}
+
+    \begin{tabularx}{0.49\textwidth}{
+    >{\raggedright\arraybackslash\hsize=.9\hsize}X
+    >{\raggedright\arraybackslash\hsize=.3\hsize}X}
+    \toprule
+
+{ {\textbf{Objectifs principaux}}}
+& {  \textbf{Travaux}}
+\\ \midrule
+
+{  \textbf{\textbf{R1}}: détection d'intrusion, surveillance du réseau, détection de menaces possibles}
+& {  \cite{vasilomanolakis2015taxonomy, gorodetski2003multi, de2017distributed, holloway2009self, lamont2009military, akandwanaho2018generic}}
+\\
+
+{  \textbf{\textbf{R2}}: application de contre-mesures, contrôles d'accès, correctifs de cyber-défense, stratégies de cyber-défense}
+& {  \cite{holloway2009self, lamont2009military, akandwanaho2018generic}}
+\\
+
+{  \textbf{\textbf{R3}}: investigations forensiques, élaboration de contre-mesures adaptées, apprentissage des cyber-attaques, adaptation aux cyber-attaques}
+& {  \cite{holloway2019self, haack2011ant, morteza2015method, demir2021adaptive}}
+\\
+        \bottomrule
+        
+    \end{tabularx}
+    \label{tab:reference-cyberdefense}
+\end{table}
+
+
+Pour chacun de ces mêmes travaux, nous nous sommes aussi intéressés aux caractéristiques principales de l’organisation et de l'environnement de déploiement. Un aperçu de ce travail est présenté en table \ref{tab:general-overview} %\footref{notallrefs}.
+Nous constatons qu'indépendamment des objectifs de cyber-défense, l'organisation centralisée et/ou hiérarchique est la plus répandue parmi les SMA de cyber-défense étudiés. La centralisation des données acquises de l'environnement, en un seul point, favorise de meilleures performances pour l'analyse de la situation globale et le contrôle du système de cyber-défense. Ces types d'organisation semblent moins facilement s'appliquer pour des réseaux dynamiques, mais sont répandus sur des systèmes de taille moyenne avec des contraintes connues\cite{vasilomanolakis2015taxonomy}.
+%
+%\noindent
+Les organisations de type décentralisé tirent profit d'une approche davantage auto-organisée pour faire face aux cyber-menaces de façon à augmenter l'autonomie du SMA de cyber-défense comme proposé dans le <<~Artificial Immune System~>> \cite{morteza2015method} ou la <<~Ant-Based Cyber Security~>> \cite {haack2011ant}.% en sont des exemples. %Elles sont néanmoins moins établies en tant que solutions génériques de cyber-défense et/ou cyber-sécurité.
+
+% bien qu'elles ne soient pas bien établies (dans les organisations décentralisées).
+% Finalement, les coalitions sont d'autres organisations récurrentes utilisées pour tirer parti de leurs principaux avantages lors de la distribution et du traitement des tâches pour atteindre des objectifs spécifiques dans un environnement caractéristique.
+
+
+\section{Vers un mécanisme général d'organisation de la cyber-défense en réseau}
+
+La revue a permis d'identifier de premiers mécanismes sous-jacents à un SMA de cyber-défense. Cependant, il est nécessaire de la compléter par une étape d'expérimentation.
+En effet, notre classification ne permet pas de définir de façon certaine des recommandations de conception d'organisation pour un SMA de cyber-défense générique. La diversité (des objectifs, des environnements, des architectures d'agents, des protocoles d'interaction\dots) des SMA de cyber-défense disponibles rend l'appréciation entre ces derniers difficiles sans cadre commun.
+
+\subsection{Vers un modèle expérimental de la situation}
+% titre de sous section pas super explicite je trouve
+
+Il apparaît nécessaire de caractériser le SMA de cyber-défense
+% (y compris son organisation, ses objectifs et ses performances)
+et l'environnement dans lequel il est déployé.% avec ses propriétés
+% (y compris probablement des métriques)
+%en connaissant les actions de cyber-défense/attaque qui peuvent l'impacter. 
+
+Un  modèle générique  permettrait alors de représenter des scénarios d'attaque sur un environnement réseau avec un ou pour plusieurs types de SMA de cyber-défense. Cependant, aucun des travaux étudiés ne répond précisément à ce besoin. Sa mise en œuvre prendrait la forme d'un simulateur de réseau sur lequel seraient déployés plusieurs agents d'attaque et défense. Cependant, les simulateurs de réseau du domaine les plus aboutis ne permettent d'avoir qu'un seul agent d'attaque ou de défense là où nous souhaiterions évaluer le passage à l'échelle des SMA de cyber-défense.
+
+
+% Ce modèle pourrait être développé comme un Decentralized Partially Observable Markov Decision Process (Dec-POMDP) car l'environnement, les agents et les actions car le problème repose sur une prise de décision prenant en compte l'incertitude et les observations
+% ... expliciter le choix d'un dec POMDP , à voir (citation)
+
+
+Pour répondre à ce besoin, il serait possible d'étendre un modèle générique de réseau pouvant subir une cyber-attaque, tel que dans le simulateur CYST\cite{drasar_session-level_2020},
+%ou \cite{cyberbattlesim}
+avec la possibilité d'avoir plusieurs agents d'attaque et de cyber-défense. Un tel modèle serait la base d'un simulateur qui permettrait un grand nombre de possibilités expérimentales pour appréhender l'impact de l'organisation des agents de cyber-défense.
+
+% Une piste pour implémenter ce simulateur est de s'appuyer sur le framework <<~PettingZoo~>>\cite{terry2020pettingzoo} qui est adapté pour le contexte .
+% expliciter pourquoi pettingZoo
+
+\subsection{Traitement des facteurs pour concevoir des organisations}
+
+Dans notre contexte, la conception d'une organisation d'un SMA de cyber-défense est un processus prenant en compte les facteurs suivant : les contraintes matérielles et logicielles de l'environnement de déploiement; 
+% (supposé être partiellement défini par l'utilisateur et/ou la politique établie)
+les menaces internes du SMA de cyber-défense lui-même; et les modèles définis d'architecture et d'objectifs de cyber-défense.
+
+Actuellement, il n'existe pas de méthodes ou de processus automatisés visant à trouver un consensus avec ces facteurs lors de la conception d'une organisation. 
+La conception d'un SMA de cyber-défense auto/ré-organisé repose alors sur l'expérience empirique du concepteur en suivant des exigences définies.
+Une autre approche serait de s'appuyer sur des mécanismes automatisés pour développer une organisation adaptée avec peu d'intervention du concepteur. 
+Une première piste serait le <<~Distributed Constrained Optimization Problem~>> (DCOP) où les facteurs d'organisation seraient modélisés par une fonction de coût que cherchent à minimiser \textit{online} les agents cyber-défenseurs en s'organisant. Une deuxième voie serait le <<~Multi-Agent Reinforcement Learning~>> (MARL) où les agents cyber-défenseurs apprennent eux-mêmes les organisations possibles adaptées par rapport à une récompense reçue modélisant les objectifs de cyber-défense.
+
+\section{Conclusion}
+Un SMA de cyber-défense déployé sur un système hôte en réseau permettrait de relever les défis liés à la complexité et la rapidité de cyber-attaques. Notre étude donne un aperçu d'organisations possibles respectant des objectifs de cyber-défense et des contraintes de l'environnement de déploiement d'un SMA de cyber-défense.
+Elle souligne aussi le besoin de définir un cadre théorique et technique spécifique à l'organisation d'un SMA de cyber-défense dans un environnement réseau. Un tel cadre permettra d'explorer, d'évaluer et de tirer des recommandations sur l'organisation d'un SMA de cyber-défense que nous valoriserons pour le développement d'un agent AICA.
