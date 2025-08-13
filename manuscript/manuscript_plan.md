@@ -60,32 +60,32 @@
 
 # Partie III — Méthode de conception : MAMAD
 
-**Objectif :** présenter en détail les 4 phases de la méthode MAMAD et les contributions associées. On montre aussi comment la méthode et chaque phase est aussi pensé pour la conception d'un AICA auto-organisé, adaptatif...
+**Objectif :** présenter en détail les 4 activités de la méthode MAMAD et les contributions associées. On montre aussi comment la méthode et chaque activité est aussi pensé pour la conception d'un AICA auto-organisé, adaptatif...
 
 ## Chapitre 6 : MAMAD comme réponse intégrée
 
 * 6.1 Principe général et boucle itérative
 * 6.2 Architecture globale
 
-## Chapitre 7 : Phase 1 — Modélisation
+## Chapitre 7 : Activité 1 — Modélisation
 
 * 7.1 Reconstruction partielle de l'environnement
 * 7.2 Apprentissage de la dynamique observable
 * 7.3 Modélisation des exigences de conception et de l'objectif
 
-## Chapitre 8 : Phase 2 — Apprentissage guidé (MARL contraint)
+## Chapitre 8 : Activité 2 — Apprentissage guidé (MARL contraint)
 
 * 8.1 Cadres Markoviens utilisés
 * 8.2 Contraintes organisationnelles dans MARL (OAC, TRF)
 * 8.3 Une politique conjointe composite pour l'incertitude
 
-## Chapitre 9 : Phase 3 — Analyse post-entraînement
+## Chapitre 9 : Activité 3 — Analyse post-entraînement
 
 * 9.1 Méthodes d'inférence des rôles et objectifs
 * 9.2 Indicateurs : SOF, FOF, OF
 * 9.3 Outil TEMM : fonctionnement, cas d'usage
 
-## Chapitre 10 : Phase 4 — Transfert et supervision
+## Chapitre 10 : Activité 4 — Transfert et supervision
 
 * 10.1 Modes de transfert (centralisé/distribué)
 * 10.2 Bouclage entre environnement réel et simulation

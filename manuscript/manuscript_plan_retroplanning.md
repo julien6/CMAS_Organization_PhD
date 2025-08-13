@@ -16,7 +16,7 @@
 
 * Période estimée : 1 juillet au 12 juillet
 * Durée estimée : entre 10 et 12 jours
-* Objectif : présenter en détail la méthode MAMAD en 4 phases, avec les contributions associées à chacune.
+* Objectif : présenter en détail la méthode MAMAD en 4 activités, avec les contributions associées à chacune.
 
 ## Partie IV — Évaluation expérimentale
 
