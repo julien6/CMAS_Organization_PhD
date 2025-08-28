@@ -303,6 +303,14 @@ Dans cette approche manuelle, on part d'une description informelle de l'environn
 
 % \rem{Manque d'organisation~: modélisation de l'environnement, des agents attaquants, des agents défenseurs, des stratégies de défense/d'attaque, ... On s'attend à une suite, quitte à redécouper...}
 
+Afin de définir une modélisation, nous avons pris un cas d'utilisation tiré de l'\acn{AICA}~\cite{theron_autonomous_2021}. Nous nous intéressons à la modélisation d'un environnement réseau composé de \textit{nœuds} sur lesquels des cyberattaquants et des cyberdéfenseurs \textit{agents} peuvent être déployés pour observer et agir. Ces nœuds peuvent être décrits par un ensemble de \textit{propriétés} liées aux processus, aux systèmes de fichiers, aux systèmes d'exploitation, à l'architecture matérielle, etc.
+Les \textit{observations} et les \textit{actions} des agents sont conditionnées par leurs propres propriétés (y compris celles qu'ils connaissent) et par des incertitudes. Par exemple, la lecture d'un fichier donné ou le remappage de ports peut nécessiter un niveau de privilège élevé~; ou la réception de données provenant d'un capteur physique n'est pas garantie à tout moment.
+Chaque agent qui applique des actions modifie les propriétés d'un ou plusieurs nœuds. Cela modifie l'état de l'environnement, rapprochant ou éloignant les agents de leur objectif.
+Les principales caractéristiques de cette description englobent des notions telles que l'incertitude dans les observations, les conditions dans les actions pour la transition d'état et les métriques que nous considérons comme exprimées dans une modélisation Dec-POMDP.
+%\after{Ceci vise à répondre au besoin d'un modèle formel d'agents attaquants et défenseurs englobant divers contextes d'application.}
+
+\
+
 \begin{figure*}[]
   \centering
   \includegraphics[width=0.97\textwidth]{figures/model_example_illustration.pdf}
@@ -319,7 +327,7 @@ Il existe différentes façons d'exécuter plusieurs agents dans un même enviro
 
 
   \item L'environnement est mis à jour par une fonction de transition qui dépend de l'état actuel et de l'action entreprise par l'agent (changement des propriétés une fois que la condition préalable est remplie). Une action est utilisée pour modifier les propriétés de l'environnement en mettant à jour la relation entre les identifiants de propriétés et les valeurs de propriétés.
-        Par exemple, dans la figure~\ref{fig:model_example_illustration}, dans l'état actuel, les propriétés de $Node_1$ sont $p_1,p_3,p_4,p_2,p_9$. Lorsque l'action $Action_1$ est appliquée, la relation associe les sous-ensembles $\{p_3\}$ ou $\{p_4, \allowbreak p_{10}\}$ à $\{p_{15}, \allowbreak p_{14}, \allowbreak p_{11}\}$. La condition préalable basée sur les propriétés peut être comprise comme $p_3 \lor (p_4 \land p_{10})$. Comme $p_{15}$ et $p_{14}$ sont identifiés par $ID_4$ et $ID_2$ qui définissent déjà respectivement $p_{2}$ et $p_{4}$, $p_{4}$ et $p_{2}$ sont supprimés et $p_{11}$ et $p_{14}$ sont ajoutés ($p_{15}$ n'est pas ajouté car $id_2$ n'est associé à aucune valeur)
+  Par exemple, dans la figure~\ref{fig:model_example_illustration}, dans l'état actuel, les propriétés de $Node_1$ sont $p_1,p_3,p_4,p_2,p_9$. Lorsque l'action $Action_1$ est appliquée, la relation associe les sous-ensembles $\{p_3\}$ ou $\{p_4, \allowbreak p_{10}\}$ à $\{p_{15}, \allowbreak p_{14}, \allowbreak p_{11}\}$. La condition préalable basée sur les propriétés peut être comprise comme $p_3 \lor (p_4 \land p_{10})$. Comme $p_{15}$ et $p_{14}$ sont identifiés par $ID_4$ et $ID_2$ qui définissent déjà respectivement $p_{2}$ et $p_{4}$, $p_{4}$ et $p_{2}$ sont supprimés et $p_{11}$ et $p_{14}$ sont ajoutés ($p_{15}$ n'est pas ajouté car $id_2$ n'est associé à aucune valeur)
 
 
 
@@ -424,7 +432,7 @@ Ces défis sont directement liés aux questions étudiées concernant la génér
 
 
   \item Nous avons produit une description reliant les tactiques identifiées entre elles et les techniques, sous-techniques et procédures associées afin de créer un scénario décrivant comment le groupe APT pourrait attaquer le système en réseau. Cette étape définit la topologie du réseau avec ses principales propriétés
-        %(telles qu'un réseau d'entreprise composé de plusieurs serveurs de bases de données dédiés communiquant via FTP et HTTP, etc.)
+  %(telles qu'un réseau d'entreprise composé de plusieurs serveurs de bases de données dédiés communiquant via FTP et HTTP, etc.)
 
   \item Nous avons créé une arborescence AD comme proposé dans ~\cite{BKordy2010} avec les tactiques comme objectifs d'action principaux et les techniques, sous-techniques et procédures dans la partie inférieure de l'arborescence. Nous avons veillé à disposer de plusieurs chemins pour atteindre un même objectif d'action principal. Nous avons pris soin de définir chaque action d'attaque avec des conditions préalables et des conditions postérieures basées sur les propriétés de l'environnement
 
@@ -432,18 +440,18 @@ Ces défis sont directement liés aux questions étudiées concernant la génér
 
 
 
-        % \item Nous avons également répertorié et défini les principales actions environnementales spécifiques au déploiement à partir de la description précédente de l'environnement de déploiement ou des actions d'attaque/défense étendues qui sont communes aux cyberdéfenseurs et aux cyberattaquants. Cette étape permet d'obtenir un environnement plus réaliste, fournissant un nombre représentatif d'actions plausibles qu'un agent peut choisir dans de nombreux systèmes.
-        % Ces actions communes pourraient inclure au moins~:
-        % \begin{itemize}
-        %     \item Lecture et écriture de fichiers
-        %     \item Créer, supprimer, copier, déplacer, renommer, modifier les propriétés des fichiers/dossiers.
-        %     \item Accéder à un dossier, accéder au dossier parent
-        %     \item Sélectionner un fichier/dossier pour y appliquer des actions ultérieures
-        %     \item Exécuter un fichier binaire
-        %     \item Utilisation d'un protocole réseau (tel que HTTP, FTP, SSH, etc.).
-        %     \item Autres interactions avec les lignes de commande de base concernant la surveillance ou le contrôle du système.
-        % \end{itemize}
-        % Ensuite, les propriétés environnementales associées doivent décrire un système de fichiers, une interface de terminal, un port avec des règles, les propriétés des paramètres du système d'exploitation, etc.
+  % \item Nous avons également répertorié et défini les principales actions environnementales spécifiques au déploiement à partir de la description précédente de l'environnement de déploiement ou des actions d'attaque/défense étendues qui sont communes aux cyberdéfenseurs et aux cyberattaquants. Cette étape permet d'obtenir un environnement plus réaliste, fournissant un nombre représentatif d'actions plausibles qu'un agent peut choisir dans de nombreux systèmes.
+  % Ces actions communes pourraient inclure au moins~:
+  % \begin{itemize}
+  %     \item Lecture et écriture de fichiers
+  %     \item Créer, supprimer, copier, déplacer, renommer, modifier les propriétés des fichiers/dossiers.
+  %     \item Accéder à un dossier, accéder au dossier parent
+  %     \item Sélectionner un fichier/dossier pour y appliquer des actions ultérieures
+  %     \item Exécuter un fichier binaire
+  %     \item Utilisation d'un protocole réseau (tel que HTTP, FTP, SSH, etc.).
+  %     \item Autres interactions avec les lignes de commande de base concernant la surveillance ou le contrôle du système.
+  % \end{itemize}
+  % Ensuite, les propriétés environnementales associées doivent décrire un système de fichiers, une interface de terminal, un port avec des règles, les propriétés des paramètres du système d'exploitation, etc.
 
 \end{enumerate*}
 
