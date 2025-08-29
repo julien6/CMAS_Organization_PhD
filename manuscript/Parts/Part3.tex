@@ -78,7 +78,7 @@ Le cycle de vie d'un \acn{SMA} conçu avec \acn{MAMAD} est illustré en \autoref
   \label{fig:cycle}
 \end{figure}
 
-Le coeur de la méthode \acn{MAMAD} est d'envisager la conception d'un \acn{SMA} comme un processus itératif d'optimisation sous contraintes. On suppose donnés~:
+Le coeur de la méthode \acn{MAMAD} est d'envisager la conception d'un \acn{SMA} comme un processus itératif d'optimisation sous contraintes. Nous proposons une description formalisée de la méthode \acn{MAMAD} dans l'\autoref{alg:mamad} qui met en perspective les activités évoquées précédemment. Les données en entrée sont~:
 \begin{itemize}
   \item $\mathcal{E}_0$~: l'environnement initial dans lequel les agents peuvent agir~;
   \item $\mathcal{G}_{\text{inf}}$~: une description informelle de l'objectif global recherché~;
@@ -90,26 +90,28 @@ Le coeur de la méthode \acn{MAMAD} est d'envisager la conception d'un \acn{SMA}
 
 L'adéquation organisationnelle est un indicateur quantitatif de la conformité d'une politique conjointe aux spécifications organisationnelles, calculé à l'aide de la méthode \acn{TEMM} présentée en \autoref{chap:analyzing}. La récompense moyenne $\overline{r}$ et l'écart-type $\sigma$ sont des métriques classiques en apprentissage par renforcement, reflétant respectivement la performance globale et la stabilité d'une politique.
 
-\noindent Comme décrit dans \autoref{alg:mamad}, le cadre méthodologique permet une conception continue du \acn{SMA} via la coordination itérative et asynchrone de deux processus distincts~: le \textit{processus de Transfert}, qui est connecté à l'environnement réel et gère l'exécution en temps réel et la collecte d'historiques conjoints~; et le \textit{processus \acn{MTA}}, qui consomme les données stockées pour améliorer itérativement le modèle simulé, la politique conjointe et les spécifications organisationnelles du \acn{SMA}.
+
+La méthode \acn{MAMAD} est le cadre méthodologique permet une conception continue du \acn{SMA} via la coordination itérative et asynchrone de deux processus distincts~: le \textit{processus de Transfert}, qui est connecté à l'environnement réel et gère l'exécution en temps réel et la collecte d'historiques conjoints~; et le \textit{processus \acn{MTA}}, qui consomme les données stockées pour améliorer itérativement le modèle simulé, la politique conjointe et les spécifications organisationnelles du \acn{SMA}.
 
 \paragraph{Processus de Transfert~: déploiement des politiques et collecte de données}
 
-Ce processus est actif en continu tant que le \acn{SMA} est en fonctionnement dans l'environnement réel. Il a deux rôles~: déployer la politique conjointe la plus récente $\pi^j_{\text{latest}}$ auprès des agents déployés dans l'environnement cible, garantissant un comportement à jour sans interruption~; et collecter en continu les trajectoires des agents sous forme d'historiques conjoints $H^j$, stockés par lots. Une fois qu'un nombre suffisant de trajectoires est collecté, le lot est ajouté au dépôt global $\mathcal{D}_{H^j}$. Si le processus de mise à jour n'est pas en cours, il déclenche le lancement du processus \textit{\acn{MTA}}.
+Ce processus qui consiste à maintenir la cohérence entre l'environnement simulé et l'environnement est actif en continu tant que le \acn{SMA} est en fonctionnement dans l'environnement réel. Il a deux rôles~: déployer la politique conjointe la plus récente $\pi^j_{\text{latest}}$ auprès des agents déployés dans l'environnement cible, garantissant un comportement à jour sans interruption~; et collecter en continu les trajectoires des agents sous forme d'historiques conjoints $H^j$, stockés par lots. Une fois qu'un nombre suffisant de trajectoires est collecté, le lot est ajouté au dépôt global $\mathcal{D}_{H^j}$. Si le processus de mise à jour n'est pas en cours, il déclenche le lancement du processus \textit{\acn{MTA}}.
 
+% Rajouter des commentaires sur chaque activité
 
 \begin{algorithm}[H]
   \caption{Conception de SMA assistée par MOISE+MARL (MAMAD)}
   \label{alg:mamad}
   \DontPrintSemicolon
 
-  \KwIn{Environnement initial $\mathcal{E}$, objectif $\mathcal{G}_{\text{inf}}$, contraintes de conception $\mathcal{C}_{\text{inf}}$, $n_{refine}$ nombre maximal de cycles de raffinement}
+  \KwIn{Environnement initial $\mathcal{E}$, objectif $\mathcal{G}_{\text{inf}}$, contraintes de conception $\mathcal{C}_{\text{inf}}$, nombre maximal de cycles de raffinement $n_{refine}$}
   \KwOut{Un SMA déployé satisfaisant aux exigences de conception, de performance et d'explicabilité~; ainsi que ses spécifications organisationnelles associées}
 
   Initialiser~: $\mathcal{D}_{H^j} \gets \emptyset$, $\pi^j_{\text{latest}} \gets \pi^j_{\text{init}}$, $running\_MTA \gets False$ \;
 
   \vspace{0.3em}
 
-  \While{le SMA est actif dans l'environnement $\mathcal{E}$}{
+  \While{le SMA est en cours de conception}{
     \tcp*[l]{Transfert~: récupération des trajectoires \& déploiement de la politique}
     $\mathcal{D}_{H^j}, \texttt{need\_update} \gets \text{transfer}(\pi^i_{latest}, \mathcal{D}_{H^j})$ \tcp*[r]{appel asynchrone}
     \If{\texttt{need\_update} et non \texttt{running\_MTA}}{
@@ -162,7 +164,7 @@ Ce processus modélise le problème de conception actuel et améliore la politiq
 
 Un modèle markovien est ensuite construit à partir des éléments modélisés afin d'entraîner les agents en tenant compte des spécifications organisationnelles, via le framework MOISE+MARL. Une fois l'entraînement terminé, la politique conjointe $\pi^j$ est analysée à l'aide de \acn{TEMM} afin d'inférer les spécifications organisationnelles implicites $\mathcal{MM}_{\text{imp}}$ et de calculer un score d'adéquation organisationnelle.
 
-\section{Boucle de raffinement via les spécifications organisationnelles}
+\paragraph{Boucle de raffinement via les spécifications organisationnelles}
 
 Si la politique apprise montre des performances insuffisantes ou une grande variabilité (par rapport aux seuils définis), les spécifications organisationnelles implicites inférées sont utilisées pour raffiner les spécifications initiales. Ce processus de raffinement peut impliquer une inspection manuelle des structures inférées pour identifier les facteurs clés de succès des comportements émergents. Guidé par ces observations, le concepteur peut réviser les spécifications afin d'orienter les prochaines itérations d'apprentissage.
 
@@ -217,18 +219,19 @@ Les chapitres suivantes détaillent chaque activité du cadre \acn{MAMAD}, ident
 \null
 \newpage
 
+% TODO : faire un index avec les mots clés (Auto-encodeur, World Models, SMA, LSTM, RNN, MLP, adéquation organisationnelle...)
+
 \chapter{Modéliser l'environnement en simulation}
 \label{chap:modelling}
 
-L'\textbf{activité de modélisation} vise donc à produire les composants formels suivants~:
+\noindent L'\textit{activité de modélisation} a pour objectif de représenter le problème de conception comme un problème d'optimisation sous contraintes. L'\textbf{activité de modélisation} vise donc à produire les composants formels suivants~:
 \begin{displaymath}
   \texttt{model}(\mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}}, \gamma, A, \Omega) \rightarrow \mathcal{T}^j, R^j_H, \mathcal{MM}
 \end{displaymath}
 
-
-\noindent L'\textit{activité de modélisation} a pour objectif de représenter le problème de conception comme un problème d'optimisation sous contraintes. Pour cela, la tâche la plus difficile est de modéliser l'environnement comme un modèle assimilable à une simulation avec un niveau de fidélité connu. Deux approches sont envisageables pour faciliter cette tâche~:
+\noindent Pour cela, la tâche la plus difficile est de modéliser l'environnement comme un modèle assimilable à une simulation avec un niveau de fidélité connu. Deux approches sont envisageables pour faciliter cette tâche~:
 \begin{itemize}
-  \item Dans le cadre de la Cyberdéfense, la modélisation manuelle d'un environnement, telle que l'infrastructure en réseau d'une entreprise par une analyse manuelle de l'environnement réel pour obtenir une version simplifiée. Cependant, en raison de l'inexistence de modèle générique servant de chassis pour la modélisation d'un tel environnement, ce travail peut être fastidieux et conduire à différents modèles peu homogènes. C'est pourquoi nous proposons un modèle formel générique pouvant servir de base à la modélisation d'un environnement.
+  \item En raison de l'inexistence de modèle générique servant de chassis pour la modélisation d'un tel environnement, ce travail peut être fastidieux et conduire à différents modèles peu homogènes. C'est pourquoi nous proposons un modèle formel générique pouvant servir de base à la modélisation d'un environnement.
   \item La génération automatisée d'un environnement. Cependant, en raison de l'impossibilité d'accéder directement à l'état réel de l'environnement, nous nous appuyons sur les historiques conjoints stockés. C'est pourquoi nous utilisons les \textit{World Models}, capables de généraliser à partir d'un grand volume d'historiques pour estimer les transitions d'états cachés et d'observations. Toutefois, un obstacle majeur est l'absence de \textit{World Models} explicitement conçus pour les environnements multi-agents. Nous proposons ci-dessous une extension du cadre \textit{World Models} aux contextes multi-agents.
 \end{itemize}
 
@@ -251,7 +254,7 @@ Nous supposons ici que la formalisation manuelle de la description informelle de
   $\mathcal{MM} \gets \texttt{manual\_formalize}(\mathcal{C}_{\text{inf}})$ \;
 
   \vspace{0.5em}
-  \tcp{2. Entraîner les encodeurs pour les observations et actions conjointes}
+  \tcp{2. Entraîner les auto-encodeurs pour les observations et actions conjointes}
   Extraire les observations $\Omega^j = \{\omega^j_t\}$ à partir des historiques $\mathcal{D}_{H^j}$ \;
   Entraîner un auto-encodeur $(Enc_{\omega^j}, Dec_{\omega^j})$ sur $\Omega^j$ en minimisant l'erreur de reconstruction \;
 
@@ -302,7 +305,7 @@ Plus précisément, les observations conjointes $\omega_t^{j} = (\omega_t^1, \do
 
 On utilise généralement des \acn{MLP}s ou des architectures à base d'attention pour ces encodeurs, afin d'agréger les informations multi-agents en vecteurs de caractéristiques de taille fixe, tout en capturant les dépendances critiques entre agents.
 
-Une fois l'encodage effectué, le \textit{World Model} multi-agent fonctionne comme en contexte mono-agent, en utilisant les observations encodées $z_t$ dans les historiques transmis au \acn{RLDM} $\mathcal{T}^{z}$. Ce modèle permet une modélisation évolutive, tout en conservant les motifs d'interaction clés entre agents. Dans le cadre de \acn{MAMAD}, ces \textit{World Models} constituent le cœur de la simulation mise en œuvre par l'\hyperref[sec:modelling]{activité de modélisation}, agissant comme des jumeaux numériques de haute fidélité de l'environnement cible.
+Une fois l'encodage effectué, le \textit{World Model} multi-agent fonctionne comme en contexte mono-agent, en utilisant les observations encodées $z_t$ dans les historiques transmis au \acn{RLDM} $\mathcal{T}^{z}$. Dans le cadre de \acn{MAMAD}, ces \textit{World Models} constituent le cœur de la simulation mise en œuvre par l'\hyperref[sec:modelling]{activité de modélisation}, agissant comme des jumeaux numériques de haute fidélité de l'environnement cible.
 
 \section{Un modèle de simulation pour la génération manuelle du modèle simulé}
 
@@ -328,15 +331,15 @@ Les principales caractéristiques de cette description englobent des notions tel
 \end{figure*}
 
 \noindent
-D'un point de vue global, le modèle Dec-POMDP proposé exprime l'état d'un environnement comme l'ensemble des propriétés des nœuds, y compris les propriétés observables des agents. Nous définissons une propriété comme un couple composé d'un identifiant et d'une valeur. L'état de l'environnement est modifié lorsqu'une action est appliquée par un agent. Une action ne peut être appliquée que si la condition préalable booléenne basée sur les propriétés est satisfaite dans l'état actuel de l'environnement. L'état résultant est ensuite modifié en fonction de la post-condition, ce qui conduit finalement à l'ajout de certaines nouvelles propriétés et à la suppression d'autres propriétés. Une fois qu'une action a été appliquée avec succès par un agent, les propriétés observables du même agent lui sont renvoyées sous forme d'observations issues de ce nouvel état. Une récompense est également calculée en fonction de l'état actuel et renvoyée à l'agent. Un agent est choisi pour être modélisé comme une fonction de comportement qui doit sélectionner la prochaine action à effectuer en fonction des observations et des récompenses reçues.
+D'un point de vue global, le modèle Dec-POMDP proposé exprime l'état d'un environnement comme l'ensemble des propriétés des nœuds, y compris les propriétés observables des agents. Nous définissons une propriété comme un couple composé d'un identifiant et d'une valeur. L'état de l'environnement est modifié lorsqu'une action est appliquée par un agent. Une action ne peut être appliquée que si la condition préalable booléenne basée sur les propriétés est satisfaite dans l'état actuel de l'environnement. L'état résultant est ensuite modifié en fonction de la post-condition, ce qui conduit finalement à l'ajout de certaines nouvelles propriétés et à la suppression d'autres propriétés. Une fois qu'une action a été appliquée avec succès par un agent, les propriétés observables du même agent lui sont renvoyées sous forme d'observations issues de ce nouvel état. Une récompense est également calculée en fonction de cet état actuel et renvoyée à l'agent. Un agent est choisi pour être modélisé comme une fonction de comportement qui doit sélectionner la prochaine action à effectuer en fonction des observations et des récompenses reçues.
 
-Il existe différentes façons d'exécuter plusieurs agents dans un même environnement en ajustant le nombre d'agents à exécuter dans un intervalle de temps et le nombre d'actions à jouer par un agent dans un intervalle de temps. Même si cela n'est pas réaliste, nous avons choisi le \textquote{cycle d'environnement d'agent}~\cite{terry2020pettingzoo} comme première approximation en faisant jouer plusieurs agents une action à chaque tour de manière cyclique et séquentielle. Le cycle d'itération est présenté à travers une vue informelle illustrative du modèle de simulation dans la figure~\ref{fig:model_example_illustration}. Elle montre $i$ nœuds avec leurs propriétés, y compris celles observées par les $m$ agents, et comment chacune des $j$ actions disponibles associe un ensemble de propriétés préalables à un sous-ensemble de nouvelles propriétés à ajouter à l'environnement, en supprimant éventuellement les propriétés obsolètes ayant les mêmes identifiants que les nouvelles propriétés~: \begin{enumerate*}[label=\arabic*),itemjoin={;\quad}]
+Il existe différentes façons d'exécuter plusieurs agents dans un même environnement~\cite{terry2020pettingzoo} (en particulier \acn{AEC} et \textit{parallel}) en ajustant le nombre d'agents à exécuter dans un intervalle de temps et le nombre d'actions à jouer par un agent dans cet intervalle de temps. Compte tenu de la simplicité du mode \acn{AEC}, nous avons choisi ce mode comme première approximation en faisant jouer plusieurs agents une action à chaque tour de manière cyclique et séquentielle. Le cycle d'itération est présenté à travers une vue informelle illustrative du modèle de simulation dans la figure~\ref{fig:model_example_illustration}. Elle montre $i$ nœuds avec leurs propriétés, y compris celles observées par les $m$ agents, et comment chacune des $j$ actions disponibles associe un ensemble de propriétés préalables à un sous-ensemble de nouvelles propriétés à ajouter à l'environnement, en supprimant éventuellement les propriétés obsolètes ayant les mêmes identifiants que les nouvelles propriétés~: \begin{enumerate*}[label=\arabic*),itemjoin={;\quad}]
   \item Un agent choisit une action parmi ses observations précédentes et les récompenses en fonction d'une fonction de comportement. Dans la figure~\ref{fig:model_example_illustration}, lorsque $Agent_1$ commence son premier tour, il ne reçoit que les observations initiales ($p_{1}$) et zéro récompense, et choisit $Action_1$
 
 
 
   \item L'environnement est mis à jour par une fonction de transition qui dépend de l'état actuel et de l'action entreprise par l'agent (changement des propriétés une fois que la condition préalable est remplie). Une action est utilisée pour modifier les propriétés de l'environnement en mettant à jour la relation entre les identifiants de propriétés et les valeurs de propriétés.
-  Par exemple, dans la figure~\ref{fig:model_example_illustration}, dans l'état actuel, les propriétés de $Node_1$ sont $p_1,p_3,p_4,p_2,p_9$. Lorsque l'action $Action_1$ est appliquée, la relation associe les sous-ensembles $\{p_3\}$ ou $\{p_4, \allowbreak p_{10}\}$ à $\{p_{15}, \allowbreak p_{14}, \allowbreak p_{11}\}$. La condition préalable basée sur les propriétés peut être comprise comme $p_3 \lor (p_4 \land p_{10})$. Comme $p_{15}$ et $p_{14}$ sont identifiés par $ID_4$ et $ID_2$ qui définissent déjà respectivement $p_{2}$ et $p_{4}$, $p_{4}$ et $p_{2}$ sont supprimés et $p_{11}$ et $p_{14}$ sont ajoutés ($p_{15}$ n'est pas ajouté car $id_2$ n'est associé à aucune valeur)
+        Par exemple, dans la figure~\ref{fig:model_example_illustration}, dans l'état actuel, les propriétés de $Node_1$ sont $p_1,p_3,p_4,p_2,p_9$. Lorsque l'action $Action_1$ est appliquée, la relation associe les sous-ensembles $\{p_3\}$ ou $\{p_4, \allowbreak p_{10}\}$ à $\{p_{15}, \allowbreak p_{14}, \allowbreak p_{11}\}$. La condition préalable basée sur les propriétés peut être comprise comme $p_3 \lor (p_4 \land p_{10})$. Comme $p_{15}$ et $p_{14}$ sont identifiés par $ID_4$ et $ID_2$ qui définissent déjà respectivement $p_{2}$ et $p_{4}$, $p_{4}$ et $p_{2}$ sont supprimés et $p_{11}$ et $p_{14}$ sont ajoutés ($p_{15}$ n'est pas ajouté car $id_2$ n'est associé à aucune valeur)
 
 
 
@@ -431,7 +434,7 @@ De plus, lorsque l'on considère un faible niveau d'abstraction, de nombreuses a
 Ces défis sont directement liés aux questions étudiées concernant la génération automatisée de graphiques d'attaque à l'aide de bases de données disponibles intégrant éventuellement des techniques d'\acn{IA}, comme dans ~\cite{GFalco2018}. Nous n'avons pas l'intention de nous attarder davantage sur ces questions, car elles dépassent le cadre de ce travail.
 
 \
-
+% TODO : motiver
 \noindent
 \textbf{Approche d'intégration MITRE ATT\&CK}~: Nous suggérons une approche manuelle de haut niveau que nous avons utilisée pour intégrer les informations MITRE ATT\&CK sous forme d'arborescence AD, car elle formalise les actions à jouer dans un scénario et leurs interactions avec l'environnement. Elle vise à aider à établir les actions d'attaque/défense qui seront finalement intégrées dans le simulateur~:
 \begin{enumerate*}[label=\arabic*),itemjoin={;\quad}]
@@ -441,7 +444,7 @@ Ces défis sont directement liés aux questions étudiées concernant la génér
 
 
   \item Nous avons produit une description reliant les tactiques identifiées entre elles et les techniques, sous-techniques et procédures associées afin de créer un scénario décrivant comment le groupe APT pourrait attaquer le système en réseau. Cette étape définit la topologie du réseau avec ses principales propriétés
-  %(telles qu'un réseau d'entreprise composé de plusieurs serveurs de bases de données dédiés communiquant via FTP et HTTP, etc.)
+        %(telles qu'un réseau d'entreprise composé de plusieurs serveurs de bases de données dédiés communiquant via FTP et HTTP, etc.)
 
   \item Nous avons créé une arborescence AD comme proposé dans ~\cite{BKordy2010} avec les tactiques comme objectifs d'action principaux et les techniques, sous-techniques et procédures dans la partie inférieure de l'arborescence. Nous avons veillé à disposer de plusieurs chemins pour atteindre un même objectif d'action principal. Nous avons pris soin de définir chaque action d'attaque avec des conditions préalables et des conditions postérieures basées sur les propriétés de l'environnement
 
@@ -449,18 +452,18 @@ Ces défis sont directement liés aux questions étudiées concernant la génér
 
 
 
-  % \item Nous avons également répertorié et défini les principales actions environnementales spécifiques au déploiement à partir de la description précédente de l'environnement de déploiement ou des actions d'attaque/défense étendues qui sont communes aux cyberdéfenseurs et aux cyberattaquants. Cette étape permet d'obtenir un environnement plus réaliste, fournissant un nombre représentatif d'actions plausibles qu'un agent peut choisir dans de nombreux systèmes.
-  % Ces actions communes pourraient inclure au moins~:
-  % \begin{itemize}
-  %     \item Lecture et écriture de fichiers
-  %     \item Créer, supprimer, copier, déplacer, renommer, modifier les propriétés des fichiers/dossiers.
-  %     \item Accéder à un dossier, accéder au dossier parent
-  %     \item Sélectionner un fichier/dossier pour y appliquer des actions ultérieures
-  %     \item Exécuter un fichier binaire
-  %     \item Utilisation d'un protocole réseau (tel que HTTP, FTP, SSH, etc.).
-  %     \item Autres interactions avec les lignes de commande de base concernant la surveillance ou le contrôle du système.
-  % \end{itemize}
-  % Ensuite, les propriétés environnementales associées doivent décrire un système de fichiers, une interface de terminal, un port avec des règles, les propriétés des paramètres du système d'exploitation, etc.
+        % \item Nous avons également répertorié et défini les principales actions environnementales spécifiques au déploiement à partir de la description précédente de l'environnement de déploiement ou des actions d'attaque/défense étendues qui sont communes aux cyberdéfenseurs et aux cyberattaquants. Cette étape permet d'obtenir un environnement plus réaliste, fournissant un nombre représentatif d'actions plausibles qu'un agent peut choisir dans de nombreux systèmes.
+        % Ces actions communes pourraient inclure au moins~:
+        % \begin{itemize}
+        %     \item Lecture et écriture de fichiers
+        %     \item Créer, supprimer, copier, déplacer, renommer, modifier les propriétés des fichiers/dossiers.
+        %     \item Accéder à un dossier, accéder au dossier parent
+        %     \item Sélectionner un fichier/dossier pour y appliquer des actions ultérieures
+        %     \item Exécuter un fichier binaire
+        %     \item Utilisation d'un protocole réseau (tel que HTTP, FTP, SSH, etc.).
+        %     \item Autres interactions avec les lignes de commande de base concernant la surveillance ou le contrôle du système.
+        % \end{itemize}
+        % Ensuite, les propriétés environnementales associées doivent décrire un système de fichiers, une interface de terminal, un port avec des règles, les propriétés des paramètres du système d'exploitation, etc.
 
 \end{enumerate*}
 
@@ -473,13 +476,15 @@ Ces défis sont directement liés aux questions étudiées concernant la génér
 \chapter{Entraînement des politiques sous contraintes}
 \label{chap:training}
 
-L'\textbf{activité d'entraînement} traite les éléments formels suivants~:
+% TODO: référence l'algo
+
+L'\textit{activité d'entraînement} vise à résoudre le problème de conception modélisé comme un problème d'optimisation sous contraintes en s'appuyant sur le cadre MOISE+MARL. L'\textbf{activité d'entraînement} traite donc les éléments formels suivants~:
 %
 \begin{displaymath}
   \pi^j_i \gets \texttt{train}(\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, \gamma, R^j_H, \Omega, A, \mathcal{MM})
 \end{displaymath}
 
-L'\textit{activité d'entraînement} vise à résoudre le problème de conception modélisé comme un problème d'optimisation sous contraintes en s'appuyant sur le cadre MOISE+MARL. Cependant, une limite importante réside dans le fait que MOISE+MARL repose sur le formalisme \acn{Dec-POMDP}, qui suppose un accès complet à l'état réel de l'environnement. En pratique, notre approche se fonde possiblement uniquement sur les données observables (à savoir les historiques conjoints des agents) sans accès aux états internes. Pour combler cet écart, un nouveau formalisme markovien est introduit, opéré sur des séquences observables via le \acn{JOPM}, tout en restant compatible avec les cadres algorithmiques \acn{MARL} existants.
+\noindent Une limite importante réside dans le fait que MOISE+MARL repose sur le formalisme \acn{Dec-POMDP}, qui suppose un accès complet à l'état réel de l'environnement. En pratique, notre approche se fonde possiblement uniquement sur les données observables (à savoir les historiques conjoints des agents) sans accès aux états internes. Pour combler cet écart, un nouveau formalisme markovien est introduit, opéré sur des séquences observables via le \acn{JOPM}, tout en restant compatible avec les cadres algorithmiques \acn{MARL} existants.
 Dans ce chapitre, nous commençons par présenter le framework MOISE+MARL avant d'explorer son extension aux \textit{World Models} Multi-Agents.
 
 
@@ -735,14 +740,19 @@ ii) la conformité au rôle (via les guides de récompense de rôle, pondérés 
 \chapter{Analyser et interpréter les comportements émergents}
 \label{chap:analyzing}
 
-\noindent L'\textbf{activité d'analyse} traite les éléments formels suivants~:
+% TODO: recontextualiser cette activité au sein de la méthode
+
+Cette activité poursuit deux objectifs~: (i) fournir une explication de la politique conjointe apprise en termes de spécifications organisationnelles MOISE+MARL (rôles, objectifs, missions), et (ii) calculer l'adéquation organisationnelle, c'est-à-dire l'alignement entre les comportements appris et une organisation régulière, explicite ou implicite.
+L'\textbf{activité d'analyse} traite donc les éléments formels suivants~:
 \[
   (\mathcal{MM}_{i,\text{implicit}}, \text{OF}) \gets \texttt{analyze}(d_i, \mathcal{MM}_i, \pi^j_i, d_\Omega)
 \]
 
-\noindent Cette activité poursuit deux objectifs~: (i) fournir une explication de la politique conjointe apprise en termes de spécifications organisationnelles MOISE+MARL (rôles, objectifs, missions), et (ii) calculer l'adéquation organisationnelle, c'est-à-dire l'alignement entre les comportements appris et une organisation régulière, explicite ou implicite.
+\noindent
+Pour cela nous nous appuyons sur la méthode \textbf{TEMM}~\cite{soule2025moisemarl} dont nous montrons l’intérêt pour détérminer automatiquement des éléments à la base de spécifications organisationnelles MOISE+MARL mais nous montrons aussi les limites en termes de configuration manuelle et de <<fine-tuning>> dans l'utilisation des techniques \acn{ML} utlisées. Ce chapitre commence par introduire la méthode TEMM et une extension de cette méthode pour automatiser la configuration des hyperparamètres dans un soucis de réduire la dépendance à l'expertise humaine.
 
-Pour cela nous nous appuyons sur la méthode \textbf{TEMM}~\cite{soule2025moisemarl} dont nous montrons l’intérêt pour détérminer automatiquement des éléments à la base de spécifications organisationnelles MOISE+MARL mais nous montrons aussi les limites en termes de configuration manuelle et de <<fine-tuning>> dans l'utilisation des techniques \acn{ML} utlisées. Ce chapitre commence par exposer la méthode TEMM avant de proposer une extension de cette méthode pour automatiser la configuration des hyperparamètres dans un soucis de réduire la dépendance à l'expertise humaine.
+% TODO : expliquer pourquoi on a interêt à utiliser TEMM auto ou TEMM manuel
+% TODO: introduire adéquation organisationnelle avec tous les composants
 
 \section{La méthode TEMM}
 \label{sec:TEMM_algorithm}
@@ -875,14 +885,13 @@ Nous adoptons un compromis basé sur le \textbf{point de coude} du graphique con
 \chapter{Transférer et superviser en environnement réel}
 \label{chap:transferring}
 
-\noindent L'\textbf{activité de transfert} traite les éléments formels suivants~:
+L'\textit{activité de transfert} a deux objectifs principaux~: (1) déployer en continu la politique conjointe la plus récente $\pi^j_{\text{latest}}$ dans l'environnement réel $\mathcal{E}$ afin d'assurer l'action et l'interaction efficaces des agents~; et (2) collecter de nouvelles trajectoires réelles $(\omega^j_t, a^j_t, \omega^j_{t+1})$ pour enrichir l'ensemble de trajectoires $\mathcal{D}_{H^j}$ utilisé pour mettre à jour l'environnement simulé et les spécifications organisationnelles.
+\noindent L'\textbf{activité de transfert} traite donc les éléments formels suivants~:
 \[
   \mathcal{D}_{H^j}, \texttt{need\_update} \gets \texttt{transfer}(\pi^j_{\text{latest}}, \mathcal{E}, \mathcal{D}_{H^j})
 \]
 
-L'\textit{activité de transfert} a deux objectifs principaux~: (1) déployer en continu la politique conjointe la plus récente $\pi^j_{\text{latest}}$ dans l'environnement réel $\mathcal{E}$ afin d'assurer l'action et l'interaction efficaces des agents~; et (2) collecter de nouvelles trajectoires réelles $(\omega^j_t, a^j_t, \omega^j_{t+1})$ pour enrichir l'ensemble de trajectoires $\mathcal{D}_{H^j}$ utilisé pour mettre à jour l'environnement simulé et les spécifications organisationnelles.
-
-À notre connaissance, aucun framework n'offre à la fois un déploiement asynchrone des politiques et une collecte automatique des historiques conjoints, déclenchée par seuil, dans une boucle fermée capable de se synchroniser avec une chaîne d'apprentissage. Cette absence limite fortement l'automatisation du cycle de conception des \acn{SMA} en environnement réel.
+\noindent À notre connaissance, aucun framework n'offre à la fois un déploiement asynchrone des politiques et une collecte automatique des historiques conjoints, déclenchée par seuil, dans une boucle fermée capable de se synchroniser avec une chaîne d'apprentissage. Cette absence limite fortement l'automatisation du cycle de conception des \acn{SMA} en environnement réel.
 
 \paragraph{Cadre de transfert}
 
