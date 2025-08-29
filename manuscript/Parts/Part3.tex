@@ -67,16 +67,18 @@ La méthode \acn{MAMAD} ambitionne de réunir les forces des approches symboliqu
 \chapter{Présentation globale de la méthode}
 \label{chap:mamad_global}
 
-La méthode \acn{MAMAD}~\footnotemark[1] repose sur quatre grandes activités~: (1) la modélisation de l'environnement, de l'objectif global et des contraintes organisationnelles, (2) l'apprentissage des politiques à l'aide de divers algorithmes \acn{MARL}, (3) l'analyse des comportements et l'inférence des spécifications organisationnelles à l'aide d'une méthode proposée, et (4) le maintien de la cohérence entre l'environnement simulé et l'environnement réel en déployant les politiques entraînées et en mettant à jour la simulation. Cette approche guide le processus d'apprentissage des agents tout en imposant des contraintes organisationnelles strictes, garantissant ainsi l'efficacité des politiques apprises. Le cycle de vie d'un \acn{SMA} conçu avec \acn{MAMAD} est illustré en \autoref{fig:cycle}.
+La méthode \acn{MAMAD}~\footnotemark[2] repose sur quatre grandes activités~: (1) la modélisation de l'environnement, de l'objectif global et des contraintes organisationnelles, (2) l'apprentissage des politiques à l'aide de divers algorithmes \acn{MARL}, (3) l'analyse des comportements et l'inférence des spécifications organisationnelles à l'aide d'une méthode proposée, et (4) le maintien de la cohérence entre l'environnement simulé et l'environnement réel en déployant les politiques entraînées et en mettant à jour la simulation. Cette approche guide le processus d'apprentissage des agents tout en imposant des contraintes organisationnelles strictes, garantissant ainsi l'efficacité des politiques apprises.
+
+Le cycle de vie d'un \acn{SMA} conçu avec \acn{MAMAD} est illustré en \autoref{fig:cycle}. Il commence par la modélisation de l'environnement, réalisée à partir d'un ensemble suffisant de trajectoires réelles (issues d'agents déjà transférés ou de toute autre source disponible), ainsi que la définition de l'objectif global et des contraintes de conception sous forme de rôles et d'objectifs. Ensuite, les agents sont entraînés dans cet environnement simulé à l'aide de techniques d'apprentissage par renforcement multi-agent (MARL). Une fois l'entraînement terminé, une analyse post-entraînement permet d'extraire les rôles et objectifs émergents des agents, ce qui conduit à l'amélioration des spécifications organisationnelles appliquées. Enfin, après validation, les politiques apprises sont déployées pour contrôler les actionneurs de l'environnement, générant ainsi de nouvelles traces qui serviront à affiner la modélisation lors des itérations suivantes.
 
 \begin{figure}[h!]
   \centering
   \input{figures/cycle.tex}
-  \caption[Cycle de vie d'un SMA conçu avec MAMAD]{Cycle de vie d'un SMA conçu avec MAMAD~: i) L'utilisateur commence par modéliser l'environnement à partir d'un ensemble suffisant de trajectoires réelles (obtenues à l'aide d'agents initialement transférés) ou de toute autre source disponible, ainsi que l'objectif global et les contraintes de conception sous forme de rôles et d'objectifs~; \quad ii) Ensuite, il lance l'entraînement des agents via des techniques MARL~; \quad iii) Une analyse post-entraînement est réalisée pour extraire les rôles et objectifs émergents des agents, ce qui permet d'améliorer les spécifications organisationnelles appliquées~; \quad v) Une fois validées, les politiques apprises sont déployées pour contrôler les actionneurs de l'environnement, générant de nouvelles traces utiles pour une meilleure modélisation.}
+  \caption{Cycle de vie d'un SMA conçu avec MAMAD}
   \label{fig:cycle}
 \end{figure}
 
-La méthode \acn{MAMAD} conçoit la conception d'un \acn{SMA} comme un processus itératif d'optimisation sous contraintes. On suppose donnés~:
+Le coeur de la méthode \acn{MAMAD} est d'envisager la conception d'un \acn{SMA} comme un processus itératif d'optimisation sous contraintes. On suppose donnés~:
 \begin{itemize}
   \item $\mathcal{E}_0$~: l'environnement initial dans lequel les agents peuvent agir~;
   \item $\mathcal{G}_{\text{inf}}$~: une description informelle de l'objectif global recherché~;
@@ -86,27 +88,14 @@ La méthode \acn{MAMAD} conçoit la conception d'un \acn{SMA} comme un processus
   \item $\texttt{org\_fit}_{min}$, $\overline{r}_{min}$, $\sigma_{min}$~: les valeurs minimales exigées pour le score d'adéquation organisationnelle, la récompense moyenne, et l'écart-type, servant à valider une politique conjointe. Ces seuils sont en général fixés empiriquement.
 \end{itemize}
 
+L'adéquation organisationnelle est un indicateur quantitatif de la conformité d'une politique conjointe aux spécifications organisationnelles, calculé à l'aide de la méthode \acn{TEMM} présentée en \autoref{chap:analyzing}. La récompense moyenne $\overline{r}$ et l'écart-type $\sigma$ sont des métriques classiques en apprentissage par renforcement, reflétant respectivement la performance globale et la stabilité d'une politique.
+
 \noindent Comme décrit dans \autoref{alg:mamad}, le cadre méthodologique permet une conception continue du \acn{SMA} via la coordination itérative et asynchrone de deux processus distincts~: le \textit{processus de Transfert}, qui est connecté à l'environnement réel et gère l'exécution en temps réel et la collecte d'historiques conjoints~; et le \textit{processus \acn{MTA}}, qui consomme les données stockées pour améliorer itérativement le modèle simulé, la politique conjointe et les spécifications organisationnelles du \acn{SMA}.
 
 \paragraph{Processus de Transfert~: déploiement des politiques et collecte de données}
 
-Ce processus est actif en continu tant que le \acn{SMA} est en fonctionnement dans l'environnement réel. Il a deux rôles~: déployer la politique conjointe la plus récente $\pi^j_{\text{latest}}$ auprès des agents réels, garantissant un comportement à jour sans interruption~; et collecter en continu les trajectoires des agents sous forme d'historiques conjoints $H^j$, stockés par lots. Une fois qu'un nombre suffisant de trajectoires est collecté, le lot est ajouté au dépôt global $\mathcal{D}_{H^j}$. Si le processus de mise à jour n'est pas en cours, il déclenche le lancement du processus \textit{\acn{MTA}}.
+Ce processus est actif en continu tant que le \acn{SMA} est en fonctionnement dans l'environnement réel. Il a deux rôles~: déployer la politique conjointe la plus récente $\pi^j_{\text{latest}}$ auprès des agents déployés dans l'environnement cible, garantissant un comportement à jour sans interruption~; et collecter en continu les trajectoires des agents sous forme d'historiques conjoints $H^j$, stockés par lots. Une fois qu'un nombre suffisant de trajectoires est collecté, le lot est ajouté au dépôt global $\mathcal{D}_{H^j}$. Si le processus de mise à jour n'est pas en cours, il déclenche le lancement du processus \textit{\acn{MTA}}.
 
-\paragraph{Processus MTA~: optimisation des politiques et raffinement organisationnel}
-
-Ce processus modélise le problème de conception actuel et améliore la politique du \acn{SMA} ainsi que ses spécifications organisationnelles. Il commence par construire un modèle de prédiction d'observations conjointes (\acparen{JOPM}) $T^j$ à l'aide de \textit{World Models} étendus, à partir des trajectoires collectées. Les exigences de conception sont formalisées sous forme de spécifications organisationnelles MOISE+MARL $\mathcal{MM}$ et l'objectif est formalisé par une fonction de récompense basée sur l'historique $R^j_H$.
-
-Un modèle markovien est ensuite construit à partir des éléments modélisés afin d'entraîner les agents en tenant compte des spécifications organisationnelles, via le framework MOISE+MARL. Une fois l'entraînement terminé, la politique conjointe $\pi^j$ est analysée à l'aide de \acn{TEMM} afin d'inférer les spécifications organisationnelles implicites $\mathcal{MM}_{\text{imp}}$ et de calculer un score d'adéquation organisationnelle.
-
-\section{Boucle de raffinement via les spécifications organisationnelles}
-
-Si la politique apprise montre une faible adéquation organisationnelle, des performances insuffisantes ou une grande variabilité (par rapport aux seuils définis), les spécifications organisationnelles implicites inférées sont utilisées pour raffiner les spécifications initiales. Ce processus de raffinement peut impliquer une inspection manuelle des structures inférées pour identifier les facteurs clés de succès des comportements émergents. Guidé par ces observations, le concepteur peut réviser les spécifications afin d'orienter les prochaines itérations d'apprentissage.
-
-Cette boucle est répétée jusqu'à un maximum de $n_{refine}$ fois, orientant progressivement l'espace des politiques vers des comportements plus structurés et plus performants. La dernière politique validée est alors enregistrée comme $\pi^j_{\text{latest}}$, prête à être déployée dans l'environnement réel.
-
-La boucle de raffinement est particulièrement utile dans les environnements complexes où la connaissance préalable est limitée ou où la conception manuelle serait trop coûteuse. À chaque itération, elle permet de restreindre l'espace de recherche des politiques en le concentrant sur les régions associées à des régularités organisationnelles émergentes. Remarquablement, ce processus peut commencer sans aucune spécification organisationnelle initiale, et produire par raffinement successif des contraintes organisationnelles pertinentes, objectives, et indépendantes de toute expertise humaine ou connaissance préalable de l'environnement.
-
-\noindent L'interaction entre ces deux processus asynchrones constitue un cycle de conception de \acn{SMA} complet et fermé. Le système apprend continuellement à partir de l'exécution réelle, met à jour son modèle simulé, réentraîne sous des spécifications évolutives, et déploie des politiques améliorées sans nécessiter d'intervention constante du concepteur. Cette architecture établit un pont entre les principes symboliques de l'ingénierie orientée agents et l'automatisation par apprentissage, assurant conformité, adaptabilité et explicabilité au niveau organisationnel.
 
 \begin{algorithm}[H]
   \caption{Conception de SMA assistée par MOISE+MARL (MAMAD)}
@@ -165,6 +154,26 @@ La boucle de raffinement est particulièrement utile dans les environnements com
   }
 \end{algorithm}
 
+
+
+\paragraph{Processus MTA~: optimisation des politiques et raffinement organisationnel}
+
+Ce processus modélise le problème de conception actuel et améliore la politique conjointe des agents ainsi que ses spécifications organisationnelles. Il commence par construire un modèle de prédiction d'observations conjointes (\acparen{JOPM}) $T^j$ à l'aide de \textit{World Models} étendus, à partir des trajectoires collectées. Les exigences de conception sont formalisées sous forme de spécifications organisationnelles MOISE+MARL $\mathcal{MM}$ et l'objectif est formalisé par une fonction de récompense basée sur l'historique $R^j_H$.
+
+Un modèle markovien est ensuite construit à partir des éléments modélisés afin d'entraîner les agents en tenant compte des spécifications organisationnelles, via le framework MOISE+MARL. Une fois l'entraînement terminé, la politique conjointe $\pi^j$ est analysée à l'aide de \acn{TEMM} afin d'inférer les spécifications organisationnelles implicites $\mathcal{MM}_{\text{imp}}$ et de calculer un score d'adéquation organisationnelle.
+
+\section{Boucle de raffinement via les spécifications organisationnelles}
+
+Si la politique apprise montre des performances insuffisantes ou une grande variabilité (par rapport aux seuils définis), les spécifications organisationnelles implicites inférées sont utilisées pour raffiner les spécifications initiales. Ce processus de raffinement peut impliquer une inspection manuelle des structures inférées pour identifier les facteurs clés de succès des comportements émergents. Guidé par ces observations, le concepteur peut réviser les spécifications afin d'orienter les prochaines itérations d'apprentissage.
+
+Cette boucle est répétée jusqu'à un maximum de $n_{refine}$ fois, orientant progressivement l'espace des politiques vers des comportements plus structurés et plus performants. La dernière politique validée est alors enregistrée comme $\pi^j_{\text{latest}}$, prête à être déployée dans l'environnement réel.
+
+La boucle de raffinement est particulièrement utile dans les environnements complexes où la connaissance préalable est limitée ou où la conception manuelle serait trop coûteuse. À chaque itération, elle permet de restreindre l'espace de recherche des politiques en le concentrant sur les régions associées à des régularités organisationnelles émergentes.
+
+A noter que ce processus peut commencer sans aucune spécification organisationnelle initiale, et produire par raffinement successif des contraintes organisationnelles pertinentes, objectives, et indépendantes de toute expertise humaine ou connaissance préalable de l'environnement.
+
+\noindent L'interaction entre ces deux processus asynchrones constitue un cycle de conception de \acn{SMA} complet et fermé. Le système apprend continuellement à partir de l'exécution réelle, met à jour son modèle simulé, réentraîne sous des spécifications évolutives, et déploie des politiques améliorées sans nécessiter d'intervention constante du concepteur. Cette architecture établit un pont entre les principes symboliques de l'ingénierie orientée agents et l'automatisation par apprentissage, assurant conformité, adaptabilité et explicabilité au niveau organisationnel.
+
 \noindent On peut noter que nous proposons d'exploiter un environnement simulé modélisé comme un jumeau numérique (\textit{Digital Twin}) pour l'entraînement ultérieur, tandis que les approches \acn{MBRL} combinent simultanément modélisation et apprentissage. En effet, nous privilégions une séparation entre modélisation et apprentissage pour les raisons suivantes~: i) la réutilisabilité du modèle d'environnement pour d'autres entraînements d'agents, avec des ajustements éventuels~; \quad ii) le besoin d'agents simples n'embarquant pas de modèles coûteux pour planifier~; \quad iii) le besoin d'un environnement simulé de haute fidélité commun à tous les agents.
 
 \section{Application flexible de la méthode MAMAD}
@@ -178,8 +187,8 @@ Chaque activité peut être utilisée de façon indépendante ou combinée avec 
 
 Cette flexibilité permet :
 \begin{itemize}
-  \item \textbf{Une application partielle} : un cas d'application peut exploiter uniquement certaines activités (par exemple, \acn{MOD} et \acn{TRN} uniquement) tout en omettant l'analyse et le transfert si ces étapes ne sont pas nécessaires.
-  \item \textbf{Un choix ciblé de sous-activités} : pour chaque activité retenue, une sous-activité peut être choisie en fonction des objectifs, des ressources disponibles et du degré d'automatisation souhaité (par exemple, \acn{MOD-AUT} pour la modélisation, \acn{TRN-CON} pour l'entraînement).
+  \item \textbf{Une application partielle} : un cas d'application peut exploiter uniquement certaines activités (par exemple, \acn{MOD} et \acn{TRN} uniquement) tout en omettant l'analyse et le transfert si ces étapes ne sont pas nécessaires comme dans le cas où l'environnement n'est pas dynamique.
+  \item \textbf{Un choix ciblé de sous-activités} : pour chaque activité retenue, une sous-activité peut être choisie en fonction des objectifs, des ressources disponibles et du degré d'automatisation souhaité (par exemple, \acn{MOD-AUT} pour la modélisation automatisée, \acn{TRN-CON} pour l'entraînement avec des contraintes). Cela permet de gérer le coût de conception en fonction du niveau de complexité de l'environnement et du resources (financières, temps, experience) disponibles.
   \item \textbf{Une combinaison adaptative} : certaines activités peuvent être réalisées de manière automatisée tandis que d'autres restent manuelles ou semi-manuelles, afin d'équilibrer précision, contrôle et rapidité.
 \end{itemize}
 
@@ -211,9 +220,9 @@ Les chapitres suivantes détaillent chaque activité du cadre \acn{MAMAD}, ident
 \chapter{Modéliser l'environnement en simulation}
 \label{chap:modelling}
 
-L'\textbf{activité de modélisation} vise à produire les composants formels suivants~:
+L'\textbf{activité de modélisation} vise donc à produire les composants formels suivants~:
 \begin{displaymath}
-  \texttt{model}(\mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}}, \gamma, A, \Omega) = \mathcal{T}^j, R^j_H, \mathcal{MM}
+  \texttt{model}(\mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}}, \gamma, A, \Omega) \rightarrow \mathcal{T}^j, R^j_H, \mathcal{MM}
 \end{displaymath}
 
 
@@ -248,7 +257,7 @@ Nous supposons ici que la formalisation manuelle de la description informelle de
 
   \vspace{0.5em}
   \tcp{3. Encoder les observations dans les historiques}
-  Pour chaque historique $h^j = \{\omega_t^j, a_t^j\} \in \mathcal{D}_{H^j}$, encoder chaque observation conjointe ${z}_t = Enc_{\omega^j}(\omega^j_t)$ pour constituer l'ensemble d'entraînement $\mathcal{B} = \{ \{(z_t, a^j_t, z_{t+1})\} = h_z^j, h_z^j \in \mathcal{D}_{H^j}\}$
+  Pour chaque historique $h^j = (\omega_t^j, a_t^j) \in \mathcal{D}_{H^j}$, encoder chaque observation conjointe ${z}_t = Enc_{\omega^j}(\omega^j_t)$ pour constituer l'ensemble d'entraînement $\mathcal{B} = \{ \{(z_t, a^j_t, z_{t+1})\} = h_z^j, h_z^j \in \mathcal{D}_{H^j}\}$
 
   \vspace{0.5em}
   \tcp{4. Entraîner le RLDM}
@@ -289,7 +298,7 @@ Dans les environnements multi-agents, les observations conjointes deviennent rap
 \end{figure}
 
 
-Plus précisément, les observations conjointes $\omega_t^{j} = (\omega_t^1, \dots, \omega_t^n) \in \Omega^{j}$ sont transformées en représentations latentes compactes à l'aide d'un encodeur d'observations conjointes $Enc_{\omega^j}~: \Omega^j \rightarrow z$, produisant $z_t = Enc_{\omega^j}(\omega_t^j)$. Un décodeur $Dec_z~: z \rightarrow \hat{\Omega}^j$ permet la reconstruction des observations conjointes si nécessaire.
+Plus précisément, les observations conjointes $\omega_t^{j} = (\omega_t^1, \dots, \omega_t^n) \in \Omega^{j}$ sont transformées en représentations latentes compactes à l'aide d'un encodeur d'observations conjointes $Enc_{\omega^j}~: \Omega^j \rightarrow z$, produisant $z_t = Enc_{\omega^j}(\omega_t^j)$. Un décodeur $Dec_z~: z \rightarrow \hat{\Omega}^j$ permet la reconstruction des observations conjointes.
 
 On utilise généralement des \acn{MLP}s ou des architectures à base d'attention pour ces encodeurs, afin d'agréger les informations multi-agents en vecteurs de caractéristiques de taille fixe, tout en capturant les dépendances critiques entre agents.
 
@@ -353,7 +362,7 @@ Nous définissons les éléments liés aux propriétés des nœuds, des agents e
 
   \item Nous appelons le couple $p = (id_{j}, v_{j})$ avec $id_j \in {ID}$ et $v_j \in V$, une propriété.
         \begin{itemize}
-          \item $ID$~: l'ensemble des identifiants de propriétés indiquant éventuellement comment les propriétés sont organisées dans une structure de données non plate (telle que $PC1.processes.agents.agent1$). Ces identifiants de propriétés peuvent être utilisés pour un chemin d'accès à un fichier, le type de système d'exploitation utilisé dans un nœud, une ligne de commande utilisée par un agent\dots
+          \item $ID$~: l'ensemble des identifiants de propriétés indiquant éventuellement comment les propriétés sont organisées dans une structure de données non plate (telle que $PC1. \allowbreak processes.agents.agent1$). Ces identifiants de propriétés peuvent être utilisés pour un chemin d'accès à un fichier, le type de système d'exploitation utilisé dans un nœud, une ligne de commande utilisée par un agent\dots
           \item $V$~: Ensemble des valeurs de propriétés. Celles-ci peuvent inclure le contenu d'un fichier, une description complète du système d'exploitation, le résultat d'une ligne de commande\dots
                 % \item $Valeurs~: ID \rightarrow \mathcal{P}(V) = \{(id_{j}, V_{j}) \: | \: id_j \in {ID},$ $V_j \in \mathcal{P}(V)\}$~: une bijection associant un identifiant de propriété à l'ensemble des différentes valeurs auxquelles il peut être associé. Par exemple, l'identifiant $ls\_command\_output$ peut être associé aux valeurs suivantes $\{file.txt,\{file.txt,passwd.txt\}\}$
         \end{itemize}
@@ -539,7 +548,7 @@ La définition de $V^{\pi^j}$ suit le schéma d'exécution d'agent séquentiel e
     \end{gather*}
     %
     \vspace{-0.5cm}
-    \textcolor{red}{\[\text{ \hspace{-0.1cm} With } rag(h_t, \omega_t) = A_{t} \times \mathbb{R} \text{, } \langle a_t, ch_{t} \rangle \in A_{t} \times \mathbb{R} \text{ ; } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
+    \textcolor{red}{\[\text{ \hspace{-0.1cm} With } rag(h_t, \omega_t) = A_{t} \times \mathbb{R} \text{, } \langle a_t, ch_{t} \rangle \in A_{t} \times \mathbb{R} \text{ ; } rn: \emptyset \to [0,1[ \text{, une fonction aléatoire uniforme}\]}
     %
     \vspace{-0.6cm}
     \textcolor{blue}{
@@ -635,7 +644,7 @@ La définition complète de $V_{\mathcal{T}^j}^{\pi^j}$ est donnée dans \hyperr
     \[\hspace{-0.5cm} h^j_t = \langle h_{t,0}, h_{t,1} \dots h_{t,|\mathcal{A}|} \rangle = \langle \langle h_{t-1,i}, \omega_{t,i}, a_{t,i} \rangle \rangle_{i \in \mathcal{A}}\]
     %
     \vspace{-0.2cm}
-    \textcolor{red}{\[\hspace{-1cm}\text{ \hspace{-0.1cm} With } \langle rag_i, rrg_i \rangle = rcg(ar(i)) \text{ ; } rn: \emptyset \to [0,1[ \text{, a uniform random function}\]}
+    \textcolor{red}{\[\hspace{-1cm}\text{ \hspace{-0.1cm} With } \langle rag_i, rrg_i \rangle = rcg(ar(i)) \text{ ; } rn: \emptyset \to [0,1[ \text{, une fonction aléatoire uniformef}\]}
     %
     \vspace{-0.3cm}
     \textcolor{red}{\[A^j_t \times \mathbf{R}^{|\mathcal{A}|} = rag^j(h^j_t, \tilde{\omega}^j_t) = \langle rag_i(h_{t,i}, \omega_{t,i}) \rangle_{i \in \mathcal{A}} \text{ ; } rrg^j(h^j_t, \tilde{\omega}^j_t, a^j_t) = \sum_{i \in \mathcal{A}}{rrg_i(h_{t,i}, \omega_{t,i}, a_{t,i})}\]}
@@ -904,7 +913,7 @@ Nous proposons un cadre théorique général mettant en œuvre un système de co
   \If{$|\mathcal{B}| \geq \texttt{batch\_size}$}{
     Ajouter $\mathcal{B}$ à $\mathcal{D}_{H^j}$ et vider $\mathcal{B}$ \;
     $\texttt{need\_update} \gets \texttt{True}$ \;
-    \If{$\texttt{running\_update} = \texttt{False}$}{
+    \If{$\texttt{not running\_update} = \texttt{False}$}{
       \texttt{launch\_update()} \tcp*[r]{Appel asynchrone}
     }
   }
