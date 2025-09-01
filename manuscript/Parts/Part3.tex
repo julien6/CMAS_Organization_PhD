@@ -20,12 +20,17 @@
 
 \noindent
 
+% todo : Initialement, dans la partie I, notre problème était un problème de conception logiciel d'un SMA de Cyberdéfense capable d'assurer la Cyberdéfense de façon optimale compte tenu des contraintes dynamique de l'environnement et des concepteur. Nous avons formalisé le fait que pour répondre à cette question de recherche globale, il faut répondre simultanément à 6 critères (Autonomie - C1, Performance - C2, Adaptation - C3, Contrôle - C4, Explicabilité - C5, Robustesse - C6). Nous avons donc poursuivi une première revue de littérature qui nous a permis de comprendre qu'assez peu de travaux s’intéressent à une approche multi-agent pour la Cyberdéfense et que les travaux qui couvrent le plus de critères sont à chercher du côté de l'approche connexioniste qui favorise la performance et l'adaptation là où l'approche purement symbolique favorise l'explicabilité et le controle. Fort de ce constat, nous avons proposé de voir la question de recherche globale au travers le prisme d'un problème d'optimisation sous contraintes où la politique conjointe est à optimiser pour maximiser une récompense qui encode le succès dans l'atteinte d'un objectif de Cyberdéfense (ou un conglomérat d'objectifs) et où les contraintes sont formalisées comme des spécifications organisationnelles. A partir de cette formalisation, la complexité de la question de recherche globale apparait abordable au travers de 4 activités : Modélisation, Entrainement, Analyse et Transfert. On sait pour chaque activité les données en entrée, les données en sortie attendues et donc aussi les objectifs de chaque activité.
+% A partir de cette vision, la partie II présente les travaux qui couvrent les objectifs pour chaque activité, permettant ainsi de savoir quels sont les domaines/sous-domaines ou travaux qui semble le plus adaptés (ou qui nécéssitent le moins de contributions supplémentaires) pour atteindre les objectifs de chaque activités. Compte tenu des travaux identifiés comme les plus prometteurs, on en déduit donc les verrous qui restent encore à combler par de nouvelles contributions pour atteindre les objectifs de chaque activités.
+% La partie III, présente la méthode qui orchestre les 4 activités et explique dans chacune des activités comment nous avons combler les verrous par de nouvelles contributions. Dans cette partie, une présentation générale de la méthode qui orchestre les 4 activités est d'abord donnée. Ensuite, nous détaillons chaque activité en rappellant rapidement les objectifs et chacun des verrous associés et pour chacun nous détaillons notre contribution en les justifiant. Une fois ceci fait, nous donnons une représentation alogrithmique de l'activité qui sert de support pour détailler de façon formelle l'activité en explicitant chacun des éléments formels (ensemble, élément d'un ensemble, relation...). A la fin de l'activité, on fait une sorte de bilan en expliquant ce qu'on pense qui sera couvert en termes d'objectifs attendus, ce qui l'est moyennement et pourquoi et ce qui n'est pas du tout couvert.
+% La partie IV concerne la validation expérimentale de la méthode par la mise en application de cette méthode au travers de trois cas d'études non-orientés Cyberdéfense et de trois cas d'études orientés Cyberdéfense. L'objectif est de vérifier que les 6 critères (Autonomie - C1, Performance - C2, Adaptation - C3, Contrôle - C4, Explicabilité - C5) sont bien couverts. Pour cela, on applique une grille d'évaluation qui associe chaque critères à un ensemble de métriques mesurables et qui peuvent être analysé pour voir si le critère est couvert ou pas. Comme la grille de lecture est commune aux 6 environnements, on peut donc vérifier de manière plus consistante et générique si la méthode permet bien de couvrir les 6 critères. La partie finit donc avec une analyse globale de si la méthode couvre bien les 6 critères posés initialement.
+
 La partie précédente a mis en lumière les lacunes actuelles dans l'intégration des modèles organisationnels au sein des approches d'apprentissage multi-agent, tant du point de vue du contrôle, de l'explicabilité que de l'automatisation de la conception. Elle a également mis en lumière les lacunes dans la modélisation de l'environnement et son intégration dans le processus d’entraînement notamment sur le manque de cadre permettant d'assurer la cohérence entre l'environnement simulé et réel.
 
 \medskip
 
 \noindent
-Cette troisième partie présente notre proposition pour répondre à ces lacunes~: la méthode \acn{MAMAD}. Cette méthode repose sur la prémisse que la conception d'un \acn{SMA} peut être abordée par le prisme d'un problème d'optimisation sous contraintes. La méthode est construit autour de cette vision et s'organise donc autour de quatre activités~:
+Cette troisième partie présente notre proposition pour répondre à ces lacunes~: la méthode \acn{MAMAD}. Cette méthode repose sur la prémisse que la conception d'un \acn{SMA} peut être abordée par le prisme d'un problème d'optimisation sous contraintes. La méthode est construite autour de cette vision et s'organise donc autour de quatre activités~:
 
 \begin{enumerate}
   \item \textbf{Modélisation}~: modéliser l'environnement réel en un environnement simulé ainsi que les contraintes de conceptions en spécifications organisationnelles~;
@@ -50,7 +55,7 @@ La méthode \acn{MAMAD} ambitionne de réunir les forces des approches symboliqu
 
 \begin{figure}[h!]
   \centering
-  \resizebox{\linewidth}{!}{%
+  \resizebox{0.8\linewidth}{!}{%
     \input{figures/organisation_manuscrit_partie_3.tex}
   }
   \caption{Structure de la Partie III~: La méthode MAMAD}
@@ -85,7 +90,7 @@ Le coeur de la méthode \acn{MAMAD} est d'envisager la conception d'un \acn{SMA}
   \item $\mathcal{C}_{\text{inf}}$~: une spécification informelle des contraintes de conception~;
   \item $\gamma \in [0,1]$~: le facteur d'actualisation définissant une solution à court ou long terme, généralement fixé empiriquement (par défaut à 1)~;
   \item $A, \Omega$~: respectivement les espaces d'actions et d'observations~;
-  \item $\texttt{org\_fit}_{min}$, $\overline{r}_{min}$, $\sigma_{min}$~: les valeurs minimales exigées pour le score d'adéquation organisationnelle, la récompense moyenne, et l'écart-type, servant à valider une politique conjointe. Ces seuils sont en général fixés empiriquement.
+  \item $\texttt{org\_fit}_{min}$, $\overline{r}_{min}$, $\sigma_{max}$~: les valeurs minimales exigées pour le score d'adéquation organisationnelle, la récompense moyenne, et la valeur maximale pour l'écart-type, servant à valider une politique conjointe. Ces seuils sont en général fixés empiriquement.
 \end{itemize}
 
 L'adéquation organisationnelle est un indicateur quantitatif de la conformité d'une politique conjointe aux spécifications organisationnelles, calculé à l'aide de la méthode \acn{TEMM} présentée en \autoref{chap:analyzing}. La récompense moyenne $\overline{r}$ et l'écart-type $\sigma$ sont des métriques classiques en apprentissage par renforcement, reflétant respectivement la performance globale et la stabilité d'une politique.
@@ -104,16 +109,16 @@ Ce processus qui consiste à maintenir la cohérence entre l'environnement simul
   \label{alg:mamad}
   \DontPrintSemicolon
 
-  \KwIn{Environnement initial $\mathcal{E}$, objectif $\mathcal{G}_{\text{inf}}$, contraintes de conception $\mathcal{C}_{\text{inf}}$, nombre maximal de cycles de raffinement $n_{refine}$}
+  \KwIn{Environnement initial $\mathcal{E}$, objectif $\mathcal{G}_{\text{inf}}$, contraintes de conception $\mathcal{C}_{\text{inf}}$, espace d'observation $\Omega$, espace d'action $A$, nombre maximal de cycles de raffinement $n_{refine}$}
   \KwOut{Un SMA déployé satisfaisant aux exigences de conception, de performance et d'explicabilité~; ainsi que ses spécifications organisationnelles associées}
 
-  Initialiser~: $\mathcal{D}_{H^j} \gets \emptyset$, $\pi^j_{\text{latest}} \gets \pi^j_{\text{init}}$, $running\_MTA \gets False$ \;
+  Initialiser~: $\mathcal{D}_{H^j} \gets \emptyset$, $\pi^j_{\text{latest}} \gets \pi^j_{\text{init}}$, $running\_MTA \gets False, \mathcal{MM} \gets \emptyset$ \;
 
   \vspace{0.3em}
 
-  \While{le SMA est en cours de conception}{
+  \While{SMA en cours de conception}{
     \tcp*[l]{Transfert~: récupération des trajectoires \& déploiement de la politique}
-    $\mathcal{D}_{H^j}, \texttt{need\_update} \gets \text{transfer}(\pi^i_{latest}, \mathcal{D}_{H^j})$ \tcp*[r]{appel asynchrone}
+    $\mathcal{D}_{H^j}, \texttt{need\_update} \gets \text{transfer}(\pi^i_{\text{latest}}, \mathcal{D}_{H^j})$ \tcp*[r]{appel asynchrone}
     \If{\texttt{need\_update} et non \texttt{running\_MTA}}{
       \texttt{launch\_MTA()} \tcp*[r]{appel asynchrone}
     }
@@ -124,28 +129,25 @@ Ce processus qui consiste à maintenir la cohérence entre l'environnement simul
   \MTA{}{}{
 
   $\texttt{running\_MTA} \gets True$ \tcp*[l]{Variable globale}
-
+  % ttt
   \tcp*[l]{Modélisation~: modéliser l'environnement réel}
-  $\mathcal{T}^j, R^j_H, \mathcal{MM} \gets \texttt{model}(\mathcal{E}, \mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}}, \gamma, A, \Omega)$ \;
+  $(\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \text{Render}^j_H) \gets \texttt{model}(\mathcal{E}, \mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \gamma, \Omega, A)$ \;
 
-  \While{$i < n_{refine}$}{
+  \tcp*[l]{Politique insatisfaisante ou nombre max. de raffinement non atteint}
 
-  \vspace{0.5em}
-  \tcp*[l]{Entraînement~: politique sous contraintes organisationnelles}
-  $\pi^j, \overline{r}, \sigma \gets \texttt{train}(\mathcal{T}^j, \mathcal{MM})$ \;
+  \While{$i < n_{refine} \ \text{ou} \ (\texttt{org\_fit} > \texttt{org\_fit}_{min} \ or \ \overline{r} > \overline{r}_{min} \ or \  \sigma < \sigma_{max})$}{
 
   \vspace{0.5em}
-  \tcp*[l]{Analyse~: inférer les nouvelles spécifications organisationnelles}
+  \tcp*[l]{Entraînement~: politique sous spec. org.}
+  $(\pi^j, \overline{r}, \sigma) \gets \texttt{train}(\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \text{Render}^j_H, \mathcal{MM}, \mathcal{C}_{\text{inf}}, \gamma, \Omega, A)$ \;
+
+  \vspace{0.5em}
+  \tcp*[l]{Analyse~: inférer les nouvelles spec. org.}
   $(\mathcal{MM}_{\text{imp}}, \texttt{org\_fit}) \gets \texttt{analyze}(\mathcal{T}^j, \mathcal{MM}, \pi^j)$ \;
 
-  \vspace{0.5em}
-  \tcp*[l]{Si politique insatisfaisante, raffinement}
-  \If{$\texttt{org\_fit} < \texttt{org\_fit}_{min} \ or \ \overline{r} < \overline{r}_{min} \ or \  \sigma > \sigma_{min}$}{
-  $\mathcal{MM} \gets \mathcal{MM}_{\text{imp}}$ \;
-  retour à 'Analyzing' \;
-  }
-
   $\pi^j_{\text{latest}} \gets \pi^j$ \tcp*[r]{Mise à jour de la politique la plus récente}
+
+  $\mathcal{MM} \gets \mathcal{MM}_{\text{imp}}$ \;
 
   $i \gets i + 1$
 
@@ -226,7 +228,7 @@ Les chapitres suivantes détaillent chaque activité du cadre \acn{MAMAD}, ident
 
 \noindent L'\textit{activité de modélisation} a pour objectif de représenter le problème de conception comme un problème d'optimisation sous contraintes. L'\textbf{activité de modélisation} vise donc à produire les composants formels suivants~:
 \begin{displaymath}
-  \texttt{model}(\mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{C}_{\text{inf}}, \gamma, A, \Omega) \rightarrow \mathcal{T}^j, R^j_H, \mathcal{MM}
+  \texttt{model}(\mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{S}_{\text{inf}}, \mathcal{E}, \gamma, \Omega, A) \rightarrow \mathcal{T}^j, R^j_H, S^j_H, \text{Render}^j_H
 \end{displaymath}
 
 \noindent Pour cela, la tâche la plus difficile est de modéliser l'environnement comme un modèle assimilable à une simulation avec un niveau de fidélité connu. Deux approches sont envisageables pour faciliter cette tâche~:
@@ -235,10 +237,9 @@ Les chapitres suivantes détaillent chaque activité du cadre \acn{MAMAD}, ident
   \item La génération automatisée d'un environnement. Cependant, en raison de l'impossibilité d'accéder directement à l'état réel de l'environnement, nous nous appuyons sur les historiques conjoints stockés. C'est pourquoi nous utilisons les \textit{World Models}, capables de généraliser à partir d'un grand volume d'historiques pour estimer les transitions d'états cachés et d'observations. Toutefois, un obstacle majeur est l'absence de \textit{World Models} explicitement conçus pour les environnements multi-agents. Nous proposons ci-dessous une extension du cadre \textit{World Models} aux contextes multi-agents.
 \end{itemize}
 
-En complément de cet environnement simulé, le problème d'optimisation formalisé comprend également la transformation de la description informelle de l'objectif global $\mathcal{G}_{\text{inf}}$ en une fonction de récompense basée sur l'historique $R^j_H: H^j \times \Omega^j \rightarrow \mathbb{R}$, ainsi que la formalisation des contraintes issues des exigences de conception $\mathcal{C}_{\text{inf}}$ sous la forme de spécifications organisationnelles MOISE+MARL $\mathcal{MM}$.
+En complément de cet environnement simulé, le problème d'optimisation formalisé comprend également la transformation de la description informelle de l'objectif global $\mathcal{G}_{\text{inf}}$ en une fonction de récompense basée sur l'historique $R^j_H: H^j \rightarrow \mathbb{R}$ ainsi qu'une fonction d'arrêt basée sur l'historique $S^j_H: H^j \rightarrow \{0,1\}$ (qui correspond le plus souvent à un arrêt conditioné par un nombre maximal d'étapes). Enfin, de façon optionnelle, il est également possible de définir une fonction de rendu basée sur l'historique $Render^j_H: H^j \rightarrow \text{Render}$ pour visualiser les trajectoires des agents dans l'environnement simulé.
 
-Nous supposons ici que la formalisation manuelle de la description informelle de l'objectif et des contraintes de conception en une fonction $R^j_H$ et en spécifications $\mathcal{MM}$ est prise en charge.
-
+Nous considérons ici que la formalisation et la mise en œuvre de l'objectif $R^j_H$, de la fonction d'arrêt $S^j_H$ et, le cas échéant, de la fonction de rendu $Render^j_H$, à partir de leur description informelle, relèvent d'un processus manuel classique réalisé par les concepteurs.
 
 \begin{algorithm}[H]
   \caption{Algorithme de l'activité de modélisation}
@@ -249,12 +250,11 @@ Nous supposons ici que la formalisation manuelle de la description informelle de
   \KwOut{JOPM $\mathcal{T}^j$, fonction de récompense $R^j_H$, spécifications MOISE+MARL $\mathcal{MM}$}
 
   \vspace{0.5em}
-  \tcp{1. Formalisation manuelle des exigences symboliques}
-  $R^j_H \gets \texttt{manual\_formalize}(\mathcal{G}_{\text{inf}})$ \;
-  $\mathcal{MM} \gets \texttt{manual\_formalize}(\mathcal{C}_{\text{inf}})$ \;
+  \tcp{1. Formalisation manuelle des fonctions composantes}
+  $(R^j_H, S^j_H, \text{Render}^j_H) \gets \texttt{manual\_formalize}(\mathcal{S}_{\text{inf}}, \mathcal{G}_{\text{inf}}, \mathcal{E}, A, \Omega)$ \;
 
   \vspace{0.5em}
-  \tcp{2. Entraîner les auto-encodeurs pour les observations et actions conjointes}
+  \tcp{2. Entraîner les auto-encodeurs pour les observations}
   Extraire les observations $\Omega^j = \{\omega^j_t\}$ à partir des historiques $\mathcal{D}_{H^j}$ \;
   Entraîner un auto-encodeur $(Enc_{\omega^j}, Dec_{\omega^j})$ sur $\Omega^j$ en minimisant l'erreur de reconstruction \;
 
@@ -281,7 +281,7 @@ Nous supposons ici que la formalisation manuelle de la description informelle de
 
   \vspace{0.5em}
   \tcp{6. Retourner les éléments modélisés}
-  \Return{$\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, \mathcal{MM}$}
+  \Return{$\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \text{Render}^j_H$}
 \end{algorithm}
 
 
@@ -339,7 +339,7 @@ Il existe différentes façons d'exécuter plusieurs agents dans un même enviro
 
 
   \item L'environnement est mis à jour par une fonction de transition qui dépend de l'état actuel et de l'action entreprise par l'agent (changement des propriétés une fois que la condition préalable est remplie). Une action est utilisée pour modifier les propriétés de l'environnement en mettant à jour la relation entre les identifiants de propriétés et les valeurs de propriétés.
-        Par exemple, dans la figure~\ref{fig:model_example_illustration}, dans l'état actuel, les propriétés de $Node_1$ sont $p_1,p_3,p_4,p_2,p_9$. Lorsque l'action $Action_1$ est appliquée, la relation associe les sous-ensembles $\{p_3\}$ ou $\{p_4, \allowbreak p_{10}\}$ à $\{p_{15}, \allowbreak p_{14}, \allowbreak p_{11}\}$. La condition préalable basée sur les propriétés peut être comprise comme $p_3 \lor (p_4 \land p_{10})$. Comme $p_{15}$ et $p_{14}$ sont identifiés par $ID_4$ et $ID_2$ qui définissent déjà respectivement $p_{2}$ et $p_{4}$, $p_{4}$ et $p_{2}$ sont supprimés et $p_{11}$ et $p_{14}$ sont ajoutés ($p_{15}$ n'est pas ajouté car $id_2$ n'est associé à aucune valeur)
+  Par exemple, dans la figure~\ref{fig:model_example_illustration}, dans l'état actuel, les propriétés de $Node_1$ sont $p_1,p_3,p_4,p_2,p_9$. Lorsque l'action $Action_1$ est appliquée, la relation associe les sous-ensembles $\{p_3\}$ ou $\{p_4, \allowbreak p_{10}\}$ à $\{p_{15}, \allowbreak p_{14}, \allowbreak p_{11}\}$. La condition préalable basée sur les propriétés peut être comprise comme $p_3 \lor (p_4 \land p_{10})$. Comme $p_{15}$ et $p_{14}$ sont identifiés par $ID_4$ et $ID_2$ qui définissent déjà respectivement $p_{2}$ et $p_{4}$, $p_{4}$ et $p_{2}$ sont supprimés et $p_{11}$ et $p_{14}$ sont ajoutés ($p_{15}$ n'est pas ajouté car $id_2$ n'est associé à aucune valeur)
 
 
 
@@ -444,7 +444,7 @@ Ces défis sont directement liés aux questions étudiées concernant la génér
 
 
   \item Nous avons produit une description reliant les tactiques identifiées entre elles et les techniques, sous-techniques et procédures associées afin de créer un scénario décrivant comment le groupe APT pourrait attaquer le système en réseau. Cette étape définit la topologie du réseau avec ses principales propriétés
-        %(telles qu'un réseau d'entreprise composé de plusieurs serveurs de bases de données dédiés communiquant via FTP et HTTP, etc.)
+  %(telles qu'un réseau d'entreprise composé de plusieurs serveurs de bases de données dédiés communiquant via FTP et HTTP, etc.)
 
   \item Nous avons créé une arborescence AD comme proposé dans ~\cite{BKordy2010} avec les tactiques comme objectifs d'action principaux et les techniques, sous-techniques et procédures dans la partie inférieure de l'arborescence. Nous avons veillé à disposer de plusieurs chemins pour atteindre un même objectif d'action principal. Nous avons pris soin de définir chaque action d'attaque avec des conditions préalables et des conditions postérieures basées sur les propriétés de l'environnement
 
@@ -452,18 +452,18 @@ Ces défis sont directement liés aux questions étudiées concernant la génér
 
 
 
-        % \item Nous avons également répertorié et défini les principales actions environnementales spécifiques au déploiement à partir de la description précédente de l'environnement de déploiement ou des actions d'attaque/défense étendues qui sont communes aux cyberdéfenseurs et aux cyberattaquants. Cette étape permet d'obtenir un environnement plus réaliste, fournissant un nombre représentatif d'actions plausibles qu'un agent peut choisir dans de nombreux systèmes.
-        % Ces actions communes pourraient inclure au moins~:
-        % \begin{itemize}
-        %     \item Lecture et écriture de fichiers
-        %     \item Créer, supprimer, copier, déplacer, renommer, modifier les propriétés des fichiers/dossiers.
-        %     \item Accéder à un dossier, accéder au dossier parent
-        %     \item Sélectionner un fichier/dossier pour y appliquer des actions ultérieures
-        %     \item Exécuter un fichier binaire
-        %     \item Utilisation d'un protocole réseau (tel que HTTP, FTP, SSH, etc.).
-        %     \item Autres interactions avec les lignes de commande de base concernant la surveillance ou le contrôle du système.
-        % \end{itemize}
-        % Ensuite, les propriétés environnementales associées doivent décrire un système de fichiers, une interface de terminal, un port avec des règles, les propriétés des paramètres du système d'exploitation, etc.
+  % \item Nous avons également répertorié et défini les principales actions environnementales spécifiques au déploiement à partir de la description précédente de l'environnement de déploiement ou des actions d'attaque/défense étendues qui sont communes aux cyberdéfenseurs et aux cyberattaquants. Cette étape permet d'obtenir un environnement plus réaliste, fournissant un nombre représentatif d'actions plausibles qu'un agent peut choisir dans de nombreux systèmes.
+  % Ces actions communes pourraient inclure au moins~:
+  % \begin{itemize}
+  %     \item Lecture et écriture de fichiers
+  %     \item Créer, supprimer, copier, déplacer, renommer, modifier les propriétés des fichiers/dossiers.
+  %     \item Accéder à un dossier, accéder au dossier parent
+  %     \item Sélectionner un fichier/dossier pour y appliquer des actions ultérieures
+  %     \item Exécuter un fichier binaire
+  %     \item Utilisation d'un protocole réseau (tel que HTTP, FTP, SSH, etc.).
+  %     \item Autres interactions avec les lignes de commande de base concernant la surveillance ou le contrôle du système.
+  % \end{itemize}
+  % Ensuite, les propriétés environnementales associées doivent décrire un système de fichiers, une interface de terminal, un port avec des règles, les propriétés des paramètres du système d'exploitation, etc.
 
 \end{enumerate*}
 
@@ -481,12 +481,13 @@ Ces défis sont directement liés aux questions étudiées concernant la génér
 L'\textit{activité d'entraînement} vise à résoudre le problème de conception modélisé comme un problème d'optimisation sous contraintes en s'appuyant sur le cadre MOISE+MARL. L'\textbf{activité d'entraînement} traite donc les éléments formels suivants~:
 %
 \begin{displaymath}
-  \pi^j_i \gets \texttt{train}(\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, \gamma, R^j_H, \Omega, A, \mathcal{MM})
+  \pi^j_i \gets \texttt{train}(\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \text{Render}^j_H, \mathcal{MM}, \mathcal{C}_{\text{inf}}, \gamma, \Omega, A)
 \end{displaymath}
+
+La formalisation des contraintes issues des exigences de conception $\mathcal{C}_{\text{inf}}$ sous la forme de spécifications organisationnelles MOISE+MARL $\mathcal{MM}$ contraintes de conception en une fonction  et en spécifications $\mathcal{MM}$ est prise en charge.
 
 \noindent Une limite importante réside dans le fait que MOISE+MARL repose sur le formalisme \acn{Dec-POMDP}, qui suppose un accès complet à l'état réel de l'environnement. En pratique, notre approche se fonde possiblement uniquement sur les données observables (à savoir les historiques conjoints des agents) sans accès aux états internes. Pour combler cet écart, un nouveau formalisme markovien est introduit, opéré sur des séquences observables via le \acn{JOPM}, tout en restant compatible avec les cadres algorithmiques \acn{MARL} existants.
 Dans ce chapitre, nous commençons par présenter le framework MOISE+MARL avant d'explorer son extension aux \textit{World Models} Multi-Agents.
-
 
 \section{MOISE+MARL pour lier $\mathcal{M}OISE^+$ avec le MARL}
 
@@ -681,21 +682,31 @@ Les transitions d'observation et d'état sont approximées via la fonction $\mat
 i) l'atteinte d'objectifs valides (via les guides de récompense des objectifs, pondérés par $\frac{1}{1 - p + \epsilon}$),
 ii) la conformité au rôle (via les guides de récompense de rôle, pondérés par $1 - ch_t$).
 
+
 \begin{algorithm}[H]
   \caption{Algorithme de l'activité d'entraînement}
   \label{alg:training_mamad}
   \DontPrintSemicolon
 
   \KwIn{
-    Modèle de Prédiction d'Observations Conjointes (JOPM) $\mathcal{T}^j$,
-    Observations initiales conjointes $\Omega_0^{\mathcal{T}^j}$,
-    Fonction de récompense $R_H^j$,
-    Spécifications organisationnelles $\mathcal{MM}$,
-    Facteur d'actualisation $\gamma$
+  Modèle de Prédiction d'Observations Conjointes (JOPM) $\mathcal{T}^j$,
+  Observations initiales conjointes $\Omega_0^{\mathcal{T}^j}$,
+  Fonction de récompense $R_H^j$,
+  Fonction d'arrêt $S_H^j$,
+  Fonction de rendue $\text{Render}^j_H$,
+  Spécifications organisationnelles $\mathcal{MM}$,
+  Contraintes de conception informelles $\mathcal{C}_{\text{inf}}$,
+  Facteur d'actualisation $\gamma$
+  Espace d'observations $\Omega$,
+  Espace d'actions $A$
   }
   \KwOut{$\pi^j$~: Politique conjointe entraînée}
 
   \vspace{0.3em}
+
+  \If{$\mathcal{MM} = \emptyset$}{
+    $\mathcal{MM} \gets \texttt{manual\_formalize}(\mathcal{C}_{\text{inf}})$ \tcp*{Formalisation manuelle specs. orgs.} \;
+  }
 
   Initialiser les paramètres de la politique $\pi^j$ et du buffer de replay $\mathcal{B}$ \;
 
@@ -737,7 +748,7 @@ ii) la conformité au rôle (via les guides de récompense de rôle, pondérés 
 \null
 \newpage
 
-\chapter{Analyser et interpréter les comportements émergents}
+\chapter{Analyser les comportements émergents}
 \label{chap:analyzing}
 
 % TODO: recontextualiser cette activité au sein de la méthode
