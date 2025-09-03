@@ -282,7 +282,9 @@ Les graphiques d'attaque peuvent être utilisés pour identifier les vulnérabil
 \begin{figure}[h!]
   \centering
   \includegraphics[width=0.8\linewidth]{figures/attack_graph.pdf}
-  \caption[Illustration d'un graphe d'attaque décrivant un scénario de compromission d’un coffre-fort.]{Illustration d'un graphe d'attaque décrivant un scénario de compromission d’un coffre-fort. (adapté de \cite{schneier1999modeling})~: L’objectif racine \emph{Open Safe} est décomposé en quatre voies principales : \emph{Pick Lock} (\$30K), \emph{Learn Combo} (\$20K), \emph{Cut Open Safe} (\$10K) et \emph{Install Improperly} (\$100K). Par défaut, un nœud est de type \textsc{OU} (réaliser l’un des enfants suffit) ; lorsqu’un \emph{and} est indiqué, il s’agit d’un \textsc{ET} (tous les enfants sont requis). Les montants représentent des coûts estimés : pour un \textsc{OU}, le coût du parent est le \emph{minimum} des coûts enfants ; pour un \textsc{ET}, les coûts \emph{s’additionnent}.}
+  \caption[Illustration d'un graphe d'attaque décrivant un scénario de compromission d’un coffre-fort.]{Illustration d'un graphe d'attaque décrivant un scénario de compromission d’un coffre-fort. (adapté de \cite{schneier1999modeling})~: L’objectif racine \emph{Open Safe} est décomposé en quatre voies principales : \emph{Pick Lock} (\$30K), \emph{Learn Combo} (\$20K), \emph{Cut Open Safe} (\$10K) et \emph{Install Improperly} (\$100K). Par défaut, un nœud est de type \textsc{OU} (réaliser l’un des enfants suffit) ;
+    lorsqu’un \emph{and} est indiqué, il s’agit d’un \textsc{ET} (tous les enfants sont requis). Les montants représentent des coûts estimés : pour un \textsc{OU}, le coût du parent est le \emph{minimum} des coûts enfants ;
+    pour un \textsc{ET}, les coûts \emph{s’additionnent}.}
   \label{fig:attack_graphs}
 \end{figure}
 
@@ -375,127 +377,396 @@ Ce chapitre a pour objectif d'analyser, pour chacune des hypothèses H-MOD à H-
 
 \section{La modélisation d'un environnement en simulation (H-MOD)}
 
-\noindent
-Nous avons montré l'intérêt de disposer d'un environnement simulé pour entraîner des agents de manière sûre, rapide et contrôlée. Dans cette perspective, deux approches sont envisageables :
 
+
+
+\subsection*{Recontextualisation du sous-problème dans la démarche de la thèse}
+
+Le premier sous-problème fondamental identifié dans notre approche concerne la \textbf{modélisation réaliste de l’environnement} (P1). Cette étape est cruciale car elle conditionne la crédibilité des expérimentations, l’entraînement des agents et, in fine, la validité des politiques de cyberdéfense obtenues. Dans le cadre de la thèse, la simulation d’un environnement pertinent permet de tester, d’évaluer et d’optimiser les comportements multi-agents sans exposer de systèmes réels à des risques opérationnels. Elle constitue ainsi le socle expérimental sur lequel reposent les phases ultérieures d’apprentissage, d’analyse et de transfert. \subsection*{Objectif global et critères spécifiques} L’objectif principal de cette activité est d’obtenir un environnement simulé qui soit à la fois \textbf{réaliste}, \textbf{adaptable}, \textbf{fidèle aux dynamiques du monde réel} et \textbf{exploitables pour l’entraînement et l’évaluation des agents}. Pour guider la revue de littérature, nous retenons les critères spécifiques suivants :
+%
 \begin{itemize}
-  \item les \textit{World Models} constituent une approche prometteuse, permettant d'apprendre une dynamique approximative de l'environnement à partir de données collectées. Ces modèles sont largement utilisés en apprentissage par renforcement, notamment dans des contextes mono-agent, mais restent sous-explorés en environnement multi-agent complexe~;
-  \item les frameworks Markoviens multi-agents, tels que les \acn{Dec-POMDP}, fournissent une base formelle pour modéliser les interactions entre agents dans un environnement stochastique et partiellement observable. Cependant, ces modèles existants restent encore trop basiques pour faciliter la modélisation manuelle de façon significative.
+  \item \textbf{Fidélité} : capacité à reproduire les dynamiques, menaces et interactions observées dans des environnements réels ;
+  \item \textbf{Adaptabilité} : possibilité de modifier facilement la topologie, les scénarios ou les paramètres pour explorer différents contextes ;
+  \item \textbf{Automatisation} : degré d’automatisation de la génération ou de l’évolution de l’environnement simulé ;
+  \item \textbf{Interopérabilité} : aptitude à intégrer ou à échanger des données avec d’autres outils ou plateformes ;
+  \item \textbf{Facilité d’utilisation} : accessibilité pour les concepteurs, possibilité de personnalisation sans expertise avancée ;
+  \item \textbf{Multi-agent} : capacité de l’environnement à accueillir un ou plusieurs agents, et à gérer leurs interactions.
 \end{itemize}
 
-\noindent
-La littérature montre un regain d'intérêt pour l'automatisation de la conception de \acn{SMA}, notamment via l'ingénierie dirigée par les modèles, les frameworks organisationnels paramétrables, ou encore les générateurs de code à partir de spécifications. Des travaux comme INGENIAS~\cite{Pavon2003}, KB-ORG~\cite{Sims2008} ou AutoGenesisAgent~\cite{harper2024autogenesisagent} visent à automatiser la génération d'architectures agents à partir de modèles symboliques. Néanmoins, ces approches supposent en général un environnement connu, structuré, voire entièrement spécifié a priori.
+\subsection*{Hypothèse de restriction de l’espace de recherche (H-MOD)}
 
-\noindent
-Dans le domaine de l'apprentissage, des travaux récents en cybersécurité~\cite{hammar2023scalable} ont exploré la génération automatique de scénarios pour entraîner des agents de Cyberdéfense en simulation. Ces environnements, bien que plus dynamiques, sont encore conçus manuellement ou via des générateurs à base de règles, et ne s'adaptent pas aux interactions des agents. À ce jour, aucun pipeline complet ne relie la collecte de données dans un environnement réel à l'entraînement de politiques multi-agents via un modèle simulé appris de manière autonome.
+Afin de circonscrire l’espace de recherche à un domaine pertinent et exploitable, nous posons l’hypothèse suivante~: \textit{Il est possible d’obtenir un environnement simulé réaliste, soit en facilitant la modélisation manuelle, soit par des techniques d’apprentissage machine à partir de données}. Cette hypothèse nous conduit à concentrer la revue de littérature sur deux grandes familles de travaux~:
 
-\medskip
-
-\noindent
-Le cadre des \textit{World Models}~\cite{Ha2018} propose une solution intéressante à ce besoin. En apprenant une représentation latente compressée de l'environnement et sa dynamique, il devient possible de simuler des trajectoires cohérentes pour entraîner des politiques sans interaction réelle. Toutefois, ces approches ont été principalement développées pour des environnements mono-agents à observation complète.
-
-\noindent
-Appliquer les \textit{World Models} à des environnements multi-agents soulève trois principaux défis que nous avons identifié~:
 \begin{itemize}
-  \item \textbf{Représentation conjointe}~: l'encodage et la combinaison des observations partielles issues de plusieurs agents hétérogènes~;
-  \item \textbf{Dynamique coordonnée}~: l'apprentissage d'une transition qui tient compte des effets d'interaction ou de coopération~;
-  \item \textbf{Complexité combinatoire}~: le nombre d’agents et de combinaisons d’actions croît rapidement, rendant l’apprentissage difficile.
+  \item \textbf{La modélisation manuelle}~: regroupe tous les travaux où la création de l’environnement simulé repose sur une intervention humaine. Cela inclut les simulateurs (CybORG, NASimEmu, CYST) et modèles d’environnements de cyberdéfense génériques, dans lesquels la structure, les règles et les scénarios sont explicitement définis, totalement ou partiellement, par des experts. Cette approche permet de réutiliser des modèles existants, soit directement si l’environnement simulé correspond à l’environnement réel cible, soit après adaptation et instanciation du modèle de simulation générique. Bien que largement répandue, cette méthode limite souvent la généricité, car peu de modèles sont à la fois faciles à adapter et applicables à une grande diversité d’environnements de cyberdéfense. On y retrouve également les formalismes Markoviens (MDP, POMDP, Dec-POMDP, POSG), qui servent de base théorique et pratique à la plupart des modélisations manuelles.
+  \item \textbf{La modélisation basée sur l'apprentissage}~: regroupe les approches où la dynamique de l’environnement est apprise automatiquement à partir de données collectées dans l’environnement réel ou issues d’interactions. Cela inclut les travaux d’identification de systèmes (\textit{System Identification}), de modélisation de substitution (\textit{Surrogate Modeling}) ou de simulation guidée par les données (\textit{Data-Driven Simulation}).
 \end{itemize}
 
-\noindent
-À notre connaissance, aucune approche ne propose actuellement un \textit{World Model} multi-agent générique capable de simuler des environnements partiellement observables avec des interactions complexes entre agents. Cela constitue un verrou méthodologique majeur à l'automatisation de la conception de \acn{SMA}~: sans modèle simulé réaliste, il est difficile de guider ou d'évaluer l'apprentissage des politiques à grande échelle.
+Ce choix est motivé par l’état de l’art, qui montre que ces deux axes concentrent l’essentiel des avancées récentes et offrent des compromis différents entre fidélité, automatisation et adaptabilité.
+
+\subsection*{Couverture des critères par les travaux identifiés}
+
+Une synthèse de la couverture des critères par les travaux identifiés dans les sujets évoqués dans l'hypothèse (H-MOD) est présentée dans le tableau \ref{tab:couverture_criteres_travaux}.
+
+\begin{table}[h!]
+  \centering
+  \caption{Couverture des critères spécifiques par les principales familles de travaux de modélisation d'environnements de cyberdéfense}
+  \label{tab:couverture_criteres_travaux}
+  \begin{tabular}{|p{4.2cm}|c|c|c|c|c|c|}
+    \hline
+    \textbf{Travaux / Critères}                                                                                              & \textbf{Fidélité} & \textbf{Adaptabilité} & \textbf{Automatisation} & \textbf{Interopérabilité} & \textbf{Facilité d'utilisation} & \textbf{Multi-agent} \\
+    \hline
+    Modèles formels génériques (MDP, POMDP, Dec-POMDP, POSG, graphes d'attaque, arbres AD, réseaux de Petri, modèles de jeu) & \cmark{}          & \cmark{}              & \xmark{}                & \cmark{}                  & \xmark{}                        & \cmark{}             \\
+    \hline
+    Frameworks génériques et configurables (CyberBattleSim, NASim, NASimEmu, DETERLab, CyberVAN, CYST)                       & \cmark{}          & \cmark{}              & \xmark{}                & \cmark{}                  & \cmark{}                        & \cmark{}             \\
+    \hline
+    Simulateurs spécialisés de cyberdéfense (CybORG, CybORG++, CyberWheel, SCYTHE, CTF)                                      & \cmark{}          & \xmark{}              & \xmark{}                & \cmark{}                  & \cmark{}                        & \cmark{}             \\
+    \hline
+    System Identification                                                                                                    & \cmark{}          & \cmark{}              & \cmark{}                & \xmark{}                  & \xmark{}                        & \cmark{}             \\
+    \hline
+    Surrogate Modeling                                                                                                       & \cmark{}          & \cmark{}              & \cmark{}                & \xmark{}                  & \cmark{}                        & \cmark{}             \\
+    \hline
+    Data-Driven Simulation (World Models, simulation guidée par les données)                                                 & \cmark{}          & \cmark{}              & \cmark{}                & \xmark{}                  & \xmark{}                        & \cmark{}             \\
+    \hline
+  \end{tabular}
+\end{table}
+
+Concernant l'approche de modélisation manuelle, les travaux identifiés sont :
+
+\paragraph{Les modèles formels génériques.}
+Au niveau le plus abstrait, la modélisation des environnements de cyberdéfense repose sur des formalismes mathématiques issus de la théorie de la décision séquentielle. Le cadre de base est le \textit{Markov Decision Process} (MDP) \cite{puterman1994mdp}, qui décrit un environnement comme un ensemble d’états, d’actions et de transitions probabilistes. Lorsque l’information disponible est partielle, les \textit{Partially Observable Markov Decision Processes} (POMDP) \cite{kaelbling1998pomdp} offrent un cadre adapté. Pour les systèmes multi-agents coopératifs, les variantes décentralisées (\textit{Dec-POMDP}) \cite{Oliehoek2016} sont utilisées, tandis que les environnements compétitifs (attaquant/défenseur) sont modélisés par les \textit{Partially Observable Stochastic Games} (POSG) \cite{hansen2004posg}. D’autres extensions, comme les MDP factorisés \cite{guestrin2003factored}, facilitent la modélisation de systèmes complexes, et la théorie des jeux de sécurité \cite{manshaei2013game} permet de formaliser explicitement les stratégies adversariales.
+Ces formalismes constituent la base théorique commune à la plupart des simulateurs et frameworks de cybersécurité. À côté des modèles markoviens, des représentations graphiques intermédiaires sont également utilisées. Les \textit{graphes d’attaque} \cite{CPhilips1998} décrivent les différentes voies d’exploitation des vulnérabilités d’un réseau, tandis que les \textit{arbres attaque-défense} \cite{BKordy2010} intègrent explicitement les contre-mesures défensives. Les \textit{réseaux de Petri} \cite{MPetty2022,JBland2020,SYamaguchi2020} permettent de représenter et d’analyser des stratégies concurrentes d’attaque et de défense. Enfin, les \textit{modèles de jeu} appliqués à la cybersécurité \cite{MPanfili2018,AAttiah2018,CXiaolin2008} formalisent les interactions attaquant/défenseur comme des jeux dynamiques, souvent non coopératifs, et constituent une passerelle naturelle vers les cadres POSG et Dec-POMDP \cite{beynier2010,terry2020pettingzoo,bernstein2013}.
+En résumé, ces modèles formels et graphiques offrent une boîte à outils générique et flexible pour construire des environnements de simulation adaptés à une grande variété de scénarios de cybersécurité.
+
+\paragraph{Les frameworks génériques et configurables.}
+Entre les formalismes abstraits et les simulateurs spécialisés, la littérature met en avant plusieurs frameworks visant à offrir un compromis entre généricité et exploitabilité. Parmi ceux-ci, \textit{CyberBattleSim} \cite{cyberbattlesim}, développé par Microsoft, propose une modélisation configurable d’un réseau sous forme de graphe, où chaque nœud représente un service vulnérable. De manière similaire, \textit{NASim} \cite{nasim2023} et son extension \textit{NASimEmu} \cite{fernandes2024nasimemu} permettent de définir des topologies, vulnérabilités et scénarios d’attaque variés, avec une compatibilité avec OpenAI Gym facilitant l’usage en apprentissage par renforcement. D’autres approches se situent dans des infrastructures de test à grande échelle comme \textit{DETERLab} et \textit{CyberVAN} \cite{Mirkovic2010}, qui offrent des environnements configurables pour la simulation et l’émulation cyber. De plus, l'outil \textit{CYST} \cite{Drasar2020} propose une plateforme modulaire pour la création et l’évaluation de scénarios de cyberdéfense, avec un accent sur la flexibilité et l’extensibilité. Ces frameworks se distinguent par leur capacité à être adaptés à différents contextes, tout en fournissant des environnements suffisamment réalistes pour l’entraînement et l’évaluation des agents de cyberdéfense.
+
+\paragraph{Les simulateurs spécialisés de cyberdéfense.}
+Enfin, au niveau le plus concret, plusieurs simulateurs dédiés ont été développés pour fournir des environnements instanciés dans lesquels les agents de cyberdéfense peuvent être entraînés et évalués. Parmi eux, \textit{CybORG} \cite{Standen2021} est devenu une référence, avec des scénarios Red Team/Blue Team exploitables dans des compétitions comme le CAGE Challenge, et qui a été étendu dans \textit{CybORG++} pour intégrer des modèles Dec-POMDP et des scénarios multi-agents complexes \cite{landolt2025cyborgpp}. Le simulateur \textit{CyberWheel} \cite{vyas2025cyberwheel} a également été proposé pour l’entraînement académique de défenseurs automatisés, avec un accent sur la formation. Outre ces outils de recherche, des plateformes orientées \textit{capture-the-flag} comme \textit{SCYTHE} ou des environnements de type CTF \cite{palmer2023ctf} ont été détournés pour servir de bancs d’essai aux approches d’apprentissage par renforcement en cyberdéfense. Ces simulateurs spécialisés se distinguent par leur haut degré de fidélité et leur orientation vers des cas d’usage précis, mais au prix d’une adaptabilité plus limitée par rapport aux frameworks génériques.
+
+\
+
+Concernant l'approche de modélisation automatique, les travaux identifiés sont :
+
+\paragraph{System Identification.}
+Une première famille de travaux automatise la construction des environnements simulés via des méthodes d’identification de systèmes, où la dynamique du monde réel est reconstruite à partir de données empiriques. Ces approches cherchent à extraire automatiquement les équations ou modèles décrivant l’évolution d’un système, par exemple dans des contextes de micro-réseaux ou de systèmes multi-agents soumis à des attaques \cite{NtDvjag65BgJ, tBI-_piWs1cJ}. L’identification peut se faire à travers l’estimation paramétrique ou structurelle de modèles de contrôle \cite{g5PxHs45ZtYJ}, mais aussi par l’ajustement de modèles probabilistes/stochastiques qui intègrent directement l’incertitude des dynamiques et sont calibrés sur des données réelles. Ces modèles probabilistes incluent notamment les processus de Markov bayésiens, les réseaux bayésiens dynamiques et les processus gaussiens, qui permettent de capturer des comportements non linéaires et incertains dans des environnements complexes. De tels travaux illustrent comment l’identification de systèmes fournit une base automatisée et statistiquement robuste pour simuler des environnements de cyberdéfense à partir de traces et de mesures.
+
+\paragraph{Surrogate Modeling.}
+Une seconde famille regroupe les travaux de \textit{modélisation de substitution}, où un modèle approximatif et léger est entraîné pour reproduire le comportement d’un simulateur ou d’un système coûteux. Ces modèles sont particulièrement utiles dans les environnements cyber-physiques où l’exécution d’un simulateur de haute fidélité est trop lourde pour permettre l’entraînement massif d’agents. On retrouve ici les approches par réseaux neuronaux ou graph neural networks servant de modèles substituts \cite{g4qXIBHVJwUJ, Cr1JpifjcFwJ}, mais également des méthodes probabilistes permettant d’estimer la distribution des sorties du système \cite{hPBZHSLGStkJ}. Ces surrogate models peuvent être distribués et intégrés dans des architectures fédérées pour préserver la confidentialité des données tout en améliorant la vitesse et la performance des simulations \cite{g4qXIBHVJwUJ}. Ils constituent un compromis efficace entre réalisme et exploitabilité, en offrant aux agents des environnements proches de la réalité mais plus accessibles computationnellement.
+
+\paragraph{Data-Driven Simulation.}
+Enfin, la troisième famille repose sur des approches de simulation directement guidées par les données collectées dans les environnements réels. Ces approches construisent un jumeau numérique partiel ou complet du système cible en utilisant les traces, journaux et trajectoires observées. Un exemple emblématique est celui des \textit{World Models} \cite{Ha2018}, qui utilisent des architectures neuronales pour apprendre un espace latent compact permettant de simuler et de généraliser les dynamiques d’un environnement à partir d’interactions passées. Dans le contexte de la cybersécurité, ces modèles peuvent simuler des comportements d’attaquants et de défenseurs en exploitant directement les logs réseau ou les données issues d’incidents passés \cite{D2mbiT0vgP4J}. Plus largement, des approches de simulation data-driven combinent apprentissage profond, représentations symboliques et renforcement multi-agent \cite{5oUSbVbTXX0J, RQyw5NYMj-wJ}, afin de créer des environnements artificiels mais réalistes, capables de capturer la co-évolution attaque/défense \cite{oOfK6FXUSCAJ}. Ces travaux ouvrent la voie à des environnements simulés dont la fidélité et l’adaptabilité croissent avec la richesse des données collectées.
+
+\subsection*{Analyse des travaux et verrous}
+
+L’analyse des travaux de modélisation manuelle montre que les modèles formels génériques, en particulier le cadre Dec-POMDP, offrent la meilleure adaptabilité et généricité pour représenter des environnements de cyberdéfense multi-agents. Contrairement aux frameworks configurables ou aux simulateurs spécialisés, qui sont souvent limités par leur structure interne et leur difficulté d’adaptation à de nouveaux contextes, un modèle Dec-POMDP permet de formaliser n’importe quel scénario en s’appuyant sur des abstractions standardisées (états, actions, observations, récompenses). Cependant, cette flexibilité a un coût : la modélisation manuelle d’un environnement réaliste reste une tâche lourde, nécessitant une expertise poussée et un effort important de formalisation. De plus, l’automatisation de cette étape est très limitée, car il n’existe pas de bibliothèque de modèles Dec-POMDP pré-spécialisés pour la cybersécurité qui factoriserait les invariants communs à ces environnements. Ainsi, même si le Dec-POMDP est le choix le plus pertinent pour garantir l’adaptabilité, il ne couvre pas le critère d’automatisation et impose une barrière d’entrée élevée pour la modélisation de nouveaux environnements.
+
+Du côté de la modélisation automatique, les approches d’identification de systèmes et de surrogate modeling apportent des solutions intéressantes pour automatiser la génération de modèles à partir de données, mais elles requièrent souvent une pré-modélisation mathématique ou une calibration fine sur des jeux de données spécifiques. Les World Models se distinguent comme la solution la plus prometteuse pour automatiser la modélisation, car ils apprennent directement la dynamique observationnelle de l’environnement sans nécessiter de structure explicite préalable. Cette approche offre une fidélité élevée et une grande agilité, indépendamment du domaine d’application. Toutefois, un verrou subsiste : les World Models actuels sont principalement conçus pour des contextes mono-agent et leur extension au multi-agent reste un défi ouvert, notamment pour capturer les interactions complexes entre agents. Par ailleurs, l’automatisation complète est freinée par la nécessité de régler des hyperparamètres et d’adapter l’architecture du modèle à chaque nouveau cas d’usage. En résumé, si les World Models représentent l’option la plus automatisée et fidèle, ils ne couvrent pas encore pleinement les besoins d’un environnement multi-agent de cyberdéfense sans intervention humaine.
 
 \section{L'intégration de contraintes/guidages organisationnelles dans le processus MARL (H-TRN)}
 
-\noindent
-Le \acn{MARL}, tel que présenté dans le \autoref{chap:concepts}, permet aux agents de développer de manière autonome des politiques coopératives dans des environnements complexes et dynamiques. Toutefois, la nature exploratoire du \acn{MARL} rend difficile le contrôle précis des comportements émergents, en particulier lorsque des exigences critiques de sûreté, de coordination ou de structure doivent être respectées.
+\subsection*{Recontextualisation du sous-problème dans la démarche de la thèse}
 
-\medskip
+Le second sous-problème fondamental de notre démarche concerne la \textbf{capacité à intégrer des contraintes ou des guidages organisationnels explicites dans le processus d'apprentissage multi-agent} (\acn{MARL}). Alors que l'apprentissage par renforcement multi-agent permet aux agents de découvrir de manière autonome des politiques coopératives dans des environnements complexes, il ne garantit pas, en l'état, le respect de spécifications organisationnelles essentielles telles que la répartition des rôles, la coordination structurée ou la conformité à des règles de sûreté.
 
-\noindent
-Les travaux en \textit{Safe Reinforcement Learning}~\cite{garcia2015comprehensive} ont cherché à intégrer des contraintes dans le processus d'apprentissage afin d'éviter certains comportements indésirables. Par exemple, \acn{CPO}~\cite{achiam2017constrained} garantit que la politique reste proche d'un ensemble d'actions autorisées, tandis que \textit{Deep Constrained Q-Learning}~\cite{kalweit2020deep} applique des contraintes explicites sur la mise à jour des valeurs Q. D'autres approches introduisent des mécanismes de \textit{shielding}, \textit{reward shaping} ou encore l'intégration de retours humains (cf.~\cite{zhou2025mentor}). Ces travaux montrent qu'il est possible d'influencer l'apprentissage en encadrant l'espace des politiques, tout en maintenant une capacité d'adaptation.
+Dans le contexte de la cyberdéfense, cette question revêt une importance particulière. Les environnements sont non seulement dynamiques et partiellement observables, mais ils imposent également des exigences fortes en matière de sécurité, de robustesse et d'explicabilité. Il ne suffit pas que les agents apprennent à coopérer efficacement : il est souvent indispensable qu'ils respectent des contraintes organisationnelles définies a priori, par exemple pour garantir la séparation des responsabilités, la hiérarchie des décisions, ou la conformité à des protocoles de défense.
 
-\noindent
-Cependant, la majorité de ces méthodes opèrent à un niveau \textit{comportemental} local~: elles imposent des règles sur les actions possibles, ou ajustent la récompense pour favoriser certaines trajectoires. Très peu de travaux intègrent des contraintes \textit{organisationnelles} symboliques, c'est-à-dire des spécifications abstraites sur les rôles, missions ou interactions attendues entre agents.
+Ce sous-problème s'inscrit donc au cœur de la démarche de la thèse, qui vise à concilier l'autonomie d'apprentissage offerte par le \acn{MARL} avec la nécessité de garantir des propriétés organisationnelles critiques. L'intégration de telles contraintes ou guidages organisationnels dans le processus d'apprentissage doit permettre d'assurer la cohérence, la sûreté et l'explicabilité des comportements collectifs, tout en préservant la capacité d'adaptation des agents face à des menaces évolutives. Cette problématique structure ainsi l'un des axes majeurs de la méthode proposée, en cherchant à dépasser les limites des approches purement émergentes ou purement prescriptives dans la conception des systèmes multi-agents pour la cyberdéfense.
 
-\medskip
-
-\noindent
-La littérature sur le \acn{MARL} s'est principalement concentrée sur l'optimisation de la coopération entre agents dans des environnements incertains et partiellement observables~\cite{Zhang2021, Papoudakis2021}. Toutefois, les approches classiques négligent généralement l'incorporation de contrain-tes symboliques ou organisationnelles dans le processus d'apprentissage. Les agents apprennent par essais-erreurs sans garantie que leurs comportements émergents respecteront des exigences de conception critiques, comme des règles de sûreté, le respect des rôles, ou des hiérarchies d'équipe.
-
-\noindent
-Plusieurs travaux récents ont tenté de combler cette lacune via des techniques d'apprentissage par renforcement sensibles aux contraintes. \textit{Constraint-Guided Reinforcement Learning}~\cite{spieker2021constraint} intègre des modèles de contraintes explicites dans l'interaction agent-environnement, permettant d'apprendre des politiques respectant des bornes comportementales prédéfinies. \textit{Deep Constrained Q-Learning}~\cite{kalweit2020deep} impose des contrain-tes à court et moyen terme dans la mise à jour des valeurs Q, assurant ainsi le respect de critères de performance et de sécurité. L'approche \acn{CPO}~\cite{achiam2017constrained} offre des garanties théoriques de satisfaction des contraintes durant la recherche de politiques, et \textit{MENTOR}~\cite{zhou2025mentor} guide les agents dans un cadre hiérarchique à l'aide de retours humains et de sous-objectifs dynamiquement contraints. Enfin, l'apprentissage contraint sans fonction de récompense explicite~\cite{miryoosefi2022} optimise directement la satisfaction de contraintes en contournant l'ingénierie de récompenses.
-
-\medskip
-
-\noindent
-Si ces approches renforcent le contrôle des politiques apprises, elles restent limitées à un niveau local ou comportemental et n'intègrent pas des modèles de conception symboliques tels que ceux développés en ingénierie des \acplu{SMA}.
-
-\medskip
-
-\noindent
-Les modèles issus de l'ingénierie des \acplu{SMA}, comme \textit{$\mathcal{M}OISE^+$}~\cite{hubner2002moise}, proposent au contraire une structuration explicite du système via des rôles, des missions à accomplir, et des groupes formés dynamiquement. À notre connaissance, aucune approche ne permet de guider ou contraindre les agents à s'aligner sur des comportements d'agents évoluant dans une organisation structurée et fonctionnelle telle que proposée dans $\mathcal{M}OISE^+$.
-
-\medskip
-
-\noindent
-Ainsi, un verrou fondamental demeure~: il n'existe pas de méthode permettant de structurer et de guider l'apprentissage \acn{MARL} à partir de spécifications organisationnelles riches, telles que celles proposées par $\mathcal{M}OISE^+$, tout en assurant un compromis entre autonomie d'apprentissage et respect de contraintes. Or, dans des domaines critiques (cyberdéfense, secours, coordination robotique), ce besoin est central.
-
-
-\section{L'extraction automatisée des spécifications organisationnelles émergentes (H-ANL)}
-
-Alors que la tradition \acn{AOSE} garantit l'explicabilité à travers des artefacts de conception structurés (tels que des protocoles, des rôles, des missions ou des objectifs), ces éléments symboliques sont généralement perdus dans les approches classiques du \acn{MARL}. Les politiques apprises sont souvent représentées sous la forme de réseaux de neurones opaques, rendant difficile l'évaluation de la conformité des comportements des agents avec l'intention de conception initiale ou les principes organisationnels. Bien que l'explicabilité en \acn{MARL} ait suscité un intérêt croissant, la majorité des travaux existants se concentrent sur le comportement individuel des agents ou les mécanismes internes des politiques, sans aborder leur alignement collectif ou organisationnel.
-
-Un nombre croissant de recherches cherche à améliorer l'interprétabilité via la conception de modèles ou l'analyse post-hoc. Zabounidis et al.~\cite{zabounidis2023concept} intègrent des concepts interprétables dans la boucle d'apprentissage, en forçant les agents à prédire des concepts compréhensibles par un humain avant d'agir. Cela favorise la transparence et permet des corrections par des experts. Iturria-Rivera et al.~\cite{iturria2024explainable} utilisent la décomposition de la récompense dans les fonctions de valeur factorisées (par exemple VDN~\cite{Sunehag2018}, QMIX~\cite{Tabish2018}) pour exposer la contribution de chaque composante aux décisions de l'agent. Liu et al.~\cite{liu2025} proposent MIXRTs, une architecture hybride combinant réseaux neuronaux récurrents et arbres de décision pour l'apprentissage de politiques interprétables. D'autres efforts comme ceux de Poupart et al.~\cite{poupart2025perspectives} introduisent des méthodes post-hoc telles que la rétropropagation de la pertinence (relevance backpropagation) ou le patching d'activations. Li et al.~\cite{li2025from} emploient des approximations basées sur la valeur de Shapley pour transformer des politiques de type deep \acn{RL} en structures interprétables.
-
-Cependant, ces approches restent principalement limitées à des analyses locales ou centrées sur un seul agent. Elles ne permettent pas d'interpréter le comportement collectif d'un \acn{SMA} ni de relier ces dynamiques à des structures organisationnelles symboliques. Très peu d'études abordent explicitement la possibilité d'inférer des rôles, objectifs ou structures émergentes à partir de trajectoires observées.
-
-Certains travaux connexes offrent néanmoins des pistes intéressantes. Berenji et Vengerov~\cite{berenji2000learning} modélisent les dépendances entre agents dans des missions de drones afin d'améliorer leur coordination, et Yusuf et Baber~\cite{yusuf2020inferential} proposent un raisonnement bayésien pour soutenir une coordination dynamique. Bien que ces contriobjectifions soulignent l'intérêt d'une modélisation symbolique à partir de comportements, elles ne fournissent pas de mécanismes pour inférer explicitement des rôles ou objectifs organisationnels à partir des trajectoires. De leur côté, Serrino et al.~\cite{serrino2019finding} analysent les interactions sociales pour identifier des rôles émergents, mais leur approche reste centrée sur des dynamiques sociales informelles sans formalisation organisationnelle.
-
-En résumé, aucune méthode existante ne permet actuellement d'extraire automatiquement des spécifications organisationnelles (telles que des structures de rôles, des missions ou des objectifs collectifs) à partir de trajectoires d'agents entraînés. Or, une telle capacité permettrait de combler le fossé entre les approches symboliques prescriptives de l'\acn{AOSE} et les approches apprenantes fondées sur l'émergence. Elle offrirait un cadre pour évaluer l'organisation implicite d'un \acn{SMA}, identifier des écarts avec un modèle attendu, et potentiellement réinjecter ces connaissances dans une boucle de conception organisationnelle itérative. Cette hypothèse ouvre la voie à une nouvelle génération de méthodes de diagnostic, de rétro-ingénierie et d'adaptation des \acplu{SMA} entraînés par apprentissage.
-
-
-\section{Un cadre Markovien pour formaliser le problème de conception et sa résolution en MARL (H-TRF)}
-
-\noindent
-La conception d'un \acn{SMA} implique généralement de définir des rôles, des interactions et des règles de coordination dans un environnement donné. Traditionnellement, cette activité repose sur une modélisation symbolique, où les concepteurs spécifient manuellement les comportements et les structures attendus. À l'inverse, les approches fondées sur l'apprentissage, notamment le \acn{MARL}, cherchent à découvrir ces comportements de manière automatique à partir d'expériences. Il devient alors essentiel de disposer d'un cadre formel permettant de représenter le problème de conception lui-même comme un problème de décision, résoluble par apprentissage.
-
-\medskip
-
-\noindent
-Les travaux en \acn{MARL} se basent généralement sur des modèles Markoviens multi-agents, tels que les \acn{Dec-MDP} ou les \acn{Dec-POMDP}. Dans un \acn{Dec-POMDP}, chaque agent dispose d'observations partielles, d'une politique locale, et d'une fonction de récompense partagée ou individuelle. Ce formalisme permet de représenter des dynamiques complexes, distribuées et incertaines, tout en tenant compte de la coordination nécessaire entre agents.
-
-\noindent
-Cependant, dans la majorité des cas, ces modèles sont utilisés pour représenter des problèmes d'exécution (ex.~: résolution de tâches) plutôt que des problèmes de conception. Le lien entre spécifications organisationnelles ($\mathcal{M}OISE^+$, rôles, missions) et les composantes du \acn{Dec-POMDP} n'est généralement pas formalisé. De plus, ces modèles ne permettent pas directement d'imposer des contraintes symboliques sur les politiques ou les trajectoires.
-
-\medskip
-
-\noindent
-Pour pallier cette limite, plusieurs possibilités des \acn{MDP}s sont disponibles~:
+Pour évaluer la capacité des approches existantes à intégrer des contraintes ou guidages organisationnels dans le processus d'apprentissage multi-agent, nous retenons les critères suivants :
 \begin{itemize}
-  \item les \textit{Constrained \acn{MDP}}~\cite{Altman1999} (CMDP), où certaines contraintes (coût, sécurité) doivent être respectées au cours de l'exécution~;
-  \item la possibilité d'ajouter des contraintes aux \acn{Dec-POMDP} sur les politiques des agents~\cite{Beynier2010}.
+  \item \textbf{Expressivité des contraintes}~: aptitude à exprimer des exigences organisationnelles complexes (rôles, missions, interactions, hiérarchies) ;
+  \item \textbf{Niveau d’intégration}~: niveau auquel les contraintes sont prises en compte (action, politique, trajectoire, organisation) ;
+  \item \textbf{Garantie de respect}~: existence de garanties théoriques ou empiriques sur la satisfaction des contraintes ;
+  \item \textbf{Compatibilité avec l’apprentissage}~: maintien de la capacité d’adaptation et d’optimisation des agents ;
+  \item \textbf{Explicabilité}~: possibilité d’expliquer ou de vérifier le respect des contraintes dans les politiques apprises.
 \end{itemize}
 
-\noindent
-Ces possibilités constituent des bases intéressantes, mais restent rarement utilisés pour formaliser le processus même de \textit{conception} d'un \acn{SMA}. En effet, ils supposent généralement que la dynamique de l'environnement est connue, que l'espace d'état est spécifié, et que les contraintes sont codées à bas niveau. Il manque donc un cadre unifié permettant de représenter~:
+\subsection*{Hypothèse de restriction de l’espace de recherche (H-TRN)}
+
+Afin de circonscrire l’espace de recherche à un domaine pertinent et exploitable, nous reprenons l’hypothèse suivante~:
+
+\textit{Il est possible d’intégrer des contraintes ou des guidages organisationnels explicites dans le processus d’apprentissage multi-agent (MARL), de façon à orienter ou restreindre l’espace des politiques apprises, tout en préservant la capacité d’adaptation et d’optimisation des agents.}
+
+Cette hypothèse conduit à explorer principalement trois axes complémentaires dans la littérature~:
 \begin{itemize}
-  \item les dynamiques simulées de l'environnement (\textit{World Model})~;
-  \item les contraintes organisationnelles ($\mathcal{M}OISE^+$)~;
-  \item et la recherche de politiques collectives compatibles avec ces éléments.
+  \item \textbf{L’intégration de contraintes explicites}~: travaux où des contraintes de sûreté, de structure ou de mission sont formellement ajoutées au processus d’apprentissage (par exemple via des Constrained MDP, CPO, Deep Constrained Q-Learning, etc.) ;
+  \item \textbf{L’utilisation de mécanismes de guidage}~: approches qui orientent l’apprentissage par des techniques telles que le reward shaping, le shielding, ou l’incorporation de feedback humain, afin d’influencer indirectement les politiques apprises ;
+  \item \textbf{L’incorporation de modèles organisationnels symboliques}~: tentatives d’intégrer des spécifications organisationnelles issues de l’ingénierie des SMA (par exemple, $\mathcal{M}OISE^+$) dans le processus d’apprentissage, afin de garantir le respect de structures, de rôles ou de missions collectives.
 \end{itemize}
 
-\medskip
+Le périmètre de la revue de littérature est ainsi délimité par ces trois axes, qui couvrent l’ensemble des approches visant à combiner apprentissage multi-agent et respect de contraintes organisationnelles, qu’elles soient imposées de manière explicite, implicite ou symbolique.
 
-\noindent
-Nous proposons d'enrichir le \acn{Dec-POMDP} en y injectant deux structures complémentaires~:
+\subsection*{Couverture des critères par les travaux identifiés}
+
+La synthèse de la couverture de ces critères par les principales familles de travaux identifiés est présentée dans le tableau~\ref{tab:couverture_criteres_travaux_trn}.
+
+\begin{table}[h!]
+  \centering
+  \caption{Couverture des critères par les principales familles de travaux sur l’intégration de contraintes/guidages organisationnels dans le MARL}
+  \label{tab:couverture_criteres_travaux_trn}
+  \begin{tabular}{|p{5cm}|c|c|c|c|c|}
+    \hline
+    \textbf{Travaux / Critères}                      & \textbf{Expressivité organisationnelle} & \textbf{Niveau d’intégration} & \textbf{Garantie de respect} & \textbf{Compatibilité apprentissage} & \textbf{Explicabilité} \\
+    \hline
+    Safe RL, CPO, Deep Constrained Q-Learning        & Faible                                  & Action/Politique              & Oui (partiel)                & Oui                                  & Faible                 \\
+    \hline
+    Reward shaping, shielding, feedback humain       & Moyenne                                 & Action/Trajectoire            & Non (souple)                 & Oui                                  & Faible                 \\
+    \hline
+    Constraint-Guided RL, MENTOR, RL contraint       & Moyenne                                 & Politique                     & Oui (partiel)                & Oui                                  & Moyenne                \\
+    \hline
+    Intégration de modèles organisationnels (MOISE+) & Forte (potentielle)                     & Organisation                  & Non (verrou)                 & Non (verrou)                         & Forte                  \\
+    \hline
+  \end{tabular}
+\end{table}
+
+Le \autoref{tab:couverture_criteres_travaux_trn} synthétise les travaux identifiés dans les trois axes définis par l’hypothèse (H-TRN) vis à vis des critères spécifiques.
+
+Tout d'abord, les approches issues du champ du Safe Reinforcement Learning, comme CPO (Constrained Policy Optimization) ou Deep Constrained Q-Learning, se distinguent par leur capacité à fournir certaines garanties de sécurité ou de respect partiel des contraintes \cite{achiam2017constrained}. Ces travaux opèrent généralement à un niveau local, souvent au niveau des actions ou des politiques, et sont bien compatibles avec les algorithmes d’apprentissage profond. Toutefois, leur expressivité organisationnelle demeure faible, car elles ne modélisent pas explicitement les structures collectives ou les règles organisationnelles. De même, leur explicabilité reste limitée, rendant difficile l'interprétation des comportements multi-agents vis-à-vis des attentes organisationnelles \cite{garcia2015comprehensive}. En somme, ces approches privilégient l'efficacité opérationnelle locale à la cohérence globale avec des contraintes organisationnelles complexes.
+
+Ensuite, les méthodes comme le reward shaping, le shielding ou l’intégration de feedback humain cherchent à influencer les agents via des mécanismes souples ou indirects \cite{ng1999policy}. Bien que ces approches permettent une intégration à différents niveaux (actions ou trajectoires) et soient compatibles avec l’apprentissage, elles n’offrent pas de garanties formelles sur le respect des contraintes organisationnelles. Leur expressivité est relativement moyenne, dans la mesure où elles peuvent encoder des préférences mais sans structure hiérarchique explicite. Par ailleurs, l’explicabilité est souvent faible, car la source de certaines décisions ou adaptations des agents est diluée dans la dynamique d’apprentissage et l’optimisation implicite des récompenses modifiées \cite{warnell2018deep, amodei2016concrete}. Ces méthodes sont donc utiles pour influencer le comportement des agents sans imposer de structure rigide, mais elles peinent à faire émerger une coordination organisationnelle explicite.
+
+Enfin, les approches fondées sur l’intégration de modèles organisationnels explicites comme $\mathcal{M}OISE^+$ ou des extensions multi-agents inspirées des organisations humaines représentent une avancée conceptuelle majeure \cite{hubner2007using}. Elles offrent une expressivité organisationnelle forte, car elles permettent de représenter des rôles, des missions et des relations entre entités collectives. Cependant, elles rencontrent des verrous techniques majeurs : leur intégration avec l’apprentissage est souvent absente ou difficile (non compatible), et la garantie de respect des contraintes n’est pas toujours assurée dans un environnement dynamique ou incertain. En revanche, ces modèles se distinguent par leur fort potentiel d’explicabilité, car ils rendent les intentions collectives et les structures de décision transparentes. Cela suggère une piste prometteuse pour l’hybridation entre apprentissage autonome et pilotage organisationnel, encore peu explorée dans la littérature \cite{bordini2006jade, chernova2014robot}.
+
+\subsection*{Analyse des travaux et verrous}
+
+L’analyse de l’état de l’art met en évidence plusieurs avancées dans l’intégration de contraintes dans le processus d’apprentissage multi-agent, notamment via des approches de \textit{Safe RL}, de \textit{reward shaping}, ou de \textit{shielding}. Ces méthodes permettent d’orienter l’apprentissage en imposant des contraintes sur les actions, en modifiant la fonction de récompense, ou en guidant les agents à travers des feedbacks humains ou des mécanismes de filtrage d’actions. Elles offrent ainsi un certain contrôle sur les politiques apprises, en particulier pour éviter des comportements indésirables ou garantir le respect de règles de sûreté locales.
+
+Cependant, ces approches présentent des limites majeures dès lors qu’il s’agit d’exprimer et de garantir le respect de contraintes organisationnelles complexes, telles que la répartition des rôles, la coordination structurée ou la réalisation de missions collectives. Les contraintes sont généralement intégrées à un niveau local (action, trajectoire, politique individuelle), sans prise en compte explicite de la structure organisationnelle globale du système multi-agent.
+
+Par ailleurs, les travaux issus de l’ingénierie des SMA, et notamment les modèles organisationnels symboliques comme $\mathcal{M}OISE^+$, proposent une formalisation riche des rôles, missions et relations entre agents. Toutefois, il n’existe pas, à ce jour, de méthode permettant d’intégrer directement ces spécifications organisationnelles dans le processus d’apprentissage MARL, que ce soit via le reward shaping (pour inciter les agents à adopter des comportements conformes à leur rôle ou à leurs objectifs) ou via la restriction de l’espace des actions (pour forcer le respect de certaines contraintes organisationnelles).
+
+En synthèse, le verrou principal identifié est l’absence d’un cadre unifié permettant de combiner :
+\begin{itemize}
+  \item l’expressivité des modèles organisationnels symboliques (rôles, missions, permissions, obligations) ;
+  \item et l’efficacité des techniques d’apprentissage par renforcement multi-agent sous contraintes (reward shaping, action masking, etc.)
+\end{itemize}
+pour guider ou contraindre l’apprentissage de politiques collectives respectant explicitement les spécifications organisationnelles.
+
+Ce manque limite la capacité à concevoir des SMA à la fois adaptatifs, sûrs et explicables dans des contextes critiques comme la cyberdéfense. Il justifie la nécessité de contributions méthodologiques permettant d’articuler modèles organisationnels et apprentissage, ce qui constituera l’un des axes centraux de la méthode proposée dans la partie suivante.
+
+
+% \section{L'intégration de contraintes/guidages organisationnelles dans le processus MARL (H-TRN)}
+
+% \noindent
+% Le \acn{MARL}, tel que présenté dans le \autoref{chap:concepts}, permet aux agents de développer de manière autonome des politiques coopératives dans des environnements complexes et dynamiques. Toutefois, la nature exploratoire du \acn{MARL} rend difficile le contrôle précis des comportements émergents, en particulier lorsque des exigences critiques de sûreté, de coordination ou de structure doivent être respectées.
+
+% \medskip
+
+% \noindent
+% Les travaux en \textit{Safe Reinforcement Learning}~\cite{garcia2015comprehensive} ont cherché à intégrer des contraintes dans le processus d'apprentissage afin d'éviter certains comportements indésirables. Par exemple, \acn{CPO}~\cite{achiam2017constrained} garantit que la politique reste proche d'un ensemble d'actions autorisées, tandis que \textit{Deep Constrained Q-Learning}~\cite{kalweit2020deep} applique des contraintes explicites sur la mise à jour des valeurs Q. D'autres approches introduisent des mécanismes de \textit{shielding}, \textit{reward shaping} ou encore l'intégration de retours humains (cf.~\cite{zhou2025mentor}). Ces travaux montrent qu'il est possible d'influencer l'apprentissage en encadrant l'espace des politiques, tout en maintenant une capacité d'adaptation.
+
+% \noindent
+% Cependant, la majorité de ces méthodes opèrent à un niveau \textit{comportemental} local~: elles imposent des règles sur les actions possibles, ou ajustent la récompense pour favoriser certaines trajectoires. Très peu de travaux intègrent des contraintes \textit{organisationnelles} symboliques, c'est-à-dire des spécifications abstraites sur les rôles, missions ou interactions attendues entre agents.
+
+% \medskip
+
+% \noindent
+% La littérature sur le \acn{MARL} s'est principalement concentrée sur l'optimisation de la coopération entre agents dans des environnements incertains et partiellement observables~\cite{Zhang2021, Papoudakis2021}. Toutefois, les approches classiques négligent généralement l'incorporation de contrain-tes symboliques ou organisationnelles dans le processus d'apprentissage. Les agents apprennent par essais-erreurs sans garantie que leurs comportements émergents respecteront des exigences de conception critiques, comme des règles de sûreté, le respect des rôles, ou des hiérarchies d'équipe.
+
+% \noindent
+% Plusieurs travaux récents ont tenté de combler cette lacune via des techniques d'apprentissage par renforcement sensibles aux contraintes. \textit{Constraint-Guided Reinforcement Learning}~\cite{spieker2021constraint} intègre des modèles de contraintes explicites dans l'interaction agent-environnement, permettant d'apprendre des politiques respectant des bornes comportementales prédéfinies. \textit{Deep Constrained Q-Learning}~\cite{kalweit2020deep} impose des contrain-tes à court et moyen terme dans la mise à jour des valeurs Q, assurant ainsi le respect de critères de performance et de sécurité. L'approche \acn{CPO}~\cite{achiam2017constrained} offre des garanties théoriques de satisfaction des contraintes durant la recherche de politiques, et \textit{MENTOR}~\cite{zhou2025mentor} guide les agents dans un cadre hiérarchique à l'aide de retours humains et de sous-objectifs dynamiquement contraints. Enfin, l'apprentissage contraint sans fonction de récompense explicite~\cite{miryoosefi2022} optimise directement la satisfaction de contraintes en contournant l'ingénierie de récompenses.
+
+% \medskip
+
+% \noindent
+% Si ces approches renforcent le contrôle des politiques apprises, elles restent limitées à un niveau local ou comportemental et n'intègrent pas des modèles de conception symboliques tels que ceux développés en ingénierie des \acplu{SMA}.
+
+% \medskip
+
+% \noindent
+% Les modèles issus de l'ingénierie des \acplu{SMA}, comme \textit{$\mathcal{M}OISE^+$}~\cite{hubner2002moise}, proposent au contraire une structuration explicite du système via des rôles, des missions à accomplir, et des groupes formés dynamiquement. À notre connaissance, aucune approche ne permet de guider ou contraindre les agents à s'aligner sur des comportements d'agents évoluant dans une organisation structurée et fonctionnelle telle que proposée dans $\mathcal{M}OISE^+$.
+
+% \medskip
+
+% \noindent
+% Ainsi, un verrou fondamental demeure~: il n'existe pas de méthode permettant de structurer et de guider l'apprentissage \acn{MARL} à partir de spécifications organisationnelles riches, telles que celles proposées par $\mathcal{M}OISE^+$, tout en assurant un compromis entre autonomie d'apprentissage et respect de contraintes. Or, dans des domaines critiques (cyberdéfense, secours, coordination robotique), ce besoin est central.
+
+\section{L'extraction des spécifications organisationnelles émergentes (H-ANL)}
+
+\subsection*{Recontextualisation du sous-problème dans la démarche de la thèse}
+
+L’extraction des spécifications organisationnelles émergentes constitue le troisième sous-problème central de la démarche de la thèse. Alors que les modèles organisationnels symboliques (comme $\mathcal{M}OISE^+$) permettent de prescrire explicitement des structures, rôles et missions lors de la conception d’un SMA, ces spécifications sont généralement absentes ou perdues dans les approches fondées sur l’apprentissage par renforcement multi-agent (MARL). Les politiques apprises sont souvent représentées sous forme de réseaux de neurones opaques, rendant difficile l’analyse, la vérification ou l’explicabilité des comportements collectifs obtenus.
+
+Dans ce contexte, la capacité à extraire a posteriori des structures organisationnelles émergentes (rôles, missions, objectifs collectifs, relations) à partir des trajectoires et politiques apprises devient un enjeu clé. Cette extraction permettrait de combler le fossé entre les approches prescriptives (où l’organisation est définie a priori) et les approches émergentes (où l’organisation résulte de l’apprentissage), en offrant un moyen d’analyser, d’expliquer et de comparer l’organisation implicite qui se forme au sein d’un SMA entraîné.
+
+Ce sous-problème est donc directement lié à l’explicabilité, à la rétro-ingénierie et à l’amélioration continue des systèmes multi-agents. Il ouvre la voie à une boucle de conception organisationnelle itérative, où les spécifications extraites peuvent être utilisées pour diagnostiquer des écarts, guider de nouveaux apprentissages ou réinjecter des contraintes organisationnelles adaptées. L’extraction des spécifications organisationnelles émergentes est ainsi essentielle pour garantir la transparence, la robustesse et l’évolutivité des SMA conçus par apprentissage.
+
+\subsection*{Hypothèse de restriction de l’espace de recherche (H-ANL)}
+
+Nous reprenons l’hypothèse suivante~: \textit{Il est possible d’extraire, à partir des trajectoires et politiques apprises d’un SMA, des spécifications organisationnelles émergentes (telles que des structures de rôles, des missions ou des objectifs collectifs), permettant d’analyser, d’expliquer et de comparer l’organisation implicite via des techniques d'apprentissage machine.}
+
+Cette hypothèse restreint le périmètre de la revue de littérature aux travaux qui visent à :
+\begin{itemize}
+  \item améliorer l’interprétabilité ou l’explicabilité des politiques multi-agents (analyse post-hoc, modèles interprétables, attribution de concepts) ;
+  \item inférer ou diagnostiquer des structures collectives, des rôles ou des missions à partir de trajectoires ou d’interactions observées ;
+  \item relier les dynamiques collectives apprises à des modèles organisationnels symboliques ou à des structures explicites.
+\end{itemize}
+
+Pour évaluer la pertinence des travaux identifiés, les critères spécifiques retenus sont~:
+\begin{itemize}
+  \item \textbf{Niveau d’explicabilité}~: capacité à expliquer les politiques apprises, localement (agent) ou globalement (organisation) ;
+  \item \textbf{Extraction de structures organisationnelles}~: possibilité d’identifier des rôles, missions, objectifs collectifs ou relations émergentes ;
+  \item \textbf{Automatisation de l’analyse}~: degré d’automatisation de l’inférence organisationnelle à partir des trajectoires ;
+  \item \textbf{Lien avec des modèles symboliques}~: aptitude à relier les comportements émergents à des modèles organisationnels formels (ex.~: $\mathcal{M}OISE^+$).
+\end{itemize}
+
+\subsection*{Couverture des critères par les travaux identifiés}
+
+La synthèse de la couverture des critères par les principales familles de travaux identifiés est présentée dans le tableau~\ref{tab:couverture_criteres_travaux_anl}.
+
+\begin{table}[h!]
+  \centering
+  \caption{Couverture des critères par les principales familles de travaux sur l’extraction organisationnelle émergente}
+  \label{tab:couverture_criteres_travaux_anl}
+  \begin{tabular}{|p{5cm}|c|c|c|c|}
+    \hline
+    \textbf{Travaux / Critères}                                                           & \textbf{Explicabilité} & \textbf{Extraction organisationnelle} & \textbf{Automatisation} & \textbf{Lien symbolique} \\
+    \hline
+    Modèles interprétables (arbres, concepts, décomposition de valeur)                    & Locale                 & Faible à moyenne                      & Moyenne                 & Faible                   \\
+    \hline
+    Analyse post-hoc (relevance, patching, Shapley)                                       & Locale                 & Faible                                & Moyenne                 & Faible                   \\
+    \hline
+    Inférence de rôles ou de dépendances (analyse sociale, clustering, modèles bayésiens) & Moyenne                & Moyenne                               & Faible à moyenne        & Faible                   \\
+    \hline
+    Extraction organisationnelle symbolique (non couvert)                                 & --                     & --                                    & --                      & --                       \\
+    \hline
+  \end{tabular}
+\end{table}
+
+La \autoref{tab:couverture_criteres_travaux_anl} synthétise les contributions des travaux identifiés en matière d'explicabilité, d'extraction organisationnelle, d'automatisation et de lien symbolique. La première famille de travaux, centrée sur les modèles interprétables comme les arbres de décision ou les représentations conceptuelles, vise à rendre les politiques apprises plus transparentes. Ces approches permettent d’obtenir une explicabilité principalement locale, c’est-à-dire au niveau de la décision d’un agent donné, en décomposant la politique en structures arborescentes ou symboliques lisibles. Le travail de Zhang \cite{zhang2024advancing} propose ainsi une méthode d'extraction d’arbres à partir de politiques MARL, combinant efficacité d’échantillonnage et transparence. De même, les travaux MAVIPER de Milani et al. \cite{milani2022maviper,milani2024interpretable} traduisent les réseaux de neurones en politiques arborescentes, exploitant la structure des décisions pour améliorer la lisibilité des comportements collectifs. Si ces approches permettent une certaine extraction de structures organisationnelles implicites (rôles ou schémas d’action), leur couverture reste limitée à des missions simples ou à des environnements structurés. L’automatisation de cette extraction est toutefois bien amorcée grâce à des pipelines d’extraction semi-supervisés, bien que le lien avec des modèles organisationnels symboliques comme $\mathcal{M}OISE^+$ demeure marginal, voire inexistant.
+
+La seconde catégorie, celle des approches d’analyse post-hoc, regroupe les méthodes qui n'interviennent pas lors de l'apprentissage, mais après coup, pour expliquer les décisions prises par un SMA entraîné. Ces méthodes incluent des techniques de type SHAP, patching ou attribution de concepts. Elles permettent également une explicabilité locale, souvent centrée sur l'importance des caractéristiques dans les décisions individuelles. Grupen et al. \cite{grupen2022concept} ont par exemple utilisé une approche fondée sur les concepts latents pour analyser les comportements émergents dans des environnements multi-agents, sans modifier l'entraînement initial. Bien que ces méthodes soient prometteuses pour interpréter les politiques individuelles, elles restent limitées en ce qui concerne la détection de structures organisationnelles globales. L’automatisation de l’analyse est modérée : elle repose sur l’instrumentation du modèle entraîné, mais nécessite encore un effort d’interprétation humaine significatif. Comme pour les modèles interprétables, ces méthodes restent déconnectées de toute formalisation symbolique, ne produisant pas de représentation formelle d’une organisation émergente.
+
+Enfin, les travaux centrés sur l’inférence de rôles ou de dépendances sociales cherchent à reconstituer des structures collectives ou hiérarchiques à partir des trajectoires d'agents. Cette ligne de recherche se distingue par une explicabilité plus globale, avec des tentatives d’identifier des rôles émergents, des missions collectives, ou encore des relations de dépendance entre agents. L’approche ROMA de Wang et al. \cite{Wang2020} repose sur la maximisation de l’information mutuelle entre les rôles et les trajectoires pour faire émerger des spécialisations comportementales. Ces méthodes proposent des éléments d’extraction organisationnelle plus marqués, bien qu’encore limitées en termes d'automatisation (ex. : besoin de configurations spécifiques ou d’une supervision partielle). Elles n’intègrent généralement pas non plus de cadre symbolique formel, bien que certaines (comme \cite{subramanian2024neurosymbolic}) commencent à explorer des approches hybrides combinant règles et apprentissage profond.
+
+\subsection*{Analyse des travaux et verrous}
+
+L’analyse de l’état de l’art sur l’extraction des spécifications organisationnelles émergentes met en évidence plusieurs avancées, mais aussi des limites importantes. Les travaux existants se répartissent principalement en trois familles : (i) les modèles interprétables visant à rendre les politiques plus lisibles, (ii) les méthodes d’analyse post-hoc pour expliquer les décisions individuelles, et (iii) les approches d’inférence de rôles ou de dépendances sociales à partir des trajectoires.
+
+Si ces contributions permettent d’améliorer l’explicabilité locale (niveau agent) ou d’identifier certains schémas collectifs, elles restent limitées pour ce qui est de l’extraction automatisée de structures organisationnelles complètes (rôles, missions, objectifs collectifs) et de leur formalisation symbolique. En particulier, aucune méthode ne propose aujourd’hui de relier systématiquement les comportements émergents à des modèles organisationnels formels tels que $\mathcal{M}OISE^+$.
+
+Les travaux les plus prometteurs pour répondre à ce sous-problème proviennent du domaine de l’apprentissage non supervisé, et en particulier des techniques de clustering appliquées aux trajectoires d’agents. Il devient ainsi envisageable d’utiliser le clustering sur les observations ou les actions pour inférer des rôles (via l’identification de patterns comportementaux fréquents) et des objectifs (via la détection d’observations ou de situations récurrentes). Cette approche ouvre la voie à une extraction plus automatisée et potentiellement plus globale des structures organisationnelles émergentes.
+
+Cependant, deux verrous majeurs subsistent :
 \begin{enumerate}
-  \item une fonction d'environnement $\mathcal{T}$, apprise à partir de données (\textit{World Model})~;
-  \item un ensemble de contraintes organisationnelles symboliques, représentées sous forme de relations $(h, o) \mapsto A_{autorisé}$ ou de fonctions de récompense de trajectoire.
+  \item \textbf{L’absence de cadre théorique pour l’évaluation de l’explicabilité organisationnelle~:} Il manque aujourd’hui un framework et des notions quantitatives permettant de mesurer le niveau d’explicabilité atteint par les méthodes d’extraction, que ce soit au niveau des rôles, des missions ou des relations collectives.
+  \item \textbf{Le manque d’automatisation dans le paramétrage des méthodes~:} Les techniques de clustering et d’inférence nécessitent souvent un réglage manuel des hyperparamètres (nombre de clusters, seuils, etc.), ce qui limite leur automatisation et leur applicabilité à grande échelle.
 \end{enumerate}
 
+En résumé, bien que l’utilisation de l’apprentissage non supervisé et du clustering de trajectoires constitue une piste prometteuse pour l’extraction organisationnelle émergente, il reste nécessaire de lever ces deux verrous pour permettre une analyse automatisée, explicable et généralisable des organisations implicites dans les SMA entraînés par apprentissage. Cela justifie le besoin de contributions méthodologiques nouvelles, à la fois sur le plan théorique (cadre d’évaluation de l’explicabilité) et pratique (automatisation du processus d’inférence organisationnelle).
+
+
+% \section{L'extraction des spécifications organisationnelles émergentes (H-ANL)}
+
+% Alors que la tradition \acn{AOSE} garantit l'explicabilité à travers des artefacts de conception structurés (tels que des protocoles, des rôles, des missions ou des objectifs), ces éléments symboliques sont généralement perdus dans les approches classiques du \acn{MARL}. Les politiques apprises sont souvent représentées sous la forme de réseaux de neurones opaques, rendant difficile l'évaluation de la conformité des comportements des agents avec l'intention de conception initiale ou les principes organisationnels. Bien que l'explicabilité en \acn{MARL} ait suscité un intérêt croissant, la majorité des travaux existants se concentrent sur le comportement individuel des agents ou les mécanismes internes des politiques, sans aborder leur alignement collectif ou organisationnel.
+
+% Un nombre croissant de recherches cherche à améliorer l'interprétabilité via la conception de modèles ou l'analyse post-hoc. Zabounidis et al.~\cite{zabounidis2023concept} intègrent des concepts interprétables dans la boucle d'apprentissage, en forçant les agents à prédire des concepts compréhensibles par un humain avant d'agir. Cela favorise la transparence et permet des corrections par des experts. Iturria-Rivera et al.~\cite{iturria2024explainable} utilisent la décomposition de la récompense dans les fonctions de valeur factorisées (par exemple VDN~\cite{Sunehag2018}, QMIX~\cite{Tabish2018}) pour exposer la contribution de chaque composante aux décisions de l'agent. Liu et al.~\cite{liu2025} proposent MIXRTs, une architecture hybride combinant réseaux neuronaux récurrents et arbres de décision pour l'apprentissage de politiques interprétables. D'autres efforts comme ceux de Poupart et al.~\cite{poupart2025perspectives} introduisent des méthodes post-hoc telles que la rétropropagation de la pertinence (relevance backpropagation) ou le patching d'activations. Li et al.~\cite{li2025from} emploient des approximations basées sur la valeur de Shapley pour transformer des politiques de type deep \acn{RL} en structures interprétables.
+
+% Cependant, ces approches restent principalement limitées à des analyses locales ou centrées sur un seul agent. Elles ne permettent pas d'interpréter le comportement collectif d'un \acn{SMA} ni de relier ces dynamiques à des structures organisationnelles symboliques. Très peu d'études abordent explicitement la possibilité d'inférer des rôles, objectifs ou structures émergentes à partir de trajectoires observées.
+
+% Certains travaux connexes offrent néanmoins des pistes intéressantes. Berenji et Vengerov~\cite{berenji2000learning} modélisent les dépendances entre agents dans des missions de drones afin d'améliorer leur coordination, et Yusuf et Baber~\cite{yusuf2020inferential} proposent un raisonnement bayésien pour soutenir une coordination dynamique. Bien que ces contriobjectifions soulignent l'intérêt d'une modélisation symbolique à partir de comportements, elles ne fournissent pas de mécanismes pour inférer explicitement des rôles ou objectifs organisationnels à partir des trajectoires. De leur côté, Serrino et al.~\cite{serrino2019finding} analysent les interactions sociales pour identifier des rôles émergents, mais leur approche reste centrée sur des dynamiques sociales informelles sans formalisation organisationnelle.
+
+% En résumé, aucune méthode existante ne permet actuellement d'extraire automatiquement des spécifications organisationnelles (telles que des structures de rôles, des missions ou des objectifs collectifs) à partir de trajectoires d'agents entraînés. Or, une telle capacité permettrait de combler le fossé entre les approches symboliques prescriptives de l'\acn{AOSE} et les approches apprenantes fondées sur l'émergence. Elle offrirait un cadre pour évaluer l'organisation implicite d'un \acn{SMA}, identifier des écarts avec un modèle attendu, et potentiellement réinjecter ces connaissances dans une boucle de conception organisationnelle itérative. Cette hypothèse ouvre la voie à une nouvelle génération de méthodes de diagnostic, de rétro-ingénierie et d'adaptation des \acplu{SMA} entraînés par apprentissage.
+
+
+\section{Le maintien de cohérence entre l'environnement simulé et l'environnement réel (H-TRF)}
+
+\subsection*{Recontextualisation du sous-problème dans la démarche de la thèse}
+
+Le maintien de la cohérence entre l'environnement simulé (ou jumeau numérique) et l'environnement réel constitue un enjeu transversal et critique dans la démarche de la thèse. En effet, l'ensemble du processus de conception, d'entraînement et d'analyse des politiques multi-agents repose sur la capacité à disposer d'une simulation fidèle, représentative des dynamiques et incertitudes du monde réel. Cette cohérence est essentielle pour garantir que les politiques apprises en simulation soient effectivement transférables, robustes et sûres lors de leur déploiement opérationnel.
+
+Dans le contexte de la cyberdéfense, où les environnements sont particulièrement dynamiques, partiellement observables et sujets à des évolutions rapides (nouvelles menaces, changements de topologie, comportements adverses imprévus), le risque de divergence entre simulation et réalité est élevé. Un écart non détecté ou non corrigé peut conduire à des politiques inefficaces, voire dangereuses, lors du passage au réel. Il est donc indispensable de mettre en place des mécanismes permettant de synchroniser, recalibrer ou adapter en continu le jumeau numérique, afin de maintenir sa pertinence tout au long du cycle de vie du système.
+
+Ce sous-problème s'articule ainsi avec les autres étapes de la démarche : il conditionne la validité des apprentissages réalisés en simulation, la capacité à analyser les comportements émergents dans un contexte réaliste, et la possibilité de réinjecter les retours du terrain pour améliorer ou corriger le modèle simulé. Il s'agit donc d'un verrou central pour assurer la robustesse, la maintenabilité et la sécurité des systèmes multi-agents conçus par apprentissage, en particulier dans des domaines critiques comme la cyberdéfense.
+
+\subsection*{Hypothèse de restriction de l’espace de recherche (H-TRF)}
+
+Nous reprenons l’hypothèse suivante~: \textit{Il est possible de maintenir la cohérence entre l’environnement simulé (jumeau numérique) et l’environnement réel grâce à des mécanismes de couplage, d’adaptation ou de recalibrage, permettant un transfert sûr, adaptatif et maintenable des politiques apprises en simulation vers le réel, tout en assurant la fidélité du jumeau numérique face aux évolutions de l’environnement.}
+
+Cette hypothèse restreint l’espace de recherche aux travaux qui visent à :
+\begin{itemize}
+  \item synchroniser ou adapter dynamiquement le modèle simulé à partir des données ou des retours issus de l’environnement réel (domain adaptation, sim2real, calibration dynamique) ;
+  \item assurer le transfert robuste des politiques apprises en simulation vers le réel (policy transfer, transfer learning, robust RL) ;
+  \item détecter et corriger les écarts entre simulation et réalité (model discrepancy, online adaptation, feedback loop) pour garantir la robustesse et la sécurité du déploiement.
+\end{itemize}
+
+Pour conduire la revue de littérature, nous retenons les critères spécifiques suivants :
+\begin{itemize}
+  \item \textbf{Fidélité du jumeau numérique}~: capacité à représenter fidèlement les dynamiques et incertitudes du monde réel ;
+  \item \textbf{Robustesse au transfert}~: aptitude à maintenir les performances et la sûreté lors du passage simulation $\rightarrow$ réel ;
+  \item \textbf{Adaptation en ligne}~: possibilité de recalibrer ou d’ajuster le modèle simulé en fonction des retours du réel ;
+  \item \textbf{Sécurité et maintenabilité}~: garanties sur l’absence de comportements dangereux ou imprévus lors du transfert et sur la capacité à maintenir le système dans la durée.
+\end{itemize}
+
+\subsection*{Couverture des critères par les travaux identifiés}
+
+La synthèse de la couverture des critères par les principales familles de travaux sur le maintien de cohérence entre environnement simulé et environnement réel est présentée dans le tableau~\ref{tab:couverture_criteres_travaux_trf}.
+
+\begin{table}[h!]
+  \centering
+  \caption{Couverture des critères par les principales familles de travaux sur le maintien de cohérence simulation/réel}
+  \label{tab:couverture_criteres_travaux_trf}
+  \begin{tabular}{|p{5cm}|c|c|c|c|}
+    \hline
+    \textbf{Travaux / Critères}                                                       & \textbf{Fidélité du jumeau} & \textbf{Robustesse au transfert} & \textbf{Adaptation en ligne} & \textbf{Sécurité/maintenabilité} \\
+    \hline
+    Domain adaptation / Sim2Real~\cite{tobin2017domain,ganin2016domain}               & Moyenne à forte             & Moyenne à forte                  & Moyenne                      & Moyenne                          \\
+    \hline
+    Policy transfer / Robust RL~\cite{pinto2017robust}                                & Moyenne                     & Forte                            & Faible à moyenne             & Moyenne                          \\
+    \hline
+    Online model calibration / Feedback loop~\cite{deisenroth2011pilco}               & Forte                       & Moyenne                          & Forte                        & Moyenne à forte                  \\
+    \hline
+    Synchronisation manuelle (recalibrage ponctuel)~\cite{Standen2021,cyberbattlesim} & Forte (statique)            & Faible                           & Faible                       & Faible                           \\
+    \hline
+  \end{tabular}
+\end{table}
+
 \noindent
-L'idée est de voir la conception d'un \acn{SMA} comme un \textit{problème d'optimisation sous contraintes}, où les politiques sont apprises pour maximiser une récompense tout en respectant des contraintes structurelles, organisationnelles ou comportementales. Cette formalisation ouvre la voie à un apprentissage dirigé et sécurisé des comportements.
+\textbf{Domain adaptation} et \textbf{Sim2Real} visent à réduire l’écart entre simulation et réalité, soit en adaptant les données simulées (ex. via \textit{domain randomization}~\cite{tobin2017domain}), soit en utilisant des techniques adversariales~\cite{ganin2016domain} pour rendre les représentations latentes invariantes au domaine. Ces approches offrent généralement une bonne couverture en termes de fidélité et de robustesse, bien que l’adaptation en ligne reste partielle.
+
+Les méthodes de \textbf{policy transfer} et de \textbf{robust reinforcement learning}~\cite{pinto2017robust} s’attachent à transférer des politiques apprises en simulation vers le monde réel, en maximisant la robustesse face aux incertitudes du domaine cible. Elles s’appuient souvent sur des mécanismes d'entraînement adversarial ou de perturbations, mais intègrent peu d'adaptation continue.
+
+Les approches d’\textbf{online model calibration} ou de \textbf{feedback loop}, comme l’algorithme PILCO~\cite{deisenroth2011pilco}, permettent de mettre à jour dynamiquement les modèles à partir de données du réel, assurant une adaptation permanente et une meilleure sécurité, au prix d'une complexité computationnelle accrue.
+
+Enfin, la \textbf{synchronisation manuelle} via recalibrage ponctuel reste une pratique courante dans les simulateurs industriels ou cybersécuritaires (ex.~: CybORG~\cite{Standen2021}, CyberBattleSim~\cite{cyberbattlesim}), bien qu'elle offre peu de garanties face à des environnements dynamiques.
+
+\begin{itemize}
+  \item \textit{Domain randomization}~\cite{tobin2017domain} et \textit{adversarial domain adaptation}~\cite{ganin2016domain} pour sim2real ;
+  \item \textit{Robust RL}~\cite{pinto2017robust} pour le transfert de politiques ;
+  \item \textit{Online system identification}~\cite{deisenroth2011pilco} pour la calibration dynamique ;
+  \item \textit{Manual resynchronization} dans les simulateurs industriels ou cyber (ex.~: CybORG~\cite{Standen2021}, CyberBattleSim~\cite{cyberbattlesim}).
+\end{itemize}
+
+
+\subsection*{Analyse des travaux et verrous}
+
+L’analyse de l’état de l’art sur le maintien de cohérence entre environnement simulé et environnement réel met en évidence plusieurs avancées, mais aussi des limites structurantes. Les approches de \textit{domain adaptation} et \textit{sim2real} permettent de réduire l’écart entre simulation et réalité, en adaptant soit les données, soit les politiques pour les rendre plus robustes aux variations du monde réel. Cependant, ces méthodes se concentrent principalement sur le transfert initial et n’intègrent que rarement des mécanismes d’adaptation continue ou de recalibrage dynamique du modèle simulé après le déploiement.
+
+Les travaux sur le \textit{policy transfer} ou le \textit{robust RL} visent à garantir que les politiques apprises en simulation restent performantes et sûres lors de leur transfert dans l’environnement réel. Néanmoins, ils n’abordent pas la question de la mise à jour du modèle simulé lui-même : une fois la politique transférée, le jumeau numérique n’est généralement pas recalibré pour suivre les évolutions du réel, ce qui peut conduire à une divergence progressive et à une perte de pertinence.
+
+À l’inverse, les approches d’\textit{online calibration} ou de \textit{feedback loop} se focalisent sur la mise à jour dynamique du modèle simulé à partir des retours du réel, assurant ainsi une meilleure fidélité du jumeau numérique. Toutefois, ces méthodes n’intègrent pas explicitement le transfert ou l’adaptation des politiques multi-agents déjà déployées, ce qui limite leur capacité à garantir la robustesse et la sécurité du système dans son ensemble.
+
+Enfin, la synchronisation manuelle (recalibrage ponctuel du modèle) reste une pratique courante dans l’industrie, mais elle est peu adaptée aux environnements dynamiques et évolutifs, car elle ne permet ni une adaptation fine ni une automatisation du processus.
+
+En synthèse, il n’existe pas aujourd’hui de framework unificateur permettant de coupler de façon intégrée la mise à jour des politiques des agents déployés dans l’environnement réel et la mise à jour du modèle d’environnement simulé. La plupart des travaux identifiés couvrent une partie des objectifs (transfert de politiques ou recalibrage du modèle), mais aucun ne permet de les atteindre simultanément et de façon coordonnée. Par exemple, le \textit{Robust RL} permet de transférer des politiques mais ne prend pas en compte l’évolution du modèle simulé, tandis que la calibration en ligne ajuste le modèle mais sans garantir l’adaptation des politiques en conséquence.
+
+Le verrou principal réside donc dans l’absence d’un cadre méthodologique ou d’un framework de jumeau numérique capable d’assurer à la fois :
+\begin{itemize}
+  \item la mise à jour continue du modèle simulé en fonction des évolutions de l’environnement réel ;
+  \item et la mise à jour ou l’adaptation des politiques multi-agents déployées, pour garantir leur robustesse, leur sécurité et leur maintenabilité.
+\end{itemize}
+
+Ce manque limite la capacité à déployer durablement des SMA dans des environnements réels évolutifs, en particulier dans des domaines critiques comme la cyberdéfense. Il justifie la nécessité de contributions nouvelles visant à articuler, dans un même cadre, l’adaptation conjointe du jumeau numérique et des politiques multi-agents, afin d’assurer une cohérence et une performance durables du système.
+
+
+
+% Le but de cette activité est de maintenir la cohérence entre le jumeau numérique et l'environnement réel. Il s'agit d'assurer un double objectif : i) garantir la fidélité du jumeau numérique par rapport à l'environnement réel, et ii) permettre un transfert efficace des politiques apprises en simulation vers l'environnement réel.
+
+% \textbf{P4 -- Déploiement et transfert vers le réel}
+% Ce sous-problème vise à maintenir la cohérence entre le jumeau numérique et l'environnement réel en gérant notamment le transfert des politiques apprises en simulation vers l'environnement réel tout en maintenant la fidélité de l'environnement simulé par rapport à l'environnement réel.
+
+% \textbf{H-TRF~:} Un couplage entre environnement réel et simulé permet un déploiement sûr, adaptatif et maintenable des politiques apprises.
 
 \section*{Synthèse des verrous identifiés}
 
