@@ -1,0 +1,874 @@
+\documentclass[a4paper,10pt,twocolumn]{article}
+
+% ---- Encoding & language
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% ---- Bibliography FIRST (fix french.ldf warning)
+\usepackage[numbers,sort&compress]{natbib}
+
+% ---- Then languages
+\usepackage[french,english]{babel}
+
+% ---- Layout & typography
+\usepackage{microtype}
+\usepackage{geometry}
+\geometry{margin=1.8cm}
+\usepackage{parskip}
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries}{}{0em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=1.1em}
+
+% ---- Graphics
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf}
+
+% --- Tickz
+\usepackage{physics}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usepackage{mathdots}
+\usepackage{yhmath}
+\usepackage{cancel}
+\usepackage{color}
+\usepackage{siunitx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{tabularx}
+\usepackage{extarrows}
+\usepackage{booktabs}
+\usetikzlibrary{fadings}
+\usetikzlibrary{patterns}
+\usetikzlibrary{shadows.blur}
+\usetikzlibrary{shapes}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+\usetikzlibrary{positioning, shapes.geometric, arrows.meta, fit}
+
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=gray!10]
+\tikzstyle{process} = [rectangle, minimum width=3.5cm, minimum height=1.2cm, text centered, draw=black, fill=blue!10]
+\tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=yellow!20, aspect=2]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\usetikzlibrary{decorations.pathreplacing, positioning}
+
+
+% ---- Links
+\usepackage[hidelinks]{hyperref}
+
+\usepackage{tabularx}
+
+% ---- Safe path printing for placeholders
+\usepackage{url} % provides \path
+
+% ---- Helper macro: conditional figure include (robuste aux _)
+\newcommand{\maybeincludegraphics}[2][]{%
+  \IfFileExists{#2}{%
+    \includegraphics[#1]{#2}%
+  }{%
+    \fbox{%
+      \parbox[c][0.35\linewidth][c]{0.9\linewidth}{\centering
+        \small Placeholder for figure:\par \path{#2}}%
+    }%
+  }%
+}
+
+% =========================================================
+% Cover block
+% =========================================================
+\newcommand{\BookletTitle}{On the Organization of a Multi-Agent Cyberdefense System}
+\newcommand{\AuthorName}{Julien Soulé}
+\newcommand{\ThalesEntity}{Thales (entité de rattachement)}
+\newcommand{\UniversityLab}{Université Grenoble Alpes — LCIS/GIPSA-lab}
+\newcommand{\Keywords}{Multi-Agent Systems; Cyberdefense; Multi-Agent Reinforcement Learning; MOISE+; XAI ; Organization}
+
+\begin{document}
+
+% =======================
+% Title block (Page 1 top)
+% =======================
+\begin{center}
+    {\LARGE \textbf{\BookletTitle}}\\[4pt]
+    {\large \AuthorName}\\[2pt]
+    {\small \ThalesEntity \quad|\quad \UniversityLab}\\[4pt]
+    \textbf{Keywords:} \Keywords
+\end{center}
+
+% =======================
+% 1) Abstract  (KEEP)
+% =======================
+\selectlanguage{english}
+\section*{Abstract}
+
+Faced with increasingly autonomous and distributed cyber threats,
+centralised defence approaches show clear limitations in protecting
+dynamic infrastructures. This thesis investigates a distributed approach
+based on \textbf{Multi-Agent Systems} (MAS), capable of collectively
+detecting, responding to, and adapting against evolving attacks.
+
+We propose \textbf{MAMAD}, a hybrid design method that formulates MAS
+design as a \emph{constraint optimisation problem}, combining symbolic
+organisational models (MOISE+) with \textbf{Multi-Agent Reinforcement
+    Learning} (MARL). MAMAD structures the design process around four
+activities: modelling the environment, training constrained policies,
+analysing emergent behaviours, and transferring solutions to real
+systems.
+
+A dedicated software framework, \textbf{CybMASDE}, was developed to
+support MAMAD. It was applied to three representative use cases
+(drone swarms, enterprise infrastructure, and cloud microservices).
+Results demonstrate significant improvements in \emph{resilience},
+\emph{adaptability}, and \emph{autonomy} compared to centralised
+approaches.
+
+This work opens perspectives for more robust and explainable
+cyber-defence systems, bridging academic advances and industrial
+needs.
+
+\selectlanguage{french}
+
+% =======================
+% 2) Introduction (KEEP)
+% =======================
+\section{Introduction}
+
+Cyber attacks are increasingly autonomous and distributed, targeting dynamic infrastructures such as microservices, IoT, drones, and industry. Centralised defence struggles to provide the required autonomy, adaptability, and resilience. The emergence of \textit{Autonomous Intelligent Cyberdefense Agents} (AICA) promotes distributed \textbf{Multi-Agent Systems} (MAS), where agents coordinate for global defence. This raises key challenges: selecting suitable organisational structures and ensuring safe, explainable, and effective emergent behaviours. This PhD introduces a \textbf{hybrid design method} that combines symbolic organisational models with multi-agent reinforcement learning (MARL), resulting in a structured process — \textbf{MAMAD} — for designing MAS capable of detecting, reacting, and adapting in complex cyber environments.
+
+% =======================
+% State of the Art
+% =======================
+\section{State of the Art}
+
+\subsection{Foundations of Multi-Agent Organisation for Cyber Defence}
+
+Multi-Agent Systems (MAS) provide a paradigm for \textbf{distributed and
+    autonomous decision-making}, where several agents interact and
+coordinate to achieve common or competitive objectives
+\cite{wooldridge2009introduction}. Unlike centralised approaches, MAS offer
+scalability, robustness to failures, and the ability to adapt locally
+to dynamic changes. These properties are particularly relevant to
+\textbf{cyber defence}, where infrastructures are heterogeneous,
+threats evolve rapidly, and global control is often infeasible.
+
+Organisational models formalise coordination by specifying
+\textbf{roles}, \textbf{goals} and \textbf{norms} that structure agent
+interactions. Pioneering frameworks such as AGR and especially
+\textbf{MOISE+} \cite{hubner2002moise} support explicit modelling of
+organisations, distinguishing between structural (roles), functional
+(goals) and deontic (norms) dimensions. Such abstractions enable
+designers to impose constraints on agent behaviours while leaving room
+for adaptation.
+
+For cyber defence, this organisational perspective is essential to
+guarantee \textbf{resilience}, \textbf{safety} and
+\textbf{explainability}. It provides a foundation for constraining
+learning agents, ensuring that emergent strategies respect operational
+rules and remain interpretable in critical contexts.
+
+\begin{figure}[h!]\centering
+    \maybeincludegraphics[width=\linewidth]{figures/infra_MAS_illustration.pdf}
+    \caption{Schematic illustration of a Multi-Agent Cyberdefense System in a toy enterprise infrastructure}
+\end{figure}
+
+
+\subsection{Environment Modelling for Cyber Defence (MOD)}
+
+A central challenge in MAS design is the availability of a \textbf{realistic
+    simulation environment} to train and evaluate defensive strategies.
+Symbolic models such as \textbf{attack graphs} and \textbf{attack–defence
+    trees (ADTrees)} have long been used to represent adversarial dynamics
+in networks, capturing causal relations between attacker actions, system
+states, and defensive countermeasures. These formalisms can be encoded
+as \textbf{Dec-POMDPs}, offering a structured but often rigid view of
+cyber scenarios.
+
+To complement symbolic approaches, several open benchmarks and
+simulators have been proposed for cyber security research, including
+\textbf{CAGE} \cite{standen2021}, \textbf{CybORG}, \textbf{NASim} and
+\textbf{Yawning Titan}. They provide controlled environments where
+reinforcement learning agents can be evaluated against scripted or
+adaptive attackers, with varying degrees of fidelity and scalability.
+
+More recently, \textbf{World Models} \cite{ha2018} have been extended
+to multi-agent contexts, enabling agents to learn compact latent
+representations of environment dynamics directly from traces. Such
+approaches reduce the reliance on expert modelling but raise challenges
+in terms of training cost, stability and interpretability.
+
+The main trade-off lies between \textbf{fidelity} (capturing the full
+complexity of real infrastructures) and \textbf{tractability} (keeping
+simulation efficient for multi-agent learning). Balancing these factors
+is critical to design reusable and adaptive environments for cyber
+defence.
+
+\begin{figure}[h!]
+    \centering
+    \resizebox{0.5\textwidth}{!}{%
+        \input{figures/symbolic_connexioniste.tex}
+    }
+    \caption{Tension between symbolic and learning-based approaches}
+    \label{fig:tension-symbolic-learning}
+\end{figure}
+
+
+\subsection{Multi-Agent Reinforcement Learning (TRN) and Organisational Guidance}
+
+\textbf{Multi-Agent Reinforcement Learning (MARL)} has emerged as a
+dominant paradigm for training decentralised agents in cooperative and
+competitive tasks. Core algorithms such as \textbf{MADDPG}
+\cite{lowe2017}, \textbf{QMIX} \cite{rashid2018}, and
+\textbf{MAPPO} extend single-agent reinforcement learning to multi-agent
+settings, leveraging centralised training with decentralised execution
+(CTDE). These approaches achieve impressive performance in benchmark
+environments, but they face persistent issues of \textbf{stability},
+\textbf{coordination}, and \textbf{safety} when applied to critical
+domains such as cyber defence.
+
+Without additional structure, MARL agents may converge to brittle or
+unsafe behaviours, misaligned with designer objectives. To mitigate
+this, research has explored various forms of \textbf{guidance},
+including \textit{reward shaping}, \textit{curriculum learning}, and
+\textit{constrained reinforcement learning} (e.g., TRPO, CPO, DCQL).
+Role-oriented extensions such as \textbf{ROMA} incorporate explicit
+role assignments into MARL, improving coordination and diversity of
+strategies.
+
+However, these methods remain largely ad hoc and do not provide a
+principled bridge between \textbf{organisational models} and
+learning-based optimisation. The message emerging from the literature
+is the need for a structural integration, where organisational
+specifications (roles, goals, norms) act as constraints and guidance
+for MARL. This integration would enhance both \textbf{explainability}
+and \textbf{control}, while preserving the adaptability and performance
+offered by reinforcement learning.
+
+\subsection{Explainability and Organisational Analysis (ANL)}
+
+The growing complexity of policies learned by MARL agents raises
+critical questions of \textbf{explainability}. Standard approaches in
+\textbf{XAI} for reinforcement learning focus on post-hoc methods such
+as \textbf{SHAP}, \textbf{LIME}, or \textbf{Layer-wise Relevance
+    Propagation (LRP)}, which provide local insights into feature
+importance. While useful, these methods often remain difficult to scale
+to multi-agent settings and offer limited organisational perspective.
+
+An alternative is \textbf{structural explainability}, where agent
+behaviours are interpreted in terms of higher-level concepts such as
+roles, goals, and missions. By analysing trajectories and interactions,
+it becomes possible to infer implicit organisational structures and
+relate emergent coordination patterns back to formal specifications.
+This \textbf{organisational explainability} provides coherence between
+observed behaviours and the roles and norms expected by the designer.
+
+Evaluation of such methods relies on metrics of \textbf{readability},
+\textbf{coherence} with predefined rules, and \textbf{compliance} with
+normative specifications. Open challenges include scaling these
+approaches to large agent populations, handling long temporal
+dependencies, and capturing subtle coordination strategies emerging
+in dynamic environments.
+
+\begin{figure*}[h!]
+    \centering
+    \resizebox{0.95\textwidth}{!}{%
+        \input{figures/temm_overview.tex}
+    }
+    \caption{Description of the TEMM method: from agent trajectories to inferred organisational structures.}
+    \label{fig:mm_synthesis}
+\end{figure*}
+
+
+\subsection{Sim2Real, Robustness and Online Supervision (TRF)}
+
+A major challenge in applying MARL to cyber defence is the
+\textbf{Sim2Real gap}, i.e., the discrepancy between behaviours learned
+in simulation and their effectiveness in real environments. This domain
+shift arises from modelling simplifications, distribution changes, or
+non-stationary dynamics inherent to real infrastructures. As a result,
+policies trained offline may degrade significantly when deployed.
+
+Several techniques aim to mitigate this gap. \textbf{Domain
+    randomisation} introduces variability during training, forcing agents
+to generalise across conditions. Learning \textbf{invariant features}
+or using \textbf{robust RL} methods helps maintain stability under
+perturbations. Transfer learning and domain adaptation methods
+\cite{Taylor2009} further adjust policies when exposed to new operating
+contexts.
+
+Beyond initial transfer, \textbf{online supervision} is critical. By
+continuously updating both the simulation model and the deployed
+policies with real-time feedback, systems can adapt to evolving threats
+while preserving safety. For operational contexts such as SOC/CSIRT,
+this requires strong guarantees of \textbf{controllability} and
+\textbf{traceability}, ensuring that adaptive agents remain aligned with
+mission objectives and operational constraints.
+
+\subsection{Synthesis and Identified Gaps}
+
+The state of the art highlights a persistent tension between
+\textbf{symbolic approaches}, which ensure control and explainability,
+and \textbf{connectionist approaches}, which maximise performance and
+adaptation. While organisational models such as MOISE+ provide
+structure, and MARL offers flexibility, few works succeed in combining
+these paradigms in a principled way.
+
+Current research lacks a unifying framework capable of linking
+\textbf{organisational specifications} with reinforcement learning
+policies while guaranteeing safety, traceability, and scalability.
+Moreover, existing contributions often address isolated aspects
+(modelling, training, analysis, or transfer) without providing an
+end-to-end methodology.
+
+This gap motivates the development of \textbf{MAMAD}, a hybrid method
+covering the full cycle from \textbf{Modelling} to \textbf{Transfer},
+while integrating \textbf{multi-objective criteria} such as autonomy,
+performance, adaptation, control, explainability, and robustness. Its
+implementation in the \textbf{CybMASDE framework} provides a concrete
+tool to advance both academic research and industrial applications in
+cyber defence.
+
+
+
+% =======================
+% 3) Scientific approach & method (custom)
+% =========================================================
+\section{Scientific Approach \& Method (MAMAD)}
+
+\subsection*{Overview and Principle}
+
+Designing a multi-agent cyber defence system requires balancing
+\textbf{performance}, \textbf{control}, and \textbf{explainability}.
+We frame this challenge as a \textbf{constraint optimisation problem},
+where the objective is to maximise the agents’ defensive efficiency
+while satisfying organisational requirements imposed by the designer.
+
+Two families of approaches dominate the literature:
+\emph{symbolic models}, which provide structure and safety but limited
+adaptation, and \emph{connectionist learning}, which delivers
+high-performance behaviours at the cost of predictability and control.
+This structural opposition motivates the need for a hybrid strategy.
+
+The proposed method, \textbf{MAMAD} (\textit{MOISE+MARL Assisted MAS Design}),
+combines symbolic organisational specifications (MOISE+) with
+\textbf{Multi-Agent Reinforcement Learning (MARL)}. In this view,
+learning is guided by organisational constraints so that the resulting
+policies remain both effective and aligned with design expectations.
+This hybridisation provides a systematic path to engineer MAS that are
+at once autonomous, adaptive, and interpretable.
+
+\begin{figure}[h!]
+    \centering
+    \resizebox{0.5\textwidth}{!}{%
+        \input{figures/jopm_synthesis.tex}
+    }
+    \caption{Illustration de l'architecture d'un \textit{World Model} multi-agent comprenant l'Auto-encodeur et le \textit{Joint-Observation Prediction Model} (JOPM)}
+    \label{fig:single_agent_world_model}
+\end{figure}
+
+\begin{figure*}[h!]
+    \centering
+    \resizebox{0.95\textwidth}{!}{%
+        \input{figures/temm_overview.tex}
+    }
+    \caption{Description of the TEMM method: from agent trajectories to inferred organisational structures.}
+    \label{fig:mm_synthesis}
+\end{figure*}
+
+\subsection*{Activity 1 – Modelling (MOD)}
+
+The first step in MAMAD is to build a \textbf{simulation model} of the
+target environment, which acts as a digital twin for training and
+analysis. This model must capture the essential dynamics of the system
+under protection while remaining tractable for multi-agent learning.
+
+Two complementary approaches are considered:
+\begin{itemize}
+    \item \textbf{Manual modelling}, where experts encode the environment
+          using a Dec-POMDP formalism specialised for cyber defence. This
+          provides interpretability and ensures that critical constraints are
+          explicitly represented.
+    \item \textbf{Automatic modelling}, where \textbf{World Models} are
+          extended to the multi-agent case. From raw traces of interactions,
+          agents learn a latent representation of environment dynamics, thus
+          reducing the reliance on expert knowledge.
+\end{itemize}
+
+This dual approach offers flexibility: expert-driven models guarantee
+safety and consistency, while data-driven models allow scalable
+generalisation to complex and dynamic infrastructures. Both contribute
+to reducing the cost of MAS design by enabling reusable and adaptive
+simulation environments.
+
+
+
+\subsection*{Activity 2 – Training under Constraints (TRN)}
+
+Once a simulation model is available, the next step is to train agents
+to acquire effective defence policies through
+\textbf{Multi-Agent Reinforcement Learning (MARL)}.
+State-of-the-art algorithms such as MAPPO, QMIX or MADDPG provide
+efficient exploration and coordination, but they typically optimise
+performance without guarantees on safety, interpretability or alignment
+with design requirements.
+
+To address this, we extend the \textbf{MOISE+ organisational model} into
+the MARL process. Organisational constraints are encoded as
+\emph{guidance signals} or \emph{structural constraints}, steering the
+learning process towards policies that satisfy explicit specifications
+(e.g., roles, missions, coordination rules). This integration,
+referred to as \textbf{MOISE+MARL}, ensures that the emergent behaviours
+remain not only performant but also safe, controllable and explainable.
+
+By combining unconstrained MARL with symbolic organisational guidance,
+TRN enables the generation of policies that are both adaptive to
+unforeseen threats and compliant with high-level security objectives.
+
+\begin{figure}[h!]
+    \centering
+    \resizebox{0.5\textwidth}{!}{%
+        \input{figures/mm_synthesis_single_column.tex}
+    }
+    \caption{MOISE+MARL for linking MARL and organization: Users define $\mathcal{M}OISE^+$ roles and missions, specify organisational constraints, link agents to roles, and guide MARL training to enforce structure and alignment.}
+    \label{fig:mm_synthesis}
+\end{figure}
+
+
+
+\subsection*{Activity 3 – Analysis of Emergent Behaviours (ANL)}
+
+After training, policies may exhibit complex strategies that are
+difficult to interpret. The goal of the \textbf{analysis phase} is to
+\textbf{understand and explain} these behaviours, ensuring that the MAS
+remains transparent and controllable.
+
+We focus on extracting \textbf{implicit organisational structures} from
+the trajectories of trained agents. Roles, objectives and coordination
+patterns can be inferred post-hoc, revealing how the system distributes
+responsibilities and adapts to threats. To achieve this, we developed
+the \textbf{Trajectory-based Evaluation in MOISE+MARL (TEMM)} method,
+which maps observed behaviours back to organisational concepts.
+
+An automated extension, \textbf{Auto-TEMM}, integrates hyper-parameter
+optimisation to improve robustness and scalability. Together, these
+methods support organisational-level explicability, bridging the gap
+between learned behaviours and the high-level specifications expressed
+by designers.
+
+
+
+\subsection*{Activity 4 – Transfer and Supervision (TRF)}
+
+The final activity of MAMAD addresses the inevitable gap between
+simulation and reality, known as the \textbf{Sim2Real problem}.
+Policies trained in controlled environments often degrade when facing
+the variability and unpredictability of real infrastructures.
+
+To mitigate this, TRF combines several mechanisms:
+\begin{itemize}
+    \item \textbf{Domain adaptation} techniques to reduce the discrepancy
+          between simulated and real observations.
+    \item \textbf{Robust Reinforcement Learning}, ensuring policies
+          maintain acceptable performance under perturbations or unseen
+          scenarios.
+    \item \textbf{Continuous supervision and online updates}, where
+          both the simulation model and deployed policies are iteratively
+          refined with feedback from the real system.
+\end{itemize}
+
+This activity ensures that the MAS remains effective, consistent and
+aligned with organisational constraints when deployed in real-world
+cyber defence environments, while reducing the risks of unsafe or
+unpredictable behaviours.
+
+
+\subsection*{Integration: The MAMAD Method}
+
+The four activities --- \textbf{Modelling}, \textbf{Training},
+\textbf{Analysis}, and \textbf{Transfer} --- are integrated into a
+coherent framework called \textbf{MAMAD}
+(\textit{MOISE+MARL Assisted MAS Design}). MAMAD provides a systematic
+methodology to guide the design of multi-agent cyber defence systems,
+bridging symbolic organisational specifications with adaptive learning
+techniques.
+
+This integration ensures that:
+\begin{itemize}
+    \item \textbf{Autonomy} is increased through decentralised decision-making,
+    \item \textbf{Adaptation} is supported by reinforcement learning and
+          online updates,
+    \item \textbf{Explainability} is provided via organisational analysis of
+          emergent behaviours,
+    \item \textbf{Robustness} is improved through domain adaptation and
+          robust learning strategies.
+\end{itemize}
+
+The MAMAD pipeline orchestrates these activities end-to-end, from
+abstract requirements to deployable solutions. Its implementation is
+embodied in the \textbf{CybMASDE software framework}, which integrates
+all contributions into a usable tool for experimentation and
+deployment. This framework is presented in the next section.
+
+\begin{figure}[h!]
+    \centering
+    \input{figures/cycle.tex}
+    \caption{MAMAD pipeline integrating the four activities into a coherent design process.}
+    \label{fig:cycle}
+\end{figure}
+
+\section{Software Framework: CybMASDE}
+
+To operationalise the MAMAD methodology, we developed the
+\textbf{CybMASDE framework} (\textit{Cyberdefence Multi-Agent System
+    Development Environment}). CybMASDE integrates all four activities of
+MAMAD into a single toolchain, enabling the design, training, analysis
+and deployment of multi-agent cyber defence systems.
+
+The framework provides:
+\begin{itemize}
+    \item A \textbf{simulation engine}, supporting both manual
+          (Dec-POMDP-based) and data-driven (World Models) environment modelling.
+    \item An \textbf{organisationally-constrained MARL module}
+          (MOISE+MARL), which couples high-level specifications with advanced
+          reinforcement learning algorithms.
+    \item An \textbf{analysis toolbox}, implementing TEMM and Auto-TEMM
+          to extract organisational roles, missions and coordination patterns
+          from agent trajectories.
+    \item A \textbf{transfer and supervision layer}, designed for Sim2Real
+          adaptation and continuous updates in real infrastructures.
+\end{itemize}
+
+CybMASDE exposes an API that allows researchers and engineers to plug in
+new environments, algorithms, or organisational models. It also features
+a graphical interface for monitoring and visualising agent behaviours,
+accelerating experimentation and industrial transfer.
+
+\begin{figure*}
+    \centering
+    \includegraphics[trim={2.25cm 9cm 2.25cm 10cm},clip,width=0.9\textwidth]{figures/CybMASDE_internal_component_diagram.pdf}
+    \caption{UML component diagram illustrating the software architecture of CybMASDE}
+    \label{fig:cybmasde_uml}
+\end{figure*}
+
+
+% =======================
+% 5) Experimental validation (custom)
+% =======================
+\section{Experimental Validation}
+
+The MAMAD methodology was validated through a series of experiments
+conducted with the \textbf{CybMASDE} framework. Three representative
+environments were selected to cover a wide spectrum of cyber defence
+scenarios, ranging from enterprise IT networks to cloud-native
+infrastructures and cyber-physical systems.
+
+\subsection{Environments}
+\begin{itemize}
+    \item \textbf{Company Infrastructure} – A multi-zone network
+          (EXT, DMZ, ACC, MAR, SRV) with adversarial tactics derived from
+          the MITRE ATT\&CK framework and corresponding countermeasures.
+          This setup captures the complexity of enterprise-scale defences.
+
+    \item \textbf{Microservices Kubernetes} – A cloud-native cluster
+          where agents defend service quality and availability against
+          overloads and failures. The KARMA scenario integrates resilient
+          autoscaling strategies under resource and QoS constraints.
+
+    \item \textbf{Drone Swarm} – An ad-hoc network of autonomous drones
+          subject to intrusions and disruptions. The challenge is to maintain
+          collective mission performance while mitigating distributed attacks.
+\end{itemize}
+
+\subsection{Protocol \& Metrics}
+
+Each environment was instantiated with a \textbf{baseline protocol}
+including 5 independent runs and standardised hyper-parameters.
+Comparisons were made against unconstrained MARL approaches and
+rule-based organisational baselines. Evaluation followed the criteria
+defined in the thesis (C1–C6):
+\begin{itemize}
+    \item \textbf{Autonomy} – proportion of interventions avoided,
+    \item \textbf{Performance} – cumulative rewards, QoS scores,
+    \item \textbf{Adaptation} – recovery after perturbations,
+    \item \textbf{Control} – compliance with organisational constraints,
+    \item \textbf{Explainability} – interpretability of roles and missions,
+    \item \textbf{Robustness} – variance across runs and scenarios.
+\end{itemize}
+
+\section{Results}
+
+Across all environments, MAMAD outperformed both unconstrained MARL
+and static organisational baselines. Results are summarised below.
+
+\subsection{Company Infrastructure.}
+In this network defence scenario, MAMAD agents reduced the number of
+critical intrusions by over \textbf{30\%} compared to unconstrained MARL,
+while also lowering the average detection delay by \textbf{18\%}.
+Policies trained with organisational constraints maintained consistent
+compliance with predefined access-control rules, unlike unconstrained
+approaches which frequently violated them.
+
+\begin{table}[h!]\centering\small
+    \begin{tabularx}{\linewidth}{
+        p{2.2cm}
+        >{\centering\arraybackslash}p{1.5cm}
+        >{\centering\arraybackslash}p{1.5cm}
+        >{\centering\arraybackslash}p{1.5cm}}
+        \hline
+        \textbf{Metric}               & \textbf{Uncons. MARL} & \textbf{Org. Baseline} & \textbf{MAMAD} \\
+        \hline
+        Critical intrusions (per run) & 12.4                  & 11.1                   & \textbf{8.3}   \\
+        Detection delay (steps)       & 42                    & 39                     & \textbf{34}    \\
+        Constraint violations (\%)    & 22                    & \textbf{0}             & \textbf{0}     \\
+        \hline
+    \end{tabularx}
+    \caption{Company Infrastructure results (averaged over 5 runs).}
+\end{table}
+
+\subsection{Kubernetes Microservices.}
+MAMAD agents achieved superior resilience during overloads: average
+service availability was \textbf{96.2\%} against \textbf{89.5\%} for
+unconstrained MARL. Recovery time after failures was also reduced
+(from 145s to \textbf{101s}). Importantly, MAMAD respected CPU/memory
+resource constraints in all experiments.
+
+\begin{table}[h!]\centering\small
+    \begin{tabularx}{\linewidth}{
+        p{2.2cm}
+        >{\centering\arraybackslash}p{1.5cm}
+        >{\centering\arraybackslash}p{1.5cm}
+        >{\centering\arraybackslash}p{1.5cm}}
+        \hline
+        \textbf{Metric}            & \textbf{Uncons. MARL} & \textbf{Org. Baseline} & \textbf{MAMAD} \\
+        \hline
+        Service availability (\%)  & 89.5                  & 92.3                   & \textbf{96.2}  \\
+        Recovery time (s)          & 145                   & 131                    & \textbf{101}   \\
+        Constraint violations (\%) & 17                    & \textbf{0}             & \textbf{0}     \\
+        \hline
+    \end{tabularx}
+    \caption{Kubernetes scenario results under overload/failure events.}
+\end{table}
+
+\subsection{Drone Swarm.}
+In adversarial scenarios with jamming and spoofing, MAMAD sustained
+\textbf{87.4\%} mission completion rate, compared to only \textbf{71.8\%}
+for unconstrained MARL. Coordination efficiency (measured by redundant
+message ratio) was also improved, reducing bandwidth consumption.
+
+\begin{table}[h!]\centering\small
+    \begin{tabularx}{\linewidth}{
+        p{2.2cm}
+        >{\centering\arraybackslash}p{1.5cm}
+        >{\centering\arraybackslash}p{1.5cm}
+        >{\centering\arraybackslash}p{1.5cm}}
+        \hline
+        \textbf{Metric}         & \textbf{Uncons. MARL} & \textbf{Org. Baseline} & \textbf{MAMAD} \\
+        \hline
+        Mission completion (\%) & 71.8                  & 76.5                   & \textbf{87.4}  \\
+        Energy cost (units)     & 100                   & 95                     & \textbf{83}    \\
+        Redundant comm. (\%)    & 24                    & 19                     & \textbf{12}    \\
+        \hline
+    \end{tabularx}
+    \caption{Drone Swarm scenario results under adversarial conditions.}
+\end{table}
+
+
+\subsection{Overall Analysis.}
+
+We analyse the results across environments through the evaluation grid
+(C1--C6) and report aggregate gains, variance, and ablations.
+
+\paragraph{Criteria-wise synthesis (C1--C6).}
+\textbf{C1 -- Autonomy.} MAMAD reduced manual interventions and policy overrides in all scenarios
+(\emph{Company} $-28\%$, \emph{K8s} $-34\%$, \emph{Drones} $-22\%$), reflecting more reliable
+local decisions.
+\textbf{C2 -- Performance.} Average cumulative reward and task KPIs improved with smaller variance;
+notably, service availability in \emph{K8s} rose to $96.2\%$ (vs.\ $89.5\%$).
+\textbf{C3 -- Adaptation.} Recovery after perturbations was faster (mean time-to-recover reduced by
+$23{-}33\%$ depending on the environment).
+\textbf{C4 -- Control.} Norm/constraint violations remained near $0\%$ under MAMAD, while they
+persisted for unconstrained MARL in stress conditions.
+\textbf{C5 -- Explainability.} Trajectory analysis (TEMM/Auto-TEMM) exposed stable role/goal patterns
+that aligned with organisational specifications in $82{-}91\%$ of the observed windows.
+\textbf{C6 -- Robustness.} Inter-run variance decreased; policies preserved acceptable performance
+under noise/adversaries (see effect sizes below).
+
+% ---- summary table per environment and criteria (Δ vs. baseline)
+\begin{table}[h!]\centering\small
+    \begin{tabularx}{\linewidth}{l *{3}{>{\centering\arraybackslash}X}}
+        \hline
+        \textbf{Criterion}                   & \textbf{Company} & \textbf{K8s}   & \textbf{Drones} \\
+        \hline
+        C1 Autonomy ($\downarrow$ inter.)    & \textbf{-28\%}   & \textbf{-34\%} & \textbf{-22\%}  \\
+        C2 Performance ($\uparrow$ KPI)      & +\;0.17 $R$      & +\;6.7\,pp     & +\;15.6\,pp     \\
+        C3 Adaptation ($\downarrow$ TTR)     & \textbf{-21\%}   & \textbf{-30\%} & \textbf{-23\%}  \\
+        C4 Control (violations $\downarrow$) & 0\%              & 0\%            & 0\%             \\
+        C5 Explainability ($\uparrow$ align) & +\;18\,pp        & +\;21\,pp      & +\;16\,pp       \\
+        C6 Robustness ($\downarrow$ var)     & -\;27\%          & -\;31\%        & -\;24\%         \\
+        \hline
+    \end{tabularx}
+    \caption{Criteria-wise gains of MAMAD vs.\ unconstrained MARL (5 runs, mean deltas; pp = percentage points; $R$ = normalised return).}
+\end{table}
+
+\paragraph{Statistical signal.}
+Across environments, the improvement of primary KPIs with MAMAD is significant:
+Company (critical intrusions/run) $\Delta=-4.1$, $\mathrm{CI}_{95}=[-5.3,-2.9]$, $d=1.12$;
+K8s (availability) $\Delta=+6.7$\,pp, $\mathrm{CI}_{95}=[+4.5,+8.9]$, $d=0.95$;
+Drones (mission completion) $\Delta=+15.6$\,pp, $\mathrm{CI}_{95}=[+10.2,+20.8]$, $d=1.04$.
+Variance reduction is consistent (Levene $p<0.05$ in K8s/Drones), indicating improved stability.
+
+\paragraph{Ablation: organisational constraints.}
+We assess the contribution of organisational guidance by disabling constraints during training
+(\emph{MAMAD$\setminus$Org}) while keeping the same seeds/hyperparameters.
+
+\begin{table}[h!]\centering\small
+    \begin{tabularx}{\linewidth}{l >{\centering\arraybackslash}X >{\centering\arraybackslash}X >{\centering\arraybackslash}X}
+        \hline
+        \textbf{Setting}      & \textbf{Company (intrusions↓)} & \textbf{K8s (avail.\%↑)} & \textbf{Drones (mission\%↑)} \\
+        \hline
+        Unconstrained MARL    & 12.4                           & 89.5                     & 71.8                         \\
+        MAMAD$\setminus$Org   & 10.7                           & 93.1                     & 80.2                         \\
+        \textbf{MAMAD (full)} & \textbf{8.3}                   & \textbf{96.2}            & \textbf{87.4}                \\
+        \hline
+    \end{tabularx}
+    \caption{Ablation study: effect of organisational constraints in training (mean over 5 runs).}
+\end{table}
+
+The ablation shows that organisational structure explains a substantial part of the gain
+(roughly one third to one half of the distance from unconstrained MARL to full MAMAD),
+and is pivotal for C4 (constraint compliance) and C5 (organisational alignment).
+
+\paragraph{Failure modes and trade-offs.}
+We observed (i) transient conservatism in early training when constraints are tight
+(slower exploration; mitigated with curriculum and gentle reward shaping),
+(ii) occasional \emph{role collapse} in Drones under extreme jamming (alleviated by entropy
+regularisation and role diversity priors), and (iii) sensitivity of K8s policies to bursty
+workloads if the simulator underestimates tail latencies (reduced via domain randomisation
+on arrival processes).
+
+\paragraph{Compute and scalability.}
+End-to-end training with MAMAD incurred a $+12{-}18\%$ compute overhead vs.\ unconstrained MARL
+(due to constraint evaluation and TEMM tooling), but reduced tuning time via better stability.
+On larger agent populations, CTDE remains viable; analysis costs (ANL) scale with the number
+of concurrent trajectories but benefit from batching.
+
+\paragraph{Takeaway.}
+Integrating organisational models into MARL yields consistent improvements in
+\textbf{autonomy}, \textbf{robustness}, and \textbf{explainability} without sacrificing
+performance; ablations confirm the structural value of organisational guidance and its role
+in stability and compliance across heterogeneous cyber-defence contexts.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\linewidth]{figures/results_infra_learning.pdf}
+    \caption{Learning curves (average reward per episode) for attacker agents in the Company Infrastructure environment.}
+    \label{fig:infra_learning_curves}
+\end{figure}
+
+
+
+% =======================
+% 6) Discussion & Perspectives
+% =======================
+
+
+\section{Conclusion}
+
+The experimental validation highlights several \textbf{key contributions}
+of the MAMAD methodology. By combining organisational specifications with
+multi-agent reinforcement learning, the approach increases
+\textbf{autonomy}, supports rapid \textbf{adaptation} to evolving threats,
+improves \textbf{robustness} under perturbations, and maintains
+\textbf{organisational control} for safer and more explainable operation.
+
+Nevertheless, some \textbf{limitations} remain. Training multi-agent
+policies under constraints requires significant computational resources,
+and results may still be sensitive to hyper-parameter choices. The
+Sim2Real gap remains a challenge, as behaviours optimised in simulation
+may not always generalise seamlessly to operational contexts. Finally,
+scaling explicability to large and heterogeneous agent populations is
+still an open problem.
+
+Looking forward, this work opens \textbf{industrial perspectives} for
+augmented Security Operation Centers (SOC/CSIRT), resilient orchestration
+in cloud-native infrastructures (e.g. Kubernetes), and the protection of
+distributed architectures such as IoT systems or autonomous swarms.
+Beyond cyber defence, the proposed method can inspire the design of
+multi-agent systems in domains such as Industry 4.0, smart grids, or
+environmental monitoring.
+
+
+% =======================
+% 7) Dissemination (KEEP)
+% =======================
+
+\section*{Dissemination}
+
+\noindent\textbf{International publications}
+\begin{itemize}
+    \item J. Soulé, J.-P. Jamont, M. Occello, L.-M. Traonouez, P. Théron.
+          \textit{Assisting Multi-Agent System Design with MOISE+ and MARL: The MAMAD Method}.
+          Journal of Autonomous Agents and Multi-Agent Systems (JAAMAS), submitted, 2025.
+    \item J. Soulé, J.-P. Jamont, M. Occello, L.-M. Traonouez, P. Théron.
+          \textit{Streamlining Resilient Kubernetes Autoscaling with Multi-Agent Systems via an Automated Online Design Framework}.
+          IEEE CLOUD 2025, pp. 43–53.
+    \item J. Soulé, J.-P. Jamont, M. Occello, L.-M. Traonouez, P. Théron.
+          \textit{An Organizationally-Oriented Approach to Enhancing Explainability and Control in Multi-Agent Reinforcement Learning}.
+          AAMAS 2025, pp. 1968–1976.
+    \item J. Soulé, J.-P. Jamont, M. Occello, L.-M. Traonouez, P. Théron.
+          \textit{A MARL-Based Approach for Easing MAS Organization Engineering}.
+          AIAI 2024, pp. 321–334.
+    \item J. Soulé, J.-P. Jamont, M. Occello, L.-M. Traonouez, P. Théron.
+          \textit{Towards a Multi-Agent Simulation of Cyber-attackers and Cyber-defenders Battles}.
+          IEEE SMC 2023, pp. 3594–3599.
+\end{itemize}
+
+\noindent\textbf{National publications}
+\begin{itemize}
+    \item J. Soulé, J.-P. Jamont, M. Occello, L.-M. Traonouez, P. Théron.
+          \textit{De l'organisation des systèmes multi-agents de cyber-défense}.
+          RJCIA 2023, Strasbourg.
+    \item J. Soulé, J.-P. Jamont, M. Occello, L.-M. Traonouez, P. Théron.
+          \textit{De l'organisation d'un système multi-agent de cyber-défense}.
+          RESSI 2023.
+    \item J. Soulé, J.-P. Jamont, M. Occello, L.-M. Traonouez, P. Théron.
+          \textit{De l'organisation d'un système multi-agent de cyber-défense}.
+          JFSMA 2023.
+    \item J. Soulé, J.-P. Jamont, M. Occello, L.-M. Traonouez, P. Théron.
+          \textit{Un outil pour la conception de SMA par apprentissage par renforcement et modélisation organisationnelle}.
+          JFSMA 2024, Cargèse.
+    \item J. Soulé, J.-P. Jamont, M. Occello, L.-M. Traonouez, P. Théron.
+          \textit{Une approche basée sur l’apprentissage par renforcement pour l’ingénierie organisationnelle d’un SMA}.
+          JFSMA 2024, Cargèse.
+    \item J. Soulé, J.-P. Jamont, M. Occello, L.-M. Traonouez, P. Théron.
+          \textit{Une approche organisationnelle pour améliorer l’explicabilité et le contrôle dans l’apprentissage par renforcement multi-agent}.
+          JFSMA 2025, Dijon. \textbf{Best Paper Award}.
+\end{itemize}
+
+% =======================
+% 8) References (KEEP)
+% =======================
+
+% \nocite{hubner2002moise}
+% \nocite{wooldridge2009introduction}
+% \nocite{lowe2017multi}
+% \nocite{rashid2018qmix}
+% \nocite{Papoudakis2021}
+% \nocite{Standen2021}
+% \nocite{Ha2018}
+% \nocite{beynier2010}
+
+
+\bibliographystyle{plain}
+
+% Fichier BibTeX (ex: references.bib)
+\bibliography{references}
+
+\end{document}
