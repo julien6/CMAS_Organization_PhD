@@ -65,6 +65,12 @@
 
 \DeclareMathAlphabet\mathbfcal{OMS}{cmsy}{b}{n}
 
+\usepackage{amssymb}
+\usepackage{pifont}
+
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+
 %% D{\'e}finitions utilisateur et macros pratiques...  De telles
 %% d{\'e}finitions sont interdites dans les titres, les r{\'e}sum{\'e}s ou la
 %% bibliographie.
@@ -87,10 +93,10 @@
 [MOISE+MARL]
 %% L'argument obligatoire est imprim{\'e} sur la premi{\`e}re page, dans les
 %% ent{\^e}tes si la version courte n'est pas sp{\'e}cifi{\'e}e.
-{Une approche organisationnelle pour améliorer l’explicabilité et le contrôle dans l’apprentissage par renforcement multi-agent}
+{MOISE+MARL : un cadre organisationnel pour l’explicabilité et le contrôle en apprentissage par renforcement multi-agent \textsuperscript{(1)}}
 
-%%�Le titre anglais de l'article.
-\alttitle{An Organizationally-Oriented Approach to Enhancing Explainability and Control in Multi-Agent Reinforcement Learning}
+%% The English title of the article.
+\alttitle{MOISE+MARL: an organizational framework for explainability and control in multi-agent reinforcement learning}
 
 %% Les noms des auteurs, selon la syntaxe d'amsart, avec en outre la
 %% distinction pr{\'e}nom/nom
@@ -140,14 +146,16 @@
 
 %% R{\'e}sum{\'e}
 \begin{abstract}
-Des agents entraînés peuvent exhiber des comportements collectifs, d'où l'on peut extrapoler des rôles et objectifs implicites par analogie d'une organisation structurée et fonctionnelle. Nous proposons MOISE+MARL, un cadre qui contraint les agents à évoluer selon une telle organisation pour améliorer le contrôle et l'explicabilité en apprentissage par renforcement multi-agent.
-MOISE+MARL guide les agents vers des rôles et missions en ajustant dynamiquement leurs actions et récompenses. Il inclut une analyse post-entraînement pour inférer des spécifications organisationnelles implicites. Expérimenté sur divers environnements, il démontre un alignement entre les comportements des agents, les spécifications définies et celles inférées.
+Des agents en apprentissage par renforcement multi-agent peuvent développer des comportements interprétables comme des rôles ou objectifs implicites, suggérant une hypothétique organisation émergente. Afin d’exploiter pleinement cette analogie, nous introduisons MOISE+MARL, un cadre organisationnel qui couple le formalisme $\mathcal{M}OISE^+$ aux modèles de type Dec-POMDP afin d’améliorer le contrôle et l’explicabilité des politiques apprises.
+MOISE+MARL guide ou contraint les agents selon des rôles et des objectifs en ajustant dynamiquement leurs actions et récompenses, et intègre une méthode d’analyse permettant d’inférer a posteriori des spécifications organisationnelles implicites à partir des trajectoires des agents.
+MOISE+MARL a été évalué sur quatre environnements et plusieurs algorithmes d'apprentissage par renforcement multi-agent. Les résultats montrent que les politiques des agents convergent plus rapidement, sont plus stables et deviennent plus explicables. La méthode d'analyse est confirmé par la cohérence entre les spécifications organisationnelles définies et celles inférées.
 \end{abstract}
 
 %% R{\'e}sum{\'e} anglais
 \begin{altabstract}
-Trained agents can exhibit collective behaviors, from which implicit roles and goals can be extrapolated by analogy with a structured and functional organization. We propose MOISE+MARL, a framework that constrains agents to evolve according to such an organization to improve control and explainability in multi-agent reinforcement learning.
-MOISE+MARL guides agents toward roles and missions by dynamically adjusting their actions and rewards. It includes post-training analysis to infer implicit organizational specifications. Experimented on various environments, it demonstrates alignment between agent behaviors, defined specifications, and inferred ones.
+Multi-agent reinforcement learning agents can develop interpretable behaviors such as implicit roles or objectives, suggesting a hypothetical emergent organization. To fully exploit this analogy, we introduce MOISE+MARL, an organizational framework that couples the $\mathcal{M}OISE^+$ formalism with Dec-POMDP models to improve the control and explainability of learned policies.
+MOISE+MARL guides or constrains agents according to roles and objectives by dynamically adjusting their actions and rewards, and integrates an analysis method to infer implicit organizational specifications a posteriori from agent trajectories.
+MOISE+MARL was evaluated on four environments and several multi-agent reinforcement learning algorithms. The results show that agent policies converge faster, are more stable, and become more explainable. The analysis method is validated by the consistency between the defined organizational specifications and those inferred.
 \end{altabstract}
 
 %%�R{\'e}sum{\'e} espagnol
@@ -165,63 +173,145 @@ MOISE+MARL guides agents toward roles and missions by dynamically adjusting thei
 
 \section{Introduction}
 
-% \footnotetext[1]{Cet article est traduit d'un papier long accepté à AAMAS~\cite{soule2025moisemarl}.}
+\footnotetext[1]{Cet article est traduit d'un papier long accepté à AAMAS~\cite{soule2025moisemarl}.}
 
-% Contexte  
-L'apprentissage par renforcement multi-agent~\cite{maisonhaute2024} (\textit{Multi-Agent Reinforcement Learning - MARL}) permet de trouver une politique conjointe qui régit les actions individuelles des agents et leurs interactions pour atteindre un objectif sans gérer explicitement leur coordination. Dans des environnements nécéssitant des interactions sociales, les agents peuvent aboutir à des comportements semblables à des rôles et objectifs implicites, qui les rapprochent en partie d'une \textbf{organisation} (structurelle et fonctionnelle) telle que décrite dans $\mathcal{M}OISE^+$~\cite{Hubner2007}.
+% Contexte
+\noindent
+L'apprentissage par renforcement multi-agent~\cite{maisonhaute2024} (\textit{Multi-Agent Reinforcement Learning -- MARL}) constitue aujourd'hui un paradigme central pour l'entraînement d'agents constituant un Système Multi-Agent (SMA). Il vise à déterminer une \emph{politique conjointe} qui régit simultanément les actions individuelles des agents ainsi que leurs interactions, de manière à atteindre un objectif collectif sans qu'il soit nécessaire de spécifier explicitement les mécanismes de coordination~\cite{Albrecht2024book}.
+%
+Cette axe de recherche a démontré son intérêt dans de nombreux domaines tels que la robotique collective~\cite{Wang2025}, la gestion de ressources distribuées~\cite{Chahoud2025} ou la cybersécurité~\cite{Hammar2023}.
+
+\noindent
+Dans des environnements nécessitant une forte composante d'interactions sociales, il n’est pas rare que les agents convergent vers des comportements collectifs réguliers. Ces comportements peuvent être interprétés comme la manifestation implicite de \textbf{rôles} ( c’est-à-dire des fonctions assumées spontanément par certains agents) et de la poursuite coordonnée d’\textbf{objectifs}, ce qui peut donner l’impression de l’émergence d’une organisation structurée et fonctionnelle~\cite{Foerster2016}.
+%
+Cette dynamique rapproche partiellement ces systèmes d’une véritable \textbf{organisation multi-agent}, structurée et fonctionnelle, similaire à celles décrites par des cadres normatifs comme \textit{Agent Group Roles}~\cite{ferber2003} (AGR) ou $\mathcal{M}OISE^+$~\cite{Hubner2007}. Dans ces modèles, les spécifications organisationnelles, comme les rôles ou objectifs, constituent les briques fondamentales pour décrire le comportement attendu d’un SMA. La comparaison entre comportements émergents du MARL et organisation explicite suggère ainsi un rapprochement fécond entre apprentissage et modélisation organisationnelle.
 
 % Problématique
-Toutefois, l’identification de ces rôles et objectifs émergents reste complexe en raison de comportements souvent bruités ou irréguliers. Afin d’interpréter des comportements comme des rôles et objectifs d'une organisation implicite, nous introduisons l’\textbf{adéquation organisationnelle}.
-Ce concept propose une vision organisationnelle pour envisager deux problèmes encore peu explorés que sont le controle et l'explicabilité dans le MARL au travers de:
-i) \textbf{L'évaluation de l'adéquation organisationnelle} consiste à mesurer l'alignement d'une politique conjointe avec une organisation explicite où les comportements sont réguliers. La littérature, souvent centrée sur les rôles~\cite{Isakov2024, Wen2024, Xie2024}, manque d'approches systématiques dotées de moyens quantitatifs
-; \quad
-ii) \textbf{Le contrôle de l'adéquation organisationnelle} consiste à orienter les agents vers des politiques conformes à une organisation via des contraintes ou incitations définies. Ce contrôle induit la réduction de l'espace de recherche, l'amélioration de la convergence et le respect des contraintes de sécurité, sans recourir au \textit{Hierarchical Reinforcement Learning} (HRL).
-
-% Contribution  
-\noindent Cet article présente le cadre \textbf{MOISE+MARL} que nous avons introduit dans \cite{soule2025moisemarl}. MOISE+MARL apporte une contribution synthétique en simplifiant la complexité de nos premiers travaux sur l'intégration d'un modèle organisationnel en MARL~\cite{soule2024paper-jfsma, soule2024aomea} en se recentrant sur les notions de rôles et objectifs, permettant une meilleure utilisabilité et scalabilité. Il combine un formalisme Markovien et le modèle organisationel $\mathcal{M}OISE^+$~\cite{Hubner2007} pour permettre de spécifier la logique des rôles et objectifs. Une fois configuré, ce cadre permet d'attribuer des rôles et objectifs aux agents en ajustant dynamiquement les actions et la récompense. Dans MOISE+MARL, nous proposons également la méthode \textit{Trajectory-based Evaluation in MOISE+MARL} (TEMM) pour inférer des rôles et objectifs implicites à partir de trajectoires collectées via des techniques d'apprentissage non supervisé, évaluant ainsi quantitativement l'adéquation organisationnelle. Contrairement au HRL, qui décompose les tâches en interne~\cite{Qi2024, Matsuyama2025, SaoMai2024}, MOISE+MARL guide les agents vers des rôles et objectifs de façon externe.
-
-% Évaluation et résultats  
-Nous avons évalué MOISE+MARL avec :
-i) Quatre environnements différents, chacun entraînant des politiques nécéssitant des organisations implicites variées, afin d'évaluer la généralisabilité du cadre
-; \quad
-ii) Quatre algorithmes MARL de familles distinctes, pour mesurer leur adéquation avec MOISE+MARL lors de l'entraînement et de l'analyse post-entraînement
-; \quad
-iii) Un ensemble de spécifications organisationnelles par environment, permettant une évaluation manuelle et quantitative de leurs impacts.
+\noindent
+Toutefois, l’identification fiable de ces rôles et objectifs émergents demeure une tâche complexe. En effet, en émettant l'hypothèse que tout agent MARL suit une politique retranscrite par un rôle et des objectifs implicites possiblement inconnus, les comportements d'agents entraînés peuvent fréquemment apparaître comme \emph{bruités}, \emph{irréguliers} ou dépendants de dynamiques locales difficiles à interpréter. Cette variabilité rend délicate toute tentative de caractériser, de manière systématique, les régularités collectives comme de véritables \emph{rôles} ou \emph{objectifs}.
 %
-Une observation manuelle montre qu'un agent adoptant un rôle et engagé dans une mission, s'aligne effectivement sur le comportement attendu, confirmant la mesure de l'adéquation organisationnelle obtenue via TEMM. Les rôles et missions inférés s'alignent sur les spécifications prédéfinies, démontrant la cohérence interne du cadre. Par ailleurs, les algorithmes basés sur la politique et les acteur-critique produisent des politiques stables, tandis que ceux basés sur la valeur présentent une variabilité plus importante.
+Afin de pallier cette difficulté, nous introduisons la notion d’\textbf{adéquation organisationnelle}. Ce concept est théorisé comme la proximité entre les comportements appris par les agents par rapport aux comportements produits par des agents suivant une organisation explicite et normative. En cherchant à déterminer et à maîtriser dans quelle mesure les politiques apprises respectent ou s’écartent des spécifications organisationnelles définies, l'adéquation organisationnelle ouvre alors la voie à une double problématique encore peu explorée dans le domaine du MARL : le \textbf{contrôle} et l’\textbf{explicabilité}.
+%
+\begin{itemize}
+    \item \textbf{Évaluation de l’adéquation organisationnelle.}
+          Il s’agit de mesurer l’alignement d’une politique conjointe avec une organisation explicitement définie, c’est-à-dire un ensemble de comportements réguliers attendus. Or, la littérature existante reste principalement centrée sur l’inférence ou l’assignation de rôles~\cite{Isakov2024, Wen2024, Xie2024} au sein et pour le bénéfice de l'apprentissage seulement.
 
+    \item \textbf{Contrôle de l’adéquation organisationnelle.}
+          Il consiste à orienter l’apprentissage des agents vers des politiques conformes à une organisation cible, au moyen de \emph{contraintes} ou \emph{incitations} explicites. Un tel contrôle permet non seulement de réduire l’espace de recherche des politiques, mais aussi d’améliorer la convergence des algorithmes et d’assurer le respect de contraintes de sûreté ou de sécurité. Contrairement aux approches de \textit{Hierarchical Reinforcement Learning} (HRL), qui structurent les tâches en sous-niveaux internes, notre perspective vise un contrôle \emph{externe}, reposant sur des spécifications organisationnelles indépendantes du processus d’apprentissage.
+\end{itemize}
+
+
+% Contribution
+\noindent Nous présentons le cadre \textbf{MOISE+MARL} qui articule une double contribution :
+%
+\begin{itemize}
+    \item \textbf{Unification MARL et modèle organisationnel : }
+          MOISE+MARL combine la structure d'un modèle Markovien avec le modèle organisationel $\mathcal{M}OISE^+$, afin de spécifier la logique des rôles et objectifs. Le cadre permet alors d'appliquer des rôles et objectifs aux agents, en ajustant leurs actions et leurs récompenses pour favoriser / imposer l’alignement organisationnel.
+    \item \textbf{Méthode d'analyse organisationnelle : }
+          \textit{TEMM} (\textit{Trajectory-based Evaluation in MOISE+MARL}) propose un mécanisme d’analyse \emph{a posteriori} permettant d’inférer automatiquement des rôles et objectifs à partir des trajectoires d’agents. En mobilisant des techniques d’apprentissage non supervisé, cette méthode fournit une mesure quantitative de l’\emph{adéquation organisationnelle}.
+\end{itemize}
+
+\noindent Contrairement au \textit{Hierarchical Reinforcement Learning} (HRL)~\cite{Qi2024,Matsuyama2025}, qui repose sur une décomposition interne des tâches, MOISE+MARL applique le guidage/contrainte organisationnelle avec un ensemble limité de spécifications organisationnelles, de façon \emph{externe} et indépendante de l'apprentissage, favorisant l’\emph{utilisabilité} et la \emph{scalabilité}.
+
+% Évaluation et résultats
+\noindent
+Nous avons évalué MOISE+MARL selon trois axes principaux :
+%
+\begin{itemize}
+    \item \textbf{Diversité des environnements} : Quatre environnements MARL ont été sélectionnés, chacun nécessitant des formes d’organisation implicite différentes, afin de tester la généralisabilité du cadre à des contextes variés ;
+    \item \textbf{Multiplicité des algorithmes} : Quatre algorithmes MARL issus des familles \textit{policy-based}, \textit{actor-critic} et \textit{value-based} ont été comparées avec les spécifications organisationnelles durant l’apprentissage et l’analyse post-entraînement ;
+    \item \textbf{Spécifications organisationnelles dédiées} : Pour chaque environnement, un ensemble de rôles, objectifs et permissions/obligations a été défini, permettant une évaluation manuelle ou via TEMM de l’impact organisationnel sur les politiques apprises.
+\end{itemize}
+%
+Bien que l’établissement des spécifications organisationnelles nécessite un investissement initial, leur application permet généralement d’accélérer la convergence et de stabiliser les politiques apprises. Cela atténue le problème de non-stationnarité et contribue également à résoudre partiellement le problème d’attribution du mérite, qui sont des difficultés inhérentes au MARL~\cite{Albrecht2024book}.
+L’analyse manuelle montre que les agents dotés de rôles et d'objectifs adoptent des comportements conformes aux spécifications organisationnelles. Les rôles et objectifs inférés par TEMM correspondent aux spécifications prédéfinies, validant la cohérence interne du cadre.  Enfin, il est à noter que les algorithmes basés sur la politique et acteur-critique semblent produire des politiques plus stables que les algorithmes basés sur la valeur.
 
 % Structure de l'article  
-\noindent La \autoref{sec:related_works} présente les travaux sur l'adéquation organisationnelle, la \autoref{sec:moise_marl_framework} introduit MOISE+MARL, la \autoref{sec:TEMM_algorithm} décrit TEMM, la \autoref{sec:experimental_setup} expose le protocole expérimental et la \autoref{sec:results} les résultats, puis la \autoref{sec:discussion_conclusion_future_work} conclut.
+\noindent La \autoref{sec:related_works} examine les travaux liés à l'adéquation organisationnelle, la \autoref{sec:moise_marl_framework} détaille le cadre MOISE+MARL, la \autoref{sec:TEMM_algorithm} présente la méthode TEMM, la \autoref{sec:experimental_setup} décrit le protocole expérimental, la \autoref{sec:results} analyse les résultats obtenus, et enfin la \autoref{sec:discussion_conclusion_future_work} propose une conclusion et des perspectives.
 
 \section{Travaux connexes}
 \label{sec:related_works}
 
-Cette section explore des travaux qui lient des aspects de l'organisation dans le MARL.
+Cette section explore des travaux liant l'organisation avec le MARL.
 
 \subsection{Évaluation de l'adéquation organisationnelle}
 
-Certains travaux se sont intéressés à l'inférence de rôles ou d'objectifs pour mesurer l'adéquation organisationnelle ou des concepts similaires.
+L'évaluation de l'adéquation organisationnelle consiste à vérifier si les comportements acquis par les agents correspondent à une organisation explicitement définie ou émergente. Les principaux critères considérés sont :
+(E1) l’identification des rôles implicites,
+(E2) la détection des objectifs et missions atteints,
+(E3) la cohérence structurelle,
+(E4) la mesure quantitative de l’adéquation organisationnelle,
+et (E5) l’explicabilité des comportements collectifs.
 %
-Wilson et al.~\cite{wilson2008learning} proposent un transfert de rôles dans les environments multi-agent pour faciliter l'adaptation entre environnements, mais leur modèle se limite à des rôles spécifiques liés aux tâches.
-%
-Berenji et Vengerov~\cite{berenji2000learning} étudient la coordination et l'inférence de rôles dans des missions \textit{Unmanned Aerial Vehicles} pour renforcer la coopération, sans permettre d'inférer les rôles implicites requis.
-%
-Yusuf et Baber~\cite{yusuf2020inferential} utilisent des méthodes bayésiennes pour coordonner des agents diversifiés, mais leur approche manque d'abstraction des rôles et n'évalue pas l'alignement avec une structure organisationnelle globale.
-%
-Serrino et al.~\cite{serrino2019finding} explorent l'inférence dynamique des rôles dans des environnements sociaux, se concentrant sur des rôles opérationnels immédiats plutôt que sur des rôles implicites.
+Nous présentons ici les travaux saillants liés au sujet de l'inférence de rôles ou d'objectifs afin d'évaluer l'adéquation organisationnelle ou des notions proches.
 
-Les travaux identifiés intègrent des mécanismes internes impliquant une inférence \textquote{faite-main} implicite des rôles pour servir une coordination globale. Néanmoins, aucun ne se focalise sur l'inférence générale des rôles et objectifs ni sur la mesure de l'adéquation organisationelle.
+Des mécanisme de découverte et de transfert de rôles à travers différents environnements ont été proposées pour identifier des rôles implicite~\cite{wilson2008learning}. Toutefois, ces rôles sont définis comme des abstractions statistiques internes à l’apprentissage, et ne permettent pas de satisfaire les critères de \emph{cohérence structurelle} ou de \emph{mesure explicite de l’adéquation organisationnelle}. L’explicabilité reste limitée à l’interprétation des structures de rôles transférées
+
+Yusuf et Baber~\cite{yusuf2020inferential} contribue indirectement à la \emph{cohérence structurelle} en gérant l’incertitude et les conflits entre agents par inférence bayésienne. Toutefois, elle ne vise ni l’\emph{identification de rôles implicites}, ni la \emph{détection explicite d’objectifs ou missions}. L’absence de métriques quantitatives d’adéquation organisationnelle et de représentations interprétables limite sa portée au regard des critères recherchés.
+
+Dans le cadre de missions \textit{Unmanned Aerial Vehicle}, une approche a été proposée pour montrer que les agents apprennent à coordonner leurs actions et ressources pour coopérer efficacement~\cite{berenji2000learning}. Cependant, l’approche ne formalise pas la notion de \emph{rôle implicite} généralisable et n’évalue pas la \emph{cohérence structurelle} au sein d’une organisation. La mesure d’adéquation est absente, et l’explicabilité reste limitée à des scénarios de coopération spécifiques.
+
+Serrino et al.~\cite{serrino2019finding} propose d'aborder l’\emph{identification de rôles implicites}, mais uniquement sous la forme de relations sociales locales (allié/adversaire). Cela contribue à l’explicabilité immédiate des interactions, mais ne satisfait pas les critères de \emph{cohérence structurelle}, de \emph{mesure d’adéquation organisationnelle} ou de \emph{détection de missions globales}. L’évaluation reste contextuelle et ne s’appuie pas sur une organisation normative.
+
+\medskip
+\noindent
+En résumé, les travaux identifiés couvrent partiellement certains critères en particulier l’identification de rôles~\cite{serrino2019finding,wilson2008learning}, la détection d’objectifs dans des missions spécifiques~\cite{berenji2000learning} mais aucun ne répond simultanément à l’ensemble des critères recherchés, laissant un vide que nous souhaitons combler comme illustré dans la \autoref{tab:evaluation_criteria_summary}.
+
+\begin{table*}[h!]
+    \centering
+    \caption{Travaux liés à l’évaluation de l’adéquation organisationnelle}
+    \label{tab:evaluation_criteria_summary}
+    \renewcommand{\arraystretch}{1.3}
+    \scriptsize
+    \begin{tabular}{
+        p{3cm}
+        >{\centering\arraybackslash}p{1.4cm}
+        >{\centering\arraybackslash}p{1.4cm}
+        >{\centering\arraybackslash}p{1.4cm}
+        >{\centering\arraybackslash}p{1.4cm}
+        >{\centering\arraybackslash}p{1.4cm}
+        }
+        \hline
+        \textbf{Travaux}                                      & \textbf{(E1) Identification de rôles} & \textbf{(E2) Détection objectifs / missions} & \textbf{(E3) Cohérence structurelle} & \textbf{(E4) Mesure quantitative} & \textbf{(E5) Explicabilité organisationnelle} \\ \hline
+        Wilson et al. (2008)~\cite{wilson2008learning}        & \checkmark                            & $\times$                                     & $\times$                             & $\times$                          & $\sim$                                        \\
+        Berenji \& Vengerov (2000)~\cite{berenji2000learning} & $\times$                              & \checkmark                                   & $\times$                             & $\times$                          & $\sim$                                        \\
+        Yusuf \& Baber (2020)~\cite{yusuf2020inferential}     & $\times$                              & $\times$                                     & $\sim$                               & $\times$                          & $\times$                                      \\
+        Serrino et al. (2019)~\cite{serrino2019finding}       & \checkmark                            & $\times$                                     & $\times$                             & $\times$                          & $\sim$                                        \\
+        Wang et al. (2020)~\cite{wang2020roma}                & \checkmark                            & $\times$                                     & $\sim$                               & $\times$                          & $\sim$                                        \\
+        Nguyen et al. (2022)~\cite{nguyen2022transfer}        & \checkmark                            & $\sim$                                       & \checkmark                           & $\times$                          & $\sim$                                        \\
+        Zeng et al. (2023)~\cite{zeng2023sird}                & \checkmark                            & $\times$                                     & \checkmark                           & $\times$                          & $\sim$                                        \\
+        Zhang et al. (2025)~\cite{zhang2025clustering}        & $\sim$                                & $\times$                                     & $\sim$                               & $\times$                          & $\sim$                                        \\
+        Ahmed et al. (2022)~\cite{ahmed2022survey}            & $\sim$                                & $\sim$                                       & $\times$                             & $\times$                          & $\sim$                                        \\ \hline
+    \end{tabular}
+\end{table*}
+
+
 
 \subsection{Contrôle de l'adéquation organisationnelle}
 
-Le contrôle de l'adéquation organisationnelle consiste à aligner les politiques des agents sur une organisation prédéfinie via des contraintes ou incitations. Par exemple, Achiam et al.~\cite{achiam2017cpo} présentent le \textit{Constrained Policy Optimization} (CPO), qui ajuste les politiques avec des contraintes de sécurité tandis que nous souhaitons aller plus loin en appliquant des contraintes externes qui modifient dynamiquement l'espace d'action pour orienter les agents vers des comportements organisationnels.
+Le contrôle de l'adéquation organisationnelle consiste à aligner les politiques des agents sur une organisation prédéfinie via des contraintes ou incitations. Plusieurs travaux récents s’inscrivent dans cette perspective, avec des degrés de contrôle différents.
 
-Ray et al.~\cite{ray2019benchmarking} intègrent des contraintes dans la récompense via des multiplicateurs de Lagrange mais ne les exploite pas pour structurer les comportements de plusieurs agents. De même, alors que Garcia et al.~\cite{garcia2015comprehensive} et Alshiekh et al.~\cite{alshiekh2018safe} se concentrent sur l'exploration sécurisée (\textit{shielding}), nous cherchons à guider les agents vers des comportements alignés avec des rôles.
+\paragraph{Achiam et al.~\cite{achiam2017cpo}}
+Les auteurs proposent le \emph{Constrained Policy Optimization} (CPO), une extension de PPO qui incorpore des contraintes de sûreté sous forme d’inégalités convexes. L’algorithme garantit que les mises à jour de politique respectent un seuil de sécurité tout en optimisant la récompense. CPO est particulièrement adapté aux environnements où des violations de contraintes peuvent être critiques. Cependant, ces contraintes restent formulées comme des \emph{conditions globales de sûreté}, sans prise en compte d’une structuration organisationnelle (rôles, obligations, permissions). L’objectif est avant tout d’assurer la sécurité des trajectoires, non leur alignement avec une organisation explicite.
 
-Plutôt que de décomposer les tâches en sous-tâches comme le HRL~\cite{ghavamzadeh2006hrl}, nous voulons contraindre le MARL de manière externe, assurant une granularité modulaire et des comportements affinés. Enfin, la coordination décentralisée par partage des connaissances~\cite{foerster2018communication} illustre l'importance d'une communication maîtrisée pour garantir l'adéquation organisationnelle dans les systèmes complexes.
+\paragraph{Ray et al.~\cite{ray2019benchmarking}}
+Ce travail introduit une \emph{suite de benchmarks} pour l’apprentissage par renforcement contraint, et propose une approche reposant sur l’ajout de contraintes via des multiplicateurs de Lagrange. Les contraintes sont injectées dans la fonction de récompense afin de pénaliser les violations, et permettent d’étudier empiriquement différents algorithmes contraints sur un large ensemble d’environnements. Cette approche reste toutefois \emph{individuelle et locale}, ne visant pas à organiser collectivement plusieurs agents ni à définir des rôles coopératifs ; les contraintes ne servent pas de structure organisationnelle mais de garde-fous de performance.
 
-Poursuivant les approches comme le shielding ou le CPO, nous souhaitons intégrer des contraintes organisationnelles externes en MARL standard, modifiant actions et récompenses pour s'aligner sur des rôles et objectifs.
+\paragraph{Garcia et al.~\cite{garcia2015comprehensive}}
+Les auteurs réalisent une \emph{revue exhaustive} des techniques de sûreté en apprentissage par renforcement. Ils identifient deux familles principales : (i) les approches de type \emph{avoidance}, où l’agent apprend à éviter les états dangereux grâce à des signaux de pénalité, et (ii) les approches de type \emph{shielding}, où un module externe intercepte et corrige les actions jugées dangereuses. Leur travail souligne l’importance du contrôle externe pour assurer la sûreté, mais ce contrôle reste générique et orienté sécurité, sans dimension organisationnelle ni attribution de rôles.
+
+\paragraph{Alshiekh et al.~\cite{alshiekh2018safe}}
+Les auteurs approfondissent la notion de \emph{shielding} en proposant de construire formellement un bouclier à partir d’une spécification logique de sûreté (ex. LTL). Le bouclier agit en temps réel : il intercepte les actions interdites par la spécification et les remplace par des actions sûres, tout en garantissant que la politique de l’agent reste aussi proche que possible de son comportement initial. Cette approche formalise le contrôle externe, mais reste limitée à des propriétés de sûreté formelles, et non à des comportements collectifs organisés.
+
+\paragraph{Ghavamzadeh et al.~\cite{ghavamzadeh2006hrl}}
+Les approches de \emph{Hierarchical Reinforcement Learning} (HRL) décomposent les tâches complexes en sous-tâches, généralement modélisées comme des options ou macro-actions. Cette hiérarchie interne permet de guider la recherche de politique et d’accélérer l’apprentissage. Toutefois, ce guidage repose sur une structuration \emph{interne à la tâche}, sans introduire de rôles externes ou de contraintes normatives. L’accent est mis sur la modularité de la décomposition, pas sur l’adéquation organisationnelle vis-à-vis d’une spécification prédéfinie.
+
+\paragraph{Foerster et al.~\cite{foerster2018communication}}
+Les auteurs explorent la \emph{coordination décentralisée} par le biais de canaux de communication différentiables entre agents. Ils montrent que le partage sélectif d’informations améliore la coopération et stabilise l’apprentissage, notamment via des mécanismes d’attention et de messages encodés. Cette approche illustre l’importance de la communication maîtrisée pour atteindre une coordination implicite, mais elle ne fournit pas de contraintes normatives explicites : l’adéquation organisationnelle y reste émergente, et non guidée par des rôles ou des missions formalisées.
+
+\medskip
+\noindent
+Ces travaux démontrent que le contrôle externe, qu’il prenne la forme de contraintes de sûreté (CPO, shielding), de pénalisations (Lagrange multipliers), ou de structuration interne (HRL), est une voie efficace pour améliorer la stabilité et la sécurité en apprentissage. Toutefois, aucun ne propose de couplage formel avec un \emph{modèle organisationnel explicite} définissant rôles, missions et obligations. Notre cadre \textbf{MOISE+MARL} se distingue précisément par l’introduction de telles spécifications organisationnelles, modulant dynamiquement actions et récompenses pour orienter l’apprentissage vers des comportements collectifs conformes.
 
 
 \section{Le cadre MOISE+MARL}
