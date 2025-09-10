@@ -47,6 +47,7 @@
 \usetikzlibrary{shapes}
 % ---------
 
+\usepackage{arydshln}
 \usepackage{amssymb}
 \usepackage{csquotes}
 \usepackage[export]{adjustbox}
@@ -146,14 +147,14 @@
 
 %% R{\'e}sum{\'e}
 \begin{abstract}
-Des agents en apprentissage par renforcement multi-agent peuvent développer des comportements interprétables comme des rôles ou objectifs implicites, suggérant une hypothétique organisation émergente. Afin d’exploiter pleinement cette analogie, nous introduisons MOISE+MARL, un cadre organisationnel qui couple le formalisme $\mathcal{M}OISE^+$ aux modèles de type Dec-POMDP afin d’améliorer le contrôle et l’explicabilité des politiques apprises.
+Des agents en apprentissage par renforcement multi-agent peuvent développer des comportements interprétables comme des rôles ou objectifs implicites, suggérant une hypothétique organisation émergente. Afin d’exploiter pleinement cette analogie, nous introduisons MOISE+MARL, un cadre organisationnel qui couple le modèle organisationnel $\mathcal{M}OISE^+$ à un modèle Markovien afin d’améliorer le contrôle et l’explicabilité des politiques apprises.
 MOISE+MARL guide ou contraint les agents selon des rôles et des objectifs en ajustant dynamiquement leurs actions et récompenses, et intègre une méthode d’analyse permettant d’inférer a posteriori des spécifications organisationnelles implicites à partir des trajectoires des agents.
 MOISE+MARL a été évalué sur quatre environnements et plusieurs algorithmes d'apprentissage par renforcement multi-agent. Les résultats montrent que les politiques des agents convergent plus rapidement, sont plus stables et deviennent plus explicables. La méthode d'analyse est confirmé par la cohérence entre les spécifications organisationnelles définies et celles inférées.
 \end{abstract}
 
 %% R{\'e}sum{\'e} anglais
 \begin{altabstract}
-Multi-agent reinforcement learning agents can develop interpretable behaviors such as implicit roles or objectives, suggesting a hypothetical emergent organization. To fully exploit this analogy, we introduce MOISE+MARL, an organizational framework that couples the $\mathcal{M}OISE^+$ formalism with Dec-POMDP models to improve the control and explainability of learned policies.
+Multi-agent reinforcement learning agents can develop interpretable behaviors such as implicit roles or objectives, suggesting a hypothetical emergent organization. To fully exploit this analogy, we introduce MOISE+MARL, an organizational framework that couples the $\mathcal{M}OISE^+$ formalism with Dec-POMDP (\textit{Decentralized Partially Observable Markov Decision Process}) models to improve the control and explainability of learned policies.
 MOISE+MARL guides or constrains agents according to roles and objectives by dynamically adjusting their actions and rewards, and integrates an analysis method to infer implicit organizational specifications a posteriori from agent trajectories.
 MOISE+MARL was evaluated on four environments and several multi-agent reinforcement learning algorithms. The results show that agent policies converge faster, are more stable, and become more explainable. The analysis method is validated by the consistency between the defined organizational specifications and those inferred.
 \end{altabstract}
@@ -281,37 +282,63 @@ En résumé, les travaux identifiés couvrent partiellement certains critères e
         Nguyen et al. (2022)~\cite{nguyen2022transfer}        & \checkmark                            & $\sim$                                       & \checkmark                           & $\times$                          & $\sim$                                        \\
         Zeng et al. (2023)~\cite{zeng2023sird}                & \checkmark                            & $\times$                                     & \checkmark                           & $\times$                          & $\sim$                                        \\
         Zhang et al. (2025)~\cite{zhang2025clustering}        & $\sim$                                & $\times$                                     & $\sim$                               & $\times$                          & $\sim$                                        \\
-        Ahmed et al. (2022)~\cite{ahmed2022survey}            & $\sim$                                & $\sim$                                       & $\times$                             & $\times$                          & $\sim$                                        \\ \hline
+        Ahmed et al. (2022)~\cite{ahmed2022survey}            & $\sim$                                & $\sim$                                       & $\times$                             & $\times$                          & $\sim$                                        \\
+        Selmonaj et al. (2025)~\cite{Selmonaj2025}            & $\times$                              & $\sim$                                       & $\times$                             & $\sim$                            & $\sim$                                        \\ \hline
     \end{tabular}
 \end{table*}
 
-
-
 \subsection{Contrôle de l'adéquation organisationnelle}
 
-Le contrôle de l'adéquation organisationnelle consiste à aligner les politiques des agents sur une organisation prédéfinie via des contraintes ou incitations. Plusieurs travaux récents s’inscrivent dans cette perspective, avec des degrés de contrôle différents.
+Le contrôle de l'adéquation organisationnelle vise à aligner les politiques des agents sur une organisation cible via contraintes ou incitations. Les travaux récents abordent principalement : (C1) l’expressivité organisationnelle, (C2) le guidage par récompenses, (C3) les contraintes sur les actions, et (C4) l’indépendance vis-à-vis de l’algorithme d’apprentissage.
+%
+Nous présentons ici les travaux identifiés comme s’inscrivant le mieux dans cette perspective, avec des degrés de contrôle différents.
 
-\paragraph{Achiam et al.~\cite{achiam2017cpo}}
-Les auteurs proposent le \emph{Constrained Policy Optimization} (CPO), une extension de PPO qui incorpore des contraintes de sûreté sous forme d’inégalités convexes. L’algorithme garantit que les mises à jour de politique respectent un seuil de sécurité tout en optimisant la récompense. CPO est particulièrement adapté aux environnements où des violations de contraintes peuvent être critiques. Cependant, ces contraintes restent formulées comme des \emph{conditions globales de sûreté}, sans prise en compte d’une structuration organisationnelle (rôles, obligations, permissions). L’objectif est avant tout d’assurer la sécurité des trajectoires, non leur alignement avec une organisation explicite.
+Le \emph{Constrained Policy Optimization} (CPO) incorpore des contraintes convexes de sûreté dans l’optimisation de politique~\cite{achiam2017cpo}. L’approche se concentre sur la sécurité globale plutôt que sur une structuration organisationnelle fine. L’orientation de l’apprentissage se fait directement par ces contraintes, sans modulation de la récompense. Les actions des agents peuvent être restreintes si elles enfreignent les bornes de sûreté définies, tandis que l’algorithme conserve une relative généralité puisqu’il reste une extension de PPO.
 
-\paragraph{Ray et al.~\cite{ray2019benchmarking}}
-Ce travail introduit une \emph{suite de benchmarks} pour l’apprentissage par renforcement contraint, et propose une approche reposant sur l’ajout de contraintes via des multiplicateurs de Lagrange. Les contraintes sont injectées dans la fonction de récompense afin de pénaliser les violations, et permettent d’étudier empiriquement différents algorithmes contraints sur un large ensemble d’environnements. Cette approche reste toutefois \emph{individuelle et locale}, ne visant pas à organiser collectivement plusieurs agents ni à définir des rôles coopératifs ; les contraintes ne servent pas de structure organisationnelle mais de garde-fous de performance.
+Ray et al.~\cite{ray2019benchmarking} introduisent une suite de benchmarks où les contraintes sont injectées via des multiplicateurs de Lagrange. La logique est de transformer les violations en pénalités intégrées à la fonction de retour, ce qui agit comme un guidage implicite par la récompense. Les contraintes ne s’expriment pas en obligations explicites sur les actions mais en découragement progressif de comportements indésirables. Cette approche reste centrée sur l’évaluation de différents algorithmes plutôt que sur une mise en forme collective des comportements.
 
-\paragraph{Garcia et al.~\cite{garcia2015comprehensive}}
-Les auteurs réalisent une \emph{revue exhaustive} des techniques de sûreté en apprentissage par renforcement. Ils identifient deux familles principales : (i) les approches de type \emph{avoidance}, où l’agent apprend à éviter les états dangereux grâce à des signaux de pénalité, et (ii) les approches de type \emph{shielding}, où un module externe intercepte et corrige les actions jugées dangereuses. Leur travail souligne l’importance du contrôle externe pour assurer la sûreté, mais ce contrôle reste générique et orienté sécurité, sans dimension organisationnelle ni attribution de rôles.
+Le \emph{shielding formel} est fondé sur des spécifications logiques de sûreté. Cette formalisation permet de définir des propriétés complexes, mais toujours centrées sur la sécurité~\cite{alshiekh2018safe}. Le mécanisme agit exclusivement sur les actions, en interceptant celles qui violent la logique spécifiée, sans modifier la fonction de récompense. L’agent conserve ainsi son algorithme d’apprentissage intact, tout en étant encadré par un module externe.
 
-\paragraph{Alshiekh et al.~\cite{alshiekh2018safe}}
-Les auteurs approfondissent la notion de \emph{shielding} en proposant de construire formellement un bouclier à partir d’une spécification logique de sûreté (ex. LTL). Le bouclier agit en temps réel : il intercepte les actions interdites par la spécification et les remplace par des actions sûres, tout en garantissant que la politique de l’agent reste aussi proche que possible de son comportement initial. Cette approche formalise le contrôle externe, mais reste limitée à des propriétés de sûreté formelles, et non à des comportements collectifs organisés.
+Garcia et al. propose une revue dans laquelle ils distinguent deux familles de méthodes de sûreté : l’évitement par pénalité, et le \emph{shielding}, par correction externe des actions~\cite{garcia2015comprehensive}. Dans le premier cas, l’apprentissage est influencé par un retour négatif ; dans le second, les actions interdites sont directement bloquées. Ces techniques garantissent un contrôle robuste mais se limitent à la prévention des risques, sans intégrer de description organisationnelle ni de rôles.
 
-\paragraph{Ghavamzadeh et al.~\cite{ghavamzadeh2006hrl}}
-Les approches de \emph{Hierarchical Reinforcement Learning} (HRL) décomposent les tâches complexes en sous-tâches, généralement modélisées comme des options ou macro-actions. Cette hiérarchie interne permet de guider la recherche de politique et d’accélérer l’apprentissage. Toutefois, ce guidage repose sur une structuration \emph{interne à la tâche}, sans introduire de rôles externes ou de contraintes normatives. L’accent est mis sur la modularité de la décomposition, pas sur l’adéquation organisationnelle vis-à-vis d’une spécification prédéfinie.
+Les approches de \emph{Hierarchical Reinforcement Learning} (HRL) reposent sur une décomposition des tâches en sous-tâches~\cite{ghavamzadeh2006hrl}. Cette structuration interne guide l’agent en accélérant l’exploration et l’apprentissage. Les actions disponibles sont organisées en macro-actions, mais sans lien avec des prescriptions normatives externes. La logique hiérarchique impose une organisation fonctionnelle, qui reste interne à la tâche et dépendante de la façon dont elle est modélisée.
 
-\paragraph{Foerster et al.~\cite{foerster2018communication}}
-Les auteurs explorent la \emph{coordination décentralisée} par le biais de canaux de communication différentiables entre agents. Ils montrent que le partage sélectif d’informations améliore la coopération et stabilise l’apprentissage, notamment via des mécanismes d’attention et de messages encodés. Cette approche illustre l’importance de la communication maîtrisée pour atteindre une coordination implicite, mais elle ne fournit pas de contraintes normatives explicites : l’adéquation organisationnelle y reste émergente, et non guidée par des rôles ou des missions formalisées.
+La coordination par communication différentiable illustre une autre forme de contrôle, fondée sur le partage d’informations~\cite{foerster2018communication}. Les agents construisent une organisation émergente par échange de messages, sans qu’aucune contrainte normative ne soit imposée. L’apprentissage repose sur les récompenses globales, tandis que la liberté d’action est préservée. Ce type d’approche conserve une forte indépendance vis-à-vis des algorithmes employés, mais l’adéquation organisationnelle y reste implicite.
 
 \medskip
 \noindent
-Ces travaux démontrent que le contrôle externe, qu’il prenne la forme de contraintes de sûreté (CPO, shielding), de pénalisations (Lagrange multipliers), ou de structuration interne (HRL), est une voie efficace pour améliorer la stabilité et la sécurité en apprentissage. Toutefois, aucun ne propose de couplage formel avec un \emph{modèle organisationnel explicite} définissant rôles, missions et obligations. Notre cadre \textbf{MOISE+MARL} se distingue précisément par l’introduction de telles spécifications organisationnelles, modulant dynamiquement actions et récompenses pour orienter l’apprentissage vers des comportements collectifs conformes.
+En somme, ces contributions mettent en évidence différentes façons de canaliser les comportements : par contraintes explicites sur les actions, par modulation des récompenses, par hiérarchisation des tâches ou par échanges d’information. Cependant, elles se limitent à des objectifs de sûreté ou de coordination implicite, sans s’appuyer sur un modèle organisationnel explicite définissant rôles, missions et obligations. Nous cherchons précisément à introduire une telle dimension organisationnelle, capable de guider les agents de manière formalisée tout en restant compatible avec divers algorithmes d’apprentissage comme cela est résumé dans la \autoref{tab:control_criteria_summary}.
+
+\begin{table}[h]
+    \centering
+    \caption{Comparaison implicite des approches de contrôle : structuration, rôle du retour, contraintes d’action et indépendance vis-à-vis de l’algorithme.}
+    \label{tab:control_criteria_summary}
+    \scriptsize
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{
+        p{3.35cm}
+        >{\centering\arraybackslash}p{1.7cm}
+        >{\centering\arraybackslash}p{1.7cm}
+        >{\centering\arraybackslash}p{1.7cm}
+        >{\centering\arraybackslash}p{1.7cm}
+        }
+        \hline
+        \textbf{Travaux}                                        & \textbf{Structuration (C1)} & \textbf{Rôle du retour (C2)} & \textbf{Contrôle des actions (C3)} & \textbf{Indépendance algorithmique (C4)} \\
+        \hline
+        Achiam et al. (2017)~\cite{achiam2017cpo}               & $\times$                    & $\times$                     & \checkmark                         & $\sim$                                   \\
+        Ray et al. (2019)~\cite{ray2019benchmarking}            & $\times$                    & \checkmark                   & $\sim$                             & \checkmark                               \\
+        Garcia et al. (2015)~\cite{garcia2015comprehensive}     & $\times$                    & \checkmark                   & \checkmark                         & \checkmark                               \\
+        Alshiekh et al. (2018)~\cite{alshiekh2018safe}          & $\sim$                      & $\times$                     & \checkmark                         & \checkmark                               \\
+        Ghavamzadeh et al. (2006)~\cite{ghavamzadeh2006hrl}     & $\sim$                      & $\sim$                       & \checkmark                         & $\times$                                 \\
+        Foerster et al. (2018)~\cite{foerster2018communication} & $\sim$                      & \checkmark                   & $\times$                           & \checkmark                               \\
+        Ma et al. (2022)~\cite{ma2022elign}                     & $\sim$                      & \checkmark                   & $\times$                           & \checkmark                               \\
+        Xu et al. (2024)~\cite{xu2024subgoalhrl}                & $\sim$                      & $\sim$                       & \checkmark                         & $\times$                                 \\
+        Zeng et al. (2025)~\cite{zeng2025valuealignment}        & \checkmark                  & $\sim$                       & $\sim$                             & \checkmark                               \\
+        \hline
+    \end{tabular}
+\end{table}
+
+
 
 
 \section{Le cadre MOISE+MARL}
@@ -321,75 +348,112 @@ Cette section présente le formalisme utilisé pour décrire le cadre MOISE+MARL
 
 \subsection{Cadre de Markov pour le MARL}
 
-Pour appliquer les techniques de MARL, nous nous appuyons sur le \textit{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP)~\cite{Oliehoek2016}. Les Dec-POMDP modélisent naturellement la coordination décentralisée multi-agent en situation d'observabilité partielle, ce qui les rend particulièrement adaptés à l'intégration de contraintes organisationnelles. Contrairement aux \textit{Partially Observable Stochastic Games} (POSG), le Dec-POMDP comprend une fonction de récompense commune, favorisant ainsi la collaboration~\cite{Beynier2013}.
+Pour appliquer des techniques MARL, il est nécéssaire de s'appuyer sur un cadre Markovien pour formaliser les observations, actions, récompense, etc. Nous nous basons sur le cadre du Dec-POMDP~\cite{Oliehoek2016}. Les Dec-POMDP permettent de modéliser la coordination décentralisée entre agents dans des contextes à observabilité partielle, ce qui les rend particulièrement adaptés à l'intégration de contraintes organisationnelles. Contrairement aux POSG (\textit{Partially Observable Stochastic Game}), le Dec-POMDP utilise une fonction de récompense commune, favorisant ainsi la collaboration~\cite{Beynier2013}.
 
-Un Dec-POMDP $d \in D$ (où $D$ est l'ensemble des Dec-POMDP) est défini comme un 7-uplet
-$d = \langle S, \{A_i\}, T, R, \{\Omega_i\}, O, \gamma \rangle$,
-où
-\(S = \{s_1,\dots,s_{|S|}\}\) est l'ensemble des états possibles ; \quad
-\(A_i = \{a_{1}^{i},\dots,a_{|A_i|}^{i}\}\) est l'ensemble des actions possibles pour l'agent \(i\) ; \quad
-\(T\) représente l'ensemble des probabilités de transition, avec \(T(s,a,s') = \probP(s'|s,a)\) qui correspond à la probabilité de passer de l'état \(s\) à l'état \(s'\) suite à l'action \(a\) ; \quad
-\(R : S \times A \times S \rightarrow \mathbb{R}\) est la fonction de récompense, attribuant une récompense en fonction de l'état initial, de l'action effectuée et de l'état résultant ; \quad
-\(\Omega_i = \{o_{1}^{i},\dots,o_{|\Omega_i|}^{i}\}\) est l'ensemble des observations possibles pour l'agent \(i\) ; \quad
-\(O\) représente l'ensemble des probabilités d'observation, où \(O(s',a,o) = \probP(o|s',a)\) est la probabilité d'obtenir l'observation \(o\) après avoir effectué l'action \(a\) et atteint l'état \(s'\) ; \quad et enfin, \(\gamma \in [0,1]\) est le facteur d'actualisation.
+Un Dec-POMDP $d \in D$ (avec $D$ l'ensemble des Dec-POMDP) est défini par un 7-uplet $d = (S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$ où~:
+\begin{itemize}
+    \item $S = \{s_1, ..., s_{|S|}\}$~: l'ensemble des états possibles.
+    \item $A_i = \{a_1^i, ..., a_{|A_i|}^i\}$~: l'ensemble des actions possibles pour l'agent $i$.
+    \item $T$ tel que $T(s,a,s') = \probP(s'|s,a)$~: la probabilité de transition conditionnelle entre états.
+    \item $R: S \times A \times S \rightarrow \mathbb{R}$~: la fonction de récompense.
+    \item $\Omega_i = \{o_1^i, ..., o_{|\Omega_i|}^i\}$~: l'ensemble des observations possibles pour l'agent $ag_i$.
+    \item $O$ tel que $O(s',a,o) = \probP(o|s',a)$~: la probabilité conditionnelle d'observer $o$ depuis $s'$ après avoir effectué $a$.
+    \item $\gamma \in [0,1]$~: le facteur d'actualisation qui décrit l'importance des récompenses futures par rapport aux récompenses immédiates (i.e spectre entre un comportement glouton et un comportement prévenant).
+\end{itemize}
 
-Le formalisme suivant est utilisé avec MOISE+MARL pour résoudre le Dec-POMDP~\cite{Beynier2013,Albrecht2024} :
-%
-i) \(\mathcal{A}\) représente l'ensemble des \(n\) \textbf{agents}
-; \quad
-ii) \(\Pi\) désigne l'ensemble des \textbf{politiques}, où une politique \(\pi \in \Pi\), \(\pi: \Omega \rightarrow A\), associe de manière déterministe une observation à une action, représentant ainsi la stratégie interne de l'agent
-; \quad
-iii) \(\Pi_{joint}\) représente l'ensemble des \textbf{politiques conjointes}, avec une politique conjointe \(\pi_{joint} \in \Pi_{joint}\), \(\pi_{joint}: \Omega^n \rightarrow A^n = \Pi^n\), qui sélectionne une action pour chaque agent en fonction de leurs observations respectives, constituant ainsi une collection de politiques utilisée par les agents d'une même équipe
-; \quad
-iv) \(H\) est l'ensemble des \textbf{historiques}, où un historique (ou trajectoire) sur \(z \in \mathbb{N}\) étapes (typiquement le nombre maximal d'étapes dans un épisode) est représenté par le \(z\)-uplet $h = \langle \langle \omega_{k}, a_{k}\rangle \mid k \leq z,\, \omega \in \Omega,\, a \in A\rangle$, capturant les observations et actions successives
-; \quad
-v) \(H_{joint}\) désigne l'ensemble des \textbf{historiques conjointes}, avec un historique conjoint \(h_{joint} \in H_{joint}\) sur \(z\) étapes défini comme l'ensemble des historiques individuels : $h_{joint} = \{h_1, h_2, \dots, h_n\}$
-; \quad
-vi) \(V_{joint}(\pi_{joint}) : \Pi_{joint} \rightarrow \mathbb{R}\) désigne la \textbf{récompense cumulative attendue} sur un horizon fini (en supposant \(\gamma < 1\) ou si le nombre d'étapes dans un épisode est fini), où \(\pi_{joint}\) représente la politique conjointe pour l'équipe \(i\), les politiques conjointes des autres équipes, \(\pi_{joint,-i}\), étant considérées comme fixes.
+En considérant $m$ \textbf{équipes} (ou \textbf{groupes}) contenant chacune plusieurs agents parmi $\mathcal{A}$, nous reprenons le formalisme minimal nécessaire à la résolution d'un Dec-POMDP pour une équipe donnée $i, 0 \leq i \leq m$, composée de $n$ agents~\cite{Beynier2013,Albrecht2024}~:
 
-Nous définissons la \textbf{résolution du Dec-POMDP} comme la recherche d'une politique conjointe \(\pi_{joint} \in \Pi_{joint}\) qui atteint au moins une récompense cumulative attendue de \(s\), où \(s \in \mathbb{R}\).
+\begin{itemize}
+    \item $\Pi$~: l'ensemble des politiques. Une \textbf{politique} $\pi \in \Pi, \pi~: \Omega \rightarrow A$ est une fonction déterministe qui associe à chaque observation une action. Elle représente la logique interne de l'agent.
+    \item $\Pi_{joint}$~: l'ensemble des politiques conjointes. Une \textbf{politique conjointe} $\pi_{joint} \in \Pi_{joint}, \pi_{joint}~: \Omega^n \rightarrow A^n = \Pi^n$ associe une action à chaque agent en fonction de son observation, et peut être vue comme l'ensemble des politiques utilisées par les agents.
+    \item $H$~: l'ensemble des historiques. Un \textbf{historique} sur $z \in \mathbb{N}$ étapes est un $z$-uplet $h = ((\omega_k, a_k) | k \leq z, \omega \in \Omega, a \in A)$.
+    \item $H_{joint}$~: l'ensemble des historiques conjoints. Un \textbf{historique conjoint} sur $z$ étapes $h_{joint} \in H_{joint}, h_{joint} = \{h_1, h_2, ..., h_n\}$ est l'ensemble des historiques des agents.
+    \item $U_{joint,i}(\langle \pi_{joint,i}, \pi_{joint,-i} \rangle): \Pi_{joint} \rightarrow \mathbb{R}$~: la \textbf{récompense cumulée espérée} pour l'équipe $i$ sur un horizon fini, avec $\pi_{joint,i}$ la politique conjointe de l'équipe $i$ et $\pi_{joint,-i}$ les politiques conjointes des autres équipes (considérées comme fixes).
+    \item $BR_{joint,i}(\pi_{joint,i}) = \arg\max_{\pi_{joint,i}} U(\langle \pi_{joint,i}, \pi_{joint,-i} \rangle)$~: le \textbf{meilleur répondant} $\pi^*_{joint,i}$ tel qu'aucune modification de politique ne permettrait d'obtenir une récompense supérieure à $U^*_i = U_{joint,i}(\langle \pi^*_{joint,i}, \pi_{joint,-i} \rangle)$.
+    \item $SR_{joint,i}(\pi_{joint,i}, s) = \{\pi_{joint,i} \mid U(\langle \pi_{joint,i}, \pi_{joint,-i} \rangle) \geq s\}$~: la \textbf{réponse suffisante}, c'est-à-dire l'ensemble des politiques conjointes atteignant au moins une récompense cumulée attendue $s \in \mathbb{R}, s \leq U^*_i$.
+\end{itemize}
 
-\subsection{Le modèle organisationnel \(\mathcal{M}OISE^+\)}
+On appelle \textbf{résolution du Dec-POMDP} la recherche d'une politique conjointe $\pi^j \in \Pi^j$ telle que $U_{joint,i}(\pi^j) \geq s$, atteignant une récompense cumulée espérée au moins égale à un seuil $s \in \mathbb{R}$.
+
+\subsection{Le modèle organisationnel $\mathcal{M}OISE^+$}
 
 \begin{figure}[h!]
-    \input{figures/moise_model.tex}
-    \caption{\textbf{Une vue synthétique de} $\mathbfcal{M}\mathbf{OISE^+}$}
+    \centering
+    \input{figures/moise_model}
+    \caption{Vue synthétique du modèle $\mathcal{M}OISE^+$}
     \label{fig:moise_model}
 \end{figure}
 
-\noindent \textbf{Spécifications structurelles (SS):}
-Elles définissent la structure des agents, notées
-$
-    \mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle,
-$
-où \(\mathcal{R}\) est l'ensemble des rôles, avec une relation d'héritage \(\mathcal{IR}\) (c'est-à-dire, \(\rho_1 \sqsubset \rho_2\) si \(\rho_1\) hérite de \(\rho_2\)). De plus, \(\mathcal{GR}\) spécifie des groupes sous la forme
-$
-    \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle,
-$
-où \(\mathcal{L}\) désigne les liens (connaissance, communication, autorité) et \(\mathcal{C}\) les compatibilités entre rôles, avec \(np\) et \(ng\) indiquant respectivement le nombre de rôles et de sous-groupes.
+Le modèle $\mathcal{M}OISE^+$~\cite{Hubner2007} fournit une description formelle avancée d'une organisation, notamment pour la description formelle des politiques des agents (via les plans). Il prend explicitement en compte les aspects sociaux entre agents, là où AGR se concentre sur l'intégration de normes orientées conception. De plus, il propose une vision suffisamment détaillée de l'organisation pour être comprise selon différents points de vue. Une représentation visuelle des éléments formels de ce modèle est donné en \autoref{fig:moise_model}
+En nous basant sur le formalisme de $\mathcal{M}OISE^+$~\cite{Hubner2007}, nous ne détaillons ici que les éléments minimaux utilisés dans notre approche.
 
-\vspace{0.5em}
-\noindent \textbf{Spécifications fonctionnelles (FS):}
-Elles décrivent les objectifs des agents et sont notées
-$
-    \mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle.
-$
-Le schéma social \(\mathcal{SCH}\) comprend les objectifs globaux \(\mathcal{G}\), les missions \(\mathcal{M}\) et les plans \(\mathcal{P}\) organisant ces objectifs (via l'opérateur \(op\) pour séquence, choix ou parallèle). Les missions regroupent des ensembles d'objectifs (\(mo\)) et le nombre d'agents par mission est donné par \(nm\), tandis que \(\mathcal{PO}\) représente les préférences (ex. \(m_1 \prec m_2\)).
+\
 
-\vspace{0.5em}
-\noindent \textbf{Spécifications déontiques (DS):}
-Elles précisent la relation entre rôles et objectifs, notées
-$
-    \mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle.
-$
-Les contraintes temporelles \(\mathcal{TC}\) fixent les périodes pour les permissions/obligations (ex. \(Any\) pour tout moment). Les obligations \(\mathcal{OBL}\) imposent aux agents en rôle \(\rho_a\) d'exécuter la mission \(m\) aux moments \(tc\), tandis que les permissions \(\mathcal{PER}\) les autorisent. La fonction \(rds\) associe à chaque rôle une spécification sous la forme
-$
-    \langle tc, y, m \rangle,
-$
-avec \(y=0\) pour permission et \(y=1\) pour obligation.
+\noindent \textbf{Spécifications organisationnelles}~: \quad $\mathcal{OS} = \langle \mathcal{SS}, \mathcal{FS}, \mathcal{DS} \rangle$, l'ensemble des spécifications organisationnelles, où $\mathcal{SS}$ sont les \textbf{spécifications structurelles}, $\mathcal{FS}$ les \textbf{spécifications fonctionnelles}, et $\mathcal{DS}$ les \textbf{spécifications déontiques}.
 
+\
 
-Les autres spécifications structurelles (compatibilités, liens) sont inhérentes aux rôles. De même, les objectifs (incluant missions et \(mo\)) sont inhérents aux autres spécifications fonctionnelles (plans, cardinalités, ordres de préférence). Considérer les rôles, les missions et les permissions/obligations est suffisant pour lier \(\mathcal{M}OISE^+\) au Dec-POMDP.
+\noindent \textbf{Spécifications Structurelles}~: \quad $\mathcal{SS} = \langle \mathcal{R}, \mathcal{IR}, \mathcal{G} \rangle$, où~:
+
+\begin{itemize}
+    \item $\mathcal{R}_{ss}$~: l'ensemble des rôles (notés $\rho \in \mathcal{R}$)~;
+    \item $\mathcal{IR}: \mathcal{R} \rightarrow \mathcal{R}$~: la relation d'héritage entre rôles ($\mathcal{IR}(\rho_1) = \rho_2$ signifie que $\rho_1$ hérite de $\rho_2$, noté aussi $\rho_1 \sqsubset \rho_2$)~;
+    \item $RG \subseteq GR$~: l'ensemble des groupes racines, $GR = \langle \mathcal{R}, \mathcal{SG}, \mathcal{L}^{intra}, \mathcal{L}^{inter}, \mathcal{C}^{intra}, \mathcal{C}^{inter}, np, ng \rangle$, l'ensemble des groupes, où~:
+          \begin{itemize}
+              \item $\mathcal{R} \subseteq \mathcal{R}_{ss}$~: l'ensemble des rôles non-abstraits~;
+              \item $\mathcal{SG} \subseteq \mathcal{GR}$~: l'ensemble des sous-groupes~;
+              \item $\mathcal{L} = \mathcal{R} \times \mathcal{R} \times \mathcal{TL}$~: l'ensemble des liens. Un lien est un triplet $(\rho_s,\rho_d,t) \in \mathcal{L}$ (aussi noté $link(\rho_s,\rho_d,t)$), où $\rho_s$ est le rôle source, $\rho_d$ le rôle destination, et $t \in \mathcal{TL}, \mathcal{TL} = \{acq, com, aut\}$ le type de lien~:
+                    \begin{itemize}
+                        \item $t = acq$ (acquaintance)~: les agents jouant $\rho_s$ peuvent identifier les agents jouant $\rho_d$~;
+                        \item $t = com$ (communication)~: les agents jouant $\rho_s$ peuvent communiquer avec ceux jouant $\rho_d$~;
+                        \item $t = aut$ (authority)~: les agents jouant $\rho_s$ peuvent exercer une autorité sur ceux jouant $\rho_d$. Ce lien nécessite les liens d'acquaintance et de communication.
+                    \end{itemize}
+              \item $\mathcal{L}^{intra} \subseteq \mathcal{L}$~: ensemble des liens intra-groupe~;
+              \item $\mathcal{L}^{inter} \subseteq \mathcal{L}$~: ensemble des liens inter-groupe~;
+              \item $\mathcal{C} = \mathcal{R} \times \mathcal{R}$~: l'ensemble des compatibilités. Une compatibilité est un couple $(\rho_a, \rho_b) \in \mathcal{C}$ (noté aussi $\rho_a \bowtie \rho_b$), signifiant qu'un agent jouant $\rho_a$ peut aussi jouer $\rho_b$~;
+              \item $\mathcal{C}^{intra} \subseteq \mathcal{C}$~: ensemble des compatibilités intra-groupe~;
+              \item $\mathcal{C}^{inter} \subseteq \mathcal{C}$~: ensemble des compatibilités inter-groupe~;
+              \item $np: \mathcal{R} \rightarrow \mathbb{N} \times \mathbb{N}$~: relation donnant la cardinalité du nombre d'agents par rôle~;
+              \item $ng: \mathcal{SG} \rightarrow \mathbb{N} \times \mathbb{N}$~: relation donnant la cardinalité de chaque sous-groupe.
+          \end{itemize}
+\end{itemize}
+
+\medskip
+
+\noindent \textbf{Spécifications Fonctionnelles}~: \quad $\mathcal{FS} = \langle \mathcal{SCH}, \mathcal{PO} \rangle$, où~:
+
+\begin{itemize}
+    \item $\mathcal{SCH} = \langle\mathcal{G}, \mathcal{M}, \mathcal{P}, mo, nm \rangle$~: l'ensemble des \textbf{schémas sociaux}, où~:
+          \begin{itemize}
+              \item $\mathcal{G}$~: l'ensemble des objectifs globaux~;
+              \item $\mathcal{M}$~: l'ensemble des missions~;
+              \item $\mathcal{P} = \langle \mathcal{G}, \{\mathcal{G}\}^s, OP, [0,1] \rangle, s \in \mathbb{N}^*$~: ensemble des plans qui définissent l'arbre des objectifs.
+                    Un plan $p \in \mathcal{P}$ est un 4-uplet $p = (g_f, \{g_i\}_{0 \leq i \leq s}, op, p)$, où $g_f \in \mathcal{G}$ est un objectif, les $g_i \in \mathcal{G}$ sont des sous-objectifs, $op \in OP = \{sequence, choice, parallel\}$ est un opérateur, et $p \in [0,1]$ est une probabilité de succès~:
+                    \begin{itemize}
+                        \item $op = sequence$~: les $g_i$ doivent être atteints dans un ordre précis~;
+                        \item $op = choice$~: un seul $g_i$ doit être atteint~;
+                        \item $op = parallel$~: les $g_i$ peuvent être atteints en parallèle ou séquentiellement.
+                    \end{itemize}
+              \item $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$~: relation liant une mission à un ensemble de objectifs~;
+              \item $nm: \mathcal{M} \rightarrow \mathbb{N} \times \mathbb{N}$~: cardinalité du nombre d'agents affectés à une mission.
+          \end{itemize}
+    \item $\mathcal{PO}: \mathcal{M} \times \mathcal{M}$~: ensemble des \textbf{ordres de préférence}. Un ordre de préférence est un couple $(m_1, m_2)$ (noté aussi $m_1 \prec m_2$) signifiant que si un agent peut s'engager à la fois sur $m_1$ et $m_2$, il aura une préférence sociale pour $m_1$.
+\end{itemize}
+
+\medskip
+
+\noindent \textbf{Spécifications Déontiques}~: \quad $\mathcal{DS} = \langle \mathcal{OBL}, \mathcal{PER} \rangle$, l'ensemble des spécifications déontiques, où~:
+
+\begin{itemize}
+    \item $\mathcal{TC}$~: ensemble des \textbf{contraintes temporelles}. Une contrainte $tc \in \mathcal{TC}$ indique les périodes pendant lesquelles une permission ou obligation est valide ($Any \in \mathcal{TC}$ signifie tout le temps)~;
+    \item $\mathcal{OBL}: \mathcal{R} \times \mathcal{M} \times \mathcal{TC}$~: ensemble des \textbf{obligations}. Une obligation est un triplet $(\rho_a, m, tc)$ (aussi noté $obl(\rho_a, m, tc)$), signifiant qu'un agent jouant le rôle $\rho_a$ est obligé de s'engager dans la mission $m$ pendant la période spécifiée $tc$~;
+    \item $\mathcal{PER}$~: ensemble des \textbf{permissions}. Une permission est un triplet $(\rho_a, m, tc)$ (aussi noté $per(\rho_a, m, tc)$), signifiant qu'un agent jouant le rôle $\rho_a$ est autorisé à s'engager dans la mission $m$ pendant $tc$.
+\end{itemize}
+
+\
+
+\noindent Les spécifications organisationnelles appliquées aux agents sont les rôles et les objectifs (en tant que missions) à travers les permissions ou obligations. En effet, les autres spécifications structurelles comme les compatibilités ou les liens sont inhérentes aux rôles. De même, nous considérons que les objectifs, missions et leur association ($mo$) permettent de relier les autres spécifications fonctionnelles comme les plans, les cardinalités ou les préférences.
+Par conséquent, nous considérons qu'il est suffisant de prendre en compte les rôles, les missions (objectifs et correspondance) et les permissions/obligations pour décrire l'essentiel de l'organisation d'un SMA.
 
 
 \subsection{Liaison de \(\mathcal{M}OISE^+\) avec le MARL}
@@ -408,16 +472,22 @@ Alors qu'\textit{AGR}~\cite{ferber2003} (Agent Group Role) est un cadre informel
 
 \medskip
 \noindent \textbf{Guides de Contraintes} : Trois relations décrivent la logique des rôles et objectifs dans le cadre Dec-POMDP :
-i) \textbf{Guide d'action de rôle} \(rag: H \times \Omega \to \mathcal{P}(A \times \mathbb{R})\) : Pour chaque couple \((h,\omega)\) (\(h\in H\), \(\omega\in \Omega\)), il associe un ensemble d'actions \(A_\omega \subseteq A\) avec une rigidité \(ch \in [0,1]\) (par défaut \(ch=1\)), restreignant ainsi le choix de la prochaine action ; \quad
-ii) \textbf{Guide de récompense de rôle} \(rrg: H \times \Omega \times A \to \mathbb{R}\) : Défini par \(rrg(h,\omega,a)=r_m\) si \(a \notin A_\omega\) (avec \(rag(h,\omega)=A_\omega \times \mathbb{R}\)), et 0 sinon, afin d'encourager le respect du rôle ; \quad
-iii) \textbf{Guide de récompense d'objectif} \(grg: H \to \mathbb{R}\) : Attribue un bonus \(r_b\) à la récompense globale si \(h\) contient une sous-séquence caractéristique \(h_g \in H_g\) correspondant à un objectif.
+
+\begin{itemize}
+    \item \textbf{Guide d'action de rôle} \(rag: H \times \Omega \to \mathcal{P}(A \times \mathbb{R})\) : Pour chaque couple \((h,\omega)\) (\(h\in H\), \(\omega\in \Omega\)), il associe un ensemble d'actions \(A_\omega \subseteq A\) avec une rigidité \(ch \in [0,1]\) (par défaut \(ch=1\)), restreignant ainsi le choix de la prochaine action ;
+    \item \textbf{Guide de récompense de rôle} \(rrg: H \times \Omega \times A \to \mathbb{R}\) : Défini par \(rrg(h,\omega,a)=r_m\) si \(a \notin A_\omega\) (avec \(rag(h,\omega)=A_\omega \times \mathbb{R}\)), et 0 sinon, afin d'encourager le respect du rôle ;
+    \item \textbf{Guide de récompense d'objectif} \(grg: H \to \mathbb{R}\) : Attribue un bonus \(r_b\) à la récompense globale si \(h\) contient une sous-séquence caractéristique \(h_g \in H_g\) correspondant à un objectif.
+\end{itemize}
+
 
 \medskip
 \noindent \textbf{Lieurs} : Relient les spécifications de \(\mathcal{M}OISE^+\) aux Guides de Contraintes et aux agents :
-i) \textbf{Agent vers Rôle} \(ar: \mathcal{A} \to \mathcal{R}\) (relation bijective) ; \quad
-ii) \textbf{Rôle vers Guide de Contrainte} \(rcg: \mathcal{R} \to rag \cup rrg\) : Associe à chaque rôle une relation \(rag\) ou \(rrg\) ; \quad
-iii) \textbf{Objectif vers Guide de Contrainte} \(gcg: \mathcal{G} \to grg\) : Relie chaque objectif à son guide \(grg\).
 
+\begin{itemize}
+    \item \textbf{Agent vers Rôle} \(ar: \mathcal{A} \to \mathcal{R}\) (relation bijective) ;
+    \item \textbf{Rôle vers Guide de Contrainte} \(rcg: \mathcal{R} \to rag \cup rrg\) : Associe à chaque rôle une relation \(rag\) ou \(rrg\) ;
+    \item \textbf{Objectif vers Guide de Contrainte} \(gcg: \mathcal{G} \to grg\) : Relie chaque objectif à son guide \(grg\).
+\end{itemize}
 
 \begin{figure*}[h!]
     \label{eq:single_value_function}
@@ -484,52 +554,142 @@ Le calcul de la récompense cumulative se poursuit dans \(s_{t+1}\) avec l'agent
 
 \subsection{Faciliter l'implémentation des \textbf{Guides de Contrainte}}
 
-Puisque les rôles, objectifs et missions sont de simples étiquettes, leur définition est implicite. Cependant, implémenter une relation \(rag\), \(rrg\) ou \(grg\) nécessite de définir de nombreux historiques, souvent redondants, rendant une définition extensionnelle fastidieuse. De plus, la logique de chaque \textbf{Guide de Contrainte} analyse la trajectoire de l'agent pour vérifier son appartenance à un ensemble prédéfini. Par exemple, \(rag\) détermine les actions attendues selon l'appartenance de la trajectoire à un ensemble donné et la nouvelle observation.
+Puisque les rôles, objectifs et missions sont de simples étiquettes, leur définition est implicite. Cependant, implémenter une relation \(rag\), \(rrg\) ou \(grg\) nécessite de définir de nombreux historiques, souvent redondants, rendant une définition extensionnelle fastidieuse et peu évolutive. De plus, la logique de chaque \textbf{Guide de Contrainte} repose sur l’analyse de trajectoires d’agents : pour chaque historique observé, il faut décider s’il appartient à un ensemble d’historiques attendus et quelles conséquences en tirer (masquage d’actions, ajout de pénalités ou de bonus de récompense). Par exemple, \(rag\) restreint les actions disponibles selon l’appartenance de la trajectoire courante à un ensemble \(H_g\) et la nouvelle observation.
 
-Une approche consiste à laisser l'utilisateur définir ses \textbf{Guides de Contrainte} via une logique personnalisée (par script, par exemple). Dans ce cas, la relation \(b_g: H \to \{0,1\}\) formalise la décision d'appartenance d'un historique à un ensemble \(H_g\).
-Pour simplifier l'implémentation, nous proposons un \textit{Trajectory-based Pattern} (TP), inspiré du Traitement Automatique du Langage, noté \(p \in P\), permettant de définir intentionnellement un ensemble d'historiques.
+Une première approche consiste à laisser l’utilisateur définir ces guides par une logique procédurale (scripts Python ou règles spécifiques). Dans ce cas, la relation \(b_g: H \to \{0,1\}\) formalise la décision d’appartenance d’un historique à un ensemble \(H_g\). Cette solution est flexible, car elle peut exploiter la totalité du contexte disponible (positions spatiales, états internes, séquences passées). Toutefois, elle reste coûteuse à écrire et à maintenir, et conduit souvent à des définitions très verbeuses.
 
-Un TP implique que toute observation ou action réelle considérée est connue et associée à une étiquette \(l \in L\) (via \(l: \Omega \cup A \to L\)) afin d'être gérée de manière pratique. Un TP \(p \in P\) est défini comme suit : \(p\) est soit une « séquence feuille » notée comme un couple historique-cardinalité \(s_l = \langle h, \{c_{min}, c_{max}\} \rangle\) (où \(h \in H\), \(c_{min} \in \mathbb{N}\), \(c_{max} \in \mathbb{N} \cup \{``*"\}\)) ; soit une « séquence nœud » notée comme un couple composé d'un tuple de séquences et d'une cardinalité \(s_n = \langle \langle s_{l_1}, s_{l_2}, \dots \rangle, \{c_{min}, c_{max}\} \rangle\). Par exemple, le pattern
-$
+Pour dépasser cette limite, nous introduisons les \textit{Trajectory-based Patterns} (TPs), inspirés du Traitement Automatique du Langage. L’idée est de fournir un formalisme déclaratif compact permettant d’exprimer des comportements attendus comme des motifs temporels. Un TP \(p \in P\) correspond ainsi à un patron qui capture un ensemble d’historiques de manière intentionnelle. Chaque observation ou action est associée à une étiquette \(l \in L\) (via \(l: \Omega \cup A \to L\)), ce qui rend la manipulation pratique et indépendante des détails bas-niveau de l’environnement.
+
+Formellement, un TP \(p\) peut être :
+\begin{itemize}
+    \item une \textbf{séquence feuille} \(s_l = \langle h, \{c_{min}, c_{max}\} \rangle\), où \(h \in H\) désigne une sous-séquence observation/action et \(\{c_{min}, c_{max}\}\) fixe le nombre de répétitions autorisées ;
+    \item une \textbf{séquence nœud} \(s_n = \langle \langle s_{l_1}, s_{l_2}, \dots \rangle, \{c_{min}, c_{max}\} \rangle\), combinant plusieurs séquences en un motif hiérarchique.
+\end{itemize}
+
+Par exemple, le pattern
+\[
     p = ``[o_1,a_1,[o_2,a_2]\langle0,2\rangle]\langle1,*\rangle"
-$
-peut être formalisé comme la séquence nœud
-$
-    \langle \langle \langle o_1,a_1\rangle,\langle 1,1 \rangle \rangle, \langle \langle o_2,a_2\rangle,\langle 0,2 \rangle \rangle \rangle \langle 1,``*"\rangle,
-$
-indiquant l'ensemble des historiques \(H_p\) contenant au moins une fois la sous-séquence constituée d'une première paire \(\langle o_1,a_1\rangle\) suivie d'au maximum deux répétitions de la paire \(\langle o_2,a_2\rangle\).
+\]
+se lit comme suit : un historique valide doit contenir au moins une occurrence de la paire \(\langle o_1,a_1\rangle\), suivie de zéro à deux occurrences de \(\langle o_2,a_2\rangle\). Ce TP capture donc une famille entière de comportements, sans avoir à lister tous les historiques un par un.
 
-% La relation \(b_g\) devient alors 
-% $
-% b_g(h) = m(p_g,h), \quad \text{avec } m: P \times H \to \{0,1\},
-% $
-% indiquant si un historique \(h \in H\) correspond à un pattern d'historique \(p \in P\) décrivant un ensemble d'historiques \(H_g\).
+La relation de correspondance est alors définie par :
+\[
+    b_g(h) = m(p_g,h), \quad \text{avec } m: P \times H \to \{0,1\},
+\]
+où \(m(p_g,h)\) indique si un historique \(h \in H\) satisfait le pattern \(p_g \in P\).
+
+L’intérêt des TPs est double :
+\begin{enumerate}
+    \item Ils permettent de \textbf{coder de manière compacte} des comportements étendus dans le temps, difficiles à exprimer autrement.
+    \item Ils facilitent la \textbf{réutilisation et la lisibilité}, puisque les mêmes motifs peuvent être partagés entre plusieurs rôles ou objectifs.
+\end{enumerate}
+
+\paragraph{Exemple concret.} Considérons l’environnement \textit{Overcooked-AI}, où des agents cuisiniers doivent collaborer en se déplaçant dans un monde en grille et interagir avec les ingrédient (oignons) et les instruments (pots, bols) pour faire de la soupe qui est expédiée en interagissant avec la zone d'expedition. Ici, l’on souhaite reconnaître le comportement suivant : \textquote{un agent qui détient un oignon, observe un pot et interagit avec lui pour le remplir}. Ce comportement peut être exprimé par le TP suivant :
+\[
+    p = [\#any](*) , \; has\_onion , \; [\#any](*) , \; see\_pot , \; interact \;(1,1)
+\]
+
+Une fois ce TP reconnu, il peut être exploité dans les guides de contrainte comme suit :
+
+\begin{table}[h]
+    \centering
+    \caption{Exemple de guides appliqués au TP ``remplir un pot avec un oignon''.}
+    \label{tab:tp_guides_example}
+    \scriptsize
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{p{2.5cm}p{8cm}}
+        \hline
+        \textbf{Guide}                   & \textbf{Exemple de règle}                                                       \\
+        \hline
+        \textbf{RAG} (Role Action Guide) & Si le TP est satisfait, restreindre les actions possibles :
+        \[
+            rag(h,\omega) = \{\texttt{interact} \mapsto 1.0, \;\texttt{nothing} \mapsto 0.2\}
+        \]
+        L’action \texttt{interact} est fortement favorisée.                                                                \\
+        \hdashline
+        \textbf{RRG} (Role Reward Guide) & Ajouter un bonus de rôle lorsque l’action attendue est réalisée :
+        \[
+            rrg(h,\omega,a) =
+            \begin{cases}
+                +3 & \text{si } a = \texttt{interact} \\
+                0  & \text{sinon}
+            \end{cases}
+        \]                                                                                                                 \\
+        \hdashline
+        \textbf{GRG} (Goal Reward Guide) & Accorder une récompense d’équipe lorsque le TP est détecté (objectif atteint) :
+        \[
+            grg(h) =
+            \begin{cases}
+                +5 & \text{si le pot est rempli (TP reconnu)} \\
+                0  & \text{sinon}
+            \end{cases}
+        \]                                                                                                                 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Ainsi, au lieu de définir extensionnellement de vastes ensembles \(H_g\), l’utilisateur décrit quelques motifs symboliques qui capturent l’essence des comportements recherchés. MOISE+MARL applique alors automatiquement ces motifs aux guides (\(rag, rrg, grg\)), rendant leur mise en œuvre plus modulaire, scalable et interprétable.
+
 
 \section{La méthode TEMM}
 \label{sec:TEMM_algorithm}
 
-Comme indiqué en \autoref{sec:related_works}, aucun travaux ne répond pleinement à nos exigences pour déterminer les rôles et objectifs implicites ainsi que l'adéquation organisationnelle. Nous proposons donc la méthode \textit{Trajectory-based Evaluation in MOISE+MARL} (TEMM) pour inférer des spécifications comme des rôles ou des missions.
+Comme indiqué en \autoref{sec:related_works}, aucun travaux ne répond pleinement à nos exigences pour déterminer les rôles et objectifs implicites ainsi que l'adéquation organisationnelle. Nous proposons donc la méthode \textit{Trajectory-based Evaluation in MOISE+MARL} (TEMM), qui vise à \textbf{extraire automatiquement des spécifications organisationnelles implicites à partir des trajectoires d’agents entraînés}, et à les évaluer au regard des concepts de \(\mathcal{M}OISE^+\).
 
-TEMM repose sur l'apprentissage non supervisé pour généraliser ces spécifications à partir des trajectoires collectées lors de multiples épisodes. En quantifiant l'écart entre les spécifications implicites inférées et les comportements observés, TEMM mesure l'adéquation organisationnelle, c'est-à-dire la conformité d'une politique aux spécifications inférées. TEMM repose sur des définitions propres à chaque spécification organisationnelle de \(\mathcal{M}OISE^+\) (historiques conjoints, etc.), inférées progressivement via des techniques non supervisées. Une description informelle est disponible~\hyperref[fn:github]{\footnotemark[2]}.
+On suppose qu'une politique d'agent donnée peut être décrite au moins partiellement par un rôle et un ensemble d'objectifs (missions) qu'il cherche à atteindre. Ainsi, bien que les trajectoires d'un agent entraîné peuvent sembler différentes, notre hypothèse est qu'elles peuvent être regroupées par similarité à un nombre limité de trajectoires typiques issues de l’exécution du rôle et des objectifs implicites à la politique de l'agent. Elle repose sur l’hypothèse que les comportements des agents, malgré une variabilité apparente, présentent des régularités lorsqu'ils atteignent des récompenses cumulées comparables. En d'autres mots, des comportements différents peuvent être interprétés comme des variantes bruitées d'un nombre limité de stratégies. D’après la loi des grands nombres, une analyse moyennant de nombreuses trajectoires d'agents permet de reveler des trajectoires typiques supposées comme les plus proches des trajectoires issues de l'exécution d'un rôle et d'objectifs implicites.
 
-\footnotetext[2]{L'implémentation \textquote{MOISE+MARL API} (MMA), les hyperparamètres et spécifications utillisés sont disponibles à \url{https://github.com/julien6/MOISE-MARL}.}
+Pour exploiter cette hypothèse, TEMM repose sur l’apprentissage non supervisé pour généraliser ces spécifications à partir des trajectoires collectées lors de multiples épisodes. En quantifiant l’écart entre les spécifications inférées et les comportements observés, TEMM définit une \textbf{mesure d’adéquation organisationnelle} reliant comportements empiriques et modèles organisationnels.
+%
+Une description visuelle de cette méthode est fournie à la figure~\ref{fig:temm_overview}~\hyperref[fn:github]{\footnotemark[2]}.
 
-\noindent\textbf{1) Inférence des rôles et héritage} \\
-Un rôle \(\rho\) est défini comme une politique dont l'historique contient une Séquence Commune la Plus Longue (SCL). Un rôle \(\rho_2\) hérite de \(\rho_1\) si sa SCL est incluse dans celle de \(\rho_1\). TEMM emploie le clustering hiérarchique pour extraire ces SCL, représentées sous forme de dendrogramme, et mesure l'écart entre les séquences actuelles et inférées, définissant ainsi l'adéquation organisationnelle structurelle.
+\begin{figure*}
+    \centering
+    \resizebox{\textwidth}{!}{%
+        \input{figures/temm_overview.tex}
+    }
+    \caption{\textbf{Vue d'ensemble de la méthode TEMM} : À partir des trajectoires collectées, TEMM applique un clustering hiérarchique pour inférer les rôles et leurs hiérarchies (1), puis construit des graphes de transitions pour chaque historique conjoint (2). Ces graphes sont fusionnés et regroupés via K-means pour identifier des objectifs implicites (3). Enfin, TEMM évalue l'adéquation organisationnelle structurelle et fonctionnelle en comparant les spécifications inférées aux comportements observés (4).}
+    \label{fig:temm_overview}
+\end{figure*}
 
-\noindent\textbf{2) Inférence des objectifs, plans et missions} \\
-Un objectif correspond à un ensemble d'observations conjointes communes, atteint via les historiques d'agents performants. TEMM construit pour chaque historique conjoint un graphe de transition, fusionne ces graphes et, à l'aide de K-means, identifie des groupes de trajectoires. Les ensembles d'observations restreints extraits pour chaque groupe sont considérés comme des objectifs implicites, permettant d'inférer les plans sur la base des choix et séquences. Une mission est définie comme l'ensemble des objectifs réalisés par un ou plusieurs agents, et la distance entre les objectifs inférés et l'observation conjointe actuelle permet de calculer l'adéquation organisationnelle fonctionnelle.
+\footnotetext[2]{L'implémentation \textquote{MOISE+MARL API} (MMA), les hyperparamètres et spécifications utilisés sont disponibles à \url{https://github.com/julien6/MOISE-MARL}.~\label{fn:github}}
 
-\noindent\textbf{3) Inférence des obligations et permissions} \\
-Une obligation se produit lorsqu'un agent, jouant le rôle \(\rho\), réalise exclusivement les objectifs d'une mission dans un intervalle donné, tandis qu'une permission permet d'atteindre d'autres objectifs sous conditions. TEMM identifie l'association agent-mission et détermine si l'agent est contraint (obligation) ou bénéficie de flexibilité (permission). L'adéquation organisationnelle globale est la somme de l'adéquation structurelle et fonctionnelle.
+\subsection*{1) Inférence des rôles et hiérarchie de rôles}
+Un rôle \(\rho\) est défini comme une politique dont l’historique contient une séquence commune. L’héritage entre rôles est établi lorsqu’un rôle \(\rho_2\) présente une séquence commune incluse dans celle de \(\rho_1\).
+\begin{itemize}
+    \item \textbf{Préparation des trajectoires.} Compte tenu du fait que pour un agent, les actions sont souvent catégorielles, TEMM les \textit{one-hot encode} et les concatène aux observations, puis concatène ces transitions en un seul vecteur représentant la trajectoire complète de l'agent.
+    \item \textbf{Extraction.} TEMM emploie un \textit{clustering hiérarchique} appliqué aux trajectoires préparées en utilisant divers métriques comme Euclidien, Smith-Waterman, cosine, etc. Cela permet d'identifier des clusters de trajectoires par leur similarité et ainsi calculer les centroides de chaque cluster, révelant des motifs récurrents de transition de type observation $\rightarrow$ action. Ces transitions sont comme les règles de comportements caractéristiques du rôle abstrait.
+    \item \textbf{Représentation.} Le clustering établi précédement peut également être représenté sous forme de dendrogrammes où les rôles apparaissent alors représentés au niveau des noeuds et se trouve alors hiérarchisés par rapport aux noeuds supérieurs.
+    \item \textbf{Évaluation.} L’adéquation organisationnelle structurelle est mesurée comme la moyenne inverse normalisée des variances des centroides de chaque cluster.
+\end{itemize}
 
-Globalement, bien que le K-means et le clustering hiérarchique requièrent une configuration manuelle pour éviter les erreurs, TEMM recommande de vérifier et d'ajuster manuellement les rôles et objectifs obtenus pour éliminer les perturbations éventuelles.
+\subsection*{2) Inférence des objectifs, plans et missions}
+Les objectifs sont définis comme des ensembles d’observations conjointes communes atteints par des agents performants.
+\begin{itemize}
+    \item \textbf{Préparation des trajectoires.} Pour un historique d'un agent donné, TEMM construit un vecteur des observations que l'agent reçoit au long de leur évolution.
+    \item \textbf{Extraction.} Ces vecteurs sont clusterisés en utilisant divers distances, afin d’identifier des clusters de trajectoires d'observations. Cela permet de déterminer les centroides de chaque cluster, représentant des ensembles d’observations typiques atteints par les agents. La fréquence d'apparition de certaines observations (i.e la variance du centroide à un point donné) révèle la pertinence de ces observations à les considerer comme des objectifs implicites intermediaires par lesquels les agents passent pour atteindre l'objectif final.
+    \item \textbf{Représentations.} De la même façon que pour l'inférence de rôle, une représentation sous forme de dendrogrammes permet de visualier les objectifs récurrents au niveau des noeuds tandis que les noeuds supérieurs montre des observations plus partagées, interpretables comme plus générales. Une autre visualisation possible est l'analyse par composante principale qui montre visuellement les trajectoires d'agents dans un espace réduit à deux dimmensions.
+    \item \textbf{Missions.} Une mission est alors déterminé comme l'ensemble des objectifs d'un agent.
+\end{itemize}
+L’adéquation organisationnelle fonctionnelle est alors obtenue comme la moyenne inverse normalisée des variances des centroides des clusters.
+
+\subsection*{3) Inférence des obligations et permissions}
+Les obligations et permissions constituent la dimension déontique de l’organisation.
+\begin{itemize}
+    \item \textbf{Obligation.} Un agent jouant le rôle \(\rho\) est dit sous obligation s’il réalise exclusivement les objectifs d’une mission dans un intervalle donné.
+    \item \textbf{Permission.} Une permission est identifiée lorsqu’un agent peut atteindre des objectifs alternatifs sans remettre en cause l’organisation.
+\end{itemize}
+L’adéquation organisationnelle globale est la moyenne de la composante structurelle (rôles) et de la composante fonctionnelle (objectifs/missions), pondérées selon les spécifications organisationnelles de \(\mathcal{M}OISE^+\).
+
+\medskip
+
+Cependant, TEMM présente aussi certaines limites : les algorithmes de clustering (K-means, hiérarchique) requièrent une paramétrisation manuelle (nombre de clusters, seuils de similarité), introduisant un biais potentiel ; les rôles et objectifs inférés nécessitent souvent une validation experte pour éliminer les artefacts liés au bruit des trajectoires ; la méthode reste sensible à la qualité et diversité des trajectoires, et son efficacité peut être limitée dans des environnements à faible variance comportementale.
 
 
 \section{Cadre expérimental}
 \label{sec:experimental_setup}
 
 Cette section détaille le cadre expérimental utilisé pour évaluer le cadre MOISE+MARL.
+
 
 \subsection{Implémentation de MOISE+MARL}
 
@@ -572,11 +732,11 @@ iv) \textbf{COMA (Counterfactual Multi-Agent)}~\cite{foerster2018counterfactual}
 
 Pour chaque environnement, nous avons défini un ensemble de spécifications organisationnelles. Ces spécifications comprennent les rôles, les missions, ainsi que les permissions et obligations. Voici une description informelle de ces spécifications~\hyperref[fn:github]{\footnotemark[2]} :
 %
-i) \textbf{Predator-Prey} : Des rôles de prédateur et de proie sont définis, chaque prédateur ayant des objectifs spécifiques tels que « capturer la proie » ou « bloquer les voies d'évasion »
+i) \textbf{Predator-Prey} : Des rôles de prédateur et de proie sont définis, chaque prédateur ayant des objectifs spécifiques tels que \textquote{capturer la proie} ou \textquote{bloquer les voies d'évasion}
 ; \quad
 ii) \textbf{Overcooked-AI} : Les agents adoptent trois rôles principaux : chef, assistant et serveur. Le chef est responsable de la cuisson et de l'assemblage des plats, l'assistant s'occupe de la découpe et de l'approvisionnement en ingrédients, et le serveur se charge de la livraison des plats aux clients. Les missions consistent principalement à préparer et à servir un nombre déterminé de plats dans un délai imparti
 ; \quad
-iii) \textbf{Warehouse Management} : Les agents adoptent des rôles tels que « transporteur » et « gestionnaire d'inventaire », avec des missions liées à la gestion des flux logistiques et à l'optimisation des livraisons
+iii) \textbf{Warehouse Management} : Les agents adoptent des rôles tels que \textquote{transporteur} et \textquote{gestionnaire d'inventaire}, avec des missions liées à la gestion des flux logistiques et à l'optimisation des livraisons
 ; \quad
 iv) \textbf{Cyber-Defense Simulation} : Les agents occupent des rôles de défenseurs de réseau, avec des obligations telles que la détection d'intrusions, la levée d'alertes aux autres agents pour proteger l'essaim de drones.
 
