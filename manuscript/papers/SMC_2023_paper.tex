@@ -72,7 +72,7 @@ En outre, compte tenu des cyberdéfenseurs et des cyberattaquants déployés dan
 La principale contribution est un modèle de simulation dont l'intérêt principal est de fournir un cadre commun pour mettre en œuvre et évaluer différents types d'agents cyberdéfenseurs et cyberattaquants sur les mêmes environnements en réseau. L'intégration de scénarios d'attaque existants dans les cyberattaquants vise à évaluer l'efficacité des agents, à analyser ou visualiser leurs différents comportements, à former des agents de cyberdéfense contre les agents de cyberattaque, etc. En outre, elle permet de repérer les causes de dysfonctionnements ou de mauvaises performances et d'améliorer les agents cyberdéfenseurs. Bien que cela puisse soulever plusieurs défis liés à l'IA, tels que la génération d'environnements réseau, l'article se concentre particulièrement sur l'apprentissage multi-agents et la prise de décision collective.
 
 % Résultats et conclusion
-La section II donne un aperçu des travaux pertinents traitant des aspects de la modélisation des cyberattaquants et des agents de cyberdéfense dans les systèmes hôtes en réseau. La section III présente la modélisation abstraite pour la simulation, sa mise en œuvre technique et son utilisation pour l'intégration et l'évaluation de scénarios d'attaque/défense. Dans la section IV, nous présentons une étude de cas basée sur MITRE ATT\&amp;CK~\cite{MITREATTACKWebiste} et sa mise en œuvre complète dans le simulateur sous la forme d'un scénario d'attaque/défense pour les cyberattaquants et les cyberdéfenseurs. Elle présente également les résultats de l'exécution des scénarios afin d'évaluer la pertinence de la simulation. La section V conclut sur les limites à surmonter et les perspectives d'avenir.
+La section II donne un aperçu des travaux pertinents traitant des aspects de la modélisation des cyberattaquants et des agents de cyberdéfense dans les systèmes hôtes en réseau. La section III présente la modélisation abstraite pour la simulation, sa mise en œuvre technique et son utilisation pour l'intégration et l'évaluation de scénarios d'attaque/défense. Dans la section IV, nous présentons une étude de cas basée sur MITRE ATT\&CK~\cite{MITREATTACKWebiste} et sa mise en œuvre complète dans le simulateur sous la forme d'un scénario d'attaque/défense pour les cyberattaquants et les cyberdéfenseurs. Elle présente également les résultats de l'exécution des scénarios afin d'évaluer la pertinence de la simulation. La section V conclut sur les limites à surmonter et les perspectives d'avenir.
 
 % \rem{On voit pas le lien avec ce qui est dit avant ; Cette section doit faire écho avec ce qui est dit dans l'environnement : modéliser un environnement avec des agents d'attaque/défense, modéliser les attaques/défense, etc.}
 % \rem{Pourquoi avoir choisi chacun des éléments pour ces besoins... ?}
@@ -148,16 +148,16 @@ Les principales caractéristiques de cette description englobent des notions tel
 \noindent
 D'un point de vue global, le modèle Dec-POMDP proposé exprime l'état d'un environnement comme l'ensemble des propriétés des nœuds, y compris les propriétés observables des agents. Nous définissons une propriété comme un couple composé d'un identifiant et d'une valeur. L'état de l'environnement est modifié lorsqu'une action est appliquée par un agent. Une action ne peut être appliquée que si la condition préalable booléenne basée sur les propriétés est satisfaite dans l'état actuel de l'environnement. L'état résultant est ensuite modifié en fonction de la post-condition, ce qui conduit finalement à l'ajout de certaines nouvelles propriétés et à la suppression d'autres propriétés. Une fois qu'une action a été appliquée avec succès par un agent, les propriétés observables du même agent lui sont renvoyées sous forme d'observations issues de ce nouvel état. Une récompense est également calculée en fonction de l'état actuel et renvoyée à l'agent. Un agent est choisi pour être modélisé comme une fonction de comportement qui doit sélectionner la prochaine action à effectuer en fonction des observations et des récompenses reçues.
 
-Il existe différentes façons d'exécuter plusieurs agents dans un même environnement en ajustant le nombre d'agents à exécuter dans un intervalle de temps et le nombre d'actions à jouer par un agent dans un intervalle de temps. Même si cela n'est pas réaliste, nous avons choisi le \textquote{cycle d'environnement d'agent}~\cite{jk2020} comme première approximation en faisant jouer plusieurs agents une action à chaque tour de manière cyclique et séquentielle. Le cycle d'itération est présenté à travers une vue informelle illustrative du modèle de simulation dans la figure~\ref{fig:model_example_illustration}. Elle montre $i$ nœuds avec leurs propriétés, y compris celles observées par les $m$ agents, et comment chacune des $j$ actions disponibles associe un ensemble de propriétés préalables à un sous-ensemble de nouvelles propriétés à ajouter à l'environnement, en supprimant éventuellement les propriétés obsolètes ayant les mêmes identifiants que les nouvelles propriétés : \begin{enumerate*}[label=\arabic*),itemjoin={;\quad}]     
+Il existe différentes façons d'exécuter plusieurs agents dans un même environnement en ajustant le nombre d'agents à exécuter dans un intervalle de temps et le nombre d'actions à jouer par un agent dans un intervalle de temps. Même si cela n'est pas réaliste, nous avons choisi le \textquote{cycle d'environnement d'agent}~\cite{jk2020} comme première approximation en faisant jouer plusieurs agents une action à chaque tour de manière cyclique et séquentielle. Le cycle d'itération est présenté à travers une vue informelle illustrative du modèle de simulation dans la figure~\ref{fig:model_example_illustration}. Elle montre $i$ nœuds avec leurs propriétés, y compris celles observées par les $m$ agents, et comment chacune des $j$ actions disponibles associe un ensemble de propriétés préalables à un sous-ensemble de nouvelles propriétés à ajouter à l'environnement, en supprimant éventuellement les propriétés obsolètes ayant les mêmes identifiants que les nouvelles propriétés : \begin{enumerate*}[label=\arabic*),itemjoin={;\quad}]
     \item Un agent choisit une action parmi ses observations précédentes et les récompenses en fonction d'une fonction de comportement. Dans la figure~\ref{fig:model_example_illustration}, lorsque $Agent_1$ commence son premier tour, il ne reçoit que les observations initiales ($p_{1}$) et zéro récompense, et choisit $Action_1$
 
 
-    
+
     \item L'environnement est mis à jour par une fonction de transition qui dépend de l'état actuel et de l'action entreprise par l'agent (changement des propriétés une fois que la condition préalable est remplie). Une action est utilisée pour modifier les propriétés de l'environnement en mettant à jour la relation entre les identifiants de propriétés et les valeurs de propriétés.
     Par exemple, dans la figure~\ref{fig:model_example_illustration}, dans l'état actuel, les propriétés de $Node_1$ sont $p_1,p_3,p_4,p_2,p_9$. Lorsque l'action $Action_1$ est appliquée, la relation associe les sous-ensembles $\{p_3\}$ ou $\{p_4, \allowbreak p_{10}\}$ à $\{p_{15}, \allowbreak p_{14}, \allowbreak p_{11}\}$. La condition préalable basée sur les propriétés peut être comprise comme $p_3 \lor (p_4 \land p_{10})$. Comme $p_{15}$ et $p_{14}$ sont identifiés par $ID_4$ et $ID_2$ qui définissent déjà respectivement $p_{2}$ et $p_{4}$, $p_{4}$ et $p_{2}$ sont supprimés et $p_{11}$ et $p_{14}$ sont ajoutés ($p_{15}$ n'est pas ajouté car $id_2$ n'est associé à aucune valeur)
 
 
-    
+
     \item Les propriétés observées sont renvoyées à l'agent exécutant actuel pour son prochain tour. Dans la figure~\ref{fig:model_example_illustration}, $p_{11}$ et $p_1$ sont renvoyés après l'application de $Action_1$.
 
 \end{enumerate*}
@@ -173,27 +173,27 @@ Nous définissons les éléments liés aux propriétés des nœuds, des agents e
 \begin{itemize}
 
     \item $Ag = \{ag_1,..,ag_{|Ag|}\}$ : ensemble des agents (cyberattaquants et cyberdéfenseurs).
-    % \begin{itemize}
-    %     \item Avec $Attackers \subseteq Ag$ : l'ensemble des agents attaquants
-    %     \item Avec $Defenders \subseteq Ag$ : l'ensemble des agents défenseurs
-    % \end{itemize}
+          % \begin{itemize}
+          %     \item Avec $Attackers \subseteq Ag$ : l'ensemble des agents attaquants
+          %     \item Avec $Defenders \subseteq Ag$ : l'ensemble des agents défenseurs
+          % \end{itemize}
 
     \item Nous appelons le couple $p = (id_{j}, v_{j})$ avec $id_j \in {ID}$ et $v_j \in V$, une propriété.
-    \begin{itemize}
-        \item $ID$ : l'ensemble des identifiants de propriétés indiquant éventuellement comment les propriétés sont organisées dans une structure de données non plate (telle que $PC1.processes.agents.agent1$). Ces identifiants de propriétés peuvent être utilisés pour un chemin d'accès à un fichier, le type de système d'exploitation utilisé dans un nœud, une ligne de commande utilisée par un agent\dots
-        \item $V$ : Ensemble des valeurs de propriétés. Celles-ci peuvent inclure le contenu d'un fichier, une description complète du système d'exploitation, le résultat d'une ligne de commande\dots
-        % \item $Valeurs : ID \rightarrow \mathcal{P}(V) = \{(id_{j}, V_{j}) \: | \: id_j \in {ID},$ $V_j \in \mathcal{P}(V)\}$ : une bijection associant un identifiant de propriété à l'ensemble des différentes valeurs auxquelles il peut être associé. Par exemple, l'identifiant $ls\_command\_output$ peut être associé aux valeurs suivantes $\{file.txt,\{file.txt,passwd.txt\}\}$
-    \end{itemize}
+          \begin{itemize}
+              \item $ID$ : l'ensemble des identifiants de propriétés indiquant éventuellement comment les propriétés sont organisées dans une structure de données non plate (telle que $PC1.processes.agents.agent1$). Ces identifiants de propriétés peuvent être utilisés pour un chemin d'accès à un fichier, le type de système d'exploitation utilisé dans un nœud, une ligne de commande utilisée par un agent\dots
+              \item $V$ : Ensemble des valeurs de propriétés. Celles-ci peuvent inclure le contenu d'un fichier, une description complète du système d'exploitation, le résultat d'une ligne de commande\dots
+                    % \item $Valeurs : ID \rightarrow \mathcal{P}(V) = \{(id_{j}, V_{j}) \: | \: id_j \in {ID},$ $V_j \in \mathcal{P}(V)\}$ : une bijection associant un identifiant de propriété à l'ensemble des différentes valeurs auxquelles il peut être associé. Par exemple, l'identifiant $ls\_command\_output$ peut être associé aux valeurs suivantes $\{file.txt,\{file.txt,passwd.txt\}\}$
+          \end{itemize}
 
     \item $P_{j} = \{ p_1, .., p_{|P_{j}|} \}$ : l'ensemble des propriétés $p_{l}$ (avec $l \in \{1,..,|P_{j}|\}$) du nœud $j$ ($j \in \mathbb{N} $). Par exemple, ces propriétés peuvent inclure certains identifiants de processus en cours d'exécution, la liste des fichiers d'un dossier, le type de système d'exploitation avec une description, des connaissances spécifiques d'un agent, etc.
-    \begin{itemize}
-        \item $P = P_1 \cup P_2 .. \cup P_{|P|} $ : Ensemble de toutes les propriétés des nœuds.
-    \end{itemize}
+          \begin{itemize}
+              \item $P = P_1 \cup P_2 .. \cup P_{|P|} $ : Ensemble de toutes les propriétés des nœuds.
+          \end{itemize}
 
     \item $Obs : \mathcal{P}(P) \times Ag \rightarrow \mathcal{P}(P_{Ag}), P_{Ag} \subset P$ : Relation qui associe les propriétés des nœuds et un agent au sous-ensemble de propriétés observées par l'agent.
 
 
-    
+
     \item $Action : P_{pre} \rightarrow P_{post}$ : Relation qui associe un sous-ensemble de propriétés implicite dans une pré-condition booléenne conjonctive équivalente ($P_{pre} \subset \mathcal{P}(P)$) à un sous-ensemble de toutes les propriétés de la post-condition ($P_{post} \in \mathcal{P}(P)$). Par exemple, les propriétés $p_1 = (agent\_X\_privilege\_level, \allowbreak root)$, $p_2 = (agent\_X\_accessed\_text\_editor, \allowbreak Vim)$ et $p_3 = (agent\_X\_bashrc\_known\_filepath, \allowbreak /home/user/.bashrc)$ peuvent former une pré-condition ($p_1 \land p_2 \land p_3$) pour associer un nouvel ensemble de propriétés contenant $p4 = (bashrc\_file\_modified\_by\_X\_agent, \top)$. Deux sous-ensembles de pré-conditions peuvent être associés au même sous-ensemble de post-conditions pour modéliser une disjonction booléenne.
 
     \item $Metrics: \mathcal{P}(P) \times A \rightarrow \mathbb{R}^{n}$ : donne des métriques associées à un ensemble de propriétés et à une action conjointe. Par exemple, le nombre de nœuds encore actifs, les mouvements latéraux, etc.
@@ -209,31 +209,31 @@ En utilisant la description formelle d'un Dec-POMDP~\cite{OliehoekA16}, nous pro
     \item $A_{i} = \{a_{i}^{1},..,a_{i}^{|A_{i}|}\}, a_{i}^j \in Action \: et \: 1 \le j \le |A_i|$ : l'ensemble des actions possibles pour l'agent $i$.
 
     \item $T$ : Ensemble des probabilités de transition conditionnelles entre les états
-    \begin{itemize}
-        \item Avec $T(s,a,s') = \probP(s'|s,a)$, la relation qui associe la probabilité d'aller de l'état $s \in S$ à l'état $s' \in S$ sachant que nous avons joué $a = (P^a_{pre} \times P^a_{post}) \in A$ avec $P^a_{pre} \subset \mathcal{P}(P)$ et $P^a_{post} \in \mathcal{P}(P)$
-        \item Avec $\probP(s'|s,a) = 0$ si $s$ ne satisfait pas la condition préalable de $a$ (c'est-à-dire $\exists \: P_{pre_s}^{a} \in P_{pre}^{a} \: | \: P_{pre_s}^{a} \not\in \mathcal{P}(s)$).
-        \item Avec $s' = (s - \{p_l=(id_l, v_l) \: | \: p_l \in s \: et$ $id_l \in \{id_k \: | \: (id_k, v_k) \in P^a_{post} \: et \: v_k \neq \varnothing\}\}) \cup P^a_{post}$
-    \end{itemize}
+          \begin{itemize}
+              \item Avec $T(s,a,s') = \probP(s'|s,a)$, la relation qui associe la probabilité d'aller de l'état $s \in S$ à l'état $s' \in S$ sachant que nous avons joué $a = (P^a_{pre} \times P^a_{post}) \in A$ avec $P^a_{pre} \subset \mathcal{P}(P)$ et $P^a_{post} \in \mathcal{P}(P)$
+              \item Avec $\probP(s'|s,a) = 0$ si $s$ ne satisfait pas la condition préalable de $a$ (c'est-à-dire $\exists \: P_{pre_s}^{a} \in P_{pre}^{a} \: | \: P_{pre_s}^{a} \not\in \mathcal{P}(s)$).
+              \item Avec $s' = (s - \{p_l=(id_l, v_l) \: | \: p_l \in s \: et$ $id_l \in \{id_k \: | \: (id_k, v_k) \in P^a_{post} \: et \: v_k \neq \varnothing\}\}) \cup P^a_{post}$
+          \end{itemize}
 
 
-    
+
     \item $R : S \times A \rightarrow \mathbb{R}^2 = Eval \circ Metrics$ : La fonction de récompense qui prend un état et une action et associe un indicateur de performance (à l'aide des métriques de l'état) pour les attaquants et les défenseurs.
-    \begin{itemize}
-        \item Avec $Eval : \mathbb{R}^{n} \rightarrow \mathbb{R}^2$, associe un vecteur métrique à une récompense pour les cyberattaquants et les cyberdéfenseurs.
-    \end{itemize}
+          \begin{itemize}
+              \item Avec $Eval : \mathbb{R}^{n} \rightarrow \mathbb{R}^2$, associe un vecteur métrique à une récompense pour les cyberattaquants et les cyberdéfenseurs.
+          \end{itemize}
 
 
-    
+
     \item $\Omega_{i} \subset Range(Obs \: | \: \{ (s, ag_i) | s \in S \: et \: ag_i \in Ag \}) \subset P$ : ensemble des propriétés observables pour l'agent $ag_i$. Par exemple, le contenu d'un fichier, la sortie du journal d'une commande, le résultat d'un scan de port, etc.
-    \begin{itemize}
-        \item $\Omega = \Omega_1 \cup \Omega_2 .. \cup \Omega_{|Ag|} = Range(Obs)$ : Ensemble de toutes les propriétés observables pour tous les agents.
-    \end{itemize}
+          \begin{itemize}
+              \item $\Omega = \Omega_1 \cup \Omega_2 .. \cup \Omega_{|Ag|} = Range(Obs)$ : Ensemble de toutes les propriétés observables pour tous les agents.
+          \end{itemize}
 
     \item $O$ : Ensemble des probabilités d'observation conditionnelles.
-    \begin{itemize}
-        \item Avec $O(s',a,o) = \probP(o|s',a)$, la relation qui associe la probabilité d'observer une observation $o \subset \Omega$ à partir de l'état $s' \in S$ induit par $a \in A$
-        \item Avec $\probP(o|s',a) = 0$ si l'état $s' \in S$ ne contient pas les propriétés de $o \subset \Omega$ (c'est-à-dire $o \not\in \mathcal{P}(s')$). Par exemple, un agent joue l'action $x\_reads\_a\_log\_file$, ce qui donne lieu à un nouvel état dont une propriété appartenant à la connaissance de l'agent x est $(log\_file\_content\_known\_by\_x, \allowbreak abc)$. Cette propriété sera donc incluse dans les observations renvoyées à l'agent x. 
-    \end{itemize}
+          \begin{itemize}
+              \item Avec $O(s',a,o) = \probP(o|s',a)$, la relation qui associe la probabilité d'observer une observation $o \subset \Omega$ à partir de l'état $s' \in S$ induit par $a \in A$
+              \item Avec $\probP(o|s',a) = 0$ si l'état $s' \in S$ ne contient pas les propriétés de $o \subset \Omega$ (c'est-à-dire $o \not\in \mathcal{P}(s')$). Par exemple, un agent joue l'action $x\_reads\_a\_log\_file$, ce qui donne lieu à un nouvel état dont une propriété appartenant à la connaissance de l'agent x est $(log\_file\_content\_known\_by\_x, \allowbreak abc)$. Cette propriété sera donc incluse dans les observations renvoyées à l'agent x.
+          \end{itemize}
 
 \end{itemize}
 
@@ -243,7 +243,7 @@ En utilisant la description formelle d'un Dec-POMDP~\cite{OliehoekA16}, nous pro
 \noindent
 D'un point de vue brut, la modélisation formelle Dec-POMDP proposée s'appuie sur des actions pour simuler la manière dont un système en réseau réel réagirait, y compris les vulnérabilités et les contre-mesures appliquées par les agents cyberattaquants et cyberdéfenseurs.
 
-Un premier défi consiste à construire un scénario d'attaque/défense représentatif d'un système en réseau comportant des vulnérabilités afin de permettre de rendre une attaque en reliant les seules informations disponibles (telles que les tactiques, techniques et procédures connues de MITRE ATT\&amp;CK) et en choisissant des contre-mesures de défense pertinentes (issues des mesures d'atténuation de MITRE ATT\&amp;CK) et un environnement de déploiement. Un deuxième défi consiste à établir les actions correspondant au scénario d'attaque/défense. Comme les actions modifient les propriétés de l'environnement, elles ont également un impact sur l'espace des états possibles et les transitions entre ceux-ci.
+Un premier défi consiste à construire un scénario d'attaque/défense représentatif d'un système en réseau comportant des vulnérabilités afin de permettre de rendre une attaque en reliant les seules informations disponibles (telles que les tactiques, techniques et procédures connues de MITRE ATT\&CK) et en choisissant des contre-mesures de défense pertinentes (issues des mesures d'atténuation de MITRE ATT\&CK) et un environnement de déploiement. Un deuxième défi consiste à établir les actions correspondant au scénario d'attaque/défense. Comme les actions modifient les propriétés de l'environnement, elles ont également un impact sur l'espace des états possibles et les transitions entre ceux-ci.
 De plus, lorsque l'on considère un faible niveau d'abstraction, de nombreuses actions simples peuvent permettre de décrire avec précision les changements opérés dans le réseau. Cependant, cela augmente le nombre d'actions, et encore plus le nombre d'états, car ceux-ci sont des combinaisons des effets des actions.
 
 Ces défis sont directement liés aux questions étudiées concernant la génération automatisée de graphiques d'attaque à l'aide de bases de données disponibles intégrant éventuellement des techniques d'intelligence artificielle, comme dans ~\cite{GFalco2018}. Nous n'avons pas l'intention de nous attarder davantage sur ces questions, car elles dépassent le cadre de ce travail.
@@ -251,34 +251,30 @@ Ces défis sont directement liés aux questions étudiées concernant la génér
 \
 
 \noindent
-\textbf{Approche d'intégration MITRE ATT\&amp;CK} : Nous suggérons une approche manuelle de haut niveau que nous avons utilisée pour intégrer les informations MITRE ATT\&amp;CK sous forme d'arborescence AD, car elle formalise les actions à jouer dans un scénario et leurs interactions avec l'environnement. Elle vise à aider à établir les actions d'attaque/défense qui seront finalement intégrées dans le simulateur :
+\textbf{Approche d'intégration MITRE ATT\&CK} : Nous suggérons une approche manuelle de haut niveau que nous avons utilisée pour intégrer les informations MITRE ATT\&CK sous forme d'arborescence AD, car elle formalise les actions à jouer dans un scénario et leurs interactions avec l'environnement. Elle vise à aider à établir les actions d'attaque/défense qui seront finalement intégrées dans le simulateur :
 \begin{enumerate*}[label=\arabic*),itemjoin={;\quad}]
 
-    \item Pour une menace persistante avancée (APT) donnée, nous avons identifié les tactiques, techniques et procédures pertinentes de MITRE ATT\&amp;CK qui semblaient pertinentes pour un système en réseau
+    \item Pour une menace persistante avancée (APT) donnée, nous avons identifié les tactiques, techniques et procédures pertinentes de MITRE ATT\&CK qui semblaient pertinentes pour un système en réseau
 
-
-    
     \item Nous avons produit une description reliant les tactiques identifiées entre elles et les techniques, sous-techniques et procédures associées afin de créer un scénario décrivant comment le groupe APT pourrait attaquer le système en réseau. Cette étape définit la topologie du réseau avec ses principales propriétés
     %(telles qu'un réseau d'entreprise composé de plusieurs serveurs de bases de données dédiés communiquant via FTP et HTTP, etc.)
 
     \item Nous avons créé une arborescence AD comme proposé dans ~\cite{BKordy2010} avec les tactiques comme objectifs d'action principaux et les techniques, sous-techniques et procédures dans la partie inférieure de l'arborescence. Nous avons veillé à disposer de plusieurs chemins pour atteindre un même objectif d'action principal. Nous avons pris soin de définir chaque action d'attaque avec des conditions préalables et des conditions postérieures basées sur les propriétés de l'environnement
 
-    \item Nous avons extrait les techniques/sous-techniques MITRE ATT\&amp;CK liées à la détection et aux mesures d'atténuation que nous avons ajoutées dans l'arbre AD afin d'enrichir les nœuds d'attaque. Nous avons veillé à définir chaque action de défense avec des conditions préalables et des conditions postérieures basées sur des propriétés dans l'environnement.
+    \item Nous avons extrait les techniques/sous-techniques MITRE ATT\&CK liées à la détection et aux mesures d'atténuation que nous avons ajoutées dans l'arbre AD afin d'enrichir les nœuds d'attaque. Nous avons veillé à définir chaque action de défense avec des conditions préalables et des conditions postérieures basées sur des propriétés dans l'environnement.
 
-
-
-    % \item Nous avons également répertorié et défini les principales actions environnementales spécifiques au déploiement à partir de la description précédente de l'environnement de déploiement ou des actions d'attaque/défense étendues qui sont communes aux cyberdéfenseurs et aux cyberattaquants. Cette étape permet d'obtenir un environnement plus réaliste, fournissant un nombre représentatif d'actions plausibles qu'un agent peut choisir dans de nombreux systèmes.
-    % Ces actions communes pourraient inclure au moins :
-    % \begin{itemize}
-    %     \item Lecture et écriture de fichiers
-    %     \item Créer, supprimer, copier, déplacer, renommer, modifier les propriétés des fichiers/dossiers.
-    %     \item Accéder à un dossier, accéder au dossier parent
-    %     \item Sélectionner un fichier/dossier pour y appliquer des actions ultérieures
-    %     \item Exécuter un fichier binaire
-    %     \item Utilisation d'un protocole réseau (tel que HTTP, FTP, SSH, etc.).
-    %     \item Autres interactions avec les lignes de commande de base concernant la surveillance ou le contrôle du système.
-    % \end{itemize}
-    % Ensuite, les propriétés environnementales associées doivent décrire un système de fichiers, une interface de terminal, un port avec des règles, les propriétés des paramètres du système d'exploitation, etc.
+    \item Nous avons également répertorié et défini les principales actions environnementales spécifiques au déploiement à partir de la description précédente de l'environnement de déploiement ou des actions d'attaque/défense étendues qui sont communes aux cyberdéfenseurs et aux cyberattaquants. Cette étape permet d'obtenir un environnement plus réaliste, fournissant un nombre représentatif d'actions plausibles qu'un agent peut choisir dans de nombreux systèmes.
+    Ces actions communes pourraient inclure au moins :
+    \begin{itemize}
+        \item Lecture et écriture de fichiers
+        \item Créer, supprimer, copier, déplacer, renommer, modifier les propriétés des fichiers/dossiers.
+        \item Accéder à un dossier, accéder au dossier parent
+        \item Sélectionner un fichier/dossier pour y appliquer des actions ultérieures
+        \item Exécuter un fichier binaire
+        \item Utilisation d'un protocole réseau (tel que HTTP, FTP, SSH, etc.).
+        \item Autres interactions avec les lignes de commande de base concernant la surveillance ou le contrôle du système.
+    \end{itemize}
+    Ensuite, les propriétés environnementales associées doivent décrire un système de fichiers, une interface de terminal, un port avec des règles, les propriétés des paramètres du système d'exploitation, etc.
 
 \end{enumerate*}
 
@@ -310,7 +306,7 @@ Le développement de notre modèle a abouti au simulateur \textquote{Multi Cyber
 
 
 
-\section{Étude de cas basée sur MITRE ATT\&amp;CK}
+\section{Étude de cas basée sur MITRE ATT\&CK}
 
 % \rem{Expliquer pourquoi on veut tester les capacités du simulateur -&gt; illustration de comment fonctionne le simulateur}
 % \rem{Gallium APT, pourquoi ce choix ? Pourquoi cette étude de cas inspirée de cela ? Qu'est-ce qui est intéressant dans Gallium APT ? Type d'attaque/ coordination d'attaque ?}
@@ -378,7 +374,7 @@ Dans la figure~\ref{fig:graphs}, $MARL\_attacker1$ et $MARL\_attacker2$ suivent 
 
 \section{Conclusion et perspectives}
 
-\noindent Nous avons proposé une modélisation Dec-POMDP des nœuds en réseau susceptibles d'être attaqués et défendus par des agents. Ce modèle vise à intégrer différents scénarios. La mise en œuvre de ce modèle a conduit à un simulateur dont certaines capacités ont été évaluées à travers un scénario MITRE ATT\&amp;CK. À l'aide de trois approches, nous avons brièvement vérifié comment les approches par arbre de décision, aléatoire et par apprentissage par renforcement peuvent être appliquées à un agent à des fins de comparaison.
+\noindent Nous avons proposé une modélisation Dec-POMDP des nœuds en réseau susceptibles d'être attaqués et défendus par des agents. Ce modèle vise à intégrer différents scénarios. La mise en œuvre de ce modèle a conduit à un simulateur dont certaines capacités ont été évaluées à travers un scénario MITRE ATT\&CK. À l'aide de trois approches, nous avons brièvement vérifié comment les approches par arbre de décision, aléatoire et par apprentissage par renforcement peuvent être appliquées à un agent à des fins de comparaison.
 Soucieux de tirer parti de cette approche de simulation pour aborder des problèmes réalistes liés aux cyberdéfenseurs, en particulier dans le contexte de l'AICA, nous avons identifié les principales limites à surmonter :
 automatiser l'intégration de scénarios plus réalistes en s'appuyant sur une base d'actions et de propriétés communes afin que les agents puissent explorer et agir comme dans des systèmes d'information apparemment similaires à la réalité ;
 mettre en place un moyen d'utiliser les avantages des résultats obtenus avec les simulations pour des systèmes émulés ou réels tout en conservant les comportements des agents lors du déploiement ;
