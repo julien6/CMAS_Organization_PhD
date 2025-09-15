@@ -60,9 +60,52 @@ Cette étude expérimentale nous permettra de mieux cerner les atouts et les lim
 \chapter{CybMASDE: Un framework supportant MAMAD}
 \label{sec:cybmasde}
 
-\section*{Cycle d'utilisation de CybMASDE}\label{sec:cybmasde_cycle}
+\section*{Utilisation et fonctionnement de CybMASDE}\label{sec:cybmasde_cycle}
 
-Cette section décrit le parcours type d'un utilisateur de \acn{CybMASDE}, depuis la découverte d'un nouvel environnement jusqu'à l'obtention d'une politique conjointe satisfaisante accompagnée de mesures de performance, stabilité et spécifications organisationnelles explicatives. Chaque étape indique à la fois les actions de l'utilisateur et les processus internes de la plateforme. Une vue d'ensemble du cycle d'utilisation de CybMASDE est présentée dans la \autoref{fig:cybmasde_cycle} qui est également présentée sous forme de diagramme de séquence en \autoref{fig:cybmasde_sequence}.
+Cette section décrit le parcours type d'un utilisateur de \acn{CybMASDE}, depuis la découverte d'un nouvel environnement jusqu'à l'obtention d'une politique conjointe satisfaisante accompagnée de mesures de performance, stabilité et spécifications organisationnelles explicatives. Chaque étape indique à la fois les actions de l'utilisateur et les processus internes de la plateforme. Une première vue d'ensemble de CybMASDE est proposée en \autoref{fig:cybmasde_usecase} sous forme de diagramme de cas d'utilisation puis un diagramme de séquence (c.f. \autoref{fig:cybmasde_sequence}) et de composant (c.f. \autoref{fig:cybmasde_uml}) montrent davantage le fonctionnement interne de CybMASDE.
+
+\subsection{Diagramme de cas d'utilisation de \texttt{CybMASDE}}
+
+Le diagramme de cas d’utilisation présenté à la \autoref{fig:cybmasde_usecase} illustre les interactions possibles entre les différents acteurs et les principales fonctionnalités offertes par la plateforme \acn{CybMASDE}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{figures/use_case_cybmasde.pdf}
+  \caption{Diagramme de cas d'utilisation de CybMASDE}
+  \label{fig:cybmasde_usecase}
+\end{figure}
+
+\paragraph{Acteurs.}
+Au sommet se trouve le \textbf{Concepteur de SMA}, qui représente le rôle racine et peut, en pratique, assumer l’ensemble des autres responsabilités. Celui-ci se décline en plusieurs opérateurs spécialisés :
+\begin{itemize}
+  \item l’\textbf{Opérateur de modélisation}, chargé de définir ou compléter la description de l’environnement simulé, soit automatiquement à l’aide d’un \acn{World Model}, soit manuellement par le biais du modèle \acn{MCAS}~;
+  \item l’\textbf{Opérateur d’entraînement}, qui conduit les phases d’apprentissage des politiques multi-agents en tenant compte des spécifications organisationnelles~;
+  \item l’\textbf{Opérateur d’analyse}, qui exploite la méthode \acn{TEMM} ou Auto-TEMM afin d’inférer des rôles et objectifs organisationnels à partir des trajectoires produites~;
+  \item l’\textbf{Opérateur de raffinement}, qui combine les deux rôles précédents pour réaliser des cycles itératifs d’entraînement et d’analyse jusqu’à l’obtention d’une politique satisfaisante~;
+  \item enfin, l’\textbf{Opérateur de déploiement}, qui supervise l’intégration de la politique conjointe finale dans l’environnement réel, soit en mode \textit{DIRECT} (politique exécutée localement par les agents), soit en mode \textit{REMOTE} (politique exécutée par le processus \textit{Transferring}).
+\end{itemize}
+
+\paragraph{Cas d’utilisation.}
+Les principales fonctionnalités offertes par \acn{CybMASDE} s’articulent autour du cas d’utilisation global \textbf{« Développer SMA »}. Celui-ci inclut une série d’étapes :
+\begin{itemize}
+  \item \textbf{Configurer et lancer projet}, qui consiste à initialiser l’arborescence de fichiers et le fichier central \texttt{project\_configuration.json}~;
+  \item \textbf{Modéliser environnement}, qui dépend de l’étape de configuration et se décline en deux variantes : \textit{Modélisation automatique} (par World Model) et \textit{Modélisation manuelle} (via le \acn{Dec-POMDP} pré-spécialisé donnant une instance \acn{MCAS})~;
+  \item \textbf{Entraîner politiques}, qui repose sur l’existence d’un environnement simulé et permet d’apprendre des politiques multi-agents compatibles avec les contraintes organisationnelles~;
+  \item \textbf{Analyser politiques (TEMM)}, qui dépend de l’entraînement et applique Auto-TEMM pour évaluer et expliquer les politiques obtenues~;
+  \item \textbf{Raffiner politiques}, qui combine entraînement et analyse dans un processus itératif afin d’améliorer performance, stabilité et explicabilité~;
+  \item \textbf{Déployer politique}, qui succède à l’entraînement et peut être réalisé soit en mode \textit{DIRECT}, soit en mode \textit{REMOTE}.
+\end{itemize}
+
+\paragraph{Dépendances.}
+Les relations entre cas d’utilisation traduisent les dépendances logiques entre activités. Ainsi, la configuration est un prérequis à la modélisation, laquelle conditionne l’entraînement, qui lui-même est nécessaire à l’analyse. Le raffinement combine et réutilise à la fois entraînement et analyse dans une boucle itérative. Enfin, le déploiement dépend de l’entraînement et peut se décliner en deux scénarios d’extension (mode \textit{DIRECT} ou \textit{REMOTE}).
+
+\medskip
+En résumé, ce diagramme formalise la chaîne d’interactions entre acteurs et fonctionnalités dans \acn{CybMASDE}, en distinguant clairement les responsabilités, les variantes de modélisation et de déploiement, ainsi que les dépendances obligatoires entre étapes.
+
+
+\subsection{Cycle d'utilisation}
+
+Une vue d'ensemble du cycle d'utilisation de CybMASDE est présentée dans la \autoref{fig:cybmasde_cycle} qui est également présentée sous forme de diagramme de séquence en \autoref{fig:cybmasde_sequence}.
 
 \begin{figure}
   \centering
@@ -87,7 +130,7 @@ Cette section décrit le parcours type d'un utilisateur de \acn{CybMASDE}, depui
 
 \paragraph{2. Création d'un projet}
 \begin{description}
-  \item[Utilisateur :] Crée un nouveau projet via l'interface. Une arborescence est générée avec les dossiers \texttt{modelling}, \texttt{training}, \texttt{analyzing}, \texttt{transferring}. Le fichier central \texttt{project\_configuration.json} est produit.
+  \item[Utilisateur :] Crée un nouveau projet via l'interface. Une arborescence est générée avec les dossiers \textquote{modelling}, \textquote{training}, \textquote{analyzing}, \textquote{transferring}. Le fichier central \textquote{project\_configuration.json} est produit.
   \item[CybMASDE :] Génère les squelettes nécessaires (fichiers de configuration, \acn{API} de transfert, gestionnaire d'espaces d'actions/observations). Cet espace devient le support du cycle \textbf{\acn{MTA}+T} (Modelling, Training, Analyzing, Transferring).
 \end{description}
 
@@ -95,21 +138,21 @@ Cette section décrit le parcours type d'un utilisateur de \acn{CybMASDE}, depui
 \begin{description}
   \item[Utilisateur :] Renseigne au moins une des options :
     \begin{enumerate}
-      \item \textbf{\acn{API} réelle} (\texttt{transferring/configuration.json}) si elle existe déjà.
-      \item \textbf{Environnement Python manuel} (\texttt{handcrafted\_environment.py}).
+      \item \textbf{\acn{API} réelle} (\textquote{transferring/configuration.json}) si elle existe déjà.
+      \item \textbf{Environnement Python manuel} (\textquote{handcrafted\_environment.py}).
       \item \textbf{Ensemble de traces collectées} par une précédente exécution d'une politique aléatoire afin de générer des historiques conjoints.
     \end{enumerate}
-  \item[CybMASDE :] Vérifie la configuration. En cas de collecte de traces, sauvegarde les historiques dans \texttt{world\_model/traces}.
+  \item[CybMASDE :] Vérifie la configuration. En cas de collecte de traces, sauvegarde les historiques dans \textquote{world\_model/traces}.
 \end{description}
 
 \begin{description}
   \item[Utilisateur :] Implémente la classe des fonctions composantes si aucun un environnement Python manuel n'est fourni :
     \begin{enumerate}
-      \item \textbf{Fonction de récompense basée sur les historiques} en implémentant la méthode \texttt{reward()}.
-      \item \textbf{Fonction d'arrêt basée sur les historiques} en implémentant la méthode \texttt{stop()}.
-      \item \textbf{Fonction de rendu basée sur les historiques} en implémentant la méthode \texttt{render()}.
+      \item \textbf{Fonction de récompense basée sur les historiques} en implémentant la méthode \textquote{reward()}.
+      \item \textbf{Fonction d'arrêt basée sur les historiques} en implémentant la méthode \textquote{stop()}.
+      \item \textbf{Fonction de rendu basée sur les historiques} en implémentant la méthode \textquote{render()}.
     \end{enumerate}
-  \item[CybMASDE :] Vérifie la validité de la classe fournie et sauvegarde dans \texttt{generated\_environment/}.
+  \item[CybMASDE :] Vérifie la validité de la classe fournie et sauvegarde dans \textquote{generated\_ \allowbreak environment/}.
 \end{description}
 
 \paragraph{4. Modelling (MOD)}
@@ -117,16 +160,16 @@ Cette section décrit le parcours type d'un utilisateur de \acn{CybMASDE}, depui
   \item[Utilisateur :] Lance la génération d'un environnement simulé.
   \item[CybMASDE :]
     \begin{itemize}
-      \item Si des traces sont présentes : entraîne un \textbf{Joint-Observation Prediction Model (\acn{JOPM})} basé sur PyTorch (\acn{VAE}, \acn{MLP}, \acn{LSTM} optimisé par \texttt{Adam}).
+      \item Si des traces sont présentes : entraîne un \textbf{Joint-Observation Prediction Model (\acn{JOPM})} basé sur PyTorch (\acn{VAE}, \acn{MLP}, \acn{LSTM} optimisé par \textquote{Adam}).
       \item Si un environnement Python est fourni : le charge directement.
     \end{itemize}
-    Le modèle simulé est stocké dans \texttt{generated\_environment/}.
+    Le modèle simulé est stocké dans \textquote{generated\_ \allowbreak environment/}.
 \end{description}
 
 \paragraph{5. Training (TRN)}
 \begin{description}
   \item[Utilisateur :] Démarre l'entraînement des politiques multi-agents.
-  \item[CybMASDE :] Utilise \acn{MARLlib} (\acn{MAPPO}, \acn{MADDPG}, QMix, etc.) et Ray RLlib. Applique les contraintes MOISE+MARL via masquage d'actions par rôle et shaping de récompenses. Les hyperparamètres (\acn{LR}, $\gamma$, taille de batch, etc.) sont optimisés via \texttt{Optuna}, une librairie facilitant l'optimisation des hyperparamètres. Sauvegarde checkpoints et statistiques dans \texttt{training/}.
+  \item[CybMASDE :] Utilise \acn{MARLlib} (\acn{MAPPO}, \acn{MADDPG}, QMix, etc.) et Ray RLlib. Applique les contraintes MOISE+MARL via masquage d'actions par rôle et shaping de récompenses. Les hyperparamètres (\acn{LR}, $\gamma$, taille de batch, etc.) sont optimisés via \textquote{Optuna}, une librairie facilitant l'optimisation des hyperparamètres. Sauvegarde checkpoints et statistiques dans \textquote{training/}.
 \end{description}
 
 \paragraph{6. Vérification de la récompense}
@@ -138,7 +181,7 @@ Cette section décrit le parcours type d'un utilisateur de \acn{CybMASDE}, depui
 \paragraph{7. Analyzing (ANL)}
 \begin{description}
   \item[Utilisateur :] Peut consulter les spécifications organisationnelles extraites et décider de les corriger ou de les injecter.
-  \item[CybMASDE :] Exécute \acn{Auto-TEMM} ou \acn{TEMM} : clustering des trajectoires (\acparen{DTW}, \acparen{LCS}), inférence de rôles et objectifs, calcul d'adéquation organisationnelle (\acn{SOF} + \acn{FOF}). Les résultats sont sauvegardés dans \texttt{analyzing/}. Avec Auto-\acn{TEMM}, les spécifications sont automatiquement déterminées sans que l'utilisateur ne puisse ajuster lui-même les hyperparamètres ce qui peut limiter la personnalisation.
+  \item[CybMASDE :] Exécute \acn{Auto-TEMM} ou \acn{TEMM} : clustering des trajectoires (\acparen{DTW}, \acparen{LCS}), inférence de rôles et objectifs, calcul d'adéquation organisationnelle (\acn{SOF} + \acn{FOF}). Les résultats sont sauvegardés dans \textquote{analyzing/}. Avec Auto-\acn{TEMM}, les spécifications sont automatiquement déterminées sans que l'utilisateur ne puisse ajuster lui-même les hyperparamètres ce qui peut limiter la personnalisation.
 \end{description}
 
 \paragraph{8. Raffinement par itération}
@@ -187,7 +230,7 @@ En résumé, \acn{CybMASDE} automatise et structure la méthode \acn{MAMAD} à t
 \subsection*{Socle technologique (développement)}
 
 \begin{itemize}
-  \item \textbf{Langage principal (backend)} : Python — intégrant des bibliothèques standards telles que \texttt{PyTorch}, \texttt{MARLlib}, \texttt{Ray RLlib}, \texttt{Optuna}, etc. Ce backend implémente entièrement les modules Modelling, Training, Analyzing et Transferring.
+  \item \textbf{Langage principal (backend)} : Python — intégrant des bibliothèques standards telles que \textquote{PyTorch}, \textquote{MARLlib}, \textquote{Ray RLlib}, \textquote{Optuna}, etc. Ce backend implémente entièrement les modules Modelling, Training, Analyzing et Transferring.
   \item \textbf{Interface utilisateur (frontend)} : développée avec Angular, elle offre une expérience graphique permettant à l'utilisateur de renseigner les paramètres d'un projet — notamment par glisser-déposer ou injection directe des fichiers d'historiques — sans manipuler l'arborescence de fichiers du projet.
   \item \textbf{\acn{API} REST} : point d'intégration clé entre front-end, back-end et ligne de commande, garantissant une interface cohérente et réutilisable quel que soit le mode d'utilisation.
   \item \textbf{\acn{CLI}} : l'ensemble des fonctionnalités du backend est exposé via une interface en ligne de commande, utilisant la même \acn{API} \acn{REST} que le frontend.
@@ -195,11 +238,11 @@ En résumé, \acn{CybMASDE} automatise et structure la méthode \acn{MAMAD} à t
 
 L'architecture de CybMASDE démontre l'usage des frameworks et dépendances suivants :
 \begin{itemize}
-  \item \texttt{PyTorch} — entraînement des modèles \acn{VAE}, \acn{LSTM}.
-  \item \texttt{MARLlib} + \texttt{Ray RLlib} — apprentissage multi-agents avec une grande variété d'algorithmes comme \acn{MAPPO}, QMix, \acn{MADDPG}, etc.
-  \item \texttt{Optuna} — optimisation des hyperparamètres (learning rate, discount factor, \acn{PPO} clip value, etc.).
-  \item \texttt{Angular} — développement de l'interface graphique.
-  \item \texttt{Python 3.8 \& Angular v15} -- gestion des dépendances et environnement de développement.
+  \item \textquote{PyTorch} — entraînement des modèles \acn{VAE}, \acn{LSTM}.
+  \item \textquote{MARLlib} + \textquote{Ray RLlib} — apprentissage multi-agents avec une grande variété d'algorithmes comme \acn{MAPPO}, QMix, \acn{MADDPG}, etc.
+  \item \textquote{Optuna} — optimisation des hyperparamètres (learning rate, discount factor, \acn{PPO} clip value, etc.).
+  \item \textquote{Angular} — développement de l'interface graphique.
+  \item \textquote{Python 3.8 \& Angular v15} -- gestion des dépendances et environnement de développement.
 \end{itemize}
 
 
@@ -230,7 +273,7 @@ La \autoref{fig:cybmasde_uml} montre une vue \textit{composant C4}~\cite{richard
 \subsection{Implémentation du modèle Dec-POMDP pré-spécialisé pour la Cyberdéfense}
 
 En complément de la modélisation automatique basée sur des \textit{World Models}, nous proposons une approche de modélisation manuelle guidée par un modèle pré-spécialisé pour les environnements de Cyberdéfense.
-Le développement du formalisme \acn{Dec-POMDP} appliqué à ce domaine a conduit à un modèle que nous appelons \textbf{Multi-Cyberdefense Agent Simulator (\acn{MCAS})}. Celui-ci constitue une instance particulière de \acn{Dec-POMDP} adaptée aux scénarios de Cyberdéfense.
+Le développement du formalisme \acn{Dec-POMDP} appliqué à ce domaine a conduit à un modèle que nous appelons \acn{MCAS}. Celui-ci constitue une instance particulière de \acn{Dec-POMDP} adaptée aux scénarios de Cyberdéfense.
 
 Une implémentation Python de ce modèle est fournie dès la création d'un projet dans le fichier
 \textit{modelling/simulated\_environment/handcrafted\_environment.py}
@@ -243,7 +286,7 @@ Une fois complété, ce modèle est automatiquement intégré dans le cycle de \
   \item la représentation de l'environnement sous forme de graphe,
   \item l'affichage de métriques de suivi (récompenses, états, actions).
 \end{itemize}
-En complément du code Python, une représentation \texttt{JSON} du modèle est également possible. Elle permet de décrire :
+En complément du code Python, une représentation \textquote{JSON} du modèle est également possible. Elle permet de décrire :
 \begin{itemize}
   \item les propriétés des nœuds et des actions de l'environnement,
   \item les agents définis et leurs comportements,
@@ -359,6 +402,7 @@ L'évaluation s'appuie sur une grille de critères inspirée des recommandations
 \begin{table}[h!]
   \centering
   \caption{Correspondance entre critères globaux et métriques}
+  \renewcommand{\arraystretch}{1.2}
   \begin{tabular}{ll}
     \hline
     \textbf{Critère}   & \textbf{Métriques associées}                                       \\
@@ -377,12 +421,12 @@ Ces différentes métriques visent à déterminer dans quelle mesure les cinq cr
 Chaque métrique est décrite séparément pour plus de clarté.
 
 \paragraph{Proportion d'intervention (conception / fonctionnement).}\index{Proportion d'intervention}
-\textit{Unité : pourcentage (\%). Source : logs d'utilisation de la plateforme, questionnaires utilisateurs, scripts d'automatisation.}
-Elle est calculée comme suit :
+\textit{Unité : pourcentage (\%). Source : logs d'utilisation de la plateforme, questionnaires utilisateurs, scripts d'automatisation, nombre de cycle de raffinement, estimations manuelles.}
+Elle est calculée comme le rapport suivant :
 \[
-  \frac{\text{nombre d'actions nécessitant une intervention humaine}}{\text{nombre total d'actions}} \times 100.
+  \hspace{2.5cm}\frac{\text{temps estimé pour la conception automatisée}}{\text{temps estimé pour la conception manuelle}}
 \]
-Cette proportion peut être mesurée automatiquement via l'instrumentation logicielle (nombre de cycles de raffinement) ou manuellement par annotation des étapes.
+Cette proportion, moins précise, vise à quantifier au moins approximativement l'impact de l'automatisation sur le processus de conception : quel pourcentage d'interventions manuels est nécessaire pour atteindre des performances similaires à des \acplu{SMA} conçus et implémentés manuellement. Elle peut être estimée via l'instrumentation logicielle en indiquant qu'un nombre de cycles de raffinement important augmente la proportion d'intervention (i.e le ratio du nombre de cycle utilisé par rapport au nombre de \textquote{cycles} empiriques de conception manuelle). Considérant l'environnement déjà modélisé, cette proportion est aussi obtenue manuellement par estimation du temps passé (en nombre d'heures) durant la conception totalement manuelle, ce qui dans notre méthode correspond au temps estimé passé (en nombre d'heures) dans les cycle de raffinement alternant entre d'entraînement et analyse.
 
 \paragraph{Récompense cumulée.}\index{Récompense cumulée}
 \textit{Unité : valeur numérique sans unité (souvent normalisée). Source : logs d'entraînement \acn{MARLlib}/RLlib, fichiers de résultats d'épisodes.}
@@ -403,9 +447,7 @@ Elle est calculée automatiquement lors de l'agrégation des résultats.
 \textit{Unité : ratio ou pourcentage (\%). Source : tests sous perturbations (pannes, attaques), logs d'épisodes.}
 Il se définit comme :
 \[
-  \frac{\text{performance sous perturbation}}{\text{performance nominale}}
-  \quad \text{ou} \quad
-  \frac{\text{nombre d'épisodes avec performance > seuil}}{\text{nombre total d'épisodes}}.
+  \hspace{3.5cm}\frac{\text{performance sous perturbation}}{\text{performance nominale}}
 \]
 Ce score est obtenu en comparant les performances moyennes dans des scénarios perturbés et des scénarios de référence.
 Les perturbations sont générées soit par des seeds différentes dans les environnements simulés, soit par des changements explicites (topologie, pannes, attaques, etc.).
@@ -414,7 +456,7 @@ Les perturbations sont générées soit par des seeds différentes dans les envi
 \textit{Unité : pourcentage (\%). Source : logs d'exécution, wrappers d'environnement, analyse post-hoc.}
 La formule est :
 \[
-  \frac{\text{nombre de violations détectées}}{\text{nombre total d'actions ou d'épisodes}} \times 100.
+  \hspace{3.5cm}\frac{\text{nombre de violations détectées}}{\text{nombre total d'étape par épisode}}.
 \]
 Cette mesure évalue la capacité des agents à respecter les règles imposées par leurs rôles.
 Elle varie avec la dureté des contraintes : un taux nul est attendu lorsque la dureté est maximale, et un taux élevé lorsque les contraintes sont nulles.
@@ -428,9 +470,9 @@ Plus la distance entre les deux ensembles de trajectoires est faible, plus le sc
 
 \paragraph{Adéquation organisationnelle.}\index{Adéquation organisationnelle}
 \textit{Unité : ratio (0–1). Source : analyse \acn{TEMM}, matrices de correspondance rôles-missions.}
-Elle est calculée comme une moyenne pondérée des scores structurels (\acn{SOF}) et fonctionnels (\acn{FOF}) :
+Comme expliqué précédemment en \autoref{sec:TEMM_algorithm}, elle est calculée comme une moyenne pondérée des scores structurels (\acn{SOF}) et fonctionnels (\acn{FOF}) avec $\alpha = 0.5$ par défaut :
 \[
-  \text{OF} = \alpha \cdot \text{SOF} + (1-\alpha) \cdot \text{FOF}.
+  \hspace{3.5cm}\text{OF} = \alpha \cdot \text{SOF} + (1-\alpha) \cdot \text{FOF}.
 \]
 Cette mesure quantifie à quel point les politiques apprises respectent la structure organisationnelle attendue.
 
@@ -454,7 +496,10 @@ Définition d'au moins une \textbf{baseline avancée} considérée comme la \tex
   \label{tab:baseline_generic}
   \renewcommand{\arraystretch}{1.4}
   \footnotesize
-  \begin{tabular}{p{4.8cm}p{9cm}}
+  \begin{tabularx}{\textwidth}{
+      >{\raggedright\arraybackslash\hsize=0.3\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.7\hsize}X
+    }
     \hline
     \textbf{Élément}                  & \textbf{Valeur instanciée}                                                                                                      \\
     \hline
@@ -465,14 +510,14 @@ Définition d'au moins une \textbf{baseline avancée} considérée comme la \tex
     Métriques spécifiques             & Indicateurs complémentaires propres à l'environnement (ex.~plats servis, taux de collisions, drones infectés, latence moyenne). \\
     Conditions d'exécution            & Nb de runs, seeds, type de matériel (\acn{CPU}/\acn{GPU}), perturbations/stress-tests.                                          \\
     \hline
-  \end{tabular}
+  \end{tabularx}
 \end{table}
 
 \paragraph{3. Mises en place de baselines alternatives}
 Definition possible d'autres baselines jouant sur d'autres paramètres tels que les algorithmes \acn{MARL}, les contraintes organisationnelles ou la modélisation en fonction des questions spécifiques de chaque scénario. Des base
 
 \paragraph{4. Définition d'études d'ablation}
-Réalisation d'au moins une \textbf{étude d'ablation} : chaque ablation consiste prendre la \textbf{baseline avancée} et à changer un ou plusieurs paramètres notamment à remplacer une ou plusieurs activités \acn{MAMAD} par des variantes moins avancées (par exemple, \texttt{\acn{ANL-MAN}} en utilisant \acn{TEMM} plutôt que Auto-\acn{TEMM}, ou \texttt{\acn{TRN-UNC}} sans contraintes organisationnelles) mais aussi à supprimer les contraintes organisationnelles, à changer d'algorithme, etc. Chaque ablation doit être justifiée en fonction des questions spécifiques de chaque scénario.
+Réalisation d'au moins une \textbf{étude d'ablation} : chaque ablation consiste prendre la \textbf{baseline avancée} et à changer un ou plusieurs paramètres notamment à remplacer une ou plusieurs activités \acn{MAMAD} par des variantes moins avancées (par exemple, \textquote{\acn{ANL-MAN}} en utilisant \acn{TEMM} plutôt que Auto-\acn{TEMM}, ou \textquote{\acn{TRN-UNC}} sans contraintes organisationnelles) mais aussi à supprimer les contraintes organisationnelles, à changer d'algorithme, etc. Chaque ablation doit être justifiée en fonction des questions spécifiques de chaque scénario.
 
 \paragraph{5. Comparaison et validation}
 Comparaison systématique des résultats sur la grille d'évaluation (\autoref{tab:grille}) pour mesurer l'impact de chaque composant sur les critères cibles. L'analyse des résultats doit inclure des visualisations (courbes d'apprentissage, heatmaps, dendrogrammes, etc.) et une discussion critique des compromis observés (ex. performance vs. respect des contraintes).
@@ -483,7 +528,7 @@ Répétition des expériences (5 runs indépendants, seeds consignées), agréga
 
 \section{Bilan}
 
-Ce cadre expérimental fournit une base reproductible pour l'évaluation de la méthode \acn{MAMAD} dans des contextes variés. Il garantit la comparabilité entre scénarios, la robustesse des résultats et la traçabilité des choix méthodologiques. Les chapitres suivants instancient ce cadre sur différents environnements, analysent les résultats obtenus et discutent la couverture des critères d'évaluation par la méthode proposée.
+Ce chapitre a posé les fondations méthodologiques de l'évaluation expérimentale de la méthode \acn{MAMAD}. En définissant un cadre générique, reproductible et structuré, il permet de comparer rigoureusement les performances, la robustesse et l'explicabilité de la méthode dans des environnements variés, allant des cas jouets aux systèmes réels. L'intérêt majeur de ce cadre est d'assurer la traçabilité des choix, la transparence des protocoles et la validité des résultats, tout en facilitant l'analyse critique des apports et des limites de chaque composant de la méthode. Ce dispositif méthodologique est essentiel pour garantir la crédibilité scientifique des expérimentations et pour identifier les leviers d'amélioration futurs. Les chapitres suivants s'appuient sur ce cadre pour instancier, analyser et discuter l'application de \acn{MAMAD} dans des contextes concrets, en mettant en lumière sa capacité à répondre aux critères d'autonomie, de performance, d'adaptation, de contrôle et d'explicabilité.
 
 
 \clearpage
@@ -511,29 +556,33 @@ L'objectif est de décrire les expérimentations à mener pour appliquer le prot
 
 L'environnement \textbf{Overcooked-AI}~\cite{Carroll2019} simule un scénario de cuisine coopérative où les agents doivent collaborer pour préparer et servir des repas dans une cuisine structurée. Cet environnement est illustré dans \autoref{fig:overcooked}\index{Overcooked-AI}.
 
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+\begin{itemize}
   \item \textbf{Espace d'état :} Une cuisine discrète basée sur une grille avec des postes de travail (planche à découper, cuisinière, comptoir de service), des ingrédients et des agents
   \item \textbf{Espace d'observation :} Les agents observent les éléments de la cuisine dans un rayon défini
   \item \textbf{Espace d'action :}
-  \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-    \item Déplacement : \texttt{Haut, Bas, Gauche, Droite}
-    \item Interagir : \texttt{Choisir un ingrédient, couper, cuisiner, servir}.
-  \end{enumerate*}
+        \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+          \item Déplacement : \textquote{Haut, Bas, Gauche, Droite}
+          \item Interagir : \textquote{Choisir un ingrédient, couper, cuisiner, servir}.
+        \end{enumerate*}
   \item \textbf{Structure de récompense :}
-  \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-    \item Préparation réussie du repas : $+20$
-    \item Mauvaise utilisation des ingrédients : $-5$
-    \item Comportement passif : $-1$ par étape sans action significative.
-  \end{enumerate*}
+        \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+          \item Préparation réussie du repas : $+20$
+          \item Mauvaise utilisation des ingrédients : $-5$
+          \item Comportement passif : $-1$ par étape sans action significative.
+        \end{enumerate*}
   \item \textbf{objectif :} Maximiser le nombre de commandes de repas terminées dans un délai fixe.
-\end{enumerate*}
+\end{itemize}
+% \end{enumerate*}
 %
 \textbf{Spécifications organisationnelles :}
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-  \item \textbf{Rôles :} \texttt{Chef, assistant, serveur}
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+\begin{itemize}
+  \item \textbf{Rôles :} \textquote{Chef, assistant, serveur}
   \item \textbf{Missions :} Le chef prépare les plats, l'assistant fournit les ingrédients et le serveur sert les repas
   \item \textbf{Contraintes :} L'exécution des tâches doit être synchronisée afin d'éviter les goulots d'étranglement.
-\end{enumerate*}
+\end{itemize}
+% \end{enumerate*}
 
 \begin{figure}[h!]
   \centering
@@ -546,27 +595,31 @@ L'environnement \textbf{Overcooked-AI}~\cite{Carroll2019} simule un scénario de
 
 L'environnement \textbf{Predator-Prey} est un benchmark \acn{MARL} bien connu~\cite{lowe2017multi}, conçu pour évaluer la coordination entre des poursuivants coopératifs (prédateurs) qui tentent de capturer un agent insaisissable (proie). Cet environnement est illustré dans \autoref{fig:predator_prey}\index{Predator-Prey}.
 %
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+\begin{itemize}
   \item \textbf{Espace d'état :} Un espace 2D continu où les agents (prédateurs et proies) ont des positions $(x, y)$ et des vitesses
   \item \textbf{Espace d'observation :} Les agents détectent les entités proches dans un rayon limité $r$
   \item \textbf{Espace d'action :}
-  \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-    \item Déplacement : \texttt{Haut, Bas, Gauche, Droite, Rester sur place}.
-  \end{enumerate*}
+        \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+          \item Déplacement : \textquote{Haut, Bas, Gauche, Droite, Rester sur place}.
+        \end{enumerate*}
   \item \textbf{Structure de récompense :}
-  \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-    \item Les prédateurs gagnent $+50$ pour chaque proie capturée
-    \item La proie gagne $+1$ par étape de temps survécue ;.
-  \end{enumerate*}
+        \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+          \item Les prédateurs gagnent $+50$ pour chaque proie capturée
+          \item La proie gagne $+1$ par étape de temps survécue ;.
+        \end{enumerate*}
   \item \textbf{objectif :} Les prédateurs doivent coopérer pour piéger la proie, tandis que celle-ci tente de s'échapper aussi longtemps que possible.
-\end{enumerate*}
+        % \end{enumerate*}
+\end{itemize}
 %
 \textbf{Spécifications organisationnelles :}
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-  \item \textbf{Rôles :} \texttt{Prédateur, Proie}
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+\begin{itemize}
+  \item \textbf{Rôles :} \textquote{Prédateur, Proie}
   \item \textbf{Missions :} Les prédateurs coordonnent leurs efforts pour encercler la proie ; la proie cherche les meilleurs chemins pour s'échapper
   \item \textbf{Contraintes :} Les prédateurs doivent trouver un équilibre entre poursuite agressive et stratégies de blocage.
-\end{enumerate*}
+        % \end{enumerate*}
+\end{itemize}
 %
 \begin{figure}[h!]
   \centering
@@ -579,29 +632,33 @@ L'environnement \textbf{Predator-Prey} est un benchmark \acn{MARL} bien connu~\c
 
 L'environnement \textbf{Warehouse Management}~\cite{warehouse_management} modélise un entrepôt logistique basé sur une grille où plusieurs robots doivent collaborer pour transporter efficacement les marchandises. Cet environnement s'inspire des scénarios d'automatisation des entrepôts industriels et constitue un banc d'essai idéal pour évaluer la répartition des tâches, la spécialisation des rôles et la coordination en temps réel. Cet environnement est illustré dans \autoref{fig:warehouse}\index{Warehouse Management}\index{Warehouse Management}.
 %
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+\begin{itemize}
   \item \textbf{Espace d'état :} Une grille $N \times M$ où chaque cellule contient un robot, un produit, une machine de fabrication ou un lieu de dépôt. Le système suit les positions des agents, les niveaux de stock et les états des machines
   \item \textbf{Espace d'observation :} Chaque agent dispose d'une vue locale $V \times V$, lui permettant de percevoir les produits, ses coéquipiers et les machines à proximité
   \item \textbf{Espace d'action :}
-  \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-    \item Déplacement : \texttt{Haut, Bas, Gauche, Droite}
-    \item Interagir : \texttt{Prendre un produit, déposer un produit}.
-  \end{enumerate*}
+        \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+          \item Déplacement : \textquote{Haut, Bas, Gauche, Droite}
+          \item Interagir : \textquote{Prendre un produit, déposer un produit}.
+        \end{enumerate*}
   \item \textbf{Structure de récompense :}
-  \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-    \item Livraison réussie du produit : $+10$
-    \item Déplacement inefficace : $-1$ par étape inutile
-    \item Mauvaise manipulation du produit : $-5$ pour les livraisons incorrectes.
-  \end{enumerate*}
+        \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+          \item Livraison réussie du produit : $+10$
+          \item Déplacement inefficace : $-1$ par étape inutile
+          \item Mauvaise manipulation du produit : $-5$ pour les livraisons incorrectes.
+        \end{enumerate*}
   \item \textbf{objectif :} Transporter les matières premières vers les machines de transformation et livrer les produits finis aux lieux de livraison.
-\end{enumerate*}
+        % \end{enumerate*}
+\end{itemize}
 %
 \textbf{Spécifications organisationnelles :}
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-  \item \textbf{Rôles :} \texttt{Transporteur, gestionnaire des stocks}
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+\begin{itemize}
+  \item \textbf{Rôles :} \textquote{Transporteur, gestionnaire des stocks}
   \item \textbf{Missions :} Les transporteurs acheminent les produits, tandis que les gestionnaires des stocks supervisent les niveaux des stocks
   \item \textbf{Contraintes :} Les transporteurs doivent donner la priorité aux livraisons essentielles.
-\end{enumerate*}
+\end{itemize}
+% \end{enumerate*}
 
 \begin{figure}[h!]
   \centering
@@ -615,8 +672,8 @@ L'environnement \textbf{Warehouse Management}~\cite{warehouse_management} modél
 
 \paragraph{1. Configuration initiale}
 
-Nous utilisons les implémentations \emph{PettingZoo} d'\textbf{Overcooked-AI}, \textbf{Predator-Prey} et \textbf{Warehouse Management} comme \emph{environnements réels} au sens de \texttt{CybMASDE}. Concrètement, pour un environnement donné, une instance du jeu est lancée en tâche de fond et exposée via un adaptateur \acn{REST} conforme à l'\acn{API} d'I/O de \texttt{CybMASDE} (observations jointes, masques d'actions, \emph{step}/\emph{reset}). Cette passerelle permet (i) la collecte de traces pour la modélisation (\texttt{\acn{MOD-AUT}}) ; (ii) l'entraînement \acn{MARL} avec contraintes organisationnelles ; (iii) l'analyse organisationnelle (\textbf{ANL}) ; (iv) le transfert (\textbf{TRF}) vers l'exécuteur simulé standardisé.
-Pour \texttt{\acn{MOD-AUT}}, un \emph{Joint-Observation Prediction Model} (\acn{JOPM}, \acn{VAE}+\acn{LSTM}) est entraîné sur les historiques collectés (politiques aléatoires et politiques préliminaires) afin d'apprendre la dynamique $\langle o_{1:t},a_{1:t} \rangle \mapsto o_{t+1}$ et une fonction d'arrêt dérivée. La fonction de récompense reconstruite à partir des traces est validée par recoupement avec la récompense native de l'environnement. Le mappage \emph{labels} observation/action ($l_o, l_a$) est défini pour synchroniser \texttt{PettingZoo} et \texttt{MMA} (MOISE+MARL), activer le masquage d'actions et l'injection de bonus/malus par rôle. L'entraînement s'appuie sur \texttt{MARLlib}/\texttt{RLlib} (profil \texttt{MAPPO} par défaut, \texttt{Optuna} activé), avec \textit{seeds} fixées et 5 exécutions indépendantes conformément au \autoref{chap:cadre_experimental}. Les ressources matérielles suivent celles présentées \autoref{par:compute_conditions} ; seules les dérogations (longueur d'épisode, fréquence de log) sont précisées dans les résultats.
+Nous utilisons les implémentations \emph{PettingZoo} de \phantom{X} \textbf{Overcooked-AI}, \textbf{Predator-Prey} et \textbf{Warehouse Management} comme \emph{environnements réels} au sens de \textquote{CybMASDE}. Concrètement, pour un environnement donné, une instance du jeu est lancée en tâche de fond et exposée via un adaptateur \acn{REST} conforme à l'\acn{API} d'I/O de \textquote{CybMASDE} (observations jointes, masques d'actions, \emph{step}/\emph{reset}). Cette passerelle permet (i) la collecte de traces pour la modélisation (\textquote{\acn{MOD-AUT}}) ; (ii) l'entraînement \acn{MARL} avec contraintes organisationnelles ; (iii) l'analyse organisationnelle (\textbf{ANL}) ; (iv) le transfert (\textbf{TRF}) vers l'exécuteur simulé standardisé.
+Pour \textquote{\acn{MOD-AUT}}, un \emph{Joint-Observation Prediction Model} (\acn{JOPM}, \acn{VAE}+\acn{LSTM}) est entraîné sur les historiques collectés (politiques aléatoires et politiques préliminaires) afin d'apprendre la dynamique $\langle o_{1:t},a_{1:t} \rangle \mapsto o_{t+1}$ et une fonction d'arrêt dérivée. La fonction de récompense reconstruite à partir des traces est validée par recoupement avec la récompense native de l'environnement. Le mappage \emph{labels} observation/action ($l_o, l_a$) est défini pour synchroniser \textquote{PettingZoo} et \textquote{MMA} (MOISE+MARL), activer le masquage d'actions et l'injection de bonus/malus par rôle. L'entraînement s'appuie sur \textquote{MARLlib}/\textquote{RLlib} (profil \textquote{MAPPO} par défaut, \textquote{Optuna} activé), avec \textit{seeds} fixées et 5 exécutions indépendantes conformément au \autoref{chap:cadre_experimental}. Les ressources matérielles suivent celles présentées \autoref{par:compute_conditions} ; seules les dérogations (longueur d'épisode, fréquence de log) sont précisées dans les résultats.
 
 \paragraph{2 à 4. Définition des baselines}
 
@@ -630,10 +687,10 @@ Pour les trois environnements, nous définissons une \textbf{baseline avancée p
   \renewcommand{\arraystretch}{1}
   \tiny
   \begin{tabularx}{\textwidth}{
-    >{\raggedright\arraybackslash}p{4.5cm}
-    >{\raggedright\arraybackslash}p{2.5cm}
-    >{\raggedright\arraybackslash}p{2.8cm}
-    >{\raggedright\arraybackslash}p{4.5cm}
+      >{\raggedright\arraybackslash\hsize=0.3\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.3\hsize}X
     }
     \toprule
     \textbf{Profil d'activités MAMAD} & \textbf{Algorithmes MARL} & \textbf{Contraintes org. (dureté)} & \textbf{Commentaires}                                                                           \\
@@ -666,37 +723,41 @@ Pour les trois environnements, nous définissons une \textbf{baseline avancée p
 
 L'environnement \textbf{Company Infrastructure} est une simulation inspirée du simulateur CyberbatlleSim~\cite{cyberbattlesim} et de MITRE ATT\&CK~\cite{MITREATTACKWebiste}. Cet environnement a été developpé avec le \acn{Dec-POMDP} pré-spécialisé pour la Cyberdéfense et avec \acn{MCAS} intégré à CybMASDE. Il simule un réseau d'entreprise découpé en sous-réseaux (EXT, DMZ, ACC, MAR, SRV) où des \emph{agents cyber-attaquants} et \emph{agents cyber-défenseurs} interagissent via des actions à pré/post-conditions, selon un formalisme \emph{Dec-POMDP}. La topologie synthétique est illustrée en \autoref{fig:scenario_network_topology}, et les chemins d'attaque/défense sont structurés via un arbre Attaque–Défense (\autoref{fig:ADTree})\index{Company Infrastructure}.
 
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+\begin{itemize}
   \item \textbf{Espace d'état :} Un ensemble de \emph{propriétés} discrètes décrivant l'état des nœuds du réseau (fichiers, services actifs, versions, règles de pare-feu, sessions, journaux, connaissances d'agents). La topologie comprend~:
-  \begin{enumerate*}[label={\alph*)}, itemjoin={; \ }]
-    \item \textbf{EXT} : deux postes d'attaquants \texttt{At1, At2}
-    \item \textbf{DMZ} : \texttt{\acn{WS}, \acn{ES}, \acn{VPN}, FTP}
-    \item \textbf{ACC} : \texttt{E1, E2, CTO}
-    \item \textbf{MAR} : \texttt{\acn{PS}, E3, \acn{TAB}}
-    \item \textbf{SRV} : \texttt{\acn{API}, \acn{DB}, DC}.
-  \end{enumerate*}
-  Les transitions modifient l'ensemble des propriétés (ajout/suppression/mise à jour) quand les pré-conditions d'action sont satisfaites
+        \begin{enumerate*}[label={\alph*)}, itemjoin={; \ }]
+          \item \textbf{EXT} : deux postes d'attaquants \textquote{At1, At2}
+          \item \textbf{DMZ} : \textquote{\acn{WS}, \acn{ES}, \acn{VPN}, FTP}
+          \item \textbf{ACC} : \textquote{E1, E2, CTO}
+          \item \textbf{MAR} : \textquote{\acn{PS}, E3, \allowbreak \acn{TAB}}
+          \item \textbf{SRV} : \textquote{\acn{API}, \acn{DB}, DC}.
+        \end{enumerate*}
+        Les transitions modifient l'ensemble des propriétés (ajout/suppression/mise à jour) quand les pré-conditions d'action sont satisfaites
   \item \textbf{Espace d'observation :} Observations partielles spécifiques à chaque agent (relation $Obs$) — contenus de fichiers/journaux, résultats de commandes, scans de ports, états de sessions, alertes de détection. Les observations sont retournées après application d'action et dépendent de la visibilité locale (capteurs, privilèges)
   \item \textbf{Espace d'action :} Actions à \emph{pré-conditions} (conjonctions/disjonctions de propriétés) et \emph{post-conditions} (écritures sur l'état), réparties en grandes familles~:
-  \begin{enumerate*}[label={\alph*)}, itemjoin={; \ }]
-    \item \textbf{Attaquants} : \texttt{Reconnaissance réseau/compte}, \texttt{Exploiter vulnérabilité service}, \texttt{Élévation de privilèges}, \texttt{Mouvement latéral}, \texttt{Persistance (ex.~backdoor)}, \texttt{Exfiltration données (\acn{DB})}, \texttt{Installation spyware (\acn{PS})}
-    \item \textbf{Défenseurs} : \texttt{Détection journaux (\acn{WS})}, \texttt{Gestion comptes privilégiés (\acn{PAM})}, \texttt{Surveillance commandes/arguments (\acn{DB})}, \texttt{Blocage trafic/règles FW}, \texttt{Suppression sessions malveillantes}, \texttt{Restauration services}.
-  \end{enumerate*}
+        \begin{enumerate*}[label={\alph*)}, itemjoin={; \ }]
+          \item \textbf{Attaquants} : \textquote{Reconnaissance réseau/compte}, \textquote{Exploiter vulnérabilité service}, \textquote{Élévation de privilèges}, \textquote{Mouvement latéral}, \textquote{Persistance (ex.~backdoor)}, \textquote{Exfiltration \allowbreak de données (\acn{DB})}, \textquote{Installation spyware (\acn{PS})}
+          \item \textbf{Défenseurs} : \textquote{Détection journaux (\acn{WS})}, \textquote{Gestion comptes privilégiés (\acn{PAM})}, \textquote{Surveillance \allowbreak commandes/arguments (\acn{DB})}, \textquote{Blocage trafic/règles FW}, \textquote{Suppression sessions malveillantes}, \textquote{Restauration services}.
+        \end{enumerate*}
   \item \textbf{Structure de récompense :} Fonction $R = Eval \circ Metrics$ évaluant l'état \& l'action par des métriques (progrès d'attaque vers les objectifs, détections, sessions supprimées, intégrité des services, etc.) :
-  \begin{enumerate*}[label={\alph*)}, itemjoin={; \ }]
-    \item \textbf{Attaquants} : bonus de progression le long de l'\acn{AD}-tree ($+r_{\small step}$), objectifs ultimes : \texttt{Exfiltration DB} et \texttt{Spyware PS} ($+R_{\small goal}$), pénalités si détectés/neutralisés ($-\lambda_{\small det}$)
-    \item \textbf{Défenseurs} : bonus détection/prévention ($+r_{\small det}$), suppression sessions ($+r_{\small purge}$), maintien disponibilité/Intégrité ($+r_{\small avail}$), pénalités si objectifs attaquants atteints ($-\Lambda_{\small goal}$).
-  \end{enumerate*}
+        \begin{enumerate*}[label={\alph*)}, itemjoin={; \ }]
+          \item \textbf{Attaquants} : bonus de progression le long de l'\acn{AD}-tree ($+r_{\small step}$), objectifs ultimes : \textquote{Exfiltration DB} et \textquote{Spyware PS} ($+R_{\small goal}$), pénalités si détectés/neutralisés ($-\lambda_{\small det}$)
+          \item \textbf{Défenseurs} : bonus détection/prévention ($+r_{\small det}$), suppression sessions ($+r_{\small purge}$), maintien disponibilité/Intégrité ($+r_{\small avail}$), pénalités si objectifs attaquants atteints ($-\Lambda_{\small goal}$).
+        \end{enumerate*}
   \item \textbf{Objectif :} \textbf{Attaquants} — atteindre \emph{Exfiltration DB} et \emph{Spyware PS} en minimisant la détection ; \textbf{Défenseurs} — prévenir/détecter/neutraliser ces chemins d'attaque tout en maintenant les services critiques.
-\end{enumerate*}
+        % \end{enumerate*}
+\end{itemize}
 
 \medskip
-\textbf{Spécifications organisationnelles :} \emph{(Baseline)} aucune contrainte organisationnelle n'est imposée (\texttt{\acn{TRN-UNC}}), afin de fournir une référence \emph{brute} pour les scénarios orientés Cyberdéfense guidés. \emph{(Variante optionnelle, pour analyses ablatives)} :
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-  \item \textbf{Rôles (ex.)} : \texttt{Attacker\_LateralMove}, \texttt{Attacker\_ExfilDB}, \texttt{Defender\_WS\_Monitor}, \texttt{Defender\_DB\_PAM}
+\textbf{Spécifications organisationnelles :} \emph{(Baseline)} aucune contrainte organisationnelle n'est imposée (\textquote{\acn{TRN-UNC}}), afin de fournir une référence \emph{brute} pour les scénarios orientés Cyberdéfense guidés. \emph{(Variante optionnelle, pour analyses ablatives)} :
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+\begin{itemize}
+  \item \textbf{Rôles (ex.)} : \textquote{Attacker\_LateralMove}, \textquote{Attacker\_ExfilDB}, \textquote{Defender\_WS\_Monitor}, \textquote{Defender\_DB\_PAM}
   \item \textbf{Missions} : chaîner les techniques MITRE par sous-objectif (recon \textrightarrow{} exploitation \textrightarrow{} élévation \textrightarrow{} mouvement latéral \textrightarrow{} action sur l'objectif) côté rouge ; détection \textrightarrow{} confinement \textrightarrow{} éradication \textrightarrow{} reprise côté bleu
   \item \textbf{Contraintes} : autorisations par rôle (masquage d'actions), séquencement minimal de missions, déclencheurs de confinement sous conditions (journaux/\acn{IOC}).
-\end{enumerate*}
+\end{itemize}
+% \end{enumerate*}
 
 \begin{figure}[h!]
   \centering
@@ -717,13 +778,13 @@ L'environnement \textbf{Company Infrastructure} est une simulation inspirée du 
 
 \paragraph{1. Configuration initiale}
 
-Nous utilisons le modèle \emph{Dec-POMDP} pré-spécialisé \textbf{Cyberdéfense} et le simulateur \textbf{MCAS} intégrés à \texttt{CybMASDE}, exposés via un adaptateur \acn{REST} conforme à l'\acn{API} d'I/O \texttt{CybMASDE} (observations jointes, masques d'actions, \emph{step}/\emph{reset}). L'environnement \emph{Company Infrastructure} est donc traité, côté pipeline, exactement comme les environnements jouets non-orientés Cyberdéfense : (i) collecte de traces pour la modélisation automatique (\texttt{\acn{MOD-AUT}}) ; (ii) entraînement \acn{MARL} avec ou sans contraintes organisationnelles ; (iii) analyse organisationnelle (\textbf{ANL}) ; (iv) transfert automatique (\texttt{\acn{TRF-AUT}}) vers l'exécuteur simulé.
-\textbf{Justification :} aucun \texttt{\acn{TRF-MAN}} n'est requis ici, l'environnement n'étant pas une instrumentation d'un système réel mais un simulateur nativement compatible (pas de « passerelle terrain » à maintenir).
-Pour \texttt{\acn{MOD-AUT}}, un \emph{Joint-Observation Prediction Model} (\acn{JOPM} : \acn{VAE}+\acn{LSTM}) est entraîné sur des historiques mêlant trajectoires aléatoires et politiques préliminaires \emph{rouges/bleues} (progression dans l'\acn{AD}-tree, détections, quarantaines). Le \acn{JOPM} approxime la dynamique $\langle o_{1:t},a_{1:t} \rangle \mapsto o_{t+1}$ et fournit une fonction d'arrêt dérivée (objectifs atteints, neutralisation des sessions malveillantes, \emph{step-limit}). La fonction de récompense reconstruite est validée par recoupement avec les métriques natives (progrès le long de l'\acn{AD}-tree, disponibilité des services). L'entraînement s'appuie sur \texttt{MARLlib}/\texttt{RLlib} (profil \texttt{MAPPO} par défaut, mais variantes testées ci-dessous), \emph{seeds} fixées, 5 exécutions indépendantes comme dans le \autoref{chap:cadre_experimental}. Les conditions de calcul suivent celles présentées en \autoref{par:compute_conditions} ; seules les dérogations (longueur d'épisode, fréquence de log) sont précisées dans les résultats.
+Nous utilisons le modèle \emph{Dec-POMDP} pré-spécialisé \textbf{Cyberdéfense} et le simulateur \textbf{MCAS} intégrés à \textquote{CybMASDE}, exposés via un adaptateur \acn{REST} conforme à l'\acn{API} d'I/O \textquote{CybMASDE} (observations jointes, masques d'actions, \emph{step}/\emph{reset}). L'environnement \emph{Company Infrastructure} est donc traité, côté pipeline, exactement comme les environnements jouets non-orientés Cyberdéfense : (i) collecte de traces pour la modélisation automatique (\textquote{\acn{MOD-AUT}}) ; (ii) entraînement \acn{MARL} avec ou sans contraintes organisationnelles ; (iii) analyse organisationnelle (\textbf{ANL}) ; (iv) transfert automatique (\textquote{\acn{TRF-AUT}}) vers l'exécuteur simulé.
+\textbf{Justification :} aucun \textquote{\acn{TRF-MAN}} n'est requis ici, l'environnement n'étant pas une instrumentation d'un système réel mais un simulateur nativement compatible (pas de « passerelle terrain » à maintenir).
+Pour \textquote{\acn{MOD-AUT}}, un \emph{Joint-Observation Prediction Model} (\acn{JOPM} : \acn{VAE}+\acn{LSTM}) est entraîné sur des historiques mêlant trajectoires aléatoires et politiques préliminaires \emph{rouges/bleues} (progression dans l'\acn{AD}-tree, détections, quarantaines). Le \acn{JOPM} approxime la dynamique $\langle o_{1:t},a_{1:t} \rangle \mapsto o_{t+1}$ et fournit une fonction d'arrêt dérivée (objectifs atteints, neutralisation des sessions malveillantes, \emph{step-limit}). La fonction de récompense reconstruite est validée par recoupement avec les métriques natives (progrès le long de l'\acn{AD}-tree, disponibilité des services). L'entraînement s'appuie sur \textquote{MARLlib}/\textquote{RLlib} (profil \textquote{MAPPO} par défaut, mais variantes testées ci-dessous), \emph{seeds} fixées, 5 exécutions indépendantes comme dans le \autoref{chap:cadre_experimental}. Les conditions de calcul suivent celles présentées en \autoref{par:compute_conditions} ; seules les dérogations (longueur d'épisode, fréquence de log) sont précisées dans les résultats.
 
 \paragraph{2 à 4. Définition des baselines}
 
-Nous définissons une \textbf{baseline avancée par défaut} et des \textbf{ablations} qui font varier (a) les activités \acn{MAMAD}, (b) l'algorithme \acn{MARL}, (c) la \emph{dureté} des contraintes organisationnelles : \emph{fortes} (1.0), \emph{douces} (0.5), \emph{sans} (0.0). Toutes reposent sur \texttt{\acn{TRF-AUT}} (pas de \texttt{\acn{TRF-MAN}}, cf. justification ci-dessus).
+Nous définissons une \textbf{baseline avancée par défaut} et des \textbf{ablations} qui font varier (a) les activités \acn{MAMAD}, (b) l'algorithme \acn{MARL}, (c) la \emph{dureté} des contraintes organisationnelles : \emph{fortes} (1.0), \emph{douces} (0.5), \emph{sans} (0.0). Toutes reposent sur \textquote{\acn{TRF-AUT}} (pas de \textquote{\acn{TRF-MAN}}, cf. justification ci-dessus).
 
 \begin{table*}[h!]
   \centering
@@ -731,27 +792,32 @@ Nous définissons une \textbf{baseline avancée par défaut} et des \textbf{abla
   \label{tab:baselines_company}
   \renewcommand{\arraystretch}{1}
   \tiny
-  \begin{tabularx}{\textwidth}{p{3.8cm}p{2.6cm}p{2.8cm}p{4.6cm}}
+  \begin{tabularx}{\textwidth}{
+      >{\raggedright\arraybackslash\hsize=0.3\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.3\hsize}X
+    }
     \toprule
     \textbf{Profil d'activités MAMAD} & \textbf{Algorithmes MARL}           & \textbf{Contraintes org. (dureté)} & \textbf{Commentaires}                                                                                                                           \\
     \midrule
     % --- Profil A (Défaut) ---
     \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil A — Défaut}                                                                                                                                                                                                      \\
-        \texttt{\acn{MOD-AUT}};\;\texttt{\acn{TRN-CON}};\;\texttt{\acn{ANL-AUT}};\;\texttt{\acn{TRF-AUT}}}}
+        \textquote{\acn{MOD-AUT}};\;\textquote{\acn{TRN-CON}};\;\textquote{\acn{ANL-AUT}};\;\textquote{\acn{TRF-AUT}}}}
                                       & \acn{MAPPO}, \acn{QMIX}, \acn{COMA} & Oui (1.0)                          & Masquage par rôle (rouge/bleu), shaping aligné \acn{AD}-tree (progrès d'attaque / détection / quarantaine) ; \acn{JOPM} activé.                 \\
                                       & \acn{MAPPO}, \acn{QMIX}, \acn{COMA} & Douces (0.5)                       & Même pipeline, pénalités/bonus atténués ; masques partiels (exploration élargie).                                                               \\
                                       & \acn{MAPPO}, \acn{QMIX}             & Aucune (0.0)                       & \textit{Ablation} \acn{TRN-UNC} : récompense native (état/metrics), pas de guidage organisationnel.                                             \\
     \hdashline
     % --- Profil B (Analyse manuelle) ---
     \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil B — Analyse manuelle}                                                                                                                                                                                            \\
-        \texttt{\acn{MOD-AUT}};\;\texttt{\acn{TRN-CON}};\;\texttt{\acn{ANL-MAN}} (\acn{TEMM} paramétré);\;\texttt{\acn{TRF-AUT}}}}
+        \textquote{\acn{MOD-AUT}};\;\textquote{\acn{TRN-CON}};\;\textquote{\acn{ANL-MAN}} (\acn{TEMM} paramétré);\;\textquote{\acn{TRF-AUT}}}}
                                       & \acn{MAPPO}, \acn{COMA}             & Oui (1.0)                          & \acn{TEMM} paramétré à la main ; règles/masques édités (séquencement recon$\rightarrow$exploitation$\rightarrow$\acn{LM}$\rightarrow$objectif). \\
                                       & \acn{MAPPO}, \acn{COMA}             & Douces (0.5)                       & Guidage souple, contrôle post-hoc par \acn{TEMM}.                                                                                               \\
                                       & \acn{MAPPO}                         & Aucune (0.0)                       & \acn{TRN-UNC} ; \acn{TEMM} seulement pour explicabilité/diagnostic (pas de réinjection de règles).                                              \\
     \hdashline
     % --- Profil C (Cycle semi-manuel) ---
     \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil C — Cycle semi-manuel}                                                                                                                                                                                           \\
-        \texttt{\acn{MOD-MAN}} (actions/props étendues);\;\texttt{\acn{TRN-CON}} (hp manuels);\;\texttt{\acn{ANL-MAN}};\;\texttt{\acn{TRF-AUT}}}}
+        \textquote{\acn{MOD-MAN}} (actions/props étendues);\;\textquote{\acn{TRN-CON}} (hp manuels);\;\textquote{\acn{ANL-MAN}};\;\textquote{\acn{TRF-AUT}}}}
                                       & \acn{IQL}, \acn{VDN}, \acn{QMIX}    & Oui (1.0)                          & Élargissement « handcrafted » du catalogue d'actions (\acn{FW}, \acn{PAM}, persistance) ; hyperparamètres fixés (pas d'\acn{HPO}).              \\
                                       & \acn{IQL}, \acn{VDN}, \acn{QMIX}    & Douces (0.5)                       & Contraintes souples définies manuellement (seuils journaux/\acn{IOC}, priorités services).                                                      \\
                                       & \acn{IQL}, \acn{VDN}                & Aucune (0.0)                       & Base minimale sans guidage ; utile pour jauger l'apport des contraintes et du shaping.                                                          \\
@@ -763,72 +829,81 @@ Nous définissons une \textbf{baseline avancée par défaut} et des \textbf{abla
 \section{Expérimentations sur l'environnement Microservices Kubernetes}
 
 
-L'environnement \textbf{Microservices Kubernetes} est un \emph{cluster réel} (1 nœud \textit{worker} : 8 vCPU, 32~Go \acn{RAM}, 1~Gbps) utilisé comme \emph{environnement d'entrée} de la méthode \acn{MAMAD}. Une illustration schématique de ce cluster et de ses services est fournie en \autoref{fig:k8s_microservices_real}. Le cluster héberge une application web de e-commerce composée de 4 microservices en chaîne (\acn{API}, Auth, Produits, Commandes) orchestrés via Kubernetes. Chaque service est déployé dans un \emph{pod} avec un nombre variable de réplicas (1 à 5). Le cluster est surveillé en temps réel via Prometheus/Grafana, collectant des métriques telles que l'utilisation \acn{CPU}/mémoire, le taux de requêtes, la latence, les files d'attente, et l'état des pods. Des scénarios de stress-test sont appliqués pour simuler des conditions réelles : goulots d'étranglement (augmentation du trafic), attaques DDoS (trafic malveillant), pannes de pods (simulées via \texttt{kubectl delete pod}), et contention de ressources (limitation \acn{CPU}/mémoire). L'objectif est d'évaluer la capacité des agents à maintenir la résilience opérationnelle du cluster en adaptant dynamiquement les ressources et en répondant aux incidents. Une illustration synthétique de ce type de scénarios est fournie en \autoref{fig:k8s_cluster_graph_intro}\index{Microservices Kubernetes}.
+L'environnement \textbf{Microservices Kubernetes} est un \emph{cluster réel} (1 nœud \textit{worker} : 8 vCPU, 32~Go \acn{RAM}, 1~Gbps) utilisé comme \emph{environnement d'entrée} de la méthode \acn{MAMAD}. Une illustration schématique de ce cluster et de ses services est fournie en \autoref{fig:k8s_microservices_real}. Le cluster héberge une application web de e-commerce composée de 4 microservices en chaîne (\acn{API}, Auth, Produits, Commandes) orchestrés via Kubernetes. Chaque service est déployé dans un \emph{pod} avec un nombre variable de réplicas (1 à 5). Le cluster est surveillé en temps réel via Prometheus/Grafana, collectant des métriques telles que l'utilisation \acn{CPU}/mémoire, le taux de requêtes, la latence, les files d'attente, et l'état des pods. Des scénarios de stress-test sont appliqués pour simuler des conditions réelles : goulots d'étranglement (augmentation du trafic), attaques DDoS (trafic malveillant), pannes de pods (simulées via \textquote{kubectl delete pod}), et contention de ressources (limitation \acn{CPU}/mémoire). L'objectif est d'évaluer la capacité des agents à maintenir la résilience opérationnelle du cluster en adaptant dynamiquement les ressources et en répondant aux incidents. Une illustration synthétique de ce type de scénarios est fournie en \autoref{fig:k8s_cluster_graph_intro}\index{Microservices Kubernetes}.
 
-\begin{enumerate*}[label={\roman*)}, itemjoin={;\quad}]
+% \begin{enumerate*}[label={\roman*)}, itemjoin={;\quad}]
+\begin{itemize}
   \item \textbf{Espace d'état :} état courant du cluster réel et des 4 services en chaîne \((i \in \{1..4\})\) :
-  \(
-  s = \{\text{réplicas}^i,\,
-  U_{\text{cpu}}^i, U_{\text{mem}}^i,\,
-  T_{\text{in}}^i, T_{\text{out}}^i,\,
-  Q_{\text{pending}}^i,\,
-  S_{\text{status}}^{i,\text{pods}},\,
-  P_{\text{priority}}^i\}_{i=1..4}
-  \)
-  et agrégats globaux (latence moyenne \(L_{\text{avg}}\), taux de requêtes \(R_{\text{rate}}\), disponibilité)
+        \(
+        s = \{\text{réplicas}^i,\,
+        U_{\text{cpu}}^i, U_{\text{mem}}^i,\,
+        T_{\text{in}}^i, T_{\text{out}}^i,\,
+        Q_{\text{pending}}^i,\,
+        S_{\text{status}}^{i,\text{pods}},\,
+        P_{\text{priority}}^i\}_{i=1..4}
+        \)
+        et agrégats globaux (latence moyenne \(L_{\text{avg}}\), taux de requêtes \(R_{\text{rate}}\), disponibilité)
   \item \textbf{Espace d'observation :} observation \emph{réelle} partielle (\acn{Dec-POMDP}) obtenue via l'\acn{API}~Kubernetes/collecte métriques. Elle est \emph{spécifique au rôle} :
-  \begin{enumerate*}[label={}, itemjoin={;\,}]
-    \item goulots~: \(Q_{\text{pending}}^i, T_{\text{in}}^i/T_{\text{out}}^i\)
-    \item DDoS~: \(R_{\text{rate}}, \Delta T, L_{\text{avg}}\)
-    \item pannes~: \(S_{\text{status}}^{i,\text{pods}}, F_{\text{fail}}^i\)
-    \item ressources~: \(U_{\text{cpu}}^i, U_{\text{mem}}^i, P_{\text{priority}}^i\)
-  \end{enumerate*}
+        \begin{enumerate*}[label={}, itemjoin={;\,}]
+          \item goulots~: \(Q_{\text{pending}}^i, T_{\text{in}}^i/T_{\text{out}}^i\)
+          \item \phantom{XXX} DDoS~: \(R_{\text{rate}}, \Delta T, L_{\text{avg}}\)
+          \item pannes~: \(S_{\text{status}}^{i,\text{pods}}, F_{\text{fail}}^i\)
+          \item ressources~: \(U_{\text{cpu}}^i, U_{\text{mem}}^i, P_{\text{priority}}^i\)
+        \end{enumerate*}
   \item \textbf{Espace d'action :} \emph{actions réelles} appliquées au cluster via l'\acn{API}~Kubernetes :
-  \begin{enumerate*}[label={\roman*)}, itemjoin={;\quad}]
-    \item \emph{Scaling ciblé} : \texttt{scale\_up}(i), \texttt{scale\_down}(i)
-    \item \emph{Gestion DDoS} : \texttt{rate\_limit\_ingress}(i), \texttt{isolate\_service}(i)
-    \item \emph{Récupération pannes} : \texttt{restart\_failed\_pod}(i), \texttt{reschedule\_pod}(i)
-    \item \emph{Arbitrage ressources} : \texttt{throttle\_low\_prio}(i), \texttt{rebalance\_quota}(i)
-  \end{enumerate*}
+        \begin{enumerate*}[label={\roman*)}, itemjoin={;\quad}]
+          \item \emph{Scaling ciblé} : \textquote{scale\_up}(i), \textquote{scale\_down}(i)
+          \item \emph{Gestion DDoS} : \textquote{rate\_limit\_ingress}(i), \textquote{isolate\_service}(i)
+          \item \emph{Récupération pannes} : \textquote{restart\_failed\_pod}(i), \textquote{reschedule\_ \allowbreak pod}(i)
+          \item \emph{Arbitrage ressources} : \textquote{throttle\_low\_prio}(i), \textquote{rebalance\_quota}(i)
+        \end{enumerate*}
   \item \textbf{Structure de récompense :} récompense \emph{calculée sur télémétrie réelle} (QoS/résilience) :
-  \[
-    R_{\text{global}}=
-    w_1\cdot\text{SuccessRate}
-    -w_2\cdot\overline{Q_{\text{pending}}}
-    -w_3\cdot L_{\text{avg}}
-    -w_4\cdot \text{DownTime}
-    -w_5\cdot \text{OverProvision},
-  \]
-  complétée par des sous-récompenses par rôle:
-  \(R_{\text{bottleneck}}=-\sum_i Q_{\text{pending}}^i\),
-  \(R_{\text{ddos}}=-(\text{DownTime}\cdot w_d+L_{\text{avg}}\cdot w_l)\),
-  \(R_{\text{failure}}=-\sum_i T_{\text{downtime}}^i\),
-  \(R_{\text{resource}}=-\sum_{i\in\text{Critical}}(U_{\text{cpu}}^i+U_{\text{mem}}^i)\)
+        \[
+          R_{\text{global}}=
+          w_1\cdot\text{SuccessRate}
+          -w_2\cdot\overline{Q_{\text{pending}}}
+          -w_3\cdot L_{\text{avg}}
+          -w_4\cdot \text{DownTime}
+          -w_5\cdot \text{OverProvision},
+        \]
+        complétée par des sous-récompenses par rôle:
+        \begin{gather*}
+          R_{\text{bottleneck}}=-\sum_i Q_{\text{pending}}^i                  \\
+          R_{\text{ddos}}=-(\text{DownTime}\cdot w_d+L_{\text{avg}}\cdot w_l) \\
+          R_{\text{failure}}=-\sum_i T_{\text{downtime}}^i                    \\
+          R_{\text{resource}}=-\sum_{i\in\text{Critical}}(U_{\text{cpu}}^i+U_{\text{mem}}^i)
+        \end{gather*}
+
   \item \textbf{Objectif :} maximiser la \emph{résilience opérationnelle} du cluster réel (taux de réussite élevé, latence/queues faibles, disponibilité maximale) sous 5 scénarios: goulots, DDoS, pannes de pods, contention ressources, \emph{mixte}
-\end{enumerate*}
+        % \end{enumerate*}
+\end{itemize}
 
 \noindent\textbf{Spécifications organisationnelles :}
-\begin{enumerate*}[label={\roman*)}, itemjoin={;\quad}]
-  \item \textbf{Rôles :} \texttt{Gestionnaire\_Goulots}, \texttt{Gestionnaire\_DDoS}, \texttt{Gestionnaire\_Pannes}, \texttt{Gestionnaire\_Ressources}
+% \begin{enumerate*}[label={\roman*)}, itemjoin={;\quad}]
+\begin{itemize}
+  \item \textbf{Rôles :} \textquote{Gestionnaire\_Goulots}, \textquote{Gestionnaire\_DDoS}, \textquote{Gestionnaire\_Pannes}, \textquote{Gestionnaire\_Ressources}
   \item \textbf{Missions :}
-  \(\langle\)minimiser \(Q_{\text{pending}}^i\)\(\rangle\);
-  \(\langle\)détecter/isoler DDoS et réduire DownTime/latence\(\rangle\);
-  \(\langle\)\(\downarrow T_{\text{downtime}}\) par reprise rapide\(\rangle\);
-  \(\langle\)prioriser services critiques sous \(U_{\text{cpu/mem}}\) contraint\(\rangle\)
+        \(\langle\)minimiser \(Q_{\text{pending}}^i\)\(\rangle\);
+        \(\langle\)détecter/isoler DDoS et réduire DownTime/latence\(\rangle\);
+        \(\langle\)\(\downarrow T_{\text{downtime}}\) par reprise rapide\(\rangle\);
+        \(\langle\)prioriser services critiques sous \(U_{\text{cpu/mem}}\) contraint\(\rangle\)
   \item \textbf{Contraintes :}
-  (a) \emph{déontiques} par rôle (ex.~seul \texttt{Gestionnaire\_DDoS} peut \texttt{isolate\_service});
-  (b) \emph{ségrégation des responsabilités} (éviter des \texttt{scale\_up} contradictoires);
-  (c) \emph{garde-fous QoS} (\(Q_{\text{pending}}^i<Q_{\text{seuil}}, U_{\text{cpu}}^{\text{total}}<U_{\text{seuil}}\));
-  (d) deux modes d'intégration pendant l'entraînement : \textit{contraintes strictes} (masquage d'actions) vs \textit{souples} (façonnage de récompenses)
-\end{enumerate*}
+        (a) \emph{déontiques} par rôle (ex.~seul \textquote{Gestionnaire\_DDoS} peut \textquote{isolate\_ \allowbreak service});
+        (b) \emph{ségrégation des responsabilités} (éviter des \textquote{scale\_up} contradictoires);
+        (c) \emph{garde-fous QoS} (\(Q_{\text{pending}}^i<Q_{\text{seuil}}, U_{\text{cpu}}^{\text{total}}<U_{\text{seuil}}\));
+        (d) deux modes d'intégration pendant l'entraînement : \textit{contraintes strictes} (masquage d'actions) vs \textit{souples} (façonnage de récompenses)
+        % \end{enumerate*}
+\end{itemize}
 
 \medskip
 \noindent\textit{Remarque (spécificité « réel ») :}
-\begin{enumerate*}[label={--}, itemjoin={\quad}]
+% \begin{enumerate*}[label={--}, itemjoin={\quad}]
+\begin{itemize}
   \item \textsc{MOD/TRN} sur jumeau numérique dérivé de traces du cluster réel;
   \item \textsc{TRF} : déploiement des politiques apprises sur le cluster via l'\acn{API} Kubernetes;
   \item sécurité opératoire: actions bornées (quotas/limites), rollbacks et rate-limiting pour préserver la QoS.
-\end{enumerate*}
+        % \end{enumerate*}
+\end{itemize}
 
 \begin{figure}[h!]
   \centering
@@ -850,7 +925,7 @@ L'environnement \textbf{Microservices Kubernetes} est un \emph{cluster réel} (1
 
 \paragraph{1. Configuration initiale}
 
-Nous opérons \emph{sur le cluster réel} (pas de simulation en ligne de commande jouant le rôle d'« environnement réel »). Le cluster (\textbf{\acn{VM} 8~vCPU, 32~Go \acn{RAM}, 1~Gbps}) héberge l'application e-commerce (4 microservices en chaîne). La télémétrie est collectée par \textit{Prometheus} et visualisée via \textit{Grafana}. \texttt{CybMASDE}/\texttt{KARMA} s'interface avec l'\acn{API} Kubernetes pour \textit{observer} l'état et \textit{agir} (scaling, isolement, redémarrage). Un \textbf{jumeau numérique} est construit à partir des traces pour entraîner les politiques hors-ligne puis \textbf{transférées} et \textit{fermées en boucle} sur le cluster (apprentissage itératif par rafraîchissement des traces).
+Nous opérons \emph{sur le cluster réel} (pas de simulation en ligne de commande jouant le rôle d'« environnement réel »). Le cluster (\textbf{\acn{VM} 8~vCPU, 32~Go \acn{RAM}, 1~Gbps}) héberge l'application e-commerce (4 microservices en chaîne). La télémétrie est collectée par \textit{Prometheus} et visualisée via \textit{Grafana}. \textquote{CybMASDE}/\textquote{KARMA} s'interface avec l'\acn{API} Kubernetes pour \textit{observer} l'état et \textit{agir} (scaling, isolement, redémarrage). Un \textbf{jumeau numérique} est construit à partir des traces pour entraîner les politiques hors-ligne puis \textbf{transférées} et \textit{fermées en boucle} sur le cluster (apprentissage itératif par rafraîchissement des traces).
 
 \begin{figure}[h!]
   \centering
@@ -881,7 +956,12 @@ Nous évaluons \textbf{trois familles} de baselines : (A) profil \emph{défaut} 
   \label{tab:baselines_k8s}
   \renewcommand{\arraystretch}{1.2}
   \tiny
-  \begin{tabularx}{\textwidth}{p{4.1cm}p{3.4cm}p{2.7cm}X}
+  \begin{tabularx}{\textwidth}{
+      >{\raggedright\arraybackslash\hsize=0.3\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.3\hsize}X
+    }
     \toprule
     \textbf{Profil d'activités MAMAD} & \textbf{Algorithmes / Approches}                                                                                                                                                                                                                       & \textbf{Contraintes org. (dureté)} & \textbf{Commentaires}                                                                \\
     \midrule
@@ -911,7 +991,7 @@ Nous évaluons \textbf{trois familles} de baselines : (A) profil \emph{défaut} 
 
 \paragraph{Indicateurs d'évaluation et scénarios}
 
-\textbf{Scénarios} : (1) goulots (\(Q_{\text{pending}}\uparrow\)) ; (2) DDoS (\(R_{\text{rate}}\uparrow,\ \Delta T\uparrow\)) ; (3) pannes (\textit{CrashLoopBackOff}/\texttt{delete pod}) ; (4) contention (\(U_{\text{cpu/mem}}^{\text{tot}}>\) seuil) ; (5) mixte. \textbf{Indicateurs} : \emph{Résilience opérationnelle} (récompense globale, taux de succès, \(L_{\text{avg}}\), \(\overline{Q_{\text{pending}}}\), disponibilité) ; \emph{Robustesse aux attaques} (écart-type de la récompense, temps de reprise DDoS, \% services disponibles) ; \emph{Précision du jumeau numérique} (écart simulation/réel) ; \emph{Convergence} (épisodes jusqu'au palier) ; \emph{Adaptabilité} (variance récompense entre charges) ; \emph{Explicabilité} (alignement rôles/missions, analyse de trajectoires).
+\textbf{Scénarios} : (1) goulots (\(Q_{\text{pending}}\uparrow\)) ; (2) DDoS (\(R_{\text{rate}}\uparrow,\ \Delta T\uparrow\)) ; (3) pannes (\textit{CrashLoopBackOff}/\textquote{delete pod}) ; (4) contention (\(U_{\text{cpu/mem}}^{\text{tot}}>\) seuil) ; (5) mixte. \textbf{Indicateurs} : \emph{Résilience opérationnelle} (récompense globale, taux de succès, \(L_{\text{avg}}\), \(\overline{Q_{\text{pending}}}\), disponibilité) ; \emph{Robustesse aux attaques} (écart-type de la récompense, temps de reprise DDoS, \% services disponibles) ; \emph{Précision du jumeau numérique} (écart simulation/réel) ; \emph{Convergence} (épisodes jusqu'au palier) ; \emph{Adaptabilité} (variance récompense entre charges) ; \emph{Explicabilité} (alignement rôles/missions, analyse de trajectoires).
 
 
 
@@ -920,30 +1000,33 @@ Nous évaluons \textbf{trois familles} de baselines : (A) profil \emph{défaut} 
 
 L'environnement \textbf{Drone Swarm} est un réseau ad hoc d'essaim de drones sur lequel les agents défenseurs doivent le protéger contre les intrusions malveillantes dans divers scénarios de cyberattaques~\cite{Standen2021}. Cet environnement est illustré dans \autoref{fig:cyborg}\index{Drone Swarm}.
 
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+\begin{itemize}
   \item \textbf{Espace d'état :} Graphique réseau dynamique où les nœuds représentent les appareils et les arêtes indiquent les connexions actives
   \item \textbf{Espace d'observation :} Les agents reçoivent des alertes de sécurité et des mises à jour de l'état du réseau
   \item \textbf{Espace d'action :}
-  \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-    \item \texttt{Surveillance} : analyse de l'activité des nœuds
-    \item \texttt{Bloquer l'IP} : restreindre l'accès provenant d'une source suspecte
-    \item \texttt{Déployer un correctif} : Renforcer les défenses du réseau ;.
-  \end{enumerate*}
+        \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+          \item \textquote{Surveillance} : analyse de l'activité des nœuds
+          \item \textquote{Bloquer l'IP} : restreindre l'accès provenant d'une source suspecte
+          \item \textquote{Réimager un drone} : Réinstaller le système d'exploitation d'un drone suspect pour éliminer.
+        \end{enumerate*}
   \item \textbf{Structure de récompense :}
-  \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-    \item Prévention d'une attaque : $+30$
-    \item Blocage des faux positifs : $-10$
-    \item Autorisation d'une violation : $-50$.
-  \end{enumerate*}
+        \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+          \item Etat de santé global : pourcentage de drone compromis $\times$ $-100$
+          \item Prévention d'une attaque : $+30$
+          \item Blocage des faux positifs : $-10$
+          \item Réimager un drone : $-50$.
+        \end{enumerate*}
   \item \textbf{objectif :} Détecter et atténuer les cybermenaces tout en évitant les faux positifs.
-\end{enumerate*}
+\end{itemize}
 %
 \textbf{Spécifications organisationnelles :}
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
-  \item \textbf{Rôles :} \texttt{Analyste des menaces, gestionnaire de pare-feu, opérateur de sécurité}
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+\begin{itemize}
+  \item \textbf{Rôles :} \textquote{Analyste des menaces, gestionnaire de pare-feu, opérateur de sécurité}
   \item \textbf{Missions :} Détecter les menaces, bloquer les accès non autorisés, maintenir l'intégrité du réseau
   \item \textbf{Contraintes :} Minimiser les faux positifs tout en garantissant la couverture de sécurité.
-\end{enumerate*}
+\end{itemize}
 
 \begin{figure}[h!]
   \centering
@@ -956,9 +1039,9 @@ L'environnement \textbf{Drone Swarm} est un réseau ad hoc d'essaim de drones su
 
 \paragraph{1. Configuration initiale}
 
-Nous utilisons \textbf{\acn{CybORG}}~\cite{Standen2021} comme simulateur de référence pour l'essaim de drones (réseau \textit{ad hoc} dynamique, nœuds mobiles, compromis possibles). Conformément aux environnements simulés non-orientés Cyberdéfense, une instance \acn{CybORG} est lancée en tâche de fond et exposée via un \textbf{adaptateur REST} conforme à l'\acn{API} d'I/O de \texttt{CybMASDE} (\texttt{reset/step}, observations jointes, masques d'actions). Cette passerelle permet : (i) la collecte de traces pour \texttt{\acn{MOD-AUT}} (historiques $\langle o_{1:t}, a_{1:t} \rangle$) ; (ii) l'entraînement \acn{MARL} \textbf{TRN} avec ou sans \textit{spécifications organisationnelles} ; (iii) l'analyse \textbf{ANL} (clustering de trajectoires, vérification de l'alignement rôles/missions) ; (iv) le transfert \textbf{TRF} vers l'exécuteur simulé standardisé.
+Nous utilisons \textbf{\acn{CybORG}}~\cite{Standen2021} comme simulateur de référence pour l'essaim de drones (réseau \textit{ad hoc} dynamique, nœuds mobiles, compromis possibles). Conformément aux environnements simulés non-orientés Cyberdéfense, une instance \acn{CybORG} est lancée en tâche de fond et exposée via un \textbf{adaptateur REST} conforme à l'\acn{API} d'I/O de \textquote{CybMASDE} (\textquote{reset/step}, observations jointes, masques d'actions). Cette passerelle permet : (i) la collecte de traces pour \textquote{\acn{MOD-AUT}} (historiques $\langle o_{1:t}, a_{1:t} \rangle$) ; (ii) l'entraînement \acn{MARL} \textbf{TRN} avec ou sans \textit{spécifications organisationnelles} ; (iii) l'analyse \textbf{ANL} (clustering de trajectoires, vérification de l'alignement rôles/missions) ; (iv) le transfert \textbf{TRF} vers l'exécuteur simulé standardisé.
 
-Pour \texttt{\acn{MOD-AUT}}, un \textit{Joint-Observation Prediction Model} (\acn{JOPM}, \acn{VAE}+\acn{LSTM}) peut être entraîné afin d'apprendre une dynamique approximative $\langle o_{1:t}, a_{1:t} \rangle \mapsto o_{t+1}$ et une fonction d'arrêt dérivée (optionnel, le simulateur étant déjà la « source de vérité »). La fonction de récompense reconstruite est croisée avec la récompense native (prévention d'attaques, continuité de service, minimisation des faux positifs). Un mappage \emph{labels} observation/action ($l_o, l_a$) synchronise \acn{CybORG} et \texttt{MMA} (MOISE+MARL) pour activer le masquage d'actions et le shaping par rôle. L'entraînement s'appuie sur \texttt{MARLlib}/\texttt{RLlib} (profils \texttt{MAPPO}, \texttt{MADDPG}, \texttt{QMIX}, \texttt{COMA}, \texttt{IQL}, \texttt{VDN}) avec \textit{seeds} fixées, conformément au \autoref{chap:cadre_experimental} et aux ressources présentées en \autoref{par:compute_conditions}. Les épisodes et fréquences de log sont harmonisés avec les autres environnements simulés.
+Pour \textquote{\acn{MOD-AUT}}, un \textit{Joint-Observation Prediction Model} (\acn{JOPM}, \acn{VAE}+\acn{LSTM}) peut être entraîné afin d'apprendre une dynamique approximative $\langle o_{1:t}, a_{1:t} \rangle \mapsto o_{t+1}$ et une fonction d'arrêt dérivée (optionnel, le simulateur étant déjà la « source de vérité »). La fonction de récompense reconstruite est croisée avec la récompense native (prévention d'attaques, continuité de service, minimisation des faux positifs). Un mappage \emph{labels} observation/action ($l_o, l_a$) synchronise \acn{CybORG} et \textquote{MMA} (MOISE+MARL) pour activer le masquage d'actions et le shaping par rôle. L'entraînement s'appuie sur \textquote{MARLlib}/\textquote{RLlib} (profils \textquote{MAPPO}, \textquote{MADDPG}, \textquote{QMIX}, \textquote{COMA}, \textquote{IQL}, \textquote{VDN}) avec \textit{seeds} fixées, conformément au \autoref{chap:cadre_experimental} et aux ressources présentées en \autoref{par:compute_conditions}. Les épisodes et fréquences de log sont harmonisés avec les autres environnements simulés.
 
 \paragraph{2 à 4. Définition des baselines}
 
@@ -971,32 +1054,37 @@ Nous définissons une \textbf{baseline avancée par défaut} et des \textbf{abla
   \label{tab:baselines_drone_swarm}
   \renewcommand{\arraystretch}{1.2}
   \tiny
-  \begin{tabularx}{\textwidth}{p{3.8cm}p{3.2cm}p{2.8cm}p{4.5cm}}
+  \begin{tabularx}{\textwidth}{
+      >{\raggedright\arraybackslash\hsize=0.3\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.3\hsize}X
+    }
     \toprule
-    \textbf{Profil d'activités MAMAD} & \textbf{Algorithmes \acn{MARL} / Méthodes}       & \textbf{Contraintes org. (dureté)} & \textbf{Commentaires}                                                                                                                                                  \\
+    \textbf{Profil d'activités MAMAD} & \textbf{Algorithmes \acn{MARL} / Méthodes}       & \textbf{Contraintes org. (dureté)} & \textbf{Commentaires}                                                                                                                                                           \\
     \midrule
     % --- Profil A (Défaut) ---
-    \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil A — Défaut}                                                                                                                                                                                                                                          \\\acn{MOD-AUT};\;\acn{TRN-CON};\;\acn{ANL-AUT};\;\acn{TRF-AUT}}}
-                                      & \acn{MAPPO},\;\acn{MADDPG},\;\acn{QMIX}          & Oui (1.0)                          & Masquage d'actions par rôles (\texttt{Analyste}, \texttt{Pare-feu}, \texttt{Opérateur}) ; shaping mission : détection $\rightarrow$ confinement $\rightarrow$ reprise. \\
-                                      & \acn{MAPPO},\;\acn{MADDPG},\;\acn{QMIX}          & Douces (0.5)                       & Contraintes atténuées (bonus/malus, masques partiels) ; même pipeline que défaut.                                                                                      \\
-                                      & \acn{MAPPO},\;\acn{MADDPG},\;\acn{QMIX}          & Aucune (0.0)                       & \textit{Ablation} \acn{TRN-UNC} : pas de guidage organisationnel, récompense native (prévention, continuité, \acn{FP}/\acn{FN}).                                       \\
+    \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil A — Défaut}                                                                                                                                                                                                                                                   \\\acn{MOD-AUT};\;\acn{TRN-CON};\;\acn{ANL-AUT};\;\acn{TRF-AUT}}}
+                                      & \acn{MAPPO},\;\acn{MADDPG},\;\acn{QMIX}          & Oui (1.0)                          & Masquage d'actions par rôles (\textquote{Analyste}, \textquote{Pare-feu}, \textquote{Opérateur}) ; shaping mission : détection $\rightarrow$ confinement $\rightarrow$ reprise. \\
+                                      & \acn{MAPPO},\;\acn{MADDPG},\;\acn{QMIX}          & Douces (0.5)                       & Contraintes atténuées (bonus/malus, masques partiels) ; même pipeline que défaut.                                                                                               \\
+                                      & \acn{MAPPO},\;\acn{MADDPG},\;\acn{QMIX}          & Aucune (0.0)                       & \textit{Ablation} \acn{TRN-UNC} : pas de guidage organisationnel, récompense native (prévention, continuité, \acn{FP}/\acn{FN}).                                                \\
     \hdashline
     % --- Profil B (Analyse manuelle) ---
-    \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil B — Analyse manuelle}                                                                                                                                                                                                                                \\\acn{MOD-AUT};\;\acn{TRN-CON};\;\acn{ANL-MAN};\;\acn{TRF-AUT}}}
-                                      & \acn{MAPPO},\;\acn{COMA}                         & Oui (1.0)                          & Paramétrage manuel (seuils d'alerte, règles d'escalade) ; édition manuelle des masques/règles.                                                                         \\
-                                      & \acn{MAPPO},\;\acn{COMA}                         & Douces (0.5)                       & Guidage souple ; validation post-hoc par \acn{TEMM}.                                                                                                                   \\
-                                      & \acn{MAPPO},\;\acn{COMA}                         & Aucune (0.0)                       & \acn{TRN-UNC} ; \textbf{ANL} pour l'explicabilité/diagnostic uniquement, sans réinjection.                                                                             \\
+    \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil B — Analyse manuelle}                                                                                                                                                                                                                                         \\\acn{MOD-AUT};\;\acn{TRN-CON};\;\acn{ANL-MAN};\;\acn{TRF-AUT}}}
+                                      & \acn{MAPPO},\;\acn{COMA}                         & Oui (1.0)                          & Paramétrage manuel (seuils d'alerte, règles d'escalade) ; édition manuelle des masques/règles.                                                                                  \\
+                                      & \acn{MAPPO},\;\acn{COMA}                         & Douces (0.5)                       & Guidage souple ; validation post-hoc par \acn{TEMM}.                                                                                                                            \\
+                                      & \acn{MAPPO},\;\acn{COMA}                         & Aucune (0.0)                       & \acn{TRN-UNC} ; \textbf{ANL} pour l'explicabilité/diagnostic uniquement, sans réinjection.                                                                                      \\
     \hdashline
     % --- Profil C (Cycle principalement manuel) ---
-    \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil C — Cycle principalement manuel}                                                                                                                                                                                                                     \\\acn{MOD-MAN};\;\acn{TRN-CON};\;\acn{ANL-MAN};\;\acn{TRF-MAN}}}
-                                      & \acn{IQL},\;\acn{VDN},\;\acn{MADDPG}             & Oui (1.0)                          & Environnement \textit{handcrafted} (sous-ensemble des observations/actions) ; hyperparamètres fixés.                                                                   \\
-                                      & \acn{IQL},\;\acn{VDN},\;\acn{MADDPG}             & Douces (0.5)                       & Contraintes souples définies manuellement (rôles/missions + barèmes adoucis).                                                                                          \\
-                                      & \acn{IQL},\;\acn{VDN}                            & Aucune (0.0)                       & Base minimale sans guidage ; sert de référence « pure \acn{RL} » entièrement manuelle.                                                                                 \\
+    \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil C — Cycle principalement manuel}                                                                                                                                                                                                                              \\\acn{MOD-MAN};\;\acn{TRN-CON};\;\acn{ANL-MAN};\;\acn{TRF-MAN}}}
+                                      & \acn{IQL},\;\acn{VDN},\;\acn{MADDPG}             & Oui (1.0)                          & Environnement \textit{handcrafted} (sous-ensemble des observations/actions) ; hyperparamètres fixés.                                                                            \\
+                                      & \acn{IQL},\;\acn{VDN},\;\acn{MADDPG}             & Douces (0.5)                       & Contraintes souples définies manuellement (rôles/missions + barèmes adoucis).                                                                                                   \\
+                                      & \acn{IQL},\;\acn{VDN}                            & Aucune (0.0)                       & Base minimale sans guidage ; sert de référence « pure \acn{RL} » entièrement manuelle.                                                                                          \\
     \hdashline
     % --- Profil D (Références cyber classiques) ---
-    \multirow{2}{*}{\parbox{3.8cm}{\textbf{Profil D — Références cyber classiques}                                                                                                                                                                                                                     \\(Sans \acn{MARL}, pour positionnement)}}
-                                      & \acn{IDS} à règles (type \textit{rule-based}),                                                                                                                                                                                                                 \\\acn{ML} sup.~(\acn{SVM}/\acn{KNN}) &  & n/a & Détection + réaction scriptée (blocage \acn{IP}/port, isolement nœud) ; reactive, peu adaptable aux topologies mouvantes. \\
-                                      & Heuristiques réseau (\textit{score} d'anomalie),                                                                                                                                                                                                               \\contrôle \textit{threshold-based} &  & n/a & Baselines non apprenantes (seuils statiques, fenêtres glissantes) ; faible robustesse aux attaques adaptatives. \\
+    \multirow{2}{*}{\parbox{3.8cm}{\textbf{Profil D — Références cyber classiques}                                                                                                                                                                                                                              \\(Sans \acn{MARL}, pour positionnement)}}
+                                      & \acn{IDS} à règles (type \textit{rule-based}),                                                                                                                                                                                                                          \\\acn{ML} sup.~(\acn{SVM}/\acn{KNN}) &  & n/a & Détection + réaction scriptée (blocage \acn{IP}/port, isolement nœud) ; reactive, peu adaptable aux topologies mouvantes. \\
+                                      & Heuristiques réseau (\textit{score} d'anomalie),                                                                                                                                                                                                                        \\contrôle \textit{threshold-based} &  & n/a & Baselines non apprenantes (seuils statiques, fenêtres glissantes) ; faible robustesse aux attaques adaptatives. \\
     \bottomrule
   \end{tabularx}
 \end{table*}
@@ -1019,21 +1107,23 @@ Ce chapitre présente et discute les résultats expérimentaux obtenus à partir
 L'objectif est double~: d'une part valider la faisabilité et l'efficacité de la méthode proposée dans des environnements variés, d'autre part analyser la couverture des critères d'évaluation (autonomie, performance, adaptation, contrôle, explicabilité, robustesse) définis en \autoref{sec:criteres-evaluation}.
 
 Les expérimentations sont organisées selon deux axes principaux~:
-\begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+% \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
+\begin{itemize}
   \item des environnements génériques, non orientés Cyberdéfense (tels que \textit{Overcooked-AI}, \textit{Predator-Prey}), permettant de tester la robustesse de la méthode dans des contextes abstraits et contrôlés ;
   \item des environnements spécialisés de Cyberdéfense (\textit{Company Infrastructure}, \textit{Microservices Kubernetes}, \textit{Drone Swarm}), conçus pour évaluer la méthode dans des conditions réalistes de menaces et de contraintes organisationnelles.
-\end{enumerate*}
+        % \end{enumerate*}
+\end{itemize}
 
 Chaque section détaille les résultats obtenus, en les comparant systématiquement avec les \textit{baselines} décrites au \autoref{chap:case_studies}, selon les métriques introduites en \autoref{sec:criteria_metrics}.
 Enfin, une discussion transversale clôt le chapitre en examinant la couverture des critères par la méthode, ainsi que les biais et limites susceptibles d'influencer l'interprétation des résultats.
 
 \section{Résultats et discussion des environnements non orientés Cyberdéfense}\label{sec:results_and_discussion_cyberdefense}
 
-\subsection*{Performance et convergence}
+\subsection*{Performance, convergence et interventions humaines}
 
 Les trois environnements jouets (Overcooked-AI, Predator-Prey, Warehouse Management) permettent d'évaluer la méthode \acn{MAMAD} dans des contextes coopératifs/compétitifs variés.
 La \autoref{fig:noncyber_learning_curves} présente les courbes d'apprentissage (récompenses normalisées).
-Dans l'ensemble, les profils \textbf{avec contraintes organisationnelles} convergent plus rapidement que les ablations \texttt{\acn{TRN-UNC}}.
+Dans l'ensemble, les profils \textbf{avec contraintes organisationnelles} convergent plus rapidement que les ablations \textquote{\acn{TRN-UNC}}.
 Par exemple, dans Overcooked-AI, \acn{MAPPO} avec contraintes fortes converge en moyenne après $1.8\times 10^4$ épisodes contre $2.6\times 10^4$ sans contraintes.
 Dans Predator-Prey, \acn{QMIX} converge en $2.2\times 10^4$ épisodes (fortes) contre $3.4\times 10^4$ (sans).
 Enfin, dans Warehouse Management, \acn{MAPPO} atteint la convergence en $2.9\times 10^4$ épisodes (fortes) contre $4.1\times 10^4$ (sans).
@@ -1044,6 +1134,9 @@ Enfin, dans Warehouse Management, \acn{MAPPO} atteint la convergence en $2.9\tim
   \caption{Courbes d'apprentissage (récompenses normalisées) pour les environnements non orientés Cyberdéfense.}
   \label{fig:noncyber_learning_curves}
 \end{figure}
+
+De façon générale, chacun des environnements nécéssitent environ un peu plus d'une journée pour établir des spécifications qui contraignent complètement les agents permettant d'imiter une conception totalement manuelle de chacun des \acplu{SMA}. D'un autre côté, il suffit de un à deux cycles de raffinement pour obtenir des \acplu{SMA} atteignant des performances similaires aux \acplu{SMA} définis manuellement, soit entre trois à quatre heures pour chacun d'entre eux. Cela conduit à un \textbf{proportion d'interventions manuelles} estimé entre 15 et 25\%.
+
 
 \subsection*{Comparaison des récompenses cumulées}
 
@@ -1081,7 +1174,7 @@ Par exemple, dans Overcooked-AI, les collisions de rôle (deux agents prenant si
 
 Les analyses Auto-\acn{TEMM} montrent une \textbf{adéquation organisationnelle} ($\acn{OF}$) moyenne de $0.82$ (fortes), $0.79$ (douces) et $0.65$ (sans contraintes).
 La \textbf{qualité des spécifications inférées} est plus élevée dans Warehouse Management ($93\%$ de similarité Jaccard), reflétant la structure plus déterministe des tâches, que dans Predator-Prey ($84\%$).
-Dans Overcooked-AI, Auto-\acn{TEMM} infère correctement les rôles \texttt{Chef} et \texttt{Serveur} mais confond parfois l'\texttt{Assistant} et le \texttt{Chef}, expliquant un score légèrement plus bas ($87\%$).
+Dans Overcooked-AI, Auto-\acn{TEMM} infère correctement les rôles \textquote{Chef} et \textquote{Serveur} mais confond parfois l'\textquote{Assistant} et le \textquote{Chef}, expliquant un score légèrement plus bas ($87\%$).
 
 \
 
@@ -1090,13 +1183,13 @@ Les \textbf{contraintes douces} apparaissent comme le meilleur compromis entre p
 Les environnements simples montrent également que l'absence de contraintes mène à des comportements sous-optimaux (collisions, désorganisation), moins robustes et plus difficiles à interpréter.
 
 
-\section{Résultats et discussion de l'environnement \textbf{Company Infrastructure}}\label{sec:results_and_discussion_infra}
+\section{Résultats et discussion de l'environnement Company Infrastructure}\label{sec:results_and_discussion_infra}
 
-\subsection*{Performance et convergence}
+\subsection*{Performance, convergence et interventions manuelles}
 
 La \autoref{fig:infra_learning_curves} illustre les courbes d'apprentissage pour les différentes baselines.
 La \textbf{baseline avancée} (Profil~A, contraintes fortes, \acn{MAPPO}) converge en moyenne après $3.2 \times 10^4$ épisodes, contre $4.5 \times 10^4$ pour l'ablation sans contraintes (\acn{TRN-UNC}).
-Les algorithmes \texttt{QMIX} et \texttt{COMA} montrent une convergence plus lente ($\sim 5.0 \times 10^4$ épisodes) mais atteignent des récompenses comparables.
+Les algorithmes \textquote{QMIX} et \textquote{COMA} montrent une convergence plus lente ($\sim 5.0 \times 10^4$ épisodes) mais atteignent des récompenses comparables.
 
 La récompense cumulée moyenne (moyenne sur 5 runs indépendants) atteint $+2450 \pm 120$ pour \acn{MAPPO}, contre $+1930 \pm 150$ pour \acn{TRN-UNC}, indiquant un \textbf{gain de $+27\%$} grâce aux contraintes organisationnelles.
 
@@ -1106,6 +1199,8 @@ La récompense cumulée moyenne (moyenne sur 5 runs indépendants) atteint $+245
   \caption{Courbes d'apprentissage (récompense moyenne par épisode) pour l'environnement Company Infrastructure. Les zones ombrées indiquent l'écart-type entre runs.}
   \label{fig:infra_learning_curves}
 \end{figure}
+
+Dans l'environnement Company Infrastructure, le \textbf{nombre moyen d'interventions manuelles} requises est de 1 à 3 cycles de raffinement (soit 3 à 6 heures au total) pour obtenir un \acn{SMA} dont les performances sont équivalentes à celles d'une solution entièrement conçue et implémentée manuellement, laquelle nécessite généralement plus d'une journée de travail. Cela représente une réduction significative de l'intervention humaine, estimée entre 15 et 25\%.
 
 \subsection*{Robustesse et adaptation}
 
@@ -1123,7 +1218,7 @@ Toutefois, on observe une corrélation inverse avec la récompense cumulée : tr
 
 L'analyse Auto-\acn{TEMM} sur les trajectoires montre une \textbf{adéquation organisationnelle} ($\acn{OF}$) de $0.84$ pour \acn{MAPPO} avec contraintes fortes, contre $0.67$ pour \acn{TRN-UNC}.
 La qualité des spécifications inférées (similitude Jaccard entre rôles/missions attendus et extraits) atteint $92\%$ pour les profils contraints, contre $71\%$ sans contraintes.
-Les dendrogrammes produits (non inclus ici pour concision) révèlent des clusters nets alignés sur les rôles \texttt{Attacker\_ExfilDB} et \texttt{Defender\_DB\_PAM}, tandis que l'absence de contraintes engendre des clusters plus diffus.
+Les dendrogrammes produits (non inclus ici pour concision) révèlent des clusters nets alignés sur les rôles \textquote{Attacker\_ExfilDB} et \textquote{Defender\_DB\_PAM}, tandis que l'absence de contraintes engendre des clusters plus diffus.
 
 \subsection*{Synthèse comparative}
 
@@ -1152,18 +1247,18 @@ La \autoref{tab:infra_results} synthétise les principaux résultats selon la gr
 
 \
 
-Les résultats confirment que l'intégration des \textbf{contraintes organisationnelles} (MOISE+MARL) améliore sensiblement la robustesse, la stabilité et l'explicabilité des politiques apprises.
+Les résultats confirment que l'intégration des \textbf{contraintes organisationnelles} (MOISE+ \allowbreak MARL) améliore sensiblement la robustesse, la stabilité et l'explicabilité des politiques apprises.
 Néanmoins, les contraintes strictes peuvent ralentir la convergence et réduire légèrement la récompense cumulée finale par rapport aux contraintes douces, qui offrent un compromis intéressant entre performance et respect des rôles.
-L'absence de contraintes conduit à des politiques moins robustes et plus difficiles à interpréter, ce qui limite leur pertinence dans un cadre Cyberdéfense réel.
+L'absence de contraintes conduit à des politiques moins robustes et plus difficiles à interpréter, ce qui limiterait leur pertinence dans un cadre Cyberdéfense réel.
 
 
-\section{Résultats et discussion de l'environnement \textbf{Microservices Kubernetes}}\label{sec:results_and_discussion_ms}
+\section{Résultats et discussion de l'environnement Microservices Kubernetes}\label{sec:results_and_discussion_ms}
 
-\subsection*{Synthèse des performances QoS et convergence}
+\subsection*{Synthèse des performances QoS et convergence et interventions manuelles}
 
 La \autoref{fig:k8s_learning_curves} présente les courbes d'apprentissage (récompense globale QoS, moyenne glissante sur $200$ épisodes) pour les principaux profils.
-Le \textbf{Profil~A (contraintes fortes, \acn{MAPPO})} converge en $2.6\times 10^4$ épisodes (détection de plateau \emph{change-point}), contre $3.9\times 10^4$ pour l'ablation \texttt{\acn{TRN-UNC}}.
-Les variantes \texttt{MADDPG} et \texttt{QMIX} convergent respectivement à $3.1\times 10^4$ et $3.5\times 10^4$ épisodes.
+Le \textbf{Profil~A (contraintes fortes, \acn{MAPPO})} converge en $2.6\times 10^4$ épisodes (détection de plateau \emph{change-point}), contre $3.9\times 10^4$ pour l'ablation \textquote{\acn{TRN-UNC}}.
+Les variantes \textquote{MADDPG} et \textquote{QMIX} convergent respectivement à $3.1\times 10^4$ et $3.5\times 10^4$ épisodes.
 Sur $5$ runs indépendants, la récompense finale atteint $+0.91 \pm 0.03$ (normalisée) pour \acn{MAPPO}, $+0.88 \pm 0.04$ (fortes), et $+0.79 \pm 0.05$ sans contraintes.
 
 \begin{figure}[h!]
@@ -1172,6 +1267,8 @@ Sur $5$ runs indépendants, la récompense finale atteint $+0.91 \pm 0.03$ (norm
   \caption[Courbes d'apprentissage (récompense QoS normalisée) pourMicroservices Kubernetes]{Courbes d'apprentissage (récompense QoS normalisée) pour Microservices Kubernetes. Zone ombrée : écart-type inter-runs.}
   \label{fig:k8s_learning_curves}
 \end{figure}
+
+Enfin, pour l'environnement Microservices Kubernetes, le \textbf{nombre moyen d'interventions manuelles} nécessaires est d'environ 4 à 5 cycles de raffinement (soit 6 à 7 heures au total) pour que le \acn{SMA} obtenu atteigne des performances comparables à celles d'une solution entièrement conçue et implémentée manuellement, ce qui prend généralement plus d'une journée. Cela correspond à une proportion d'intervention réduite, estimée à environ 25\%.
 
 \subsection*{Indicateurs QoS en régime nominal}
 
@@ -1213,7 +1310,7 @@ La \autoref{tab:k8s_robustness} montre que les contraintes \textbf{fortes} maxim
   \label{tab:k8s_robustness}
   \renewcommand{\arraystretch}{1.2}
   \small
-  \begin{tabular}{|l|c|c|c|c|c|}
+  \begin{tabular}{lccccc}
     \hline
     \textbf{Profil}               & \textbf{Bottleneck} & \textbf{DDoS}   & \textbf{Pannes} & \textbf{Contention} & \textbf{Mixte}  \\
     \hline
@@ -1228,7 +1325,7 @@ La \autoref{tab:k8s_robustness} montre que les contraintes \textbf{fortes} maxim
 \subsection*{Temps de reprise et discipline d'action}
 
 Sous DDoS, le \textbf{temps de reprise} (retour sous $L_{\text{avg}}<200$~ms) est de $3.7 \pm 0.6$~min pour \acn{MAPPO} contre $5.2 \pm 0.8$~min (douces) et $7.9 \pm 1.1$~min (\acn{TRN-UNC}).
-Le \textbf{taux de violations des garde-fous} (actions contradictoires entre rôles, ex.~\texttt{scale\_up} simultanés) est nul en mode strict ($0.0\%$), $3.1\%$ en mode doux, et $18.4\%$ sans contraintes.
+Le \textbf{taux de violations des garde-fous} (actions contradictoires entre rôles, ex.~\textquote{scale\_up} simultanés) est nul en mode strict ($0.0\%$), $3.1\%$ en mode doux, et $18.4\%$ sans contraintes.
 L'\textbf{écart-type inter-runs} sur la récompense est réduit avec contraintes ($\sigma=0.028$ fortes, $0.031$ douces) vs $0.049$ (\acn{TRN-UNC}), soulignant une stabilité accrue.
 
 \subsection*{Précision du jumeau numérique (écart simulation/réel)}
@@ -1242,7 +1339,7 @@ Après \textit{fine-tuning} sur traces récentes (une itération), la \acn{MAE} 
 
 Auto-\acn{TEMM} appliqué aux trajectoires (post-entraînement) produit un \textbf{score d'adéquation organisationnelle} $\acn{OF}=0.86$ (contraintes fortes), $0.83$ (douces) et $0.71$ (\acn{TRN-UNC}).
 La \textbf{qualité des spécifications inférées} (similitude Jaccard sur rôles/missions et déclencheurs) atteint $93\%$ (fortes), $90\%$ (douces), $76\%$ (\acn{TRN-UNC}).
-Les dendrogrammes révèlent des clusters distincts correspondant aux rôles \texttt{Gestionnaire\_DDoS} et \texttt{Gestionnaire\_Goulots}, avec des trajectoires stables en mode strict.
+Les dendrogrammes révèlent des clusters distincts correspondant aux rôles \textquote{Gestionnaire\_DDoS} et \textquote{Gestionnaire\_Goulots}, avec des trajectoires stables en mode strict.
 
 \subsection*{Comparatif synthétique}
 
@@ -1270,16 +1367,16 @@ Les dendrogrammes révèlent des clusters distincts correspondant aux rôles \te
 
 Les résultats montrent que l'intégration des \textbf{spécifications organisationnelles} améliore simultanément (i) la \emph{robustesse} sous perturbations (notamment DDoS et pannes), (ii) la \emph{discipline d'action} (zéro conflit de décisions critiques), et (iii) l'\emph{explicabilité} (rôles/missions cohérents).
 Les contraintes \textbf{douces} maximisent la performance QoS (latence p95, files), alors que les contraintes \textbf{fortes} maximisent la résilience et réduisent les variances inter-runs.
-L'ablation \texttt{\acn{TRN-UNC}} sous-performe et présente une variabilité accrue, confirmant l'apport du guidage organisationnel dans un contexte opérationnel.
+L'ablation \textquote{\acn{TRN-UNC}} sous-performe et présente une variabilité accrue, confirmant l'apport du guidage organisationnel dans un contexte opérationnel.
 Enfin, la précision du jumeau numérique (\acn{MAE} $6$--$9\%$) est suffisante pour un entraînement hors-ligne efficace, et s'améliore rapidement après une itération de réapprentissage sur traces fraîches.
 
 
-\section{Résultats et discussion de l'environnement \textbf{Drone Swarm}}\label{sec:results_and_discussion_drone_swarm}
+\section{Résultats et discussion de l'environnement Drone Swarm}\label{sec:results_and_discussion_drone_swarm}
 
-\subsection*{Synthèse des performances et convergence}
+\subsection*{Synthèse des performances, convergence et interventions manuelles}
 
 La \autoref{fig:drone_learning_curves} illustre les courbes d'apprentissage (récompense normalisée) sur l'essaim de drones (18 nœuds).
-Le \textbf{Profil A (contraintes fortes, \acn{MAPPO})} converge en $3.1\times 10^4$ épisodes, contre $4.7\times 10^4$ pour l'ablation \texttt{\acn{TRN-UNC}}.
+Le \textbf{Profil A (contraintes fortes, \acn{MAPPO})} converge en $3.1\times 10^4$ épisodes, contre $4.7\times 10^4$ pour l'ablation \textquote{\acn{TRN-UNC}}.
 Les variantes \acn{MADDPG} et \acn{QMIX} atteignent respectivement $3.6\times 10^4$ et $4.2\times 10^4$ épisodes.
 En régime établi, les récompenses normalisées moyennes sont $+0.87 \pm 0.04$ (\acn{MAPPO} fortes), $+0.89 \pm 0.03$ (douces), et $+0.72 \pm 0.07$ sans contraintes.
 
@@ -1289,6 +1386,9 @@ En régime établi, les récompenses normalisées moyennes sont $+0.87 \pm 0.04$
   \caption[Courbes d'apprentissage (récompense normalisée) pour Drone Swarm]{Courbes d'apprentissage (récompense normalisée) pour Drone Swarm. Zone ombrée : écart-type inter-runs.}
   \label{fig:drone_learning_curves}
 \end{figure}
+
+Pour l'environnement Drone Swarm, le \textbf{nombre moyen d'interventions manuelles} nécessaires est d'environ 2 à 3 cycles de raffinement (soit 4 à 5 heures au total) pour que le \acn{SMA} obtenu atteigne des performances comparables à celles d'une solution entièrement conçue et implémentée manuellement, ce qui prend généralement plus d'une journée. Cela correspond à une proportion d'intervention réduite, estimée à environ 20\%.
+
 
 \subsection*{Indicateurs en fonctionnement nominal}
 
@@ -1351,7 +1451,7 @@ L'\textbf{écart-type des récompenses} entre runs est réduit ($\sigma=0.032$ f
 
 \subsection*{Explicabilité organisationnelle}
 
-Auto-\acn{TEMM} infère des clusters de comportements distincts : \texttt{Analyste}, \texttt{Pare-feu}, \texttt{Opérateur}.
+Auto-\acn{TEMM} infère des clusters de comportements distincts : \textquote{Analyste}, \textquote{Pare-feu}, \textquote{Opérateur}.
 Le \textbf{score de cohérence} atteint $0.84$ (fortes), $0.82$ (douces), $0.69$ (sans contraintes).
 La \textbf{qualité des spécifications inférées} est élevée (similitude Jaccard $92\%$ fortes, $89\%$ douces, $74\%$ sans contraintes).
 Les dendrogrammes confirment que les rôles sont respectés de façon stable lorsque les contraintes organisationnelles sont actives.
@@ -1405,12 +1505,12 @@ Les environnements non orientés Cyberdéfense servent de référence contrôlé
     \hline
     \textbf{Environnement} & \textbf{C1 Autonomie} & \textbf{C2 Perf.} & \textbf{C3 Adaptation} & \textbf{C4 Contrôle} & \textbf{C5 Explicabilité} \\
     \hline
-    Overcooked-AI          & $0.78$                & $0.82$            & $0.80$                 & $0.75$               & $0.72$                    \\
-    Predator-Prey          & $0.74$                & $0.79$            & $0.77$                 & $0.73$               & $0.69$                    \\
-    Warehouse Management   & $0.81$                & $0.85$            & $0.82$                 & $0.77$               & $0.76$                    \\
-    Company Infrastructure & $0.84$                & $0.88$            & $0.83$                 & $0.85$               & $0.81$                    \\
-    Microservices K8s      & $0.87$                & $0.91$            & $0.86$                 & $0.88$               & $0.83$                    \\
-    Drone Swarm            & $0.85$                & $0.89$            & $0.84$                 & $0.86$               & $0.82$                    \\
+    Overcooked-AI          & $\sim0.20$            & $0.82$            & $0.80$                 & $0.75$               & $0.72$                    \\
+    Predator-Prey          & $\sim0.20$            & $0.79$            & $0.77$                 & $0.73$               & $0.69$                    \\
+    Warehouse Management   & $\sim0.20$            & $0.85$            & $0.82$                 & $0.77$               & $0.76$                    \\
+    Company Infrastructure & $\sim0.25$            & $0.88$            & $0.83$                 & $0.85$               & $0.81$                    \\
+    Microservices K8s      & $0.25$                & $0.91$            & $0.86$                 & $0.88$               & $0.83$                    \\
+    Drone Swarm            & $\sim0.20$            & $0.89$            & $0.84$                 & $0.86$               & $0.82$                    \\
     \hdashline
     \textbf{Moyenne}       & $0.82$                & $0.86$            & $0.82$                 & $0.81$               & $0.77$                    \\
     \hline
@@ -1424,7 +1524,7 @@ Les résultats mettent en évidence plusieurs points clés :
   \item La \textbf{performance (C2)} et l'\textbf{adaptation (C3)} sont systématiquement améliorées par l'usage de contraintes organisationnelles (douces ou fortes), particulièrement dans les environnements complexes (Kubernetes, Drone Swarm).
   \item Le \textbf{contrôle (C4)} bénéficie surtout des contraintes fortes, qui garantissent une stricte conformité aux rôles et missions, mais parfois au prix d'une légère baisse de performance brute.
   \item L'\textbf{explicabilité (C5)} est globalement satisfaisante ($\sim 0.8$), mais reste légèrement inférieure à la performance. Les environnements à dynamique plus chaotique (Predator-Prey, Overcooked) entraînent des inférences organisationnelles moins stables.
-  \item L'\textbf{autonomie (C1)} atteint des scores élevés dans les environnements opérationnels (Company Infrastructure, Microservices, Drone Swarm), grâce à la boucle complète \textbf{MOD}–\textbf{TRN}–\textbf{ANL}–\textbf{TRF}, démontrant la capacité de \acn{MAMAD} à réduire l'intervention humaine.
+  \item L'\textbf{autonomie (C1)} atteint des scores montrant que dans les environnements opérationnels (Company Infrastructure, Microservices, Drone Swarm), la boucle complète \textbf{MOD}–\textbf{TRN}–\textbf{ANL}–\textbf{TRF} permet de réduire l'intervention humaine.
 \end{itemize}
 
 \subsection{Biais potentiels et limites}
