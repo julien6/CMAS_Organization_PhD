@@ -26,7 +26,7 @@
 \addcontentsline{toc}{chapter}{\textbf{Introduction}}
 
 \noindent
-Cette partie vise à démontrer l'applicabilité et la pertinence de la méthode \acn{MAMAD} dans l'ensemble de ses activités ou une partie d'entre elles dans différents contextes de conception de systèmes multi-agents. Pour cela, nous avons développé une plateforme dédiée, \acn{CybMASDE}, qui implémente l'ensemble du pipeline proposé (modélisation, apprentissage, analyse, transfert) de manière modulaire et reproductible.
+Cette partie vise à démontrer l'applicabilité et la pertinence de la méthode \acn{MAMAD} dans l'ensemble de ses activités ou une partie d'entre elles dans différents contextes de conception de \acplu{SMA}. Pour cela, nous avons développé une plateforme dédiée, \acn{CybMASDE}, qui implémente l'ensemble du pipeline proposé (modélisation, apprentissage, analyse, transfert) de manière modulaire et reproductible.
 
 \medskip
 
@@ -62,7 +62,8 @@ Cette étude expérimentale nous permettra de mieux cerner les atouts et les lim
 
 \section*{Utilisation et fonctionnement de CybMASDE}\label{sec:cybmasde_cycle}
 
-Cette section décrit le parcours type d'un utilisateur de \acn{CybMASDE}, depuis la découverte d'un nouvel environnement jusqu'à l'obtention d'une politique conjointe satisfaisante accompagnée de mesures de performance, stabilité et spécifications organisationnelles explicatives. Chaque étape indique à la fois les actions de l'utilisateur et les processus internes de la plateforme. Une première vue d'ensemble de CybMASDE est proposée en \autoref{fig:cybmasde_usecase} sous forme de diagramme de cas d'utilisation puis un diagramme de séquence (c.f. \autoref{fig:cybmasde_sequence}) et de composant (c.f. \autoref{fig:cybmasde_uml}) montrent davantage le fonctionnement interne de CybMASDE.
+\acn{CybMASDE}\footnotemark[1] est une plateforme modulaire et extensible que nous proposons pour aider la conception de \acplu{SMA} selon la méthode \acn{MAMAD}. \acn{CybMASDE} est utilisable principalement en ligne de commande (voir \autoref{appendix:cybmasde-manual}) et dispose également d'une interface graphique.
+Cette section décrit le parcours type d'un utilisateur de \acn{CybMASDE}, depuis la découverte d'un nouvel environnement jusqu'à l'obtention d'une politique conjointe satisfaisante accompagnée de mesures de performance, stabilité et spécifications organisationnelles explicatives. Chaque étape indique à la fois les actions de l'utilisateur et les processus internes de la plateforme. Une première vue d'ensemble de \acn{CybMASDE} est proposée en \autoref{fig:cybmasde_usecase} sous forme de diagramme de cas d'utilisation puis un diagramme de séquence (c.f. \autoref{fig:cybmasde_sequence}) et de composant (c.f. \autoref{fig:cybmasde_uml}) montrent davantage le fonctionnement interne de \acn{CybMASDE}.
 
 \subsection{Diagramme de cas d'utilisation de \texttt{CybMASDE}}
 
@@ -78,23 +79,69 @@ Le diagramme de cas d’utilisation présenté à la \autoref{fig:cybmasde_useca
 \paragraph{Acteurs.}
 Au sommet se trouve le \textbf{Concepteur de SMA}, qui représente le rôle racine et peut, en pratique, assumer l’ensemble des autres responsabilités. Celui-ci se décline en plusieurs opérateurs spécialisés :
 \begin{itemize}
-  \item l’\textbf{Opérateur de modélisation}, chargé de définir ou compléter la description de l’environnement simulé, soit automatiquement à l’aide d’un \acn{World Model}, soit manuellement par le biais du modèle \acn{MCAS}~;
+  \item l’\textbf{Opérateur de modélisation}, chargé de définir ou compléter la description de l’environnement simulé, soit automatiquement à l’aide d’un \textbf{World Model}, soit manuellement par le biais du modèle \acn{MCAS}~;
   \item l’\textbf{Opérateur d’entraînement}, qui conduit les phases d’apprentissage des politiques multi-agents en tenant compte des spécifications organisationnelles~;
-  \item l’\textbf{Opérateur d’analyse}, qui exploite la méthode \acn{TEMM} ou Auto-TEMM afin d’inférer des rôles et objectifs organisationnels à partir des trajectoires produites~;
+  \item l’\textbf{Opérateur d’analyse}, qui exploite la méthode \acn{TEMM} ou Auto-\acn{TEMM} afin d’inférer des rôles et objectifs organisationnels à partir des trajectoires produites~;
   \item l’\textbf{Opérateur de raffinement}, qui combine les deux rôles précédents pour réaliser des cycles itératifs d’entraînement et d’analyse jusqu’à l’obtention d’une politique satisfaisante~;
   \item enfin, l’\textbf{Opérateur de déploiement}, qui supervise l’intégration de la politique conjointe finale dans l’environnement réel, soit en mode \textit{DIRECT} (politique exécutée localement par les agents), soit en mode \textit{REMOTE} (politique exécutée par le processus \textit{Transferring}).
 \end{itemize}
 
 \paragraph{Cas d’utilisation.}
-Les principales fonctionnalités offertes par \acn{CybMASDE} s’articulent autour du cas d’utilisation global \textbf{« Développer SMA »}. Celui-ci inclut une série d’étapes :
-\begin{itemize}
-  \item \textbf{Configurer et lancer projet}, qui consiste à initialiser l’arborescence de fichiers et le fichier central \texttt{project\_configuration.json}~;
-  \item \textbf{Modéliser environnement}, qui dépend de l’étape de configuration et se décline en deux variantes : \textit{Modélisation automatique} (par World Model) et \textit{Modélisation manuelle} (via le \acn{Dec-POMDP} pré-spécialisé donnant une instance \acn{MCAS})~;
-  \item \textbf{Entraîner politiques}, qui repose sur l’existence d’un environnement simulé et permet d’apprendre des politiques multi-agents compatibles avec les contraintes organisationnelles~;
-  \item \textbf{Analyser politiques (TEMM)}, qui dépend de l’entraînement et applique Auto-TEMM pour évaluer et expliquer les politiques obtenues~;
-  \item \textbf{Raffiner politiques}, qui combine entraînement et analyse dans un processus itératif afin d’améliorer performance, stabilité et explicabilité~;
-  \item \textbf{Déployer politique}, qui succède à l’entraînement et peut être réalisé soit en mode \textit{DIRECT}, soit en mode \textit{REMOTE}.
-\end{itemize}
+Les principales fonctionnalités offertes par \acn{CybMASDE} s’articulent autour du cas d’utilisation global \textbf{\textquote{Développer SMA}}. Celui-ci inclut une série d’étapes :
+
+\medskip
+
+\textbf{1. Configurer et lancer un projet}~: cette étape consiste à créer un nouveau projet \acn{CybMASDE}, ce qui génère automatiquement une arborescence de dossiers structurée autour des quatre activités principales de la méthode \acn{MAMAD} (modélisation, entraînement, analyse, transfert), ainsi qu'un fichier central de configuration \texttt{project\_configuration.json} (voir \autoref{fig:overview_configure} et \autoref{fig:cybmasde_screenshot_configuration}). Le concepteur renseigne alors les informations nécessaires pour chaque activité, principalement sous forme de code Python ou en indiquant les chemins vers des fichiers existants. Par exemple, pour la modélisation, l'utilisateur peut fournir le chemin d'une simulation existante, ou choisir d'en créer une nouvelle en définissant l'espace des observations, des actions, les fonctions de récompense, d'arrêt et éventuellement de rendu basées sur l'historique, ainsi que les hyperparamètres pour l'entraînement du World Model. Une étape requise pour la configuration est d'implémenter une \textquote{API Environnementale} en implémentant l'interface \textquote{environment\_api} qui va permettre à \acn{CybMASDE} de communiquer avec l'environment cible.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{figures/cybmasde_configuration_overview.png}
+  \caption{Aperçu du fichier de configuration central \texttt{project\_configuration.json} dans \acn{CybMASDE} dans le dossier d'un nouveau projet intitulé \textquote{new\_test}. Ce fichier est également éditable via l'interface de \acn{CybMASDE}. Il regroupe les paramètres de chaque activité (modélisation, entraînement, analyse, transfert) ainsi que les hyperparamètres associés. Toutes ces informations sont organisées au sein de dossiers dédiés dans l'arborescence de fichiers}
+  \label{fig:overview_configure}
+\end{figure}
+
+\textbf{2. Modéliser environnement}, qui dépend de l’étape de configuration et se décline en deux variantes : \textit{Modélisation automatique} (par World Model comme montré en \autoref{fig:cybmasde_screenshot}) et \textit{Modélisation manuelle} (via le \acn{Dec-POMDP} pré-spécialisé donnant une instance \acn{MCAS})~;
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{figures/CybMASDE_2.png}
+  \caption{Capture d'écran de l'interface graphique d'édition du fichier de configuration du projet CybMASDE, illustrant ici l'onglet dédié à la modélisation}
+  \label{fig:cybmasde_screenshot_configuration}
+\end{figure}
+
+\textbf{3. Entraîner politiques}, qui repose sur l’existence d’un environnement simulé et permet d’apprendre des politiques multi-agents compatibles avec les contraintes organisationnelles~;
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{figures/CybMASDE_2.png}
+  \caption{Capture d'écran de l'interface graphique d'édition du fichier de configuration du projet CybMASDE, illustrant ici l'onglet dédié à la modélisation}
+  \label{fig:cybmasde_screenshot}
+\end{figure}
+
+\textbf{4. Analyser politiques (TEMM)}, qui dépend de l’entraînement et applique Auto-\acn{TEMM} pour évaluer et expliquer les politiques obtenues. La \autoref{fig:cybmasde_analyzing_screenshot} montre l'interface de CybMASDE dediée à la configuration de cette activité~;
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[trim=0cm 20cm 0cm 0cm, clip,width=\linewidth]{figures/analyzing_screenshot.png}
+  \caption{Capture d'écran de l'interface graphique montrant ici l'onglet dédié à l'analyse pour la selection des méthodes d'analyse (TEMM ou Auto-TEMM) et des hyperparamètres}
+  \label{fig:cybmasde_analyzing_screenshot}
+\end{figure}
+
+\textbf{3/4. Raffiner politiques}, qui combine entraînement et analyse dans un processus itératif afin d’améliorer performance, stabilité et explicabilité. La \autoref{fig:cybmasde_refining_screenshot} montre la configuration de cette activité dans \acn{CybMASDE}~;
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[trim=0cm 15cm 0cm 0cm, clip,width=\linewidth]{figures/refining.png}
+  \caption{Capture d'écran de l'interface graphique d'édition du fichier de configuration du projet CybMASDE, illustrant ici l'onglet dédié à la phase raffinement et de transfert des politiques}
+  \label{fig:cybmasde_refining_screenshot}
+\end{figure}
+
+\textbf{4. Déployer politique}, qui succède à l’entraînement et peut être réalisé soit en mode \textit{DIRECT}, soit en mode \textit{REMOTE}. Cette configuration est opérée en partie dans la section de modélisation où il est demandé l'url de l'API environmentale (\autoref{fig:cybmasde_screenshot}~;
+
+\
+
+Une fois la configuration des activités effectuées, les activités peuvent être lancées via l'interface graphique ou via une ligne de commande. Par exemple, \textquote{./cybmasde /file/path/to/project\_folder/project\_configuration.json --run modelling} lance l'activité de modélisation à partir du fichier de configuration donné. Les résultats de chaque activités peuvent alors être suvi dans les dossiers dediés se trouvant dans le dossier du projet.
+
 
 \paragraph{Dépendances.}
 Les relations entre cas d’utilisation traduisent les dépendances logiques entre activités. Ainsi, la configuration est un prérequis à la modélisation, laquelle conditionne l’entraînement, qui lui-même est nécessaire à l’analyse. Le raffinement combine et réutilise à la fois entraînement et analyse dans une boucle itérative. Enfin, le déploiement dépend de l’entraînement et peut se décliner en deux scénarios d’extension (mode \textit{DIRECT} ou \textit{REMOTE}).
@@ -105,7 +152,7 @@ En résumé, ce diagramme formalise la chaîne d’interactions entre acteurs et
 
 \subsection{Cycle d'utilisation}
 
-Une vue d'ensemble du cycle d'utilisation de CybMASDE est présentée dans la \autoref{fig:cybmasde_cycle} qui est également présentée sous forme de diagramme de séquence en \autoref{fig:cybmasde_sequence}.
+Une vue d'ensemble du cycle d'utilisation de \acn{CybMASDE} est présentée dans la \autoref{fig:cybmasde_cycle} qui est également présentée sous forme de diagramme de séquence en \autoref{fig:cybmasde_sequence}.
 
 \begin{figure}
   \centering
@@ -181,7 +228,7 @@ Une vue d'ensemble du cycle d'utilisation de CybMASDE est présentée dans la \a
 \paragraph{7. Analyzing (ANL)}
 \begin{description}
   \item[Utilisateur :] Peut consulter les spécifications organisationnelles extraites et décider de les corriger ou de les injecter.
-  \item[CybMASDE :] Exécute \acn{Auto-TEMM} ou \acn{TEMM} : clustering des trajectoires (\acparen{DTW}, \acparen{LCS}), inférence de rôles et objectifs, calcul d'adéquation organisationnelle (\acn{SOF} + \acn{FOF}). Les résultats sont sauvegardés dans \textquote{analyzing/}. Avec Auto-\acn{TEMM}, les spécifications sont automatiquement déterminées sans que l'utilisateur ne puisse ajuster lui-même les hyperparamètres ce qui peut limiter la personnalisation.
+  \item[CybMASDE :] Exécute Auto-\acn{TEMM} ou \acn{TEMM} : clustering des trajectoires (\acparen{DTW}, \acparen{LCS}), inférence de rôles et objectifs, calcul d'adéquation organisationnelle (\acn{SOF} + \acn{FOF}). Les résultats sont sauvegardés dans \textquote{analyzing/}. Avec Auto-\acn{TEMM}, les spécifications sont automatiquement déterminées sans que l'utilisateur ne puisse ajuster lui-même les hyperparamètres ce qui peut limiter la personnalisation.
 \end{description}
 
 \paragraph{8. Raffinement par itération}
@@ -210,19 +257,10 @@ Une vue d'ensemble du cycle d'utilisation de CybMASDE est présentée dans la \a
 \medskip
 En résumé, \acn{CybMASDE} automatise et structure la méthode \acn{MAMAD} à travers une chaîne modulaire \textbf{Modelling → Training → Analyzing → Transferring}, permettant à l'utilisateur de passer d'un environnement inconnu à un \acn{SMA} opérationnel, performant et explicable.
 
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\linewidth]{figures/CybMASDE_2.png}
-  \caption{Captures d'écran de l'interface graphique de CybMASDE montrant l'onglet de modélisation}
-  \label{fig:cybmasde_screenshot}
-\end{figure}
-
-
 \section*{Architecture logicielle et aspects de développement de CybMASDE}
 
 \paragraph{Vue d'ensemble}
-\acn{CybMASDE}\footnotemark[1] est une plateforme modulaire et extensible destinée à la conception de systèmes multi-agents selon la méthode \acn{MAMAD}. Elle combine apprentissage (modélisation, entraînement), inférence organisationnelle et déploiement dans un environnement technologique cohérent. L'application est structurée autour d'un backend Python et d'une interface utilisateur, tous deux orchestrés via une \acn{API} \acn{REST}.
+\acn{CybMASDE} combine apprentissage (modélisation, entraînement), inférence organisationnelle et déploiement dans un environnement technologique cohérent. L'application est structurée autour d'un backend Python et d'une interface utilisateur, tous deux orchestrés via une \acn{API} \acn{REST}.
 
 \footnotetext[1]{Code source et documentation disponible sur \url{https://github.com/julien6/CybMASDE}}
 
@@ -236,7 +274,7 @@ En résumé, \acn{CybMASDE} automatise et structure la méthode \acn{MAMAD} à t
   \item \textbf{\acn{CLI}} : l'ensemble des fonctionnalités du backend est exposé via une interface en ligne de commande, utilisant la même \acn{API} \acn{REST} que le frontend.
 \end{itemize}
 
-L'architecture de CybMASDE démontre l'usage des frameworks et dépendances suivants :
+L'architecture de \acn{CybMASDE} démontre l'usage des frameworks et dépendances suivants :
 \begin{itemize}
   \item \textquote{PyTorch} — entraînement des modèles \acn{VAE}, \acn{LSTM}.
   \item \textquote{MARLlib} + \textquote{Ray RLlib} — apprentissage multi-agents avec une grande variété d'algorithmes comme \acn{MAPPO}, QMix, \acn{MADDPG}, etc.
@@ -255,7 +293,7 @@ Cette modularité facilite la maintenance, l'extensibilité et les tests unitair
 \paragraph{Schéma conceptuel}
 La \autoref{fig:cybmasde_uml} montre une vue \textit{composant C4}~\cite{richards2019fundamentals} mettant en évidence les interactions entre :
 \begin{itemize}
-  \item \textsf{Frontend Angular} (\acn{UX} interactive du projet),
+  \item \textsf{Frontend Angular} (\acparen{UX} interactive du projet),
   \item \textsf{Backend Python}, modules \acn{MTA}+T,
   \item \textsf{\acn{API} REST} comme couche d'interface commune,
   \item \textsf{Systèmes cibles} (environnements via PettingZoo ou APIs spécifiques).
@@ -298,13 +336,13 @@ Ainsi, l'instance de simulation \textbf{MCAS} offre une alternative manuelle et 
 
 \subsection{Implémentation du framework MOISE+MARL}
 
-Nous avons développé une implémentation du cadre MOISE+MARL appelée \textquote{MMA}~\hyperref[fn:github]{\footnotemark[2]} (\acn{API} MOISE+MARL), qui est une \acn{API} Python intégrant tous les ensembles et relations théoriques afin de minimiser les interactions avec l'utilisateur. \acn{MMA} utilise une approche orientée objet, structurant le modèle $\mathcal{M}OISE^+$ en classes de données imbriquées, avec la classe « Moise » à la racine, permettant aux utilisateurs de définir des spécifications organisationnelles, telles que les rôles, les objectifs et les autorisations.
+Nous avons développé une implémentation du cadre MOISE+MARL appelée \textquote{MMA}~\hyperref[fn:github]{\footnotemark[2]} (\acn{API} MOISE+MARL), qui est une \acn{API} Python intégrant tous les ensembles et relations théoriques afin de minimiser les interactions avec l'utilisateur. \acn{MMA} utilise une approche orientée objet, structurant le modèle $\mathcal{M}OISE^+$ en classes de données imbriquées, avec la classe \textquote{Moise} à la racine, permettant aux utilisateurs de définir des spécifications organisationnelles, telles que les rôles, les objectifs et les autorisations.
 
 \footnotetext[2]{ \label{fn:github} L'implémentation \textquote{MOISE+MARL API} (\acn{MMA}), les hyperparamètres et spécifications utillisés sont disponibles à \url{https://github.com/julien6/MOISE-MARL}.}
 
-Pour prendre en charge les environnements \acn{Dec-POMDP}, nous avons utilisé la bibliothèque \textit{PettingZoo}~\cite{terry2020pettingzoo}\index{PettingZoo}, qui fournit une \acn{API} standard pour les systèmes multi-agents et garantit l'interopérabilité entre différents environnements, à l'instar du framework Gymnasium~\cite{kwiatkowski2024}. \acn{MMA} intègre un dictionnaire pour le mappage des étiquettes d'observation/action ($l$), que les utilisateurs peuvent personnaliser, et prend également en charge les modèles de trajectoire \acn{TP} pour faciliter la définition et la correspondance des modèles.
+Pour prendre en charge les environnements \acn{Dec-POMDP}, nous avons utilisé la bibliothèque \textit{PettingZoo}~\cite{terry2020pettingzoo}\index{PettingZoo}, qui fournit une \acn{API} standard pour les \acplu{SMA} et garantit l'interopérabilité entre différents environnements, à l'instar du framework Gymnasium~\cite{kwiatkowski2024}. \acn{MMA} intègre un dictionnaire pour le mappage des étiquettes d'observation/action ($l$), que les utilisateurs peuvent personnaliser, et prend également en charge les modèles de trajectoire \acn{TP} pour faciliter la définition et la correspondance des modèles.
 
-Chaque type de guide de contrainte, comme $rag$, $rrg$ et $grg$, est implémenté dans une classe distincte. Les utilisateurs peuvent définir ces guides à l'aide de fonctions personnalisées ou de règles \acn{JSON}~; par exemple, $rag$ peut être instancié en associant une paire $\langle \text{\acn{TP}, dernière observation} \rangle$ aux actions attendues, tandis que $grg$ peut appliquer des bonus en fonction de \acn{TP} spécifiques. La classe globale « \acn{MMA} » intègre ces guides avec des relations définies par l'utilisateur, telles que la liaison d'un agent à un rôle ($ar$) ou l'association d'un rôle à $rrg$ et $rag$, en incorporant les spécifications organisationnelles définies dans la structure $\mathcal{M}OISE^+$.
+Chaque type de guide de contrainte, comme $rag$, $rrg$ et $grg$, est implémenté dans une classe distincte. Les utilisateurs peuvent définir ces guides à l'aide de fonctions personnalisées ou de règles \acn{JSON}~; par exemple, $rag$ peut être instancié en associant une paire $\langle \text{\acn{TP}, dernière observation} \rangle$ aux actions attendues, tandis que $grg$ peut appliquer des bonus en fonction de \acn{TP} spécifiques. La classe globale \textquote{\acn{MMA}} intègre ces guides avec des relations définies par l'utilisateur, telles que la liaison d'un agent à un rôle ($ar$) ou l'association d'un rôle à $rrg$ et $rag$, en incorporant les spécifications organisationnelles définies dans la structure $\mathcal{M}OISE^+$.
 
 Une fois configuré, l'objet \acn{MMA} est utilisé pour encapsuler l'environnement avec un wrapper \textit{PettingZoo}. Ce wrapper applique des masques d'action et modifie les récompenses à chaque étape, garantissant que les agents respectent les spécifications organisationnelles tout au long de la formation. \acn{MMA} intègre également \textit{MARLlib}~\cite{hu2021marlib}\index{MARLlib}, qui donne accès à un ensemble représentatif d'algorithmes \acn{MARL}, permettant ainsi d'exécuter l'entraînement sur un cluster informatique haute performance.
 
@@ -316,7 +354,7 @@ Ce chapitre a démontré la faisabilité et la pertinence de la méthode \acn{MA
 
 L'intégration de MOISE+MARL dans le pipeline d'apprentissage multi-agent a permis d'obtenir des politiques plus robustes, explicables et conformes aux objectifs organisationnels. Les résultats expérimentaux montrent une accélération de la convergence, une meilleure stabilité, moins de violations de contraintes et une capacité à extraire automatiquement des rôles et missions cohérents.
 
-Malgré ces apports, des limites subsistent : dépendance à la qualité des traces, besoins computationnels élevés, difficulté de généralisation à des systèmes distribués contraints, et explicabilité encore perfectible. Ce chapitre pose ainsi les bases pour une automatisation avancée de la conception organisationnelle en \acn{MARL}, ouvrant la voie à des optimisations futures et à des applications sur des systèmes multi-agents réels.
+Malgré ces apports, des limites subsistent : dépendance à la qualité des traces, besoins computationnels élevés, difficulté de généralisation à des systèmes distribués contraints, et explicabilité encore perfectible. Ce chapitre pose ainsi les bases pour une automatisation avancée de la conception organisationnelle en \acn{MARL}, ouvrant la voie à des optimisations futures et à des applications sur des \acplu{SMA} réels.
 
 \clearpage
 \thispagestyle{empty}
@@ -392,7 +430,7 @@ Une baseline expérimentale est un ensemble de données qui servent à la reprod
   \item \textbf{Conditions d'exécution} : Un ensemble de conditions d'exécution (nb de runs, seeds, matériel, perturbations éventuelles).
 \end{itemize}
 
-Chaque baseline peut être représentée sous forme tabulaire en précisant ces éléments pour assurer la comparabilité et la reproductibilité. L'interêt d'établir des baselines est de fournir des points de référence clairs pour évaluer l'impact des différentes composantes de la méthode \acn{MAMAD}. En comparant les performances obtenues avec ces baselines, il devient possible d'identifier les contributions spécifiques de chaque activité (modélisation, entraînement, analyse, transfert) ainsi que l'effet des spécifications organisationnelles sur le comportement et l'efficacité du système multi-agent.
+Chaque baseline peut être représentée sous forme tabulaire en précisant ces éléments pour assurer la comparabilité et la reproductibilité. L'interêt d'établir des baselines est de fournir des points de référence clairs pour évaluer l'impact des différentes composantes de la méthode \acn{MAMAD}. En comparant les performances obtenues avec ces baselines, il devient possible d'identifier les contributions spécifiques de chaque activité (modélisation, entraînement, analyse, transfert) ainsi que l'effet des spécifications organisationnelles sur le comportement et l'efficacité du \acn{SMA}.
 
 \section{Grille d'évaluation}\label{sec:evaluation_grid}
 
@@ -486,7 +524,7 @@ Le protocole expérimental proposé suit un raisonnement progressif semblable au
 L'ensemble des étapes 1 à 4 constitue le protocole d'experimentation tandis que les étapes 5 et 6 concernent l'évaluation des résultats :
 
 \paragraph{1. Configuration initiale}
-Configuration requise incluant la mise en place de l'\acn{API} \acn{REST} de communication avec l'environnement et les différentes composantes requises pour modéliser l'environnement et autres données nécéssaires pour créer un projet CybMASDE pour une baseline donnée.
+Configuration requise incluant la mise en place de l'\acn{API} \acn{REST} de communication avec l'environnement et les différentes composantes requises pour modéliser l'environnement et autres données nécéssaires pour créer un projet \acn{CybMASDE} pour une baseline donnée.
 
 \paragraph{2. Mise en place de la baseline avancée}
 Définition d'au moins une \textbf{baseline avancée} considérée comme la \textbf{baseline par défaut} :
@@ -693,25 +731,25 @@ Pour les trois environnements, nous définissons une \textbf{baseline avancée p
       >{\raggedright\arraybackslash\hsize=0.3\hsize}X
     }
     \toprule
-    \textbf{Profil d'activités MAMAD} & \textbf{Algorithmes MARL} & \textbf{Contraintes org. (dureté)} & \textbf{Commentaires}                                                                           \\
+    \textbf{Profil d'activités MAMAD} & \textbf{Algorithmes MARL} & \textbf{Contraintes org. (dureté)} & \textbf{Commentaires}                                                                             \\
     \midrule
     % --- Profil A (Défaut) ---
-    \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil A — Défaut}                                                                                                                                            \\\acn{MOD-AUT};\;\acn{TRN-CON};\;\acn{ANL-AUT};\;\acn{TRF-AUT}}}
-                                      & \acn{MAPPO}               & Oui (1.0)                          & Masquage d'actions + shaping par rôle (\acn{MMA}) ; \acn{JOPM} activé pour \acn{MOD-AUT}.       \\
-                                      & \;\acn{MADDPG}            & Douces (0.5)                       & Contraintes atténuées : bonus/malus et masques partiels ; même pipeline que défaut.             \\
-                                      & \acn{QMIX}                & Aucune (0.0)                       & \textit{Ablation} : \acn{TRN-UNC}, récompense native de l'environnement, reste inchangé.        \\
+    \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil A — Défaut}                                                                                                                                              \\\acn{MOD-AUT};\;\acn{TRN-CON};\;\acn{ANL-AUT};\;\acn{TRF-AUT}}}
+                                      & \acn{MAPPO}               & Oui (1.0)                          & Masquage d'actions + shaping par rôle (\acn{MMA}) ; \acn{JOPM} activé pour \acn{MOD-AUT}.         \\
+                                      & \;\acn{MADDPG}            & Douces (0.5)                       & Contraintes atténuées : bonus/malus et masques partiels ; même pipeline que défaut.               \\
+                                      & \acn{QMIX}                & Aucune (0.0)                       & \textit{Ablation} : \acn{TRN-UNC}, récompense native de l'environnement, reste inchangé.          \\
     \hdashline
     % --- Profil B (Analyse manuelle) ---
-    \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil B — Analyse manuelle}                                                                                                                                  \\\acn{MOD-AUT};\;\acn{TRN-CON};\;\acn{ANL-MAN};\;\acn{TRF-AUT}}}
-                                      & \acn{MAPPO}               & Oui (1.0)                          & Paramétrage manuel de \acn{TEMM} ; règles/masques édités à la main.                             \\
-                                      & \acn{COMA}                & Douces (0.5)                       & Guidage souple : pénalités réduites ; vérification post-hoc par \acn{TEMM} ajusté manuellement. \\
-                                      &                           & Aucune (0.0)                       & \acn{TRN-UNC} ; analyse \acn{TEMM} uniquement pour explicabilité/diagnostic, sans réinjection.  \\
+    \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil B — Analyse manuelle}                                                                                                                                    \\\acn{MOD-AUT};\;\acn{TRN-CON};\;\acn{ANL-MAN};\;\acn{TRF-AUT}}}
+                                      & \acn{MAPPO}               & Oui (1.0)                          & Paramétrage manuel de \acn{TEMM} ; règles/masques édités à la main.                               \\
+                                      & \acn{COMA}                & Douces (0.5)                       & Guidage souple : pénalités réduites ; vérification post-hoc par \acn{TEMM} ajusté manuellement.   \\
+                                      &                           & Aucune (0.0)                       & \acn{TRN-UNC} ; analyse \acn{TEMM} uniquement pour explicabilité/diagnostic, sans réinjection.    \\
     \hdashline
     % --- Profil C (Cycle principalement manuel) ---
-    \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil C — Cycle principalement manuel}                                                                                                                       \\\acn{MOD-MAN} ; \acn{TRN-CON} ; \acn{ANL-MAN} ; \acn{TRF-MAN}}}
-                                      & \acn{IQL}                 & Oui (1.0)                          & Environnement « handcrafted » ; hyperparamètres fixés ; transfert et déploiement manuels.       \\
-                                      & \acn{VDN}                 & Douces (0.5)                       & Contraintes souples définies manuellement (rôles/missions + barèmes adoucis).                   \\
-                                      & \acn{MADDPG}              & Aucune (0.0)                       & \acn{TRN-UNC} entièrement manuel ; base minimale sans guidage organisationnel.                  \\
+    \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil C — Cycle principalement manuel}                                                                                                                         \\\acn{MOD-MAN} ; \acn{TRN-CON} ; \acn{ANL-MAN} ; \acn{TRF-MAN}}}
+                                      & \acn{IQL}                 & Oui (1.0)                          & Environnement \textquote{handcrafted} ; hyperparamètres fixés ; transfert et déploiement manuels. \\
+                                      & \acn{VDN}                 & Douces (0.5)                       & Contraintes souples définies manuellement (rôles/missions + barèmes adoucis).                     \\
+                                      & \acn{MADDPG}              & Aucune (0.0)                       & \acn{TRN-UNC} entièrement manuel ; base minimale sans guidage organisationnel.                    \\
     \bottomrule
   \end{tabularx}
 \end{table*}
@@ -721,7 +759,7 @@ Pour les trois environnements, nous définissons une \textbf{baseline avancée p
 \section{Expérimentations sur l'environnement Company Infrastructure}
 \textbf{Company Infrastructure}~\cite{cyberbattlesim}: une simulation d'attaques et de défenses sur un réseau,.
 
-L'environnement \textbf{Company Infrastructure} est une simulation inspirée du simulateur CyberbatlleSim~\cite{cyberbattlesim} et de MITRE ATT\&CK~\cite{MITREATTACKWebiste}. Cet environnement a été developpé avec le \acn{Dec-POMDP} pré-spécialisé pour la Cyberdéfense et avec \acn{MCAS} intégré à CybMASDE. Il simule un réseau d'entreprise découpé en sous-réseaux (EXT, DMZ, ACC, MAR, SRV) où des \emph{agents cyber-attaquants} et \emph{agents cyber-défenseurs} interagissent via des actions à pré/post-conditions, selon un formalisme \emph{Dec-POMDP}. La topologie synthétique est illustrée en \autoref{fig:scenario_network_topology}, et les chemins d'attaque/défense sont structurés via un arbre Attaque–Défense (\autoref{fig:ADTree})\index{Company Infrastructure}.
+L'environnement \textbf{Company Infrastructure} est une simulation inspirée du simulateur CyberbatlleSim~\cite{cyberbattlesim} et de MITRE ATT\&CK~\cite{MITREATTACKWebiste}. Cet environnement a été developpé avec le \acn{Dec-POMDP} pré-spécialisé pour la Cyberdéfense et avec \acn{MCAS} intégré à \acn{CybMASDE}. Il simule un réseau d'entreprise découpé en sous-réseaux (EXT, DMZ, ACC, MAR, SRV) où des \emph{agents cyber-attaquants} et \emph{agents cyber-défenseurs} interagissent via des actions à pré/post-conditions, selon un formalisme \emph{Dec-POMDP}. La topologie synthétique est illustrée en \autoref{fig:scenario_network_topology}, et les chemins d'attaque/défense sont structurés via un arbre Attaque–Défense (\autoref{fig:ADTree})\index{Company Infrastructure}.
 
 % \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
 \begin{itemize}
@@ -779,7 +817,7 @@ L'environnement \textbf{Company Infrastructure} est une simulation inspirée du 
 \paragraph{1. Configuration initiale}
 
 Nous utilisons le modèle \emph{Dec-POMDP} pré-spécialisé \textbf{Cyberdéfense} et le simulateur \textbf{MCAS} intégrés à \textquote{CybMASDE}, exposés via un adaptateur \acn{REST} conforme à l'\acn{API} d'I/O \textquote{CybMASDE} (observations jointes, masques d'actions, \emph{step}/\emph{reset}). L'environnement \emph{Company Infrastructure} est donc traité, côté pipeline, exactement comme les environnements jouets non-orientés Cyberdéfense : (i) collecte de traces pour la modélisation automatique (\textquote{\acn{MOD-AUT}}) ; (ii) entraînement \acn{MARL} avec ou sans contraintes organisationnelles ; (iii) analyse organisationnelle (\textbf{ANL}) ; (iv) transfert automatique (\textquote{\acn{TRF-AUT}}) vers l'exécuteur simulé.
-\textbf{Justification :} aucun \textquote{\acn{TRF-MAN}} n'est requis ici, l'environnement n'étant pas une instrumentation d'un système réel mais un simulateur nativement compatible (pas de « passerelle terrain » à maintenir).
+\textbf{Justification :} aucun \textquote{\acn{TRF-MAN}} n'est requis ici, l'environnement n'étant pas une instrumentation d'un système réel mais un simulateur nativement compatible (pas de \textquote{passerelle terrain} à maintenir).
 Pour \textquote{\acn{MOD-AUT}}, un \emph{Joint-Observation Prediction Model} (\acn{JOPM} : \acn{VAE}+\acn{LSTM}) est entraîné sur des historiques mêlant trajectoires aléatoires et politiques préliminaires \emph{rouges/bleues} (progression dans l'\acn{AD}-tree, détections, quarantaines). Le \acn{JOPM} approxime la dynamique $\langle o_{1:t},a_{1:t} \rangle \mapsto o_{t+1}$ et fournit une fonction d'arrêt dérivée (objectifs atteints, neutralisation des sessions malveillantes, \emph{step-limit}). La fonction de récompense reconstruite est validée par recoupement avec les métriques natives (progrès le long de l'\acn{AD}-tree, disponibilité des services). L'entraînement s'appuie sur \textquote{MARLlib}/\textquote{RLlib} (profil \textquote{MAPPO} par défaut, mais variantes testées ci-dessous), \emph{seeds} fixées, 5 exécutions indépendantes comme dans le \autoref{chap:cadre_experimental}. Les conditions de calcul suivent celles présentées en \autoref{par:compute_conditions} ; seules les dérogations (longueur d'épisode, fréquence de log) sont précisées dans les résultats.
 
 \paragraph{2 à 4. Définition des baselines}
@@ -818,7 +856,7 @@ Nous définissons une \textbf{baseline avancée par défaut} et des \textbf{abla
     % --- Profil C (Cycle semi-manuel) ---
     \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil C — Cycle semi-manuel}                                                                                                                                                                                           \\
         \textquote{\acn{MOD-MAN}} (actions/props étendues);\;\textquote{\acn{TRN-CON}} (hp manuels);\;\textquote{\acn{ANL-MAN}};\;\textquote{\acn{TRF-AUT}}}}
-                                      & \acn{IQL}, \acn{VDN}, \acn{QMIX}    & Oui (1.0)                          & Élargissement « handcrafted » du catalogue d'actions (\acn{FW}, \acn{PAM}, persistance) ; hyperparamètres fixés (pas d'\acn{HPO}).              \\
+                                      & \acn{IQL}, \acn{VDN}, \acn{QMIX}    & Oui (1.0)                          & Élargissement \textquote{handcrafted} du catalogue d'actions (\acn{FW}, \acn{PAM}, persistance) ; hyperparamètres fixés (pas d'\acn{HPO}).      \\
                                       & \acn{IQL}, \acn{VDN}, \acn{QMIX}    & Douces (0.5)                       & Contraintes souples définies manuellement (seuils journaux/\acn{IOC}, priorités services).                                                      \\
                                       & \acn{IQL}, \acn{VDN}                & Aucune (0.0)                       & Base minimale sans guidage ; utile pour jauger l'apport des contraintes et du shaping.                                                          \\
     \bottomrule
@@ -896,7 +934,7 @@ L'environnement \textbf{Microservices Kubernetes} est un \emph{cluster réel} (1
 \end{itemize}
 
 \medskip
-\noindent\textit{Remarque (spécificité « réel ») :}
+\noindent\textit{Remarque (spécificité \textquote{réel}) :}
 % \begin{enumerate*}[label={--}, itemjoin={\quad}]
 \begin{itemize}
   \item \textsc{MOD/TRN} sur jumeau numérique dérivé de traces du cluster réel;
@@ -908,7 +946,7 @@ L'environnement \textbf{Microservices Kubernetes} est un \emph{cluster réel} (1
 \begin{figure}[h!]
   \centering
   \includegraphics[trim=1.8cm 3.3cm 1.25cm 3.5cm, clip, width=\linewidth]{figures/k8s_cluster_graph.pdf}
-  \caption{Cluster \emph{réel} «~Services en chaîne~» (4 services) et leviers d'action exposés à CybMASDE/MAMAD via l'API Kubernetes.}
+  \caption{Cluster \emph{réel} \textquote{Services en chaîne} (4 services) et leviers d'action exposés à CybMASDE/MAMAD via l'API Kubernetes.}
   \label{fig:k8s_microservices_real}
 \end{figure}
 
@@ -925,7 +963,7 @@ L'environnement \textbf{Microservices Kubernetes} est un \emph{cluster réel} (1
 
 \paragraph{1. Configuration initiale}
 
-Nous opérons \emph{sur le cluster réel} (pas de simulation en ligne de commande jouant le rôle d'« environnement réel »). Le cluster (\textbf{\acn{VM} 8~vCPU, 32~Go \acn{RAM}, 1~Gbps}) héberge l'application e-commerce (4 microservices en chaîne). La télémétrie est collectée par \textit{Prometheus} et visualisée via \textit{Grafana}. \textquote{CybMASDE}/\textquote{KARMA} s'interface avec l'\acn{API} Kubernetes pour \textit{observer} l'état et \textit{agir} (scaling, isolement, redémarrage). Un \textbf{jumeau numérique} est construit à partir des traces pour entraîner les politiques hors-ligne puis \textbf{transférées} et \textit{fermées en boucle} sur le cluster (apprentissage itératif par rafraîchissement des traces).
+Nous opérons \emph{sur le cluster réel} (pas de simulation en ligne de commande jouant le rôle d'\textquote{environnement réel}). Le cluster (\textbf{\acn{VM} 8~vCPU, 32~Go \acn{RAM}, 1~Gbps}) héberge l'application e-commerce (4 microservices en chaîne). La télémétrie est collectée par \textit{Prometheus} et visualisée via \textit{Grafana}. \textquote{CybMASDE}/\textquote{KARMA} s'interface avec l'\acn{API} Kubernetes pour \textit{observer} l'état et \textit{agir} (scaling, isolement, redémarrage). Un \textbf{jumeau numérique} est construit à partir des traces pour entraîner les politiques hors-ligne puis \textbf{transférées} et \textit{fermées en boucle} sur le cluster (apprentissage itératif par rafraîchissement des traces).
 
 \begin{figure}[h!]
   \centering
@@ -963,27 +1001,27 @@ Nous évaluons \textbf{trois familles} de baselines : (A) profil \emph{défaut} 
       >{\raggedright\arraybackslash\hsize=0.3\hsize}X
     }
     \toprule
-    \textbf{Profil d'activités MAMAD} & \textbf{Algorithmes / Approches}                                                                                                                                                                                                                       & \textbf{Contraintes org. (dureté)} & \textbf{Commentaires}                                                                \\
+    \textbf{Profil d'activités MAMAD} & \textbf{Algorithmes / Approches}                                                                                                                                                                                                                       & \textbf{Contraintes org. (dureté)} & \textbf{Commentaires}                                                                 \\
     \midrule
-    \multirow{3}{*}{\parbox{4.1cm}{\textbf{Profil A — Défaut}                                                                                                                                                                                                                                                                                                                                                              \\\acn{MOD-AUT} ; \acn{TRN-CON} ; \acn{ANL-AUT} ; \acn{TRF-AUT}}}
-                                      & \acn{MAPPO}, \acn{MADDPG}, \acn{QMIX}                                                                                                                                                                                                                  & Oui (1.0)                          & Masquage d'actions + shaping par rôle ; jumeau numérique activé ; transfert continu. \\
-                                      & \acn{MAPPO}, \acn{MADDPG}, \acn{QMIX}                                                                                                                                                                                                                  & Douces (0.5)                       & Pénalités/bonus atténués ; masques partiels ; même pipeline que défaut.              \\
-                                      & \acn{MAPPO}, \acn{MADDPG}, \acn{QMIX}                                                                                                                                                                                                                  & Aucune (0.0)                       & \textit{Ablation} : \acn{TRN-UNC}, reste inchangé.                                   \\
+    \multirow{3}{*}{\parbox{4.1cm}{\textbf{Profil A — Défaut}                                                                                                                                                                                                                                                                                                                                                               \\\acn{MOD-AUT} ; \acn{TRN-CON} ; \acn{ANL-AUT} ; \acn{TRF-AUT}}}
+                                      & \acn{MAPPO}, \acn{MADDPG}, \acn{QMIX}                                                                                                                                                                                                                  & Oui (1.0)                          & Masquage d'actions + shaping par rôle ; jumeau numérique activé ; transfert continu.  \\
+                                      & \acn{MAPPO}, \acn{MADDPG}, \acn{QMIX}                                                                                                                                                                                                                  & Douces (0.5)                       & Pénalités/bonus atténués ; masques partiels ; même pipeline que défaut.               \\
+                                      & \acn{MAPPO}, \acn{MADDPG}, \acn{QMIX}                                                                                                                                                                                                                  & Aucune (0.0)                       & \textit{Ablation} : \acn{TRN-UNC}, reste inchangé.                                    \\
     \midrule
-    \multirow{3}{*}{\parbox{4.1cm}{\textbf{Profil B — Analyse manuelle}                                                                                                                                                                                                                                                                                                                                                    \\\acn{MOD-AUT} ; \acn{TRN-CON} ; \acn{ANL-MAN} ; \acn{TRF-AUT}}}
-                                      & \acn{MAPPO}, \acn{COMA}                                                                                                                                                                                                                                & Oui (1.0)                          & Paramétrage manuel de \acn{TEMM} ; règles/masques édités.                            \\
-                                      & \acn{MAPPO}, \acn{COMA}                                                                                                                                                                                                                                & Douces (0.5)                       & Guidage souple ; vérifications post-hoc par \acn{TEMM} ajusté manuellement.          \\
-                                      & \acn{MAPPO}, \acn{COMA}                                                                                                                                                                                                                                & Aucune (0.0)                       & \acn{TRN-UNC} ; \acn{TEMM} pour explicabilité/diagnostic, sans réinjection.          \\
+    \multirow{3}{*}{\parbox{4.1cm}{\textbf{Profil B — Analyse manuelle}                                                                                                                                                                                                                                                                                                                                                     \\\acn{MOD-AUT} ; \acn{TRN-CON} ; \acn{ANL-MAN} ; \acn{TRF-AUT}}}
+                                      & \acn{MAPPO}, \acn{COMA}                                                                                                                                                                                                                                & Oui (1.0)                          & Paramétrage manuel de \acn{TEMM} ; règles/masques édités.                             \\
+                                      & \acn{MAPPO}, \acn{COMA}                                                                                                                                                                                                                                & Douces (0.5)                       & Guidage souple ; vérifications post-hoc par \acn{TEMM} ajusté manuellement.           \\
+                                      & \acn{MAPPO}, \acn{COMA}                                                                                                                                                                                                                                & Aucune (0.0)                       & \acn{TRN-UNC} ; \acn{TEMM} pour explicabilité/diagnostic, sans réinjection.           \\
     \midrule
-    \multirow{3}{*}{\parbox{4.1cm}{\textbf{Profil C — Cycle principalement manuel}                                                                                                                                                                                                                                                                                                                                         \\\acn{MOD-MAN} ; \acn{TRN-CON} ; \acn{ANL-MAN} ; \acn{TRF-MAN}}}
-                                      & \acn{IQL}, \acn{VDN}, \acn{MADDPG}                                                                                                                                                                                                                     & Oui (1.0)                          & Environnement « handcrafted » ; hypers fixés ; transfert/déploiement manuels.        \\
-                                      & \acn{IQL}, \acn{VDN}, \acn{MADDPG}                                                                                                                                                                                                                     & Douces (0.5)                       & Contraintes souples définies manuellement (rôles/missions et barèmes adoucis).       \\
-                                      & \acn{IQL}, \acn{VDN}                                                                                                                                                                                                                                   & Aucune (0.0)                       & \acn{TRN-UNC} manuel ; base minimale sans guidage organisationnel.                   \\
+    \multirow{3}{*}{\parbox{4.1cm}{\textbf{Profil C — Cycle principalement manuel}                                                                                                                                                                                                                                                                                                                                          \\\acn{MOD-MAN} ; \acn{TRN-CON} ; \acn{ANL-MAN} ; \acn{TRF-MAN}}}
+                                      & \acn{IQL}, \acn{VDN}, \acn{MADDPG}                                                                                                                                                                                                                     & Oui (1.0)                          & Environnement \textquote{handcrafted} ; hypers fixés ; transfert/déploiement manuels. \\
+                                      & \acn{IQL}, \acn{VDN}, \acn{MADDPG}                                                                                                                                                                                                                     & Douces (0.5)                       & Contraintes souples définies manuellement (rôles/missions et barèmes adoucis).        \\
+                                      & \acn{IQL}, \acn{VDN}                                                                                                                                                                                                                                   & Aucune (0.0)                       & \acn{TRN-UNC} manuel ; base minimale sans guidage organisationnel.                    \\
     \midrule
     \parbox{4.1cm}{\textbf{Profil D — Références autoscaling K8s/ML}}
                                       & \parbox{3.4cm}{\acn{HPA} classique ; \acn{AWARE}~\cite{aware2023} ; Gym-\acn{HPA}~\cite{gymhpa2022} ; Rlad-core~\cite{Rossi2019} ; \acn{AHPA}~\cite{Zhou2024} ; \acn{KOSMOS}~\cite{KOSMOS} ; \acn{COPA}~\cite{COPA} ; QoS-aware \acn{RL}~\cite{QoSRL}}
                                       & N/A
-                                      & Lignes de base non-\acn{MAS}/\acn{MARL} ou \acn{RL} générique pour autoscaling : utile pour comparer la robustesse en charge dynamique/adversaire ; intégration K8s et prise en compte d'attaques variables selon les systèmes.                                                                                                                                                    \\
+                                      & Lignes de base non-\acn{MAS}/\acn{MARL} ou \acn{RL} générique pour autoscaling : utile pour comparer la robustesse en charge dynamique/adversaire ; intégration K8s et prise en compte d'attaques variables selon les systèmes.                                                                                                                                                     \\
     \bottomrule
   \end{tabularx}
 \end{table*}
@@ -1041,7 +1079,7 @@ L'environnement \textbf{Drone Swarm} est un réseau ad hoc d'essaim de drones su
 
 Nous utilisons \textbf{\acn{CybORG}}~\cite{Standen2021} comme simulateur de référence pour l'essaim de drones (réseau \textit{ad hoc} dynamique, nœuds mobiles, compromis possibles). Conformément aux environnements simulés non-orientés Cyberdéfense, une instance \acn{CybORG} est lancée en tâche de fond et exposée via un \textbf{adaptateur REST} conforme à l'\acn{API} d'I/O de \textquote{CybMASDE} (\textquote{reset/step}, observations jointes, masques d'actions). Cette passerelle permet : (i) la collecte de traces pour \textquote{\acn{MOD-AUT}} (historiques $\langle o_{1:t}, a_{1:t} \rangle$) ; (ii) l'entraînement \acn{MARL} \textbf{TRN} avec ou sans \textit{spécifications organisationnelles} ; (iii) l'analyse \textbf{ANL} (clustering de trajectoires, vérification de l'alignement rôles/missions) ; (iv) le transfert \textbf{TRF} vers l'exécuteur simulé standardisé.
 
-Pour \textquote{\acn{MOD-AUT}}, un \textit{Joint-Observation Prediction Model} (\acn{JOPM}, \acn{VAE}+\acn{LSTM}) peut être entraîné afin d'apprendre une dynamique approximative $\langle o_{1:t}, a_{1:t} \rangle \mapsto o_{t+1}$ et une fonction d'arrêt dérivée (optionnel, le simulateur étant déjà la « source de vérité »). La fonction de récompense reconstruite est croisée avec la récompense native (prévention d'attaques, continuité de service, minimisation des faux positifs). Un mappage \emph{labels} observation/action ($l_o, l_a$) synchronise \acn{CybORG} et \textquote{MMA} (MOISE+MARL) pour activer le masquage d'actions et le shaping par rôle. L'entraînement s'appuie sur \textquote{MARLlib}/\textquote{RLlib} (profils \textquote{MAPPO}, \textquote{MADDPG}, \textquote{QMIX}, \textquote{COMA}, \textquote{IQL}, \textquote{VDN}) avec \textit{seeds} fixées, conformément au \autoref{chap:cadre_experimental} et aux ressources présentées en \autoref{par:compute_conditions}. Les épisodes et fréquences de log sont harmonisés avec les autres environnements simulés.
+Pour \textquote{\acn{MOD-AUT}}, un \textit{Joint-Observation Prediction Model} (\acn{JOPM}, \acn{VAE}+\acn{LSTM}) peut être entraîné afin d'apprendre une dynamique approximative $\langle o_{1:t}, a_{1:t} \rangle \mapsto o_{t+1}$ et une fonction d'arrêt dérivée (optionnel, le simulateur étant déjà la \textquote{source de vérité}). La fonction de récompense reconstruite est croisée avec la récompense native (prévention d'attaques, continuité de service, minimisation des faux positifs). Un mappage \emph{labels} observation/action ($l_o, l_a$) synchronise \acn{CybORG} et \textquote{MMA} (MOISE+MARL) pour activer le masquage d'actions et le shaping par rôle. L'entraînement s'appuie sur \textquote{MARLlib}/\textquote{RLlib} (profils \textquote{MAPPO}, \textquote{MADDPG}, \textquote{QMIX}, \textquote{COMA}, \textquote{IQL}, \textquote{VDN}) avec \textit{seeds} fixées, conformément au \autoref{chap:cadre_experimental} et aux ressources présentées en \autoref{par:compute_conditions}. Les épisodes et fréquences de log sont harmonisés avec les autres environnements simulés.
 
 \paragraph{2 à 4. Définition des baselines}
 
@@ -1079,7 +1117,7 @@ Nous définissons une \textbf{baseline avancée par défaut} et des \textbf{abla
     \multirow{3}{*}{\parbox{3.8cm}{\textbf{Profil C — Cycle principalement manuel}                                                                                                                                                                                                                              \\\acn{MOD-MAN};\;\acn{TRN-CON};\;\acn{ANL-MAN};\;\acn{TRF-MAN}}}
                                       & \acn{IQL},\;\acn{VDN},\;\acn{MADDPG}             & Oui (1.0)                          & Environnement \textit{handcrafted} (sous-ensemble des observations/actions) ; hyperparamètres fixés.                                                                            \\
                                       & \acn{IQL},\;\acn{VDN},\;\acn{MADDPG}             & Douces (0.5)                       & Contraintes souples définies manuellement (rôles/missions + barèmes adoucis).                                                                                                   \\
-                                      & \acn{IQL},\;\acn{VDN}                            & Aucune (0.0)                       & Base minimale sans guidage ; sert de référence « pure \acn{RL} » entièrement manuelle.                                                                                          \\
+                                      & \acn{IQL},\;\acn{VDN}                            & Aucune (0.0)                       & Base minimale sans guidage ; sert de référence \textquote{pure \acn{RL}} entièrement manuelle.                                                                                  \\
     \hdashline
     % --- Profil D (Références cyber classiques) ---
     \multirow{2}{*}{\parbox{3.8cm}{\textbf{Profil D — Références cyber classiques}                                                                                                                                                                                                                              \\(Sans \acn{MARL}, pour positionnement)}}
@@ -1092,7 +1130,9 @@ Nous définissons une \textbf{baseline avancée par défaut} et des \textbf{abla
 
 
 \section{Bilan}
-Ce chapitre a détaillé l'instanciation du protocole d'expérimentation sur divers environnements, en précisant les adaptations méthodologiques propres à chaque cas d'étude. Le chapitre suivant présentera et analysera les résultats expérimentaux obtenus après application du protocole d'évaluation.
+Ce chapitre a posé les fondations méthodologiques et pratiques de l'évaluation expérimentale de la méthode \acn{MAMAD}. En définissant un protocole générique, reproductible et structuré, il a permis d'instancier la démarche sur des environnements variés, allant des cas jouets aux systèmes réels. L'intérêt majeur de ce cadre est d'assurer la traçabilité des choix, la transparence des protocoles et la validité des résultats, tout en facilitant l'analyse critique des apports et des limites de chaque composant de la méthode.
+%
+Ce chapitre constitue ainsi un socle essentiel pour la validation scientifique de la méthode \acn{MAMAD}, en garantissant que les résultats présentés dans la suite du manuscrit sont comparables, interprétables et généralisables.
 
 \clearpage
 \thispagestyle{empty}
@@ -1497,7 +1537,7 @@ Les environnements non orientés Cyberdéfense servent de référence contrôlé
 
 \begin{table}[h!]
   \centering
-  \caption{Synthèse multi-environnements : couverture des critères C1--C5 par MAMAD.}
+  \caption{Synthèse multi-environnements : valeurs métriques et couverture des critères C1--C5 par MAMAD.}
   \label{tab:criteria_summary}
   \renewcommand{\arraystretch}{1.4}
   \scriptsize
@@ -1512,7 +1552,7 @@ Les environnements non orientés Cyberdéfense servent de référence contrôlé
     Microservices K8s      & $0.25$                & $0.91$            & $0.86$                 & $0.88$               & $0.83$                    \\
     Drone Swarm            & $\sim0.20$            & $0.89$            & $0.84$                 & $0.86$               & $0.82$                    \\
     \hdashline
-    \textbf{Moyenne}       & $0.82$                & $0.86$            & $0.82$                 & $0.81$               & $0.77$                    \\
+    \textbf{Moyenne}       & $0.82$                & $0.86$            & $\sim0.21$             & $0.81$               & $0.77$                    \\
     \hline
   \end{tabular}
 \end{table}
@@ -1540,6 +1580,10 @@ Plusieurs facteurs peuvent influencer l'interprétation des résultats :
 \medskip
 En résumé, la méthode \acn{MAMAD} couvre de manière équilibrée les cinq critères d'évaluation, avec des gains particulièrement nets en performance, adaptation et autonomie. Les biais identifiés ouvrent des perspectives pour raffiner l'évaluation (intégration de nouveaux algorithmes, déploiements contraints, métriques avancées d'explicabilité).
 
+\section{Bilan}
+
+Ce chapitre a démontré l'intérêt et la pertinence de la méthode \acn{MAMAD} à travers une évaluation expérimentale rigoureuse sur des environnements variés, allant des cas jouets aux systèmes réels. Les résultats mettent en avant plusieurs points forts : accélération de la convergence, amélioration de la robustesse et de la stabilité des politiques multi-agents, ainsi qu'une explicabilité accrue grâce à l'intégration des spécifications organisationnelles. L'approche modulaire et automatisée, portée par la plateforme \acn{CybMASDE}, permet de réduire l'intervention humaine tout en assurant la traçabilité et la reproductibilité des expérimentations. Enfin, la couverture équilibrée des critères d'autonomie, de performance, d'adaptation, de contrôle et d'explicabilité confirme la valeur ajoutée de la méthode pour la conception de \acplu{SMA} robustes et interprétables dans des contextes complexes.
+
 \clearpage
 \thispagestyle{empty}
 \null
@@ -1549,9 +1593,9 @@ En résumé, la méthode \acn{MAMAD} couvre de manière équilibrée les cinq cr
 \chapter*{Conclusion}
 \addcontentsline{toc}{chapter}{\textbf{Conclusion}}
 
-Cette partie a permis de valider expérimentalement la méthode \acn{MAMAD} à travers des scénarios simulés, couvrant des contextes variés de conception de systèmes multi-agents : infrastructure d'entreprise, essaim de drones, et orchestration de microservices. À chaque étape du pipeline proposé, l'implémentation via la plateforme \acn{CybMASDE} a démontré la faisabilité de l'approche, tout en soulignant les apports spécifiques du couplage $\mathcal{M}OISE^+$ avec l'apprentissage multi-agent.
+Cette partie a permis de valider expérimentalement la méthode \acn{MAMAD} à travers des scénarios simulés, couvrant des contextes variés de conception de \acplu{SMA} : infrastructure d'entreprise, essaim de drones, et orchestration de microservices. À chaque étape du pipeline proposé, l'implémentation via la plateforme \acn{CybMASDE} a démontré la faisabilité de l'approche, tout en soulignant les apports spécifiques du couplage $\mathcal{M}OISE^+$ avec l'apprentissage multi-agent.
 
-Les résultats obtenus montrent des gains notables en termes d'autonomie, de résilience et de conformité organisationnelle des agents. L'analyse comparative entre les versions « guidées » et « non guidées » par l'organisation a permis d'évaluer l'impact de chaque composant de la méthode, à la fois sur les performances observées et sur la capacité à extraire des spécifications émergentes cohérentes. Les métriques introduites (comme le \acn{SOF} ou le \acn{FOF}) ont apporté une lecture inédite des comportements collectifs, en reliant les trajectoires apprises aux objectifs structurels du système.
+Les résultats obtenus montrent des gains notables en termes d'autonomie, de résilience et de conformité organisationnelle des agents. L'analyse comparative entre les versions \textquote{guidées} et \textquote{non guidées} par l'organisation a permis d'évaluer l'impact de chaque composant de la méthode, à la fois sur les performances observées et sur la capacité à extraire des spécifications émergentes cohérentes. Les métriques introduites (comme le \acn{SOF} ou le \acn{FOF}) ont apporté une lecture inédite des comportements collectifs, en reliant les trajectoires apprises aux objectifs structurels du système.
 
 Malgré ces résultats encourageants, plusieurs limites ont été identifiées : dépendance aux environnements simulés, couverture partielle des contextes applicatifs, et nécessité de ressources computationnelles importantes. Ces éléments seront discutés plus en détail dans la dernière partie de ce manuscrit, qui propose un retour réflexif sur l'ensemble de la démarche entreprise.
 
