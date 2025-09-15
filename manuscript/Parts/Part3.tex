@@ -96,10 +96,13 @@ Le coeur de la méthode \acn{MAMAD} est d'envisager la conception d'un \acn{SMA}
   \item $\mathcal{C}_{\text{inf}}$~: une spécification informelle des contraintes de conception~;
   \item $\gamma \in [0,1]$~: le facteur d'actualisation définissant une solution à court ou long terme, généralement fixé empiriquement (par défaut à 1)~;
   \item $A, \Omega$~: respectivement les espaces d'actions et d'observations~;
-  \item $\texttt{org\_fit}_{min}$, $\overline{r}_{min}$, $\sigma_{max}$~: les valeurs minimales exigées pour le score d'adéquation organisationnelle, la récompense moyenne, et la valeur maximale pour l'écart-type, servant à valider une politique conjointe. Ces seuils sont généralement déterminés empiriquement, à partir d'une analyse préliminaire des résultats obtenus lors d'une première série d'épisodes.
+  \item $w_{\text{episodes}}$~: la fenêtre glissante d'épisodes pour la validation de la politique conjointe (par défaut $w_{\text{episodes}}$ est fixée à 5)~;
+  \item $\texttt{org\_fit}_{min}$, $\overline{r}_{min}$, $\sigma_{max}$~: respectivement la valeur minimale exigée pour le score d'\textbf{adéquation organisationnelle} obtenus sur les $w_{\text{episodes}}$ derniers épisodes, la valeur minimale de la moyenne des récompenses cumulées sur les $w_{\text{episodes}}$ derniers épisodes, et la valeur maximale de l'écart-type sur les $w_{\text{episodes}}$ derniers épisodes. Ces seuils servent à valider une politique conjointe. Ces seuils sont généralement déterminés empiriquement, à partir d'une analyse préliminaire des résultats obtenus lors d'une première série d'épisodes~;
+  \item $\texttt{mode} \in \{\texttt{DIRECT}, \texttt{REMOTE}\}$~: le mode de transfert des politiques des agents, soit direct (les agents déployés dans l'environnement embarquent les politiques pour les executer eux-mêmes) ou distant (la politique conjointe est executée sur le noeud d'execution de \acn{CybMASDE} et les actions sont communiquées aux agents qui ne font que les appliquer et renvoyer leur observations respectives à \acn{CybMASDE})~;
+  \item $n_{refine}$~: le nombre maximal de cycles de raffinement alternant entre entraînement (pour entrainer les politique avec spécifications organisationnelles) et analyse (pour détérminer des spécifications organisationnelles plus pertinentes en termes de performance ou explicabilité).
 \end{itemize}
 
-L'adéquation organisationnelle est introduit de façon théorique comme un indicateur quantitatif que nous théorisons et qui est compris entre 0 et 1 et qui évalue dans quelle mesure les comportements des agents sont structurés et conformes à des spécifications organisationnelles (qu'elles soient implicites ou explicites). Une valeur proche de 1 indique que les agents adoptent des comportements réguliers, stables et fortement alignés avec une organisation définie. À l'inverse, une valeur proche de 0 signifie que les comportements sont très irréguliers et qu'aucun schéma organisationnel cohérent n'émerge. En résumé, l'adéquation organisationnelle évalue la conformité d'une politique conjointe à une organisation structurée et fonctionnelle.
+L'\textbf{adéquation organisationnelle} est introduite de façon théorique comme un indicateur quantitatif que nous théorisons et qui est compris entre 0 et 1 pour évaluer dans quelle mesure les comportements des agents sont structurés et conformes à des spécifications organisationnelles (qu'elles soient implicites ou explicites). Une valeur proche de 1 indique que les agents adoptent des comportements réguliers, stables et fortement alignés avec une organisation définie. À l'inverse, une valeur proche de 0 signifie que les comportements sont très irréguliers et qu'aucun schéma organisationnel cohérent n'émerge. En résumé, l'adéquation organisationnelle évalue la conformité d'une politique conjointe à une organisation structurée et fonctionnelle.
 La récompense moyenne $\overline{r}$ et l'écart-type $\sigma$ sont des métriques classiques en apprentissage par renforcement, reflétant respectivement la performance globale et la stabilité d'une politique.
 
 
@@ -112,11 +115,24 @@ Ce processus qui consiste à maintenir la cohérence entre l'environnement simul
 % Rajouter des commentaires sur chaque activité
 
 \begin{algorithm}[h!]
-  \caption{Conception de SMA assistée par MOISE+MARL}
+  \caption{Coeur algorithmique de la méthode MAMAD}
   \label{alg:mamad}
   \DontPrintSemicolon
 
-  \KwIn{Environnement initial $\mathcal{E}$, objectif $\mathcal{G}_{\text{inf}}$, contraintes de conception $\mathcal{C}_{\text{inf}}$, espace d'observation $\Omega$, espace d'action $A$, nombre maximal de cycles de raffinement $n_{refine}$}
+  \KwIn{
+  Environnement initial $\mathcal{E}$,
+  objectif informel $\mathcal{G}_{\text{inf}}$,
+  contraintes de conception informelles $\mathcal{C}_{\text{inf}}$,
+  facteur d'actualisation $\gamma$,
+  espace d'observation $\Omega$,
+  espace d'action $A$,
+  fenêtre glissante d'épisodes de validation $w_{\text{episodes}}$,
+  valeur minimale d'adéquation organisationnelle $\texttt{org\_fit}_{min}$,
+  valeur minimale de récompense cumulée moyenne sur un épisode $\overline{r}_{min}$,
+  valeur maximale de l'écart-type des récompenses $\sigma_{max}$,
+  mode de transfert $\texttt{mode} \in \{\texttt{DIRECT}, \texttt{REMOTE}\}$,
+  nombre maximal de cycles de raffinement $n_{refine}$}
+
   \KwOut{Un SMA déployé satisfaisant aux exigences de conception, de performance et d'explicabilité~; ainsi que ses spécifications organisationnelles associées}
 
   Initialiser~: $\mathcal{D}_{H^j} \gets \emptyset$, $\pi^j_{\text{latest}} \gets \pi^j_{\text{init}}$, $running\_MTA \gets False, \mathcal{MM} \gets \emptyset$ \;
@@ -125,7 +141,7 @@ Ce processus qui consiste à maintenir la cohérence entre l'environnement simul
 
   \While{\acn{SMA} en cours de conception}{
     \tcp*[l]{Transfert~: récupération des trajectoires \& déploiement de la politique}
-    $\mathcal{D}_{H^j}, \texttt{need\_update} \gets \text{transfer}(\pi^i_{\text{latest}}, \mathcal{D}_{H^j})$ \tcp*[r]{appel asynchrone}
+    $\mathcal{D}_{H^j}, \texttt{need\_update} \gets \text{transfer}(\pi^i_{\text{latest}}, \mathcal{D}_{H^j}, \texttt{mode})$ \tcp*[r]{appel asynchrone}
     \If{\texttt{need\_update} et non \texttt{running\_MTA}}{
       \texttt{launch\_MTA()} \tcp*[r]{appel asynchrone}
     }
@@ -1139,7 +1155,7 @@ L'activité retourne :
 
 
 \begin{algorithm}[htb]
-  \caption{Algorithme de l'activité d'analyse}
+  \caption{Algorithme de l'activité d'analyse (Auto-TEMM)}
   \label{alg:auto_temm}
   \DontPrintSemicolon
 
@@ -1306,21 +1322,21 @@ Ce schéma assure trois propriétés essentielles :
 \paragraph{Éléments formels.}
 Ainsi, l'algorithme encode la relation :
 \[
-  \hspace{3cm}\mathcal{D}_{H^j}, \texttt{need\_update} \gets \texttt{transfer}(\pi^j_{\text{latest}}, \mathcal{E}, \mathcal{D}_{H^j})
+  \hspace{3cm}\mathcal{D}_{H^j}, \texttt{need\_update} \gets \texttt{transfer}(\pi^j_{\text{latest}}, \mathcal{E}, \mathcal{D}_{H^j}, \texttt{mode})
 \]
 où :
 \begin{itemize}
-  \item $\mathcal{B}$ désigne le tampon temporaire,
+  \item $\mathcal{B}$ désigne le tampon temporaire (voir \autoref{alg:transferring}),
   \item $\texttt{batch\_size}$ fixe la granularité de déclenchement des mises à jour,
-  \item $\texttt{launch\_update}()$ assure la synchronisation avec les autres activités de la méthode \acn{MAMAD}.
+  \item $\texttt{launch\_update}()$ assure la synchronisation avec les autres activités de la méthode.
 \end{itemize}
 
 \vspace{-0.3em}
 \begin{algorithm}[h!]
-  \caption{Activité de transfert}
+  \caption{Algorithme de l'activité de transfert}
   \label{alg:transferring}
   \DontPrintSemicolon
-  \KwIn{Politique actuelle $\pi^j_{\text{latest}}$, environnement réel $\mathcal{E}$, base de trajectoires $\mathcal{D}_{H^j}$}
+  \KwIn{Politique actuelle $\pi^j_{\text{latest}}$, environnement réel $\mathcal{E}$, base de trajectoires $\mathcal{D}_{H^j}$, mode de transfert $\texttt{mode} \in \{\texttt{DIRECT}, \texttt{REMOTE}\}$}
   \KwOut{Base de trajectoires mise à jour $\mathcal{D}_{H^j}$, signal de mise à jour $\texttt{need\_update}$}
 
   \vspace{0.3em}
@@ -1328,18 +1344,29 @@ où :
   \Transfer{}{
 
   \While{le \acn{SMA} est actif dans l'environnement $\mathcal{E}$}{
-  \tcp*[l]{Exécution de la politique la plus récente}
-  $\omega^j_t \gets \texttt{observe}(\mathcal{E})$ \;
-  $a^j_t \gets \pi^j_{\text{latest}}(\omega^j_t)$ \;
-  $\omega^j_{t+1} \gets \texttt{apply}(\mathcal{E}, a^j_t)$ \;
-  Ajouter $(\omega^j_t, a^j_t, \omega^j_{t+1})$ au tampon temporaire $\mathcal{B}$ \;
+
+  \uIf{$\texttt{mode} = \texttt{DIRECT}$}{
+  \tcp*[l]{Chaque agent applique localement la politique}
+  Les agents observent localement $\omega^j_t$\;
+  Calcul local $a^j_t \gets \pi^j_{\text{latest}}(\omega^j_t)$\;
+  Application locale des actions et mise à jour de l'état $\omega^j_{t+1}$\;
+  Stockage local $(\omega^j_t, a^j_t, \omega^j_{t+1})$ dans un tampon interne\;
+  Périodiquement : envoi des tampons locaux à CybMASDE pour mise à jour de $\mathcal{D}_{H^j}$\;
+  }
+  \uElseIf{$\texttt{mode} = \texttt{REMOTE}$}{
+  \tcp*[l]{La politique est exécutée par le processus Transferring}
+  $\omega^j_t \gets \texttt{observe}(\mathcal{E})$\;
+  $a^j_t \gets \pi^j_{\text{latest}}(\omega^j_t)$\;
+  $\omega^j_{t+1} \gets \texttt{apply}(\mathcal{E}, a^j_t)$\;
+  Ajouter $(\omega^j_t, a^j_t, \omega^j_{t+1})$ au tampon temporaire $\mathcal{B}$\;
+  }
 
   \tcp*[l]{Vérification du déclenchement de la mise à jour}
   \If{$|\mathcal{B}| \geq \texttt{batch\_size}$}{
     Ajouter $\mathcal{B}$ à $\mathcal{D}_{H^j}$ et vider $\mathcal{B}$ \;
     $\texttt{need\_update} \gets \texttt{True}$ \;
     \If{$\texttt{not running\_update} = \texttt{False}$}{
-      \texttt{launch\_update()} \tcp*[r]{Appel asynchrone}
+      \texttt{launch\_update()} \tcp*[r]{Appel asynchrone du processus MTA}
     }
   }
   }
