@@ -92,6 +92,7 @@ Le cycle de vie d'un \acn{SMA} conçu avec \acn{MAMAD} est illustré en \autoref
 Le coeur de la méthode \acn{MAMAD} est d'envisager la conception d'un \acn{SMA} comme un processus itératif d'optimisation sous contraintes. Nous proposons une description formalisée de la méthode \acn{MAMAD} dans l'\autoref{alg:mamad} qui met en perspective les activités évoquées précédemment. Les données en entrée sont~:
 \begin{itemize}
   \item $\mathcal{E}_0$~: l'environnement initial dans lequel les agents peuvent agir~;
+  \item $d \in D \cup OD$~: un environnement fourni par l'utilisateur de façon optionnelle. Ce dernier peut avoir préalablement modélisé manuellement comme un \acn{Dec-POMDP} (voir \autoref{sec:dec-podmp}) ou modélisé automatiquement comme un \acn{ODec-POMDP} (voir \autoref{sec:wm_extension})~;
   \item $\mathcal{G}_{\text{inf}}$~: une description informelle de l'objectif global recherché~;
   \item $\mathcal{C}_{\text{inf}}$~: une spécification informelle des contraintes de conception~;
   \item $\gamma \in [0,1]$~: le facteur d'actualisation définissant une solution à court ou long terme, généralement fixé empiriquement (par défaut à 1)~;
@@ -115,12 +116,13 @@ Ce processus qui consiste à maintenir la cohérence entre l'environnement simul
 % Rajouter des commentaires sur chaque activité
 
 \begin{algorithm}[h!]
-  \caption{Coeur algorithmique de la méthode MAMAD}
+  \caption{Vue algorithmique de la méthode MAMAD}
   \label{alg:mamad}
   \DontPrintSemicolon
 
   \KwIn{
   Environnement initial $\mathcal{E}$,
+  Environnement simulé fourni $d \in OD \cup D$,
   objectif informel $\mathcal{G}_{\text{inf}}$,
   contraintes de conception informelles $\mathcal{C}_{\text{inf}}$,
   facteur d'actualisation $\gamma$,
@@ -135,13 +137,13 @@ Ce processus qui consiste à maintenir la cohérence entre l'environnement simul
 
   \KwOut{Un SMA déployé satisfaisant aux exigences de conception, de performance et d'explicabilité~; ainsi que ses spécifications organisationnelles associées}
 
-  Initialiser~: $\mathcal{D}_{H^j} \gets \emptyset$, $\pi^j_{\text{latest}} \gets \pi^j_{\text{init}}$, $running\_MTA \gets False, \mathcal{MM} \gets \emptyset$ \;
+  Initialiser~: $\mathcal{D}_{H^j} \gets \emptyset$, $\pi^j_{\text{latest}} \gets \pi^j_{\text{init}}$, $\texttt{running\_MTA} \gets False, \texttt{running\_refinement} \gets True, \mathcal{MM} \gets \emptyset$ \;
 
   \vspace{0.3em}
 
   \While{\acn{SMA} en cours de conception}{
     \tcp*[l]{Transfert~: récupération des trajectoires \& déploiement de la politique}
-    $\mathcal{D}_{H^j}, \texttt{need\_update} \gets \text{transfer}(\pi^i_{\text{latest}}, \mathcal{D}_{H^j}, \texttt{mode})$ \tcp*[r]{appel asynchrone}
+    $(\mathcal{D}_{H^j}, \texttt{need\_update}) \gets \texttt{transfer}(\pi^j_{\text{latest}}, \mathcal{E}, \mathcal{D}_{H^j}, \texttt{mode})$ \tcp*[r]{appel asynchrone}
     \If{\texttt{need\_update} et non \texttt{running\_MTA}}{
       \texttt{launch\_MTA()} \tcp*[r]{appel asynchrone}
     }
@@ -152,25 +154,28 @@ Ce processus qui consiste à maintenir la cohérence entre l'environnement simul
   \MTA{}{}{
 
   $\texttt{running\_MTA} \gets True$ \tcp*[l]{Variable globale}
-  % ttt
-  \tcp*[l]{Modélisation~: modéliser l'environnement réel}
-  $(\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \text{Render}^j_H) \gets \texttt{model}(\mathcal{E}, \mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \gamma, \Omega, A)$ \;
+
+  \tcp*[l]{Si env. simulé non fourni, lancer modélisation}
+  \If{$d = \emptyset$}{
+    \tcp*[l]{Modélisation~: modéliser l'environnement réel}
+    $d:= (\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \texttt{Render}^j_H) \gets \texttt{model}(\mathcal{E}, \mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \gamma, \Omega, A)$ \;
+  }
 
   \tcp*[l]{Politique insatisfaisante ou nombre max. de raffinement non atteint}
 
-  \While{$i < n_{refine} \ \text{ou} \ (\texttt{org\_fit} > \texttt{org\_fit}_{min} \ or \ \overline{r} > \overline{r}_{min} \ or \  \sigma < \sigma_{max})$}{
+  \While{$i < n_{refine} \ \text{ou} \ (\texttt{org\_fit} < \texttt{org\_fit}_{min} \ ou \ \overline{r} < \overline{r}_{min} \ ou \  \sigma > \sigma_{max}) \ ou \ \texttt{running\_refinement}$}{
 
   \vspace{0.5em}
   \tcp*[l]{Entraînement~: politique sous spec. org.}
-  $(\pi^j, \overline{r}, \sigma) \gets \texttt{train}(\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \text{Render}^j_H, \mathcal{MM}, \mathcal{C}_{\text{inf}}, \gamma, \Omega, A)$ \;
+  $\pi^j \gets \texttt{train}(d, \mathcal{MM}, \mathcal{C}_{\text{inf}}, \gamma, \Omega, A)$ \;
 
   \vspace{0.5em}
   \tcp*[l]{Analyse~: inférer les nouvelles spec. org.}
-  $(\mathcal{MM}_{\text{imp}}, \texttt{org\_fit}) \gets \texttt{analyze}(\mathcal{T}^j, \mathcal{MM}, \pi^j)$ \;
+  $(\mathcal{MM}_{\text{inferred}}, \texttt{org\_fit}, \overline{r}, \sigma, \texttt{running\_refinement}) \gets \texttt{analyze}(d, \pi^j, \mathcal{MM}, w_{\text{episodes}})$ \;
 
   $\pi^j_{\text{latest}} \gets \pi^j$ \tcp*[r]{Mise à jour de la politique la plus récente}
 
-  $\mathcal{MM} \gets \mathcal{MM}_{\text{imp}}$ \;
+  $\mathcal{MM} \gets \mathcal{MM}_{\text{inferred}}$ \;
 
   $i \gets i + 1$
 
@@ -261,27 +266,36 @@ L'objectif de cette activité est de transformer les informations disponibles (t
 
 Concrètement, les \textbf{entrées} de cette activité sont :
 \begin{itemize}
+  \item la description de l'environnement $\mathcal{E}$ ;
   \item les historiques conjoints d'interactions $\mathcal{D}_{H^j}$ ;
   \item l'objectif global informel $\mathcal{G}_{\text{inf}}$ ;
-  \item les contraintes organisationnelles informelles $\mathcal{S}_{\text{inf}}$ ;
-  \item la description de l'environnement $\mathcal{E}$ ;
   \item le facteur d'actualisation $\gamma$ ;
   \item l'espace des observations $\Omega$ ;
   \item l'espace des actions $A$.
 \end{itemize}
 
+\noindent
 Les \textbf{sorties attendues} sont :
 \begin{itemize}
-  \item un modèle de transition conjoint $\mathcal{T}^j$ assimilable à une simulation ;
+  \item un modèle de l'environnement simulé $d$ formalisé soit comme un \acn{Dec-POMDP} (modélisation manuelle) soit comme un \acn{ODec-POMDP} (modélisation automatisée) ;
+\end{itemize}
+
+La relation globale peut être exprimée par:
+\begin{displaymath}
+  \hspace{2cm}\texttt{model}: \mathcal{E} \times \mathcal{D}_{H^j} \times \mathcal{G}_{\text{inf}} \times \gamma \times \Omega \times A \rightarrow D \cup OD
+\end{displaymath}
+%
+où $d$ est le modèle de l'environnement simulé.
+Dans le cas d'une modélisation manuelle, le modèle $d$ est formalisé comme un \acn{Dec-POMDP} : $d = (S,\{A_i\},T,R,\{\Omega_i\},O,\gamma)$.
+%
+Dans le cas d'une modélisation automatisée, le modèle $d$ est formalisé comme un \acn{ODec-POMDP} : $d = (\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \texttt{Render}^j_H)$ avec :
+\begin{itemize}
+  \item un \acn{JOPM} $\mathcal{T}^j$~;
+  \item un ensemble d'états initiaux $\Omega^{\mathcal{T}^j}_0$ ;
   \item une fonction de récompense basée sur l'historique $R^j_H$ ;
   \item une fonction d'arrêt $S^j_H$ déterminant les conditions de terminaison de l'épisode ;
   \item une fonction de rendu optionnelle $Render^j_H$ permettant de visualiser les trajectoires.
 \end{itemize}
-
-La relation globale peut être exprimée par :
-\begin{displaymath}
-  \texttt{model}(\mathcal{D}_{H^j}, \mathcal{G}_{\text{inf}}, \mathcal{S}_{\text{inf}}, \mathcal{E}, \gamma, \Omega, A) \rightarrow \mathcal{T}^j, R^j_H, S^j_H, \text{Render}^j_H
-\end{displaymath}
 
 \section{Travaux mobilisés et verrous identifiés}
 
@@ -325,7 +339,7 @@ Ce double positionnement permet de tirer parti à la fois de l'explicabilité et
 
 \subsection{Les \textit{World Models} Multi-Agents pour la génération automatique du modèle simulé}
 
-Dans cette approche automatisée, on commence par générer un environnement simulé de haute fidélité en construisant un \acn{JOPM} $\mathcal{T}^j~: H^j \times \Omega^j \times A^j \rightarrow \mathcal{H} \times \hat{\Omega}^j$ à partir des traces d'interactions réelles $\mathcal{D}_{H^j}$ (avec $h^j \in \mathcal{D}_{H^j}$, $h^j = (h^1, h^2 \dots h^{|\mathcal{A}|})$ et pour $i \in \{0\dots|\mathcal{A}|\}$, $h^i = \langle (\omega_t, a_t) \rangle\phantom{X}_{t \in \llbracket 0, n_{step} \rrbracket}$). À un pas de temps $t \in \llbracket 0, n_{step} \rrbracket$, pour un état caché récurrent $\tilde{h}_{t-1} \in \mathcal{H}$ représentant l'historique conjoint jusqu'à $t-1$ (avec $\tilde{h}_{-1} = \mathbf{0}$), l'observation conjointe reçue $\omega_t^j \in H^j$ et l'action conjointe $a_t^j \in A^j$, le modèle $\mathcal{T}^j$ renvoie le nouvel état caché $\tilde{h}_t \in \mathcal{H}$ ainsi que la prédiction de la prochaine observation conjointe $\hat{\omega}^j \in \hat{\Omega}^j$. Cette architecture, illustrée en \autoref{fig:jopm_architecture}, permet à \acn{MAMAD} de construire l'environnement de simulation depuis zéro\index{Joint-Observation Prediction Model (JOPM)}.
+Dans cette approche automatisée, on commence par générer un environnement simulé de haute fidélité en construisant un \acn{JOPM} $\mathcal{T}^j~: H^j \times \Omega^j \times A^j \rightarrow \mathcal{H} \times \hat{\Omega}^j$ à partir des traces d'interactions réelles $\mathcal{D}_{H^j}$ (avec $h^j \in \mathcal{D}_{H^j}$, $h^j = (h^1, h^2 \dots h^{|\mathcal{A}|})$ et pour $i \in \{0\dots|\mathcal{A}|\}$, $h^i = \langle (\omega_t, a_t) \rangle\phantom{X}_{t \in \llbracket 0, n_{step} \rrbracket}$). À un pas de temps $t \in \llbracket 0, n_{step} \rrbracket$, pour un état caché récurrent $\tilde{h}_{t-1} \in \mathcal{H}$ représentant l'historique conjoint jusqu'à $t-1$ (avec $\tilde{h}_{-1} = \mathbf{0}$), l'observation conjointe reçue $\omega_t^j \in H^j$ et l'action conjointe $a_t^j \in A^j$, le \acn{JOPM} $\mathcal{T}^j$ renvoie le nouvel état caché $\tilde{h}_t \in \mathcal{H}$ ainsi que la prédiction de la prochaine observation conjointe $\hat{\omega}^j \in \hat{\Omega}^j$. Cette architecture, illustrée en \autoref{fig:jopm_architecture}, permet à \acn{MAMAD} d'apprendre la dynamique des observations de l'environnement pour former une simulation depuis zéro\index{Joint-Observation Prediction Model (JOPM)}.
 
 Dans les environnements multi-agents, les observations conjointes deviennent rapidement de grande dimension à mesure que le nombre d'agents augmente. Pour pallier cela, des fonctions d'encodage conjoint sont introduites pour les observations et les actions.
 
@@ -508,25 +522,37 @@ Ce mécanisme d'apprentissage permet de capturer la dynamique de l'environnement
 
 \paragraph{Étape 5 : Construction du JOPM.}
 Une fois le \acn{RLDM} entraîné, les observations initiales $\Omega^{\mathcal{T}^j}_0$ sont extraites des historiques et utilisées pour initialiser le simulateur.
-Le modèle de transition conjoint $\mathcal{T}^j$ est alors défini en combinant le modèle récurrent $f$, l'encodeur $Enc$, et le décodeur $Dec$.
+Le \acn{JOPM} $\mathcal{T}^j$ est alors défini en combinant le modèle récurrent $f$, l'encodeur $Enc$, et le décodeur $Dec$.
 Ainsi, pour toute observation et action donnée, $\mathcal{T}^j$ met à jour l'état caché et génère une observation prédite, constituant ainsi un simulateur complet des interactions multi-agents.
 
 \paragraph{Étape 6 : Sorties de l'activité.}
-Enfin, l'activité retourne l'ensemble des éléments modélisés : le modèle de transition conjoint $\mathcal{T}^j$, l'ensemble des observations initiales $\Omega^{\mathcal{T}^j}_0$, la fonction de récompense $R^j_H$, la fonction d'arrêt $S^j_H$, et la fonction de rendu éventuelle $Render^j_H$.
+Enfin, l'activité retourne l'ensemble des éléments modélisés : le \acn{JOPM} $\mathcal{T}^j$, l'ensemble des observations initiales $\Omega^{\mathcal{T}^j}_0$, la fonction de récompense $R^j_H$, la fonction d'arrêt $S^j_H$, et la fonction de rendu éventuelle $Render^j_H$.
 Ces composants constituent le cœur du jumeau numérique qui sera exploité par les activités d'entraînement, d'analyse et de transfert de la méthode \acn{MAMAD}.
 
 
 \begin{algorithm}[h!]
-  \caption{Algorithme de l'activité de modélisation}
+  \caption{Vue algorithmique de l'activité de modélisation}
   \label{alg:modeling}
   \DontPrintSemicolon
 
-  \KwIn{Historiques conjoints $\mathcal{D}_{H^j}$, objectif informel $\mathcal{G}_{\text{inf}}$, contraintes informelles $\mathcal{C}_{\text{inf}}$, facteur d'actualisation $\gamma$, espace des actions $A$, espace des observations $\Omega$}
-  \KwOut{\acn{JOPM} $\mathcal{T}^j$, fonction de récompense $R^j_H$, spécifications MOISE+MARL $\mathcal{MM}$}
+  \KwIn{
+  Environnement initial $\mathcal{E}$,
+  historiques conjoints $\mathcal{D}_{H^j}$~;
+  objectif informel $\mathcal{G}_{\text{inf}}$~;
+  facteur d'actualisation $\gamma$~;
+  espace des actions $A$~;
+  espace des observations $\Omega$
+  }
+  \KwOut{l'environnement simulé $d \in D \cup OD$}
 
   \vspace{0.5em}
   \tcp{1. Formalisation manuelle des fonctions composantes}
-  $(R^j_H, S^j_H, \text{Render}^j_H) \gets \texttt{manual\_formalize}(\mathcal{S}_{\text{inf}}, \mathcal{G}_{\text{inf}}, \mathcal{E}, A, \Omega)$ \;
+  $(R^j_H, S^j_H, \texttt{Render}^j_H) \gets \texttt{manual\_formalize}(\mathcal{G}_{\text{inf}}, \mathcal{E}, A, \Omega)$ \;
+
+  \vspace{0.5em}
+  \If{\textit{utilisateur souhaite modélisation manuelle}}{
+    \Return{$(S,\{A_i\},T,R,\{\Omega_i\},O,\gamma) \gets \texttt{manual\_model}(\mathcal{G}_{\text{inf}}, \mathcal{E}, A, \Omega)$} \;
+  }
 
   \vspace{0.5em}
   \tcp{2. Entraîner les auto-encodeurs pour les observations}
@@ -556,7 +582,7 @@ Ces composants constituent le cœur du jumeau numérique qui sera exploité par 
 
   \vspace{0.5em}
   \tcp{6. Retourner les éléments modélisés}
-  \Return{$\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \text{Render}^j_H$}
+  \Return{$(\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \texttt{Render}^j_H)$}
 \end{algorithm}
 
 
@@ -564,7 +590,7 @@ Ces composants constituent le cœur du jumeau numérique qui sera exploité par 
 \section{Bilan}
 
 \noindent
-En synthèse, l'activité de modélisation vise à fournir un environnement simulé fidèle et exploitable pour l'entraînement multi-agent, en combinant formalisme explicite (\acn{Dec-POMDP} générique) et génération automatique par World Models multi-agents. Les sorties produites — le modèle de transition conjoint (\acn{JOPM}), la fonction de récompense, la fonction d'arrêt et la fonction de rendu — constituent le socle du jumeau numérique utilisé dans les étapes suivantes. Cette approche permet d'assurer l'adaptation (via l'apprentissage sur données réelles), l'explicabilité (par la structure formelle du modèle) et la réutilisabilité (grâce au châssis générique). Toutefois, la fidélité du modèle dépend de la qualité et de la diversité des historiques collectés, et le coût computationnel de l'entraînement des auto-encodeurs et du \acn{RLDM} peut être élevé pour des environnements complexes. Enfin, la granularité des actions et la couverture des dynamiques réelles restent des limites inhérentes à toute simulation. L'activité d'entraînement exploitera ce modèle simulé pour optimiser les politiques sous contraintes organisationnelles, amorçant ainsi le cycle itératif de la méthode \acn{MAMAD}.
+En synthèse, l'activité de modélisation vise à fournir un environnement simulé fidèle et exploitable pour l'entraînement multi-agent, en combinant formalisme explicite (\acn{Dec-POMDP} générique) et génération automatique par World Models multi-agents. Les sorties produites (le \acn{JOPM}, l'ensemble des observations conjointes initiales, la fonction de récompense, la fonction d'arrêt et optionnellement la fonction de rendu) constituent le socle du jumeau numérique utilisé dans les étapes suivantes. Cette approche permet d'assurer l'adaptation (via l'apprentissage sur données réelles), l'explicabilité (par la structure formelle du modèle) et la réutilisabilité (grâce au châssis générique). Toutefois, la fidélité du modèle dépend de la qualité et de la diversité des historiques collectés, et le coût computationnel de l'entraînement des auto-encodeurs et du \acn{RLDM} peut être élevé pour des environnements complexes. Enfin, la granularité des actions et la couverture des dynamiques réelles restent des limites inhérentes à toute simulation. L'activité d'entraînement exploitera ce modèle simulé pour optimiser les politiques sous contraintes organisationnelles, amorçant ainsi le cycle itératif de la méthode \acn{MAMAD}.
 
 \clearpage
 \thispagestyle{empty}
@@ -583,23 +609,32 @@ Cette activité est cruciale car elle relie les critères définis dans \autoref
 
 Les \textbf{entrées} de l'activité d'entraînement sont :
 \begin{itemize}
-  \item le modèle de transition conjoint $\mathcal{T}^j$ produit par la modélisation ;
-  \item les observations initiales $\Omega^{\mathcal{T}^j}_0$ ;
-  \item la fonction de récompense $R^j_H$ et la fonction d'arrêt $S^j_H$ ;
-  \item les spécifications organisationnelles $\mathcal{MM}$ issues des contraintes informelles $\mathcal{C}_{\text{inf}}$ ;
-  \item les espaces d'observations $\Omega$ et d'actions $A$ ;
-  \item le facteur d'actualisation $\gamma$.
+  \item l'environnement simulé $d \in D \cup OD$ produit par l'activité de modélisation~;
+        % \item le \acn{JOPM} $\mathcal{T}^j$ produit par la modélisation ;
+        % \item les observations initiales $\Omega^{\mathcal{T}^j}_0$ ;
+        % \item la fonction de récompense basée historique $R^j_H$
+        % \item la fonction d'arrêt basée historique $S^j_H$ ;
+        % \item la fonction de rendu basée historique $\texttt{Render}^j_H$ ou vide $\emptyset$ ;
+  \item les spécifications organisationnelles $\mathcal{MM}$ possiblement issues des spécifications organisationnelles d'un cycle de raffinement précédent~;
+  \item les spécifications organisationnelles informelles $\mathcal{C}_{\text{inf}} notamment si premier cycle de raffinement$.
+        % \item le facteur d'actualisation $\gamma$ ;
+        % \item l'espace d'observations $\Omega$ ;
+        % \item l'espace d'actions $A$ ;
 \end{itemize}
 
-La \textbf{sortie attendue} est :
-\begin{itemize}
-  \item une politique conjointe entraînée $\pi^j = \{\pi^j_0, \pi^j_1, \dots, \pi^j_n\}$.
-\end{itemize}
+\noindent
+La \textbf{sortie attendue} est une politique conjointe entraînée $\pi^j = \{\pi^j_0, \pi^j_1, \dots, \pi^j_{|\mathcal{A}|}\}$.
+
+\medskip
+\noindent
 
 \noindent La relation globale peut s'exprimer par :
 \begin{displaymath}
-  \pi^j \gets \texttt{train}(\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \text{Render}^j_H, \mathcal{MM}, \mathcal{C}_{\text{inf}}, \gamma, \Omega, A)
+  \hspace{3cm}\texttt{train}: (D \cup OD) \times \mathcal{MM} \times \mathcal{C}_{\text{inf}} \rightarrow \pi^j
 \end{displaymath}
+
+Si $d \in OD, d = (\Omega, A, \mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \texttt{Render}^j_H, \gamma)$ et si $d \in D, d = (S,\{A_i\},T,R,\{\Omega_i\}, \allowbreak O,\gamma)$.
+
 \section{Travaux mobilisés et verrous identifiés}
 
 L'activité d'entraînement des politiques sous contraintes s'appuie sur plusieurs familles de travaux issus du domaine du \acn{MARL} et de l'intégration de contraintes organisationnelles.
@@ -668,7 +703,7 @@ Ce positionnement permet de concilier performance, adaptation, contrôle et expl
 \subsubsection*{Résolution du \acn{Dec-POMDP} avec MOISE+MARL}
 
 Un modèle MOISE+MARL est défini par $\mathcal{MM} = \langle \mathcal{OS}, ar, rcg, gcg, rag, rrg, grg \rangle$.
-La résolution d'un \acn{Dec-POMDP} avec $mm \in \mathcal{MM}$ consiste à trouver une politique conjointe $\pi^j = {\pi^j_0, \pi^j_1, \dots, \pi^j_n}$ qui maximise la récompense cumulative espérée (ou satisfait un seuil minimal), représentée par la fonction état-valeur $V^{\pi^j}$. Cette valeur reflète le rendement d'un état initial $s \in S$ lors de l'application d'actions conjointes successives $a^j \in A^{|\mathcal{A}|}$ sous les contraintes organisationnelles supplémentaires.
+La résolution d'un \acn{Dec-POMDP} avec $mm \in \mathcal{MM}$ consiste à trouver une politique conjointe $\pi^j = {\pi^j_0, \pi^j_1, \dots, \pi^j_{|\mathcal{A}|}}$ qui maximise la récompense cumulative espérée (ou satisfait un seuil minimal), représentée par la fonction état-valeur $V^{\pi^j}$. Cette valeur reflète le rendement d'un état initial $s \in S$ lors de l'application d'actions conjointes successives $a^j \in A^{|\mathcal{A}|}$ sous les contraintes organisationnelles supplémentaires.
 %
 La définition de $V^{\pi^j}$ suit le schéma d'exécution d'agent séquentiel et cyclique (mode \acn{AEC}) et est formalisée dans \hyperref[eq:single_value_function]{Définition 1}, intégrant des adaptations basées sur les rôles (en rouge) et les missions (en bleu) qui influencent à la fois l'espace d'action et la récompense.
 \autoref{fig:mm_synthesis} illustre comment les spécifications $\mathcal{M}OISE^+$ sont intégrées à la résolution \acn{Dec-POMDP} via le cadre MOISE+MARL.
@@ -746,27 +781,29 @@ $
 $
 indiquant l'ensemble des historiques \(H_p\) contenant au moins une fois la sous-séquence constituée d'une première paire \(\langle o_1,a_1\rangle\) suivie d'au maximum deux répétitions de la paire \(\langle o_2,a_2\rangle\).
 
-\subsection{Extension de MOISE+MARL aux \textit{World Models} Multi-Agents}
+\subsection{Extension de MOISE+MARL aux \textit{World Models} Multi-Agents}\label{sec:wm_extension}
 
-\noindent Dans des environnements réalistes, on ne dispose que des transitions issues des historiques d'actions et d'observations reçues. Pour mieux représenter ce contexte, nous introduisons un nouveau formalisme appelé \textbf{\acn{Dec-POMDP} basé sur les observations} (\acparen{ODec-POMDP}). Un \acn{ODec-POMDP} $d_\Omega \in OD_\Omega$ (avec $OD_\Omega$, l'ensemble des ODec-POMDPs) est défini comme un quintuplet~:
+\noindent Dans des environnements réalistes, on ne dispose que des transitions issues des historiques d'actions et d'observations reçues. Pour mieux représenter ce contexte, nous introduisons un nouveau formalisme appelé \textbf{\acn{Dec-POMDP} basé sur les observations} (\acparen{ODec-POMDP}). Un \acn{ODec-POMDP} $d \in OD$ (avec $OD$, l'ensemble des ODec-POMDPs) est défini comme un quintuplet~:
 %
-$d_\Omega = \left(\Omega, A, \mathcal{T}^j, R^j_H, \gamma \right)$
+$d = (\mathcal{T}^j, \Omega^{\mathcal{T}^j}_0, R^j_H, S^j_H, \texttt{Render}^j_H)$
 %
 où~:
 \begin{itemize}
-  \item $A$~: l'espace d'actions.
-  \item $\Omega$~: l'espace d'observations.
-  \item $\Omega^{\mathcal{T}^j}_0$~: l'ensemble des observations initiales conjointes.
-  \item $\mathcal{T}^j(h, \omega, a) = \langle \tilde{h}', \mathbb{P}(\omega' \mid h, \omega, a) \rangle$~: le \acn{JOPM} estimant la prochaine observation conjointe $\omega'$ à partir de l'historique $\tilde{h} \in \mathcal{H}$, de l'observation conjointe actuelle $\omega$ et de l'action conjointe $a$. Le modèle renvoie également l'état caché récurrent mis à jour $\tilde{h}'$.
-  \item $R^j_H~: H \times \Omega \times A \times \Omega \rightarrow \mathbb{R}$~: la fonction de récompense basée sur l'historique, calculant la récompense depuis l'historique précédent, l'observation et action courante et l'observation suivante.
-  \item $\gamma \in [0, 1]$~: le facteur d'actualisation.
+  \item $\Omega$, l'espace d'observations~;
+  \item $A$, l'espace d'actions~;
+  \item $\mathcal{T}^j$, le \acn{JOPM} estimant la prochaine observation conjointe $\omega'$ à partir de l'historique $\tilde{h} \in \mathcal{H}$, de l'observation conjointe actuelle $\omega$ et de l'action conjointe $a$. Le modèle renvoie également l'état caché récurrent mis à jour $\tilde{h}'$~;
+  \item $\Omega^{\mathcal{T}^j}_0$, l'ensemble des observations initiales conjointes~;
+  \item $R^j_H~: H \times \Omega \times A \times \Omega \rightarrow \mathbb{R}$, la fonction de récompense basée sur l'historique, calculant la récompense depuis l'historique précédent, l'observation et action courante et l'observation suivante~;
+  \item $S^j_H~: H \rightarrow \{0,1\}$ la fonction d'arrêt basée historique qui indique si l'agent a atteint la fin de son épisode ou réussi son objectif~;
+  \item $\texttt{Render}^j_H : H \rightarrow \emptyset$, une fonction de rendu visuelle optionnelle basée historique~;
+  \item $\gamma \in [0, 1]$, le facteur d'actualisation.
 \end{itemize}
 
 \noindent Cette formulation permet aux agents \acn{MARL} d'opérer uniquement à partir de données observables, rendant la méthode compatible avec les environnements simulés appris.
 
 \subsubsection*{Résolution d'un \acn{ODec-POMDP} avec MOISE+MARL}
 
-Résoudre un \acn{ODec-POMDP} avec des contraintes $mm \in \mathcal{MM}$ consiste à trouver une politique conjointe $\pi^j = \{\pi^j_0, \pi^j_1, \dots, \pi^j_n\}$ qui maximise la récompense cumulée espérée (ou qui satisfait un seuil minimal), via la fonction de valeur basée sur les observations $V_{\mathcal{T}^j}^{\pi^j}$. Cette fonction représente le retour attendu depuis une observation conjointe initiale $\omega^j \in \Omega^{\mathcal{T}^j}_0$, un historique $h^j$ et un état caché $\tilde{h}$, en appliquant des actions conjointes $a^j \in A^{|\mathcal{A}|}$ sous contraintes organisationnelles $\mathcal{MM}$, et en utilisant $\mathcal{T}^j$ pour approximer les transitions.
+Résoudre un \acn{ODec-POMDP} avec des contraintes $mm \in \mathcal{MM}$ consiste à trouver une politique conjointe $\pi^j = \{\pi^j_0, \pi^j_1, \dots, \pi^j_{|\mathcal{A}|}\}$ qui maximise la récompense cumulée espérée (ou qui satisfait un seuil minimal), via la fonction de valeur basée sur les observations $V_{\mathcal{T}^j}^{\pi^j}$. Cette fonction représente le retour attendu depuis une observation conjointe initiale $\omega^j \in \Omega^{\mathcal{T}^j}_0$, un historique $h^j$ et un état caché $\tilde{h}$, en appliquant des actions conjointes $a^j \in A^{|\mathcal{A}|}$ sous contraintes organisationnelles $\mathcal{MM}$, et en utilisant $\mathcal{T}^j$ pour approximer les transitions.
 
 La définition complète de $V_{\mathcal{T}^j}^{\pi^j}$ est donnée dans \hyperref[eq:single_value_function_parallel]{Définition 2}, et intègre les adaptations basées sur les rôles (en rouge) et sur les missions (en bleu), qui influencent à la fois l'espace d'actions conjointes et la récompense. La \autoref{fig:mm_synthesis} illustre comment les spécifications $\mathcal{M}OISE^+$ sont injectées dans la résolution d'un \acn{ODec-POMDP} à l'aide du cadre MOISE+MARL.
 
@@ -837,9 +874,13 @@ La définition complète de $V_{\mathcal{T}^j}^{\pi^j}$ est donnée dans \hyperr
 
 Lorsque les agents observent $\tilde{\omega}_t^j$, ils sélectionnent leurs actions dans $A_{i,t}$ (dérivées via les guides de récompense de rôle) avec une probabilité $ch_t$, ou dans $A_t$ sinon. Si $ch_t = 1$, les agents sont strictement contraints par leur rôle.
 
-Les transitions d'observation et d'état sont approximées via la fonction $\mathcal{T}^j$ à partir de l'état caché précédent $\tilde{h}_{t-1}$, de l'observation conjointe $\omega^j_t$ et de l'action conjointe $a^j_t$. La fonction de récompense $R^j_H$ utilise ces mêmes informations, ainsi que l'observation suivante, pour produire la récompense. Des bonus ou malus sont ensuite ajoutés selon~:
+Les transitions d'observation et d'état sont approximées via le \acn{JOPM} $\mathcal{T}^j$ à partir de l'état caché précédent $\tilde{h}_{t-1}$, de l'observation conjointe $\omega^j_t$ et de l'action conjointe $a^j_t$. La fonction de récompense $R^j_H$ utilise ces mêmes informations, ainsi que l'observation suivante, pour produire la récompense. Des bonus ou malus sont ensuite ajoutés selon~:
 i) l'atteinte d'objectifs valides (via les guides de récompense des objectifs, pondérés par $\frac{1}{1 - p + \epsilon}$),
 ii) la conformité au rôle (via les guides de récompense de rôle, pondérés par $1 - ch_t$).
+
+Bien qu'il n'est pas indiqué, en pratique la fonction d'arrêt $S^j_H$ est utilisée à la place du facteur d'actualisation afin de mettre un terme à la boucle des étapes. Le plus souvent cette fonction d'arrêt consiste à renvoyer vrai quand un nombre seuil d'étape a été franchi.
+%
+De même, si la fonction de rendu basée historique $\texttt{Render}$ est fournie, celle-ci est utilisée pour donner une visualisation des observations de chaque agent. Cette fonction est utilisée surtout à des fins d'explicabilité et de supervision.
 
 
 \section{Description et mise en oeuvre dans l'activité}
@@ -879,21 +920,14 @@ Les transitions sont stockées dans $\mathcal{B}$, et la politique $\pi^j$ est o
 
 
 \begin{algorithm}[h!]
-  \caption{Algorithme de l'activité d'entraînement}
+  \caption{Vue algorithmique de l'activité d'entraînement}
   \label{alg:training_mamad}
   \DontPrintSemicolon
 
   \KwIn{
-  Modèle de Prédiction d'Observations Conjointes (\acn{JOPM}) $\mathcal{T}^j$,
-  Observations initiales conjointes $\Omega_0^{\mathcal{T}^j}$,
-  Fonction de récompense $R_H^j$,
-  Fonction d'arrêt $S_H^j$,
-  Fonction de rendue $\text{Render}^j_H$,
-  Spécifications organisationnelles $\mathcal{MM}$,
-  Contraintes de conception informelles $\mathcal{C}_{\text{inf}}$,
-  Facteur d'actualisation $\gamma$
-  Espace d'observations $\Omega$,
-  Espace d'actions $A$
+  Environment simulé comme \acn{Dec-POMDP} ou \acn{ODec-POMDP} $d \in D \cup OD$~;
+  Spécifications organisationnelles $\mathcal{MM}$~;
+  Contraintes de conception informelles $\mathcal{C}_{\text{inf}}$~;
   }
   \KwOut{$\pi^j$~: Politique conjointe entraînée}
 
@@ -902,6 +936,12 @@ Les transitions sont stockées dans $\mathcal{B}$, et la politique $\pi^j$ est o
   \If{$\mathcal{MM} = \emptyset$}{
     $\mathcal{MM} \gets \texttt{manual\_formalize}(\mathcal{C}_{\text{inf}})$ \tcp*{Formalisation manuelle specs. orgs.} \;
   }
+
+  \tcp*[l]{Si env. simulé manuel, entraînement classique}
+  \If{$d \in D$}{
+    \textit{entrainer une politique conjointe $\pi^j$ via MARL contraint selon \hyperref[eq:single_value_function]{Définition 1}} \;
+  }
+  \Else{
 
   Initialiser les paramètres de la politique $\pi^j$ et du buffer de replay $\mathcal{B}$ \;
 
@@ -930,6 +970,7 @@ Les transitions sont stockées dans $\mathcal{B}$, et la politique $\pi^j$ est o
   Mettre à jour $h^j_t \gets \langle \langle h_{t-1,i}, \omega_{t,i}, a_{t,i} \rangle \rangle_{i \in \mathcal{A}}$ \;
 
   Entraîner $\pi^j$ avec des mini-lots tirés de $\mathcal{B}$ en utilisant toute méthode \acn{MARL} \;
+  }
   }
   }
 
@@ -969,22 +1010,26 @@ L'\textit{activité d'analyse}\index{Analyse (ANL)} vise à évaluer et explicit
 
 Les \textbf{entrées} de l'activité d'analyse sont :
 \begin{itemize}
+  \item un \acn{ODec-POMDP} $d$ représentant l'environnement simulé appris ;
   \item une politique conjointe entraînée $\pi^j$ ;
-  \item un \acn{ODec-POMDP} $d_\Omega$ représentant l'environnement simulé appris ;
-  \item une spécification organisationnelle initiale $\mathcal{MM}$ (optionnelle).
+  \item une spécification organisationnelle initiale $\mathcal{MM}$ (optionnelle) ;
+  \item la fenêtre d'épisodes de test $w_{\text{episodes}}$.
 \end{itemize}
 
+\noindent
 Les \textbf{sorties attendues} sont :
 \begin{itemize}
-  \item une spécification implicite inférée $\mathcal{MM}_{\text{implicit}}$ ;
-  \item un score d'adéquation organisationnelle $\text{OF}$.
+  \item l'ensemble des spécifications implicites inférées $\mathcal{MM}_{\text{inferred}}$ ;
+  \item le score d'adéquation organisationnelle $\texttt{org\_fit}$ sur les $w_{\text{episodes}}$ derniers épisodes ;
+  \item la moyenne des récompenses $\overline{r}$ sur les $w_{\text{episodes}}$ derniers épisodes ;
+  \item l'écart-type des récompenses $\sigma$ sur les $w_{\text{episodes}}$ derniers épisodes ;
+  \item le booléen qui indique si l'utilisateur souhaite poursuivre les cycles de raffinement $\texttt{running\_refinement}$.
 \end{itemize}
 
 \noindent La relation globale peut être exprimée par :
 \[
-  \hspace{3cm}(\mathcal{MM}_{\text{implicit}}, \text{OF}) \gets \texttt{analyze}(d_\Omega, \pi^j, \mathcal{MM})
+  \hspace{1cm}(\mathcal{MM}_{\text{inferred}}, \texttt{org\_fit}, \overline{r}, \sigma, \texttt{running\_refinement}) \gets \texttt{analyze}(d, \pi^j, \mathcal{MM}, w_{\text{episodes}})
 \]
-
 
 \section{Travaux mobilisés et verrous identifiés}
 
@@ -1102,8 +1147,8 @@ L'\autoref{alg:auto_temm} formalise le déroulement général de l'activité d'a
 Chaque étape est détaillée ci-dessous afin d'expliciter les mécanismes qui permettent d'inférer une spécification organisationnelle implicite et de calculer l'adéquation organisationnelle.
 
 \paragraph{Étape 1 : Collecte des trajectoires.}
-La première étape consiste à exécuter la politique conjointe $\pi^j$ dans l'environnement $d_\Omega$ afin de générer des historiques complets de transitions $(\omega, a, \omega')$.
-Deux ensembles de données sont extraits :
+La première étape consiste à exécuter la politique conjointe $\pi^j$ dans l'environnement $d$ afin de générer des historiques complets de transitions $(\omega, a, \omega')$ sur les $w_{\text{episodes}}$ de la fenêtre de validation. Cela permet de calculer la moyenne $\overline{r}$ et l'écart-type $\sigma$ des récompenses sur les épisodes collectés.
+De plus, deux ensembles de données sont extraits de ces épisodes :
 \begin{itemize}
   \item $\mathcal{D}_{\text{trans}}$ contenant les séquences de transitions $(\omega_t, a_t, \omega_{t+1})$, utilisées pour l'inférence des rôles ;
   \item $\mathcal{D}_{\text{obs}}$ contenant uniquement les séquences d'observations $(\omega_t)$, utilisées pour l'inférence des objectifs et missions.
@@ -1129,11 +1174,11 @@ Une fois les hyperparamètres optimaux $(\delta^*, \tau^*)$ déterminés, les tr
 \paragraph{Étape 4 : Recherche de représentativité optimale.}
 Le degré de représentativité $\rho_t$ fixe le seuil minimal pour qu'une transition ou observation soit retenue comme caractéristique d'un rôle ou objectif.
 Une recherche par grille est effectuée sur différentes valeurs de $\rho_t$.
-Pour chaque $\rho_t$, une spécification $\mathcal{MM}_{\rho_t}$ est inférée, puis une nouvelle politique $\pi^j_{\rho_t}$ est réentraînée dans $d_\Omega$.
+Pour chaque $\rho_t$, une spécification $\mathcal{MM}_{\rho_t}$ est inférée, puis une nouvelle politique $\pi^j_{\rho_t}$ est réentraînée dans $d$.
 On enregistre alors le temps de convergence $c_{\rho_t}$ pour atteindre une performance minimale $R_{\min}$.
 Le paramètre optimal $\rho_t^*$ est choisi comme la plus grande représentativité garantissant une convergence inférieure au seuil $\eta$ (par défaut 3.5\%).
 
-\paragraph{Étape 5 : Inférence finale des rôles et objectifs.}
+\paragraph{Étape 5 : Inférence des rôles et objectifs.}
 Avec $(\delta^*, \tau^*, \rho^*)$, on extrait les rôles $\mathcal{R}$, les objectifs intermédiaires $\mathcal{G}$ et leurs relations hiérarchiques (missions, héritage de rôles).
 Les permissions et obligations sont déduites en observant la systématicité (obligations) ou la variabilité (permissions) des associations rôle–mission dans les trajectoires.
 
@@ -1146,33 +1191,40 @@ Comme pour \acn{TEMM}, deux indicateurs partiels sont calculés :
 L'indicateur global est obtenu par agrégation :
 $\text{OF} = \frac{1}{2}(\text{SOF} + \text{FOF})$
 
+\paragraph{Étape 6.5 : Compréhension et raffinement des spécifications.}
+À cette étape, les spécifications organisationnelles implicites $\mathcal{MM}_{\text{inferred}}$ sont présentées sous forme de guides de contraintes, qui s'apparentent à des règles reliant des observations à des actions (RAG) ou à des ensembles d'observations (GRG). L'utilisateur peut, s'il le souhaite, examiner et interpréter ces guides de contraintes afin de proposer de nouvelles spécifications organisationnelles plus explicites et compréhensibles. Cette étape est facultative, mais elle permet d'améliorer la robustesse et l'interprétabilité des spécifications organisationnelles. Si l'utilisateur ne modifie pas les spécifications inférées, celles-ci sont conservées et réutilisées lors du cycle de raffinement suivant pour restreindre l'espace de recherche. Si l'utilisateur considère que les résultats sont satisfaisants, il peut mettre fin aux cycles de raffinement en positionnant le booléen \texttt{running\_refinement} à 0.
+
+Nous englobons cette étape optionnelle dans la relation $\texttt{manual\_refine}: \mathcal{MM}_{\text{inferred}} \rightarrow \mathcal{MM}_{\text{explicit}} \times {0,1}$, qui prend en entrée les spécifications implicites et retourne des spécifications explicites (ou les mêmes si l'utilisateur ne souhaite pas les modifier) ainsi qu'un booléen indiquant s'il souhaite poursuivre les cycles de raffinement.
+
 \paragraph{Étape 7 : Sorties de l'activité.}
 L'activité retourne :
 \begin{itemize}
-  \item une spécification implicite $\mathcal{MM}_{\text{implicit}}$ décrivant rôles, missions, permissions et obligations inférés automatiquement ;
-  \item un score d'adéquation organisationnelle $\text{OF}$ permettant de quantifier la qualité organisationnelle des comportements émergents.
+  \item une spécification implicite $\mathcal{MM}_{\text{inferred}}$ décrivant rôles, missions, permissions et obligations inférés automatiquement ;
+  \item le score d'adéquation organisationnelle $\texttt{org\_fit}$ permettant de quantifier la qualité organisationnelle des comportements émergents~;
+  \item la moyenne $\overline{r}$ et l'écart-type $\sigma$ des récompenses sur les épisodes analysés ;
+  \item un booléen $\texttt{running\_refinement}$ indiquant si l'utilisateur souhaite poursuivre les cycles de raffinement.
 \end{itemize}
 
 
 \begin{algorithm}[htb]
-  \caption{Algorithme de l'activité d'analyse (Auto-TEMM)}
+  \caption{Vue algorithmique de l'activité d'analyse (Auto-TEMM)}
   \label{alg:auto_temm}
   \DontPrintSemicolon
 
   \KwIn{
     Politique conjointe entraînée $\pi^j$~;
-    \acn{ODec-POMDP} $d_\Omega$~;
+    \acn{ODec-POMDP} $d$~;
     Spécification initiale $\mathcal{MM}$~;
     Seuil de convergence normalisé (défaut~: 3.5\%) $\eta$
   }
 
   \KwOut{
-  Spécification organisationnelle inférée $\mathcal{MM}_{\text{implicit}}$~;
+  Spécification organisationnelle inférée $\mathcal{MM}_{\text{inferred}}$~;
   Score de adéquation  organisationnel $\acn{OF}$
   }
 
   \tcp*[l]{1. Collecte des trajectoires}
-  Générer les historiques individuels $\mathcal{D}_{\text{trans}}$ depuis $d_\Omega$ sous $\pi^j$ \;
+  Générer les historiques individuels $\mathcal{D}_{\text{trans}}$ depuis $d$ sous $\pi^j$ \;
   $\mathcal{D}_{\text{obs}} \gets$ trajectoires d'observations individuelles issues de $\mathcal{D}_{\text{full}}$ \;
 
   \tcp*[l]{2. \acn{HPO} sur distance et seuil de clustering}
@@ -1196,25 +1248,27 @@ L'activité retourne :
   \ForEach{représentativité $\rho_t$}{
   Inférer $\mathcal{MM}_{\rho_t}$ à partir des clusters \;
   Initialiser une politique $\pi^j_{\rho_t}$ \;
-  Entraîner $\pi^j_{\rho_t}$ sur $(d_\Omega, \mathcal{MM}_{\rho_t})$ jusqu'à atteindre $R_{\min}$ \;
+  Entraîner $\pi^j_{\rho_t}$ sur $(d, \mathcal{MM}_{\rho_t})$ jusqu'à atteindre $R_{\min}$ \;
   Enregistrer le temps de convergence $c_{\rho_t}$ tel que $ct_t(\rho_t) = c_{\rho_t}$ \;
   }
 
-  \tcp*[l]{5. Sélectionner le point de coude}
+  \tcp*[l]{Sélectionner le point de coude}
   $\rho_t^* \gets max(\{\rho_t \ | \ ct_t(\rho_t) < \eta \})$ \tcp*[r]{par défaut $\eta = 3.5\%$}
   }
 
-  \tcp*[l]{6. Inférence finale des rôles et objectifs}
+  \tcp*[l]{5. Inférence des rôles et objectifs}
   Inférer les rôles à partir de $\mathcal{D}_{\text{trans}}, \delta^*, \tau^*, \rho^*$ \;
   Inférer les objectifs à partir de $\mathcal{D}_{\text{obs}}, \delta^*, \tau^*, \rho^*$ \;
 
-  \tcp*[l]{7. Calcul du adéquation  organisationnel}
+  \tcp*[l]{6. Calcul du adéquation  organisationnel}
   Calculer \acn{SOF} et \acn{FOF} à partir des variances intra-cluster \;
   $\text{OF} \gets \frac{1}{2}(\text{SOF} + \text{FOF})$ \;
 
-  \Return{$\mathcal{MM}_{\text{implicit}}, \text{OF}$}
-\end{algorithm}
+  \tcp*[l]{6.5. Raffinement manuel (optionnel)}
+  $(\mathcal{MM}_{\text{inferred}} \times {0,1}) \gets \texttt{manual\_refine}(\mathcal{MM}_{\text{inferred}})$
 
+  \Return{$\mathcal{MM}_{\text{inferred}}, \texttt{org\_fit}, \overline{r}, \sigma, \texttt{running\_refinement}$}
+\end{algorithm}
 
 \section{Bilan}
 
@@ -1241,6 +1295,7 @@ Les \textbf{entrées} de l'activité de transfert sont :
   \item la base de trajectoires accumulées $\mathcal{D}_{H^j}$.
 \end{itemize}
 
+\noindent
 Les \textbf{sorties attendues} sont :
 \begin{itemize}
   \item une base enrichie de trajectoires $\mathcal{D}_{H^j}$ ;
@@ -1249,7 +1304,7 @@ Les \textbf{sorties attendues} sont :
 
 La relation globale peut être exprimée par :
 \[
-  \hspace{3cm}\mathcal{D}_{H^j}, \texttt{need\_update} \gets \texttt{transfer}(\pi^j_{\text{latest}}, \mathcal{E}, \mathcal{D}_{H^j})
+  \hspace{3cm}(\mathcal{D}_{H^j}, \texttt{need\_update}) \gets \texttt{transfer}(\pi^j_{\text{latest}}, \mathcal{E}, \mathcal{D}_{H^j}, \texttt{mode})
 \]
 
 \section{Travaux mobilisés et verrous identifiés}
@@ -1320,11 +1375,7 @@ Ce schéma assure trois propriétés essentielles :
 \end{itemize}
 
 \paragraph{Éléments formels.}
-Ainsi, l'algorithme encode la relation :
-\[
-  \hspace{3cm}\mathcal{D}_{H^j}, \texttt{need\_update} \gets \texttt{transfer}(\pi^j_{\text{latest}}, \mathcal{E}, \mathcal{D}_{H^j}, \texttt{mode})
-\]
-où :
+%
 \begin{itemize}
   \item $\mathcal{B}$ désigne le tampon temporaire (voir \autoref{alg:transferring}),
   \item $\texttt{batch\_size}$ fixe la granularité de déclenchement des mises à jour,
@@ -1333,10 +1384,15 @@ où :
 
 \vspace{-0.3em}
 \begin{algorithm}[h!]
-  \caption{Algorithme de l'activité de transfert}
+  \caption{Vue algorithmique de l'activité de transfert}
   \label{alg:transferring}
   \DontPrintSemicolon
-  \KwIn{Politique actuelle $\pi^j_{\text{latest}}$, environnement réel $\mathcal{E}$, base de trajectoires $\mathcal{D}_{H^j}$, mode de transfert $\texttt{mode} \in \{\texttt{DIRECT}, \texttt{REMOTE}\}$}
+  \KwIn{
+  Politique actuelle $\pi^j_{\text{latest}}$,
+  environnement réel $\mathcal{E}$,
+  base de trajectoires $\mathcal{D}_{H^j}$,
+  mode de transfert $\texttt{mode} \in \{\texttt{DIRECT}, \texttt{REMOTE}\}$
+  }
   \KwOut{Base de trajectoires mise à jour $\mathcal{D}_{H^j}$, signal de mise à jour $\texttt{need\_update}$}
 
   \vspace{0.3em}
