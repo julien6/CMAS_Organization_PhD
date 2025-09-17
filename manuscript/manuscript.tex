@@ -59,6 +59,40 @@
 % \include{figures/ADTreePreamble}
 \usepackage{etoolbox}
 
+% --- PATCH POUR AUTORREF DANS LES ANNEXES ---
+\makeatletter
+% Création d'un toggle pour savoir si on est dans les annexes
+\newtoggle{inappendix}
+\togglefalse{inappendix}
+
+% Quand on appelle \appendix -> on active le toggle
+\pretocmd{\appendix}{\toggletrue{inappendix}}{}{\errmessage{Patch appendices failed}}
+
+% On modifie \hyper@makecurrent pour forcer le bon nom
+\patchcmd{\hyper@makecurrent}{%
+    \ifx\Hy@param\Hy@chapterstring
+        \let\Hy@param\Hy@chapapp
+    \fi
+}{%
+    \iftoggle{inappendix}{%
+        % Pour les sections, sous-sections, sous-sous-sections
+        \@checkappendixparam{section}%
+        \@checkappendixparam{subsection}%
+        \@checkappendixparam{subsubsection}%
+    }{}%
+    \ifx\Hy@param\Hy@chapterstring
+        \let\Hy@param\Hy@chapapp
+    \fi
+}{}{\errmessage{Patch hyper@makecurrent failed}}
+
+\newcommand*{\@checkappendixparam}[1]{%
+    \def\@checkappendixparamtmp{#1}%
+    \ifx\Hy@param\@checkappendixparamtmp
+        \let\Hy@param\Hy@appendixstring
+    \fi
+}
+\makeatother
+
 % --- Tickz
 \usepackage{physics}
 \usepackage{amsmath}
@@ -122,7 +156,7 @@
 \renewcommand{\tableautorefname}{Table}
 \renewcommand{\algorithmautorefname}{Algorithme}
 \renewcommand{\partautorefname}{Partie}
-\renewcommand{\appendixautorefname}{Appendice}
+\renewcommand{\appendixautorefname}{Annexe}
 \renewcommand{\chapterautorefname}{Chapitre}
 \renewcommand{\sectionautorefname}{Section}
 \renewcommand{\subsectionautorefname}{Sous-section}
@@ -373,7 +407,19 @@
 % Backmatter
 %*******************************************************
 \appendix
-%\renewcommand{\thechapter}{\alph{chapter}}
+
+
+\addto\extrasfrench{%
+  \renewcommand{\sectionautorefname}{Annexe}
+  \renewcommand{\subsectionautorefname}{Annexe}
+  \renewcommand{\subsubsectionautorefname}{Annexe}
+}
+
+% \newcommand*{\Appendixautorefname}{Annexe}
+
+
+
+% \renewcommand{\thechapter}{\alph{chapter}}
 \include{Parts/Appendix}
 
 %********************************************************************
