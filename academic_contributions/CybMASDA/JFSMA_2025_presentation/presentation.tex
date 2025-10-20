@@ -512,26 +512,26 @@
 
 \begin{frame}{Le cadre MOISE+MARL}{Défis dans la définition des guides de contrainte (RAG, RRG, GRG)}
 
-    \textbf{Problème :} Définir les guides de contrainte dans le MARL est un défi en pratique.
+  \textbf{Problème :} Définir les guides de contrainte dans le MARL est un défi en pratique.
 
-    \begin{itemize}
-        \item Une spécification complète \textquote{par extension} est peu praticable :
-              \begin{itemize}
-                  \item Énumérer tous les cas possibles d’observation ou d’historique est intraitable.
-                  \item Maintenir et mettre à jour de telles règles ne passe pas à l’échelle.
-              \end{itemize}
+  \begin{itemize}
+    \item Une spécification complète \textquote{par extension} est peu praticable :
+          \begin{itemize}
+            \item Énumérer tous les cas possibles d’observation ou d’historique est intraitable.
+            \item Maintenir et mettre à jour de telles règles ne passe pas à l’échelle.
+          \end{itemize}
 
-        \item \textbf{Nous proposons deux stratégies intensionnelles pour définir les guides de contrainte :}
-              \begin{enumerate}
-                  \item \textbf{Scripts logiques personnalisés :} L’utilisateur définit des fonctions Python (par rôle/objectif) qui prennent en entrée une trajectoire et une observation, et retournent :
-                        \begin{itemize}
-                            \item RAG : actions autorisées avec des poids de difficulté
-                            \item RRG : pénalités ou bonus de récompense pour certaines actions
-                            \item GRG : shaping de récompense basé sur des caractéristiques de trajectoire
-                        \end{itemize}
-                  \item \textbf{\textit{Trajectory-based Pattern} (TPs) :} Patrons déclaratifs compacts inspirés du traitement du langage naturel, utilisés pour représenter des comportements.
-              \end{enumerate}
-    \end{itemize}
+    \item \textbf{Nous proposons deux stratégies intensionnelles pour définir les guides de contrainte :}
+          \begin{enumerate}
+            \item \textbf{Scripts logiques personnalisés :} L’utilisateur définit des fonctions Python (par rôle/objectif) qui prennent en entrée une trajectoire et une observation, et retournent :
+                  \begin{itemize}
+                    \item RAG : actions autorisées avec des poids de difficulté
+                    \item RRG : pénalités ou bonus de récompense pour certaines actions
+                    \item GRG : shaping de récompense basé sur des caractéristiques de trajectoire
+                  \end{itemize}
+            \item \textbf{\textit{Trajectory-based Pattern} (TPs) :} Patrons déclaratifs compacts inspirés du traitement du langage naturel, utilisés pour représenter des comportements.
+          \end{enumerate}
+  \end{itemize}
 
 \end{frame}
 
@@ -539,25 +539,25 @@
 
 \begin{frame}{Le cadre MOISE+MARL}{Solution 1 : Guides de contrainte via scripts personnalisés}
 
-    \textbf{Principe :} Définir une fonction par rôle/objectif qui analyse la trajectoire et l'observation actuelle.
+  \textbf{Principe :} Définir une fonction par rôle/objectif qui analyse la trajectoire et l'observation actuelle.
 
-    \vspace{0.5em}
-    \textbf{Exemple (Overcooked-AI) :}
+  \vspace{0.5em}
+  \textbf{Exemple (Overcooked-AI) :}
 
-    \begin{itemize}
-        \item \textbf{Rôle :} Cuisinier principal
-        \item \textbf{Observation :} L’agent tient un bol, un pot est prêt, pas de mur devant
-        \item \textbf{Trajectoire :} L’agent a précédemment pris un oignon
-    \end{itemize}
+  \begin{itemize}
+    \item \textbf{Rôle :} Cuisinier principal
+    \item \textbf{Observation :} L’agent tient un bol, un pot est prêt, pas de mur devant
+    \item \textbf{Trajectoire :} L’agent a précédemment pris un oignon
+  \end{itemize}
 
-    \textbf{Sortie du script :}
+  \textbf{Sortie du script :}
 
-    \begin{itemize}
-        \item \textbf{RAG :} \{`interact' $\rightarrow$ 1.0, `nothing' $\rightarrow$ 0.2\}
-        \item \textbf{RRG :} Bonus de +2 si `interact` est utilisé à proximité d’un pot prêt
-    \end{itemize}
+  \begin{itemize}
+    \item \textbf{RAG :} \{`interact' $\rightarrow$ 1.0, `nothing' $\rightarrow$ 0.2\}
+    \item \textbf{RRG :} Bonus de +2 si `interact` est utilisé à proximité d’un pot prêt
+  \end{itemize}
 
-    \textbf{Avantage :} La logique personnalisée peut prendre en compte la disposition spatiale, les étapes précédentes, l’objet tenu, etc.
+  \textbf{Avantage :} La logique personnalisée peut prendre en compte la disposition spatiale, les étapes précédentes, l’objet tenu, etc.
 
 \end{frame}
 
@@ -565,32 +565,32 @@
 
 \begin{frame}{Le cadre MOISE+MARL}{Solution 2 : Guides de contrainte via \textit{Trajectory-based Pattern} (TPs)}
 
-    \textbf{Principe :} Définir des \textit{Trajectory-based Pattern} réutilisables et lisibles par un humain pour correspondre au comportement d’un agent.
+  \textbf{Principe :} Définir des \textit{Trajectory-based Pattern} réutilisables et lisibles par un humain pour correspondre au comportement d’un agent.
 
-    \vspace{0.5em}
-    \textbf{Format :} TP = transitions décrites comme \textbf{\textit{[obs, act | sub\_TP]($n_{min}$, $n_{max}$)}}
+  \vspace{0.5em}
+  \textbf{Format :} TP = transitions décrites comme \textbf{\textit{[obs, act | sub\_TP]($n_{min}$, $n_{max}$)}}
 
-    \textbf{Exemple (Overcooked-AI) :}
+  \textbf{Exemple (Overcooked-AI) :}
 
-    \begin{itemize}
-        \item \textbf{Patron :} \\ \textit{[`see\_onion`, `interact`, [\#any](*), `has\_onion`, [\#any](*), `see\_pot`, `interact`](1,1)}
-        \item \textbf{Correspondance TP :} L’agent a rempli un pot avec un oignon
-        \item \textbf{Observation actuelle :} \texttt{see\_ready\_pot}
-    \end{itemize}
+  \begin{itemize}
+    \item \textbf{Patron :} \\ \textit{[`see\_onion`, `interact`, [\#any](*), `has\_onion`, [\#any](*), `see\_pot`, `interact`](1,1)}
+    \item \textbf{Correspondance TP :} L’agent a rempli un pot avec un oignon
+    \item \textbf{Observation actuelle :} \texttt{see\_ready\_pot}
+  \end{itemize}
 
-    \textbf{Alors :}
-    \begin{itemize}
-        \item \textbf{RAG :} Autoriser uniquement l’action `interact`
-        \item \textbf{RRG :} Bonus de +3 pour `interact` maintenant
-        \item \textbf{GRG :} Encourager à se diriger vers la zone de livraison ensuite
-    \end{itemize}
+  \textbf{Alors :}
+  \begin{itemize}
+    \item \textbf{RAG :} Autoriser uniquement l’action `interact`
+    \item \textbf{RRG :} Bonus de +3 pour `interact` maintenant
+    \item \textbf{GRG :} Encourager à se diriger vers la zone de livraison ensuite
+  \end{itemize}
 
-    \textbf{Avantages :}
-    \begin{itemize}
-        \item Plus facile de définir des patrons symboliques dans divers environnements
-        \item Codage compact de comportements temporellement étendus
-        \item Les TPs peuvent être réutilisés entre agents et rôles
-    \end{itemize}
+  \textbf{Avantages :}
+  \begin{itemize}
+    \item Plus facile de définir des patrons symboliques dans divers environnements
+    \item Codage compact de comportements temporellement étendus
+    \item Les TPs peuvent être réutilisés entre agents et rôles
+  \end{itemize}
 
 \end{frame}
 
@@ -775,7 +775,7 @@
       \begin{tabular}{@{}c@{\hspace{1cm}}c@{}}
         \makebox[.48\textwidth][c]{\animategraphics[loop,autoplay,scale=0.15]{8}{figures/wm/frame}{0}{33}}   &
         \vspace{0.1cm} \makebox[.48\textwidth][c]{\animategraphics[loop,autoplay,scale=0.18]{8}{figures/overcooked_asymmetric_advantage/frame}{0}{66}} \\
-        \small{Warehouse Management}                                                                           & \vspace{0.1cm} \small{Overcooked-AI}    \\
+        \small{Warehouse Management}                                                                         & \vspace{0.1cm} \small{Overcooked-AI}    \\
         \makebox[.48\textwidth][c]{\animategraphics[loop,autoplay,scale=0.135]{8}{figures/mpe/frame}{0}{25}} &
         \makebox[.48\textwidth][c]{\animategraphics[loop,autoplay,scale=0.135]{8}{figures/cyborg/frame}{0}{33}}                                        \\
         \small{Predator-Prey}                                                                                & \small{CybORG}                          \\
