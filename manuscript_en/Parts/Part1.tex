@@ -1,0 +1,976 @@
+\clearpage
+\thispagestyle{empty}
+\null
+\newpage
+
+\cleardoublepage
+\phantomsection
+% \pdfbookmark[1]{Work context}{Work context}
+% \addcontentsline{toc}{part}{Work context}
+\markboth{\spacedlowsmallcaps{Working context}}{\spacedlowsmallcaps{Working context}}
+\part{Working context}
+\label{part:context}
+
+\clearpage
+\thispagestyle{empty}
+\null
+\newpage
+
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter} {\textbf{Introduction}}
+
+\noindent
+This first part introduces the general framework of the thesis. It invites readers to explore the scientific foundations, operational motivations, and fundamental questions that guide our approach. Without claiming to provide definitive answers at this stage, it lays the groundwork necessary to understand the path that will be followed.
+
+\medskip
+
+\noindent
+Why consider cyber defense from a distributed perspective? What promises do \acplu{SMA} offer in this area? How does formalizing this as a constrained optimization problem allow us to overcome the tensions between performance, control, and explainability? These questions gradually outline our position, at the crossroads of symbolic and connectionist approaches.
+
+\medskip
+
+\noindent
+The diagram presented in \autoref{fig:organisation_manuscript_part_1} illustrates the logical sequence of the chapters in this first part. The first chapter begins the discussion on decentralized and distributed cyber defense, introduces the key concepts, and sets out the overall question that will guide the entire manuscript. The second chapter explores the issues identified in greater depth by presenting the contributions and limitations of current work. Finally, in light of the obstacles identified, the third chapter proposes to specify the research question within a framework of optimization under constraints, thus paving the way for a clear structuring of the hypotheses on which the contributions will be based.
+
+\begin{figure}[h!]
+  \centering
+  \resizebox{0.8\textwidth}{!}{%
+    \input{figures/organisation_manuscrit_partie_1.tex}
+  }
+  \caption{Structure of Part I -- Working Context}
+  \label{fig:organisation_manuscript_part_1}
+\end{figure}
+
+\clearpage
+\thispagestyle{empty}
+\null
+\newpage
+
+\chapter{Rethinking Cyber Defense for New Challenges}
+
+\noindent
+As computer systems become more complex, interconnected, and critical, the threats targeting them are diversifying and intensifying. Cybersecurity and cyberdefense are no longer solely technical domains: they are becoming strategic pillars at the heart of the concerns of states, businesses, and critical infrastructures~\cite{ObiohaVal2025}.
+
+This thesis explores the path toward distributed, dynamic cyberdefense guided by multi-agent organization principles. This chapter lays the conceptual and problematic foundations for this approach.
+
+We will begin by defining the fundamental concepts of cybersecurity and cyberdefense, outlining the objectives, actors, and current areas of research. We will then discuss emerging threats related to agentic AI, before presenting a multi-agent approach to cyber defense as a potential response to these challenges. Finally, we will formulate the general question that this thesis aims to answer.
+
+\section{Overview of the field of cyber defense}\label{sec:cyberdef-panorama}
+
+The protection of digital systems against ever-evolving threats is a strategic issue. Two complementary disciplines are organized around this issue: \textbf{Cybersecurity}, \textbf{Cyberdefense}, and \textbf{Cyberresilience}.
+
+\subsection*{Cybersecurity: prevention and systemic protection}
+
+\textbf{Cybersecurity}\index{Cybersecurity} covers the practices, technologies, and policies aimed at preserving the confidentiality, integrity, and availability of information systems~\cite{ANSSI2024}. It includes securing infrastructure, operating systems, and networks; access control and identity management; encryption and protection of data in transit and at rest; vulnerability management and risk analysis, as well as the formalization of information system security policy and business continuity planning.
+
+These measures are primarily preventive and systemic in nature, implemented from the outset to minimize exposure to attacks.
+
+\subsection*{Cyberdefense: active detection and organized response}
+
+\textbf{Cyberdefense}\index{Cyberdéfense} adopts a more reactive and adaptive stance. According to \acn{ANSSI} and \acn{NATO}~\cite{ANSSI2024,NATO2016Cyberdef}, it encompasses \emph{active, organizational, and operational measures} to detect, analyze, counter, and neutralize threats, while restoring the capabilities of affected systems. Its components include monitoring, which combines log aggregation and correlation with large-scale anomaly detection; detection and analysis of ongoing threats or attacks, based on the use of probes, \acn{IoC}\index{IoC} and behavioral methods based on \acn{ML} in particular; rapid response, including isolation of compromised components, neutralization of threats or automatic filtering; restoration and resilience, through redeployment, business continuity, or automated reconfiguration mechanisms; and finally, intelligence and attribution, enabling the identification of adversarial tactics as TTPs and the tracking of threats.
+
+This approach is embodied in operational centers such as \acn{CSIRT}\index{CSIRT} teams or \acn{C2}\index{C2} centers, integrating technical, organizational, and regulatory dimensions.
+
+% \subsection*{Cyberdefense actors and profiles}
+
+% \textbf{Cyberdefense} mobilizes a variety of profiles, each playing a decisive role in protecting systems. Pentesters simulate attacks to identify exploitable vulnerabilities. SOC analysts provide real-time monitoring of threats. Reverse engineers specialize in disassembling and analyzing malicious tools. Security engineers design resilient network architectures. Academic researchers contribute by developing models, machine learning or deep learning algorithms, formal verification methods, and simulation environments. Finally, institutional actors orchestrate cyber defense within a legal, regulatory, and strategic framework.
+
+
+\subsection*{Structural axes of cyber defense research}
+
+Scientific work in cyber defense is divided into several complementary axes~\cite {Buczak2016}. Intrusion detection is a central area, based on signature-based approaches~\cite{Axelsson2000} or machine learning approaches~\cite{Sommer2010,Buczak2016}. Resilience, on the other hand, focuses on robustness and fault tolerance, particularly through redundancy mechanisms and multi-tier architectures~\cite{Bodeau2011}. Defensive automation (or \acparen{ACD}\index{ACD}) relies on playbooks, orchestration tools, and autonomous agents to accelerate response~\cite {Hazra2022}. AI, in particular reinforcement learning (RL) and MARL (Marine Autonomous Robotic Learning), is used to anticipate attacks and dynamically adapt defenses in simulated environments such as CybORG, NASim, or Yawning Titan~\cite{Standen2021, nasim2023,Andrew2022}. Furthermore, modeling adversaries, inspired by game theory and probabilistic models, makes it possible to anticipate their tactics. Finally, simulation environments are developed to serve as test beds for training and evaluating defensive agents.
+
+
+\subsection*{Cyber-resilience: an integrative paradigm}
+
+\textbf{Cyber resilience}\index{Cyber-résilience} seeks to articulate cybersecurity and cyber defense by adopting a comprehensive approach: anticipate, resist, respond, recover, and evolve in the face of cyberattacks~\cite{NISTresilience} . The P3R3 model\index{P3R3}~\cite{Theron2013P3R3}, illustrated in \autoref{fig:P3R3_model}, formalizes this approach in six complementary activities: prediction, which relies on threat mapping and intelligence; prevention, which consists of reducing the attack surface and deterring attackers; protection, focused on active security and compliance with standards; supervision, understood as the ability to detect cyberattacks and activate response mechanisms; response, which includes immediate mitigation actions; and finally recovery, aimed at restoring compromised services~\cite{Theron2013P3R3}.
+
+This model is in line with the approaches proposed by NIST and MITRE, while emphasizing proactive threat prediction~\cite{Theron2013P3R3}. In this context, cyber defense primarily covers protection, response, and recovery activities, which are at the heart of our approach. Recent work also highlights the value of integrating autonomous agents that are no longer merely observers, but are capable of acting and actively contributing to the resilience of the system~\cite {Kott2023}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\linewidth]{figures/P3R3.pdf}
+  \caption{The P3R3 model for cyber resilience (from \autocite{Kott2023})}
+  \label{fig:P3R3_model}
+\end{figure}
+
+\noindent
+Cyber resilience essentially relies on a combination of detection and response to cyber threats. However, the emergence of increasingly rapid, distributed, and intelligent threats is challenging traditional approaches. We explore this in the following section, analyzing recent developments in the cyberattack landscape and the challenges associated with detecting and neutralizing them.
+
+
+\section{Increasingly autonomous and distributed threats}\label{sec:evolution-threats}
+
+In recent years, the cyber threat ecosystem has undergone a major transformation. The advent of agentic AI has enabled the emergence of faster, automated, adaptive attacks that operate in parallel not only on a single host, but across entire networks~\cite{Cohen2020}. Recent work shows that attackers are using \acn{LLM} to generate malware, create targeted phishing campaigns, and react autonomously to defense systems~\cite{AutoAttacker2024}. Such systems make it possible to launch distributed campaigns with great speed and efficiency~\cite{AgenticAIThreats2025}.
+
+\subsection*{Limitations of traditional cyber defense approaches}
+
+Traditional cyber defense mechanisms (based on centralized architectures, static signatures, or predefined rules) are now overwhelmed by this new generation of threats~\cite{Kott2023}~:
+\begin{itemize}
+  \item \textbf{Decision-making latency}: centralized detection causes critical delays, allowing certain attacks to occur before they are even identified and dealt with by cyberdefense teams;
+  \item \textbf{Adaptive rigidity}: static rules cannot keep up with the evolution of attackers' methods;
+  \item \textbf{Low resilience}: when an attack is detected, no immediate corrective action is taken. This delays system restoration and allows the consequences of the incident to worsen, thus limiting the effectiveness of the post-attack response.
+\end{itemize}
+
+These identified limitations highlight the need for a more agile, proactive, and intelligent paradigm in cyber defense. Recent studies identify the advent of AI-based attacks~\cite{Miles2018,AutoAttacker2024,Falong2025}, where malicious agents~:
+\begin{itemize}
+  \item \textbf{Automate} the search for vulnerabilities, the deployment of payloads, and exfiltration~;
+  \item \textbf{Automate} vulnerability scanning, payload deployment, and exfiltration;
+  \item \textbf{Cooperate} by coordinating parallel attack vectors described in adversarial multi-agent models;
+  \item \textbf{Exploit} adversarial ML techniques, generating forms of escape from usual detections (poisoning, prompt injection, etc.).
+\end{itemize}
+
+\subsection*{An autonomous approach to cyberdefense}
+
+To address these threats, the emerging field of \acn{ACO}\index{ACO} seeks to develop systems capable of making complex decisions autonomously, taking into account the context, objectives to be achieved, and possible consequences of their actions, all in real time and with minimal or no human supervision~\cite{Vyas2023}. Early work in this field has focused mainly on architectures based on autonomous software agents, particularly within the framework of the \textit{IST-152} group of \acn{NATO}, which originated the concept of the \acn{AICA}\index{AICA} agent.
+Such an agent is theorized as being capable of perceiving its local environment (through the analysis of logs, flows, or heuristics), make autonomous decisions based on rules or learning mechanisms, act locally (e.g., through filtering or isolation actions) without relying on permanent external control, and finally communicate with other agents or human operators to share indicators, intentions, or states.
+
+In this context, the modular architecture \acn {MASCARA}~\cite{Theron2020MASCARA}\index{MASCARA}, illustrated in \autoref{fig:mascara}, was introduced to formalize the internal functioning of an agent \acn{AICA} by breaking down its activities into several specialized modules: log collection, anomaly detection, countermeasure selection, response application, etc. Based on this general architecture, it becomes possible to design a concrete instance adapted to a specific environment by modulating the number of components, their nature, and their interactions. Such adaptation allows the \acn{AICA} agent to respond precisely to the requirements of its deployment context and to guarantee protection {\em at the edge}, i.e., as close as possible to the resources to be defended, while optimizing performance in achieving cyberdefense objectives.
+
+However, this architecture remains fundamentally monolithic and rigid. As it stands, it does not provide the necessary means of adaptation to cope with the unpredictable dynamics of a real operational environment, particularly in the context of distributed, complex, and highly interactive systems. This rigidity significantly limits the ability of an \acn{AICA} agent to respond to the emergence of new threats or to adjust to fluctuating environmental constraints.
+
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{figures/MASCARA.pdf}
+  \caption{Description of the MASCARA modular architecture (taken from \autocite{Kott2023})}
+  \label{fig:mascara}
+\end{figure}
+
+\subsection*{Towards cooperative approaches}
+
+The simple modular composition initially proposed is no longer sufficient to respond to the growing complexity of today's critical infrastructures. This requires the adoption of a distributed paradigm, in which several interconnected agents cooperate, self-organize, and dynamically reorganize themselves according to operational needs~\cite{Ferber1999, Gleizes2008}. With this in mind, the idea emerged to transform each module of the \acn {MASCARA} architecture into an autonomous agent responsible for performing a specific cyberdefense task. These micro-agents, interacting in a coordinated manner, would make it possible to better distribute responsibilities, strengthen the robustness of the system, and collectively achieve overall protection objectives.
+
+The notion of granularity allows us to distinguish between micro-agents, each dedicated to a well-defined function, and so-called complete \acn{AICA} agents, capable of covering all the missions provided for by the model. In the rest of this manuscript, we will use the generic term \acn{AICA} agent to refer to these two types of agents, systematically specifying the functional scope concerned according to the context.
+
+More generally, this distributed and cooperative approach is part of a systemic vision of cyberdefense, in which a set of autonomous agents interact within the network to ensure comprehensive, adaptive, and resilient security. This conceptual orientation is supported by several recent works in the emerging field of ACD~\cite{Vyas2023} (a subdomain of \acparen{ACO}) and forms an essential foundation for the developments presented in this manuscript.
+
+For example, simulations have shown that teams of defensive agents are capable of outperforming a single agent in terms of network coverage and responsiveness, thanks to dynamic and distributed coordination~\cite{RLResilientCyberdefense2024}.
+Platforms such as \acn{CybORG}~\cite{cage_challenge_3_announcement} also illustrate this trend, offering a simulated environment in which decentralized autonomous agents simultaneously defend a network against coordinated attacks.
+
+The cooperative approach not only protects multiple hosts in parallel, but also detects synchronized attacks and dynamically adapts to changes in network topology. It thus lays the foundations for a distributed, proactive, and scalable cyberdefense, breaking with traditional defensive architectures.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\linewidth]{figures/infra_MAS_illustration.pdf}
+  \caption{Schematic illustration of a Cyber Defense SMA in a toy enterprise infrastructure}
+  \label{fig:distributed_sma}
+\end{figure}
+
+\noindent
+Finally, it is in this context that the idea of a \acn{SMA} for cyber defense\index{SMA for cyber defense}, as illustrated in \autoref{fig:distributed_sma}, appears to be a promising generic alternative to existing centralized approaches. In the following section, we present the conceptual foundations of \acplu{SMA} with a view to designing a \acn{SMA} for cyber defense.
+
+\section{The path to a multi-agent vision}\label {sec:sma-concepts}
+
+\acplu{SMAs}\index{SMA} are a central paradigm of distributed \acn{AI}\index{distributed AI}. They enable the design of complex systems based on autonomous agents interacting in a shared environment. These agents can perceive, reason, decide, and act in a coordinated manner to solve collective problems~\cite{Ferber1999,Wooldridge2002}.
+
+\subsection* {Fundamental definitions}
+
+An \textbf{agent}\index{Agent} is an autonomous entity, physical or software-based, capable of perceiving its environment, making decisions, and acting to achieve objectives~\cite{Russell2010}. An \acn{SMA} brings together several of these agents, illustrated in \autoref{fig:sma_illustration}, which cooperate or interact within a generally dynamic and partially observable environment~\cite{Jennings1998,Shoham2007} . Each agent has a local observation zone (dotted disc) allowing it to perceive only part of the environment and other agents. Based on these partial observations, and according to strategies or policies (diagram at the top of the figure), it selects and executes \textbf{actions} directed at components of the environment (squares) or at other agents (solid arrows) . Agents can also \emph{exchange messages} (dashed arrows) in order to coordinate their behaviors. The exchange between one agent and another is considered to be the application of an action that modifies the second agent's upcoming observations. The overall objective (top right) represents a desired state of the environment that the agents seek to achieve collectively.
+
+\begin{figure}[h]
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \input{figures/mas_illustration}
+  }
+  \caption{Schematic example of an SMA}
+  \label{fig:sma_illustration}
+\end{figure}
+
+\subsection*{Structural concepts: autonomy, coordination, and organization}
+
+In the context of designing a \acn{SMA} for cyberdefense, three fundamental concepts structure our approach: autonomy, coordination, and organization.
+
+\textbf{Autonomy}\index{Autonomy} refers to an agent's ability to perceive its environment, make decisions, and act without immediate external control~\cite{Russell2010, Boissier2003}. It implies a \textit{decoupling between agents} and a \textit{decentralization of the overall decision-making process}, with each agent being responsible for its own choices and actions. This autonomy can be expressed reactively (through a simple stimulus-response mechanism), deliberatively (through reasoning and planning), or in a hybrid form, combining these two dimensions~\cite {Georgeff1987}. In the context of cyber defense, autonomy allows an agent to detect an anomaly, assess the situation locally, and trigger a countermeasure without having to systematically report to a central authority.
+
+\textbf{Coordination}\index{Coordination} refers to the mechanisms by which agents manage their interdependencies in order to cooperate effectively~\cite{Durfee2001, Jennings1996, Sandholm1999}. These mechanisms include negotiation, joint planning, task allocation, and social commitment. In a distributed cyberdefense environment, robust coordination is essential to avoid conflicts of intervention between agents, ensure consistency of responses, and dynamically distribute roles according to the situation.
+
+The \textbf{organization}\index{Organisation} refers to the social structure in which agents operate: distribution of roles, allocation of responsibilities, management of dependencies and interactions. Two visions coexist in the literature~\cite{Picard2009reorganisation} and are summarized in \autoref{fig:auto_vs_topdown}. On the one hand, the organization can be explicit and reorganizable (top-down), where agents consciously manipulate a formal organizational specification, adapting roles or social relationships as needed. On the other hand, the organization can be emergent and self-organized (bottom-up), where agents interact locally, without any overall representation of the structure, and collectively bring about an organization via decentralized mechanisms~\cite{Heylighen1999, DiMarzoSerugendo2006}.
+
+These two dynamics of organizational adaptation can be formalized by the following definitions. \textbf{Reorganization}\index{Reorganization} is an adaptation process triggered when the existing organization no longer allows the system's objectives to be met. It can be initiated by an agent or an external designer, and is based on the explicit manipulation of organizational primitives such as roles, dependencies, or interaction rules. Agents are then aware of the organization and able to modify it to ensure appropriate collective behavior~\cite{Picard2009reorganisation}.
+
+Self-organization is an emergent, strictly endogenous process in which agents possess only local knowledge. By reacting to environmental pressure and interacting with their neighbors, they indirectly modify the overall configuration of the system (topology, neighborhoods, functional differentiation) without resorting to explicit modeling~\cite{Picard2009reorganisation}. {Picard2009reorganization}.
+
+These two dynamics can be seen as two ends of a continuum. They embody two modalities of the same general process of organizational adaptation: detecting structural inadequacy and remedying it. While self-organization favors implicit, distributed, and bottom-up adaptation, reorganization relies on explicit, often planned mechanisms that may or may not be centralized.
+
+\begin{figure}[h]
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \input{figures/organisation_mecanisme.tex}
+  }
+  \caption[Overview of the organization (from~\cite{Picard2009reorganization})]{Overview of the organization: (a) Emerging MAS~; (b) Coalition-based MAS~; (c) Agent-oriented engineering~; (d) Organization-oriented MAS (taken from~\cite{Picard2009reorganisation})}
+  \label{fig:auto_vs_topdown}
+\end{figure}
+
+% \subsection*{Overview of research areas in \acn{MAS}}
+
+% The field of \acn{SMA} is structured around several research areas:
+
+% \begin{itemize}
+% \item \textbf{Agent architectures}: reactive, cognitive, \acn{BDI}, hybrid~\cite{Georgeff1987}.
+% \item \textbf{Coordination mechanisms}: auctions, negotiation, distributed planning, consensus~\cite{Sandholm1999,Durfee2001}.
+% \item \textbf{Organizational models}: $\mathcal{M}OISE^+$~\cite{hubner2002moise,Hannoun2000}, OperA~\cite{Dignum2004}, \acn{AGR}~\cite{Ferber2004}.
+% \item \textbf{Multi-agent learning}~: individual and collective learning in shared environments~\cite{Zhang2021}.
+% \item \textbf{Safety, verification, and explainability}~: formal approaches to controlling emerging behaviors~\cite{Boella2006}.
+% \item \textbf{Emergence and self-organization}: models inspired by biology or sociology to design robust and adaptive \acplu{MAS}~\cite{DiMarzoSerugendo2006,Heylighen1999}.
+% \end{itemize}
+
+
+\section{Designing a Cyberdefense MAS}\label{sec:problematique-sma}
+
+MASAs, and in particular those inspired by the AICA model, offer a relevant framework for meeting these requirements. However, simply implementing autonomous agents is not enough: the entire design process must be rethought to ensure effective and sustainable cyber defense.
+The central research question we address in this thesis can therefore be formulated as follows:
+
+\begin{quote}
+  \emph{How can we design a Cyberdefense \acn{SMA} capable of satisfactorily achieving its defense objectives, while self-organizing to dynamically adapt to environmental constraints and design requirements?}
+\end{quote}
+
+\medskip
+
+This thesis aims to determine how to design a cyber defense \acn{SMA} capable of satisfactorily achieving its objectives, while dynamically adapting to its environment and design requirements. Cyberdefense objectives here correspond to the operational goals assigned to the system, such as intrusion detection, threat neutralization, service restoration, or continuous improvement of defensive capabilities, with reference to the P3R3 model~\cite{Theron2013P3R3} (detect, respond, restore) . Environmental constraints encompass all the limitations and characteristics of the SMA's operating context: network topology, available resources, threat dynamics, real-time requirements, security policies, etc. Finally, design requirements refer to the criteria and expectations set during the design of the \acn{SMA}, including distributed autonomy, resilience, explainability, performance measurability, regulatory compliance, and development and maintenance costs. The challenge is therefore to articulate these three dimensions in order to design a cyber defense \acn{SMA} that is effective, adaptable, and sustainable.
+
+\medskip
+
+\noindent
+It is not just a question of equipping an \acn{SMA} with detection or response capabilities, but possibly of imagining a design framework where the organization of the agents themselves becomes a lever for efficiency and resilience~\cite{Picard2006, DiMarzoSerugendo2006} . This framework must meet a set of key criteria, presented below, which structure our scientific response to this question.
+
+\subsection*{Criteria for evaluating \acn{SMA}s for cyber defense}\label{sec:criteria-evaluation}
+
+Inspired by the challenges posed by the \textit{AICA IWG}~\footnotemark[3], we have defined a set of criteria, summarized in \autoref{tab:critere_aica}, describing the properties that a \acn {SMA} must satisfy in order to answer the overall research question.
+
+\footnotetext[3]{In particular, research challenges related to \textit{Infrastructure Architecture and Engineering} and \textit{Individual \& Collective Decision Making}. See \url{https://www.aica-iwg.org/research-challenges/}}
+
+\begin{table}[h!]
+\centering
+\caption{Grid of evaluation criteria for a Cyberdefense SMA}
+\label{tab:criteria_aica}
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{
+    >{\raggedright\arraybackslash\hsize=0.2\hsize}X
+    >{\raggedright\arraybackslash\hsize=0.8\hsize}X
+  }
+  \hline
+  \textbf{Criterion}            & \textbf{Summary of expectations}                                                                                                                                                                                                                                          \\
+  \hline
+  \textbf{C1 -- Autonomy}       & The \acn{SMA} must operate with minimal human intervention, whether during its design, implementation, operation, or shutdown. The goal is to reduce dependence on the operator by promoting self-organization and self-decision-making among agents.                     \\
+
+  \textbf{C2 -- Performance}    & The \acn{SMA} must demonstrate sufficient performance to achieve the set objectives. This includes maximizing collective rewards and the ability to converge toward stable behaviors.                                                                                     \\
+
+  \textbf{C3 -- Adaptation}     & The \acn{SMA} must be able to adjust to dynamic or uncertain environments. Agents must be able to maintain an acceptable level of performance in the face of disruptions, changes in objectives, or situations not encountered during training.                           \\
+
+  \textbf{C4 -- Control}        & The \acn{SMA} must remain controllable at different levels: individual and collective. This implies the ability to impose or modify organizational specifications and to ensure the overall consistency of agents' behavior with these organizational specifications.     \\
+
+  \textbf{C5 -- Explainability} & The \acn{SMA} must provide behaviors that are understandable to a human observer. The actions of agents and their coordination must be linkable to organizational specifications such as roles, missions, or objectives in order to interpret the defense logic deployed. \\
+  \hline
+\end{tabularx}
+\end {table}
+
+\noindent
+\textbf{C1 - - Autonomy.}\index{Autonomy (C1)} \quad
+Autonomy is a fundamental property expected of a cyber defense \acn{SMA}. It is not limited to an agent's ability to make decisions locally, but encompasses the entire life cycle of the \acn{SMA}, from its design and implementation to its operational execution and shutdown. An autonomous \acn{SMA} must therefore minimize dependence on human operators by promoting self-organization and decentralized decision-making. This requirement is particularly crucial in environments where reaction speed is critical and constant human supervision is impractical. Autonomy is therefore considered a necessary condition for increasing responsiveness, limiting the cognitive load on analysts, and ensuring continuity of operation in the face of rapid and distributed threats.
+
+\medskip
+
+\noindent
+\textbf{C2 -- Performance.}\index{Performance (C2)} \quad
+Performance refers to the ability of the \acn{SMA} to robustly and effectively achieve its assigned cyber defense objectives. It is manifested through the maximization of collective rewards obtained during experiments, but also through convergence towards stable and reproducible behaviors. A high-performing \acn{SMA} must be capable not only of detecting and neutralizing attacks, but also of maintaining satisfactory performance over repeated executions, without prolonged instability or behavioral oscillations. In this context, performance is evaluated not as a one-off success, but as a sustainable and generalizable property, guaranteeing the effectiveness of the system beyond a single scenario.
+
+\medskip
+
+\noindent
+\textbf{C3 -- Adaptation.}\index{Adaptation (C3)} \quad
+Adaptation reflects the ability of the \acn{SMA} to adjust its behavior in response to dynamic, uncertain, or unstable environments. It assumes that agents can absorb disturbances, respond to unprecedented situations, and quickly return to an acceptable level of functioning after a performance degradation. Adaptation also includes resilience to changes in objectives or operational conditions, such as variations in network topology, the emergence of new adversarial tactics, or fluctuating resource constraints. It is therefore considered an essential property for the sustainability of the system, ensuring that the \acn{SMA} does not remain stuck in a learned logic, but remains capable of maintaining operational effectiveness over time.
+
+\medskip
+
+\noindent
+\textbf{C4 -- Control.}\index{Control (C4)} \quad
+Control refers to the ability to guide and steer the behavior of the \acn{SMA}, whether at the individual or collective level. A controllable \acn{SMA} must allow for the imposition, modification, and monitoring of organizational specifications, such as roles, missions, or rules of interaction, while ensuring the overall consistency of observed behaviors. This criterion thus guarantees continuous alignment between design intentions and the actual dynamics of the system in operation. Control is a requirement for safety and trust, providing designers and operators with the means to limit undesirable behaviors and ensure that the \acn{SMA} acts in accordance with defined security policies. It thus establishes a necessary balance between local autonomy and external governance.
+
+\medskip
+
+\noindent
+\textbf{C5 -- Explainability.}\index{Explainability (C5)} \quad
+Explainability aims to ensure that the behaviors of the \acn{SMA}, whether individual or collective, can be understood and interpreted by a human observer. In the context of cyber defense, where transparency and trust are prerequisites for the adoption of automated solutions, it is essential that the actions of agents be linked to tangible organizational specifications, such as roles, missions, or intermediate objectives. Explainability is not limited to reporting on the action ex post, but also includes assessing the degree of similarity between the specified structures and those that actually emerge during execution. It thus constitutes a vector of readability and diagnosis, both strengthening operator confidence and improving the future design of \acplu{SMA} through a better understanding of emerging dynamics.
+
+\section{Conclusion}
+In summary, this chapter has laid the conceptual and methodological foundations of the thesis by identifying the issues, criteria, and tensions that structure the design of \acn{SMA} for cyber defense. It has highlighted the need for an integrated approach capable of reconciling performance, adaptation, control, and explainability, and has proposed formalizing the design as a constrained optimization problem. This reformulation has led to the decomposition of the problem into four fundamental sub-problems, each associated with a key activity in the design process. The rest of the manuscript will focus on exploring these sub-problems in greater depth, analyzing the obstacles identified in the literature and presenting the proposed contributions to address them, thus initiating the transition to the state of the art detailed in the following chapter.
+
+\clearpage
+\thispagestyle{empty}
+\null
+\newpage
+
+\chapter{Towards Cyber Defense SMAs and their design}
+
+% \acn{TODO}~: To be used to complete “Towards multi-agent approaches to Cyber Defense”
+% \include{papers/RESSI_paper}
+
+\noindent
+This chapter situates our approach in relation to existing work at the intersection of the fields of cyber defense and \acn{SMA}. It is based on a literature review conducted at the beginning of the thesis and updated throughout the work.
+%
+We adopt a critical reading guided by the five design criteria (C1 to C5) identified in the previous chapter. This reading allows us to structure existing contributions according to their degree of proximity to the vision of a \acn{SMA} for cyber defense.
+
+To this end, we distinguish between two complementary approaches. The first (\autoref{sec:sma-cyberdefense}) focuses on existing \textbf{\acplu{SMA} applied to Cyber Defense}, examining the objectives supported, the types of organization, and the associated deployment environments. The second (\autoref{sec:sma-cyberdefense-design}) explores the \textbf{existing means for designing these \acplu{SMAs} and the \acplu{SMAs} obtained}, whether manual or automated, symbolic or learning.
+%
+The work identified concerning the idea of autonomous agents or even distributed defense must simultaneously take into account all the criteria identified above.
+
+
+\section{Cyberdefense SMAs in the literature}\label{sec:sma-cyberdefense}
+
+A \textbf{\acn{SMA} for Cyberdefense} requires consideration of the challenges of structuring, adaptability, and coordination in a critical and dynamic environment.
+First, we conducted a literature review$^{1}$ of work that could be compared to \acplu{SMA} for Cyberdefense~\cite{soule2023ressithese}.
+In particular, for each of the works identified, we studied the relationship between the organizational mechanism adopted and the \textbf{Cyber Defense objectives} involving the implementation of one or more of the Cyber Defense functions as described in P3R3~\cite{Theron2013P3R3}~:
+(R1) Intrusion detection and alerts,
+(R2) Application of countermeasures and minimal recovery,
+(R3) Post-attack learning and continuous improvement.
+This initial study allows for a review of the work identified through the analysis grid based on the criteria identified in \autoref{sec:problematique-sma}.
+
+In a Cyberdefense \acn{SMA}, several agents achieve an overall Cyberdefense objective through collective behavior resulting from the achievement of individual sub-objectives and/or local mechanisms~\cite {jamont2015meeting}.
+Examples of such sub-objectives could be intrusion detection, implementation of a recovery plan, image restoration, port redirection, etc.
+
+\subsection{Dynamic organizational mechanisms}
+
+The autonomous operation of the \acn{SMA} for cyber defense, achieved by delegating certain tasks to agents with little direct intervention, is a response to the workloads of cyber teams and the speed of cyber attacks~\cite{ieeesp_KottT20}.
+Such an \acn{SMA} must modify its structure and the relationships between its agents in order to continuously adapt to its environment~\cite{theron_autonomous_2021}.
+Reorganization and self-organization are therefore key mechanisms~\cite {Picard2009reorganisation}.
+
+From an organization-centric perspective, global cyber defense is a common task shared by all agents across their organization.
+\textbf{Reorganization} is a means of switching between several proven organizations that appear to be suitable in given circumstances~\cite{Picard2009reorganisation}.
+
+From an agent-centered perspective, \textbf{self-organization} is defined as a bottom-up process where organization emerges from the interactions and local actions of agents.
+Global cyber defense is therefore the result of local cyber defense actions and peer-to-peer interactions between agents~\cite {Picard2009reorganisation}.
+Self-organization seems to be one of the means to be mobilized to deal with cyber threats while avoiding the pitfalls of centralized control.
+
+
+
+\begin{table*}[t!]
+
+  \caption{An overview of some organizations and host environments used in the Cyberdefense SMAs studied}
+
+  {%
+    \small
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabularx}{\linewidth}{
+        >{\raggedright\arraybackslash\hsize=.2\hsize}X
+        >{\raggedright\arraybackslash\hsize=.25\hsize}X
+        >{\raggedright\arraybackslash\hsize=.25\hsize}X
+        >{\raggedright\arraybackslash\hsize=.25\hsize}X
+        % >{\raggedright\arraybackslash}X
+        >{\raggedright\arraybackslash\hsize=.1\hsize}X}
+      \toprule
+
+      { \textbf{Organization}}
+       & { \textbf {Main advantages}}
+       & { \textbf{Main disadvantages}}
+       & { \textbf{Environment}}
+      % & { \textbf{Suggested cyber defense objectives }}
+       & { \textbf{Work}}
+      \\ \midrule
+
+      { Centralized}
+       & { High precision for situation analysis}
+       & { \acn{SPOF}, lack of scalability}
+       & { Small to medium size, non-open, small business}
+      % & { \textbf{Type (R1) objectives}: intrusion detection, network monitoring}
+       & { ~\cite{vasilomanolakis2015taxonomy, gorodetski2003multi, de2017distributed}}
+      \\
+
+      { Hierarchical (distributed)}
+       & { Scalability, task decomposition}
+       & { Information loss, bottlenecks, delays}
+       & { Medium to large size, open, few variations}
+      % & { \textbf{Objectives of type (R1) and (R2)}: network monitoring, regular backups, access controls, cyberdefense patches}
+       & { ~\cite{holloway2009self, lamont2009military}}
+      \\
+
+      { Decentralized (Peer-to-Peer)}
+       & { Structure not defined a priori, Highly adaptive}
+       & { Limited organizational control, Intensity of communication}
+       & { Open, any size, high variation}
+      % & { \textbf{Objectives of type (R3)}: threat recognition, adaptation to cyberattacks}
+       & { ~\cite{holloway2019self, haack2011ant, morteza2015method}}
+      \\
+
+      { Coalition}
+       & { Optimization of organization around tasks}
+       & { Not well suited for the long term}
+       & { Any size, open, few variations, few resources}
+      % & { \textbf{Objectives (R3)}: Adapted security countermeasures, learning about cyber attacks}
+       & { ~\cite{carvalho2011evolutionary}}
+      \\
+
+      { Teams}
+       & { Good performance for regular tasks}
+       & { High communication intensity}
+       & { Open, heterogeneous, any size, few variations}
+      % & { \textbf{Objectives of type (R1) and (R2)}: detection of possible threats, application of countermeasures}
+       & { ~\cite{akandwanaho2018generic}}
+      \\
+
+      { Market}
+       & { Organization optimized by competition, good agent management}
+       & { Complex and lengthy allocation process}
+       & { Any size, open, little variation, few resources}
+      % & { \textbf{Objectives of type (R3)}: forensic investigations, cyber defense strategies}
+       & { ~\cite{demir2021adaptive}}
+      \\
+      \bottomrule
+    \end{tabularx}
+  }
+  \label{tab:general-overview}
+\end{table*}
+
+
+\subsection{Cyberdefense SMA Organizations}
+
+
+Choosing a \acn{SMA} organization involves taking into account the relationships between cyber defense objectives and the deployment environment.
+Analysis of the available \acplu{SMA} cyber defense organizations is likely to reveal trends in these relationships.
+This would facilitate the implementation of an organization based on cyber defense objectives and the deployment environment.
+
+Our literature review focused on reconciling the concepts of \acplu{SMA} and cyber defense.
+
+For each of the cyber defense \acn{SMA} works, we looked at the cyber defense functions covered.
+An overview of this classification is provided in \autoref{tab:reference-cyberdefense}.
+We found that most of the Cyber Defense objectives of \acplu{SMA} focus primarily on the detection of anomalies and intrusions (more than 50\% of the work in our comprehensive review focuses on function R1).
+
+\begin{table}[htb]
+
+\caption{An overview of the cyber defense functions supported by the cyber defense SMAs studied}
+
+\begin{tabularx}{\textwidth}{
+  >{\raggedright\arraybackslash\hsize=0.8\hsize}X
+  >{\raggedright\arraybackslash\hsize=0.2\hsize}X}
+\toprule
+
+{ {\textbf{Main objectives}}}
+& { \textbf{Work}}
+\\ \midrule
+
+{ \textbf{\textbf{R1}}: intrusion detection, network monitoring, detection of possible threats}
+& { ~\cite{vasilomanolakis2015taxonomy, gorodetski2003multi, de2017distributed, holloway2009self, lamont2009military, akandwanaho2018generic}}
+\\
+
+{ \textbf{\textbf{R2}}: application of countermeasures, access controls, cyber defense fixes, cyber defense strategies}
+& { ~\cite{holloway2009self, lamont2009military, akandwanaho2018generic}}
+\\
+
+{ \textbf{\textbf{R3}}: forensic investigations, development of appropriate countermeasures, learning about cyberattacks, adaptation to cyberattacks}
+& { ~\cite{holloway2019self, haack2011ant, morteza2015method, demir2021adaptive}}
+\\
+\bottomrule
+\end {tabularx}
+\label{tab:reference-cyberdefense}
+\end{table}
+
+For each of these same works, we also looked at the main characteristics of the organization and the deployment environment.
+A summary of this work is presented in \autoref{tab:general-overview}.
+We note that, regardless of the objectives of cyberdefense, centralized and/or hierarchical organization is the most common among the cyberdefense \acplu{SMA} studied.
+The centralization of data acquired from the environment at a single point promotes better performance for the analysis of the overall situation and control of the cyberdefense system.
+These types of organization seem less easily applicable to dynamic networks, but are widespread on medium-sized systems with known constraints~\cite{vasilomanolakis2015taxonomy}.
+
+Decentralized organizations take advantage of a more self-organized approach to dealing with cyber threats in order to increase the autonomy of the cyber defense \acn{SMA}, as proposed in the “Artificial Immune System”~\cite{morteza2015method} or “Ant-Based Cyber Security”~\ cite{haack2011ant}.
+However, they are less established as generic cyber defense and/or cyber security solutions.
+
+\subsection{Critical review}
+\label{sec:soa-critical-review}
+
+The work reviewed highlights families of organizations (centralized, hierarchical, decentralized/swarm, coalitions, teams, market) whose qualities and limitations vary according to the criteria, as well as a marked focus on \textbf{R1} (detection/surveillance) at the expense of \textbf {R2--R3} (response/recovery), as already illustrated in our summary tables (\autoref{tab:general-overview} and \autoref{tab:reference-cyberdefense}).
+
+\paragraph{C1 -- Autonomy.}
+Local decision-making autonomy (perceiving, deciding, acting as close as possible to resources) is generally better served by decentralized organizations (peer-to-peer, swarm), which reduce dependence on a central authority and improve responsiveness. Conversely, centralized/hierarchical architectures facilitate orchestration and implementation, but retain points of failure and decision-making bottlenecks, limiting systemic autonomy (design, deployment, shutdown). These trade-offs are recurrent in the compared states of the art.
+
+\paragraph{C2 -- Performance.}
+The best analytical performance (event aggregation, prioritization) is often reported for centralized/hierarchical organizations in the \textbf{R1} context, while load handling and robustness decrease under adversarial dynamics or resource constraints. Decentralized forms show good agility, but sometimes struggle to stabilize effective collective behaviors without explicit regulation mechanisms. A recurring methodological need concerns the cross-sectional measurement of performance (reward, convergence rate, stability) on shared benches.
+
+\paragraph{C3 -- Adaptation.}
+Two levers dominate: reorganization (top-down, explicit roles/relationships) and self-organization (bottom-up, emergent structure). The literature illustrates both (e.g., swarms, artificial immune systems), but lacks a unified experimental framework for attributing adaptation to controlled organizational choices (recovery time, sensitivity to variations, resilience to new \acn{TTP}). Hence the interest in a generic grid applied to various environments.
+
+\paragraph{C4 -- Control.}
+Control (specifying, imposing, and adjusting organizational constraints and verifying their consistency) is naturally favored by centralized/hierarchical architectures (strong auditability and governance), but sometimes conflicts with autonomy and adaptation. In decentralized organizations, control requires safeguards (local rules, markets, coalitions) to avoid conflicts and undesirable effects. The literature highlights the lack of common tools to measure, in a reproducible manner, compliance with constraints and overall consistency under operational constraints (latency, communication losses).
+
+\paragraph{C5 -- Explainability.}
+A priori explainability relies on explicit structures (roles, missions, hierarchies) that provide a clear understanding of responsibilities; the a posteriori explainability of emerging organizations (decentralized, re-/self-organized) remains poorly instrumented: there is a lack of means to link observed trajectories and organizational adequacy (alignment between specified and implicit organization). This gap hinders the comparison of approaches and operational confidence.
+
+\begin{table*}[h!]
+  \centering
+  \caption{Summary reading of Cyberdefense SMA organizations according to criteria C1--C5}
+  \label{tab:org-vs-criteria}
+  \tiny
+  \renewcommand{\arraystretch}{1.12}
+  \begin{tabularx}{\linewidth}{
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.15\hsize}X}
+    \toprule
+    \textbf{Organization}                                                                               & \textbf{C1 Autonomy} & \textbf{C2 Performance} & \textbf{C3 Adaptation} & \textbf{C4 Control} & \textbf{C5 Explainability} \\
+    \midrule
+    Centralized                                                                                         &
+    Limited local responsiveness; high dependence on the center (single point of failure, bottlenecks). &
+    Very good aggregation and prioritization in R1; fragility under load/adversarial conditions.        &
+    Low structural plasticity; adaptation mainly through central re-parameterization.                   &
+    Strong governance and auditing; high enforceability of global rules.
+                                                                                                        &
+    High a priori readability (roles/chains); low readability of emerging effects.                                                                                                                                                   \\
+    \addlinespace[2pt]
+    Hierarchical (distributed)                                                                          &
+    Partial autonomy at the leaves; persistent vertical dependencies.                                   &
+    Good analysis/latency compromise; degradation at level interfaces.                                  &
+    Planned reorganization possible; costs of propagating changes.                                      &
+    Good multi-level control leverage; inter-level consistency to be monitored.                         &
+    Explanations structured by level; upward traceability.                                                                                                                                                                           \\
+    \addlinespace[2pt]
+    Decentralized/Swarm (p2p)                                                                           &
+    High local autonomy and responsiveness; no \acn {SPOF}.                                             &
+    Dynamic agility; delicate overall stabilization without regulation.                                 &
+    Very good self-organization; resilience to partial failures/communications.                         &
+    Diffuse control; need for local safeguards and arbitration.                                         &
+    Limited \emph{a posteriori} explainability; need for organizational adequacy tools.                                                                                                                                              \\
+    \addlinespace[2pt]
+    Coalitions (task-oriented)                                                                          &
+    Autonomy through opportunistic groupings.                                                           &
+    Good performance on targeted tasks; cost of formation/dissolution.                                  &
+    Adaptation through rapid recomposition; sensitive to contextual signals.                            &
+    Manageable local contracts; overall consistency depends on inter-coalition coordination.            &
+    Local explainability adequate (contracts), overall more difficult.                                                                                                                                                               \\
+    \addlinespace[2pt]
+    Teams (fixed roles)                                                                                 &
+    Autonomy framed by roles; dependence on team protocols.                                             &
+    Good performance on routines; intensive communication.                                              &
+    Adaptation through rotation/redefinition of roles; organizational inertia.                          &
+    Easy control via roles/protocols; verifiable consistency.                                           &
+    High explainability via explicit roles/missions.                                                                                                                                                                                 \\
+    \addlinespace[2pt]
+    Market (allocation by auction)                                                                      &
+    Strong individual autonomy; opportunistic decisions.                                                &
+    Performance depends on allocation mechanisms; auction latency.                                      &
+    Good adaptation to variability; stability depending on incentive design.                            &
+    Control via market rules; regulation necessary for safety.                                          &
+    Explainability through allocation/cost traces; understanding depends on the model.                                                                                                                                               \\
+    \bottomrule
+  \end{tabularx}
+\end{table*}
+
+Ultimately, centralized/hierarchical organizations favor control and explainability \emph {a priori} but limit systemic autonomy and adaptation, while decentralized/emergent forms maximize autonomy and adaptation at the cost of more diffuse control and \emph{a posteriori} explainability that is still poorly instrumented. The literature also emphasizes \textbf{R1}, leaving \textbf{R2--R3} less explored experimentally.
+
+
+
+\section{Cyberdefense SMA design frameworks in the literature}\label{sec:sma-cyberdefense-design}
+
+In this section, we focus on frameworks and environments that enable the design, training, or evaluation of agent-based systems for cyberdefense. Unlike contributions focused on already established \acn{SMA} architectures, this work aims to equip the development process for such architectures, whether through simulation, learning, or formalization.
+
+\subsection{State of the art and diversity of approaches}
+
+In this subsection, we provide an overview of existing frameworks and environments that enable the design or training of agents for cyber defense. In particular, we distinguish between:
+\begin{itemize}
+  \item simulation environments that emulate networks or attack/defense behaviors (e.g., \acn{CybORG}, \acn{NASimEmu}, \acn{EmuLab});
+  \item training frameworks based on machine learning or reinforcement learning, sometimes multi-agent (e.g., \acparen {CSLE}~\cite{Hammar2023}, \allowbreak \acn{AutoPentest-DRL}~\cite{CROND}, \acn{CANDLES}~\cite{10.1145/2739482.2768429}) ;
+  \item platforms dedicated to optimizing attack or defense policies (e.g., \acn{PenGym}~\cite{Nguyen2025}, \acn{CSLE}~\cite{Hammar2023}, \acn{CyberBattleSim}).
+\end{itemize}
+
+We also examine their level of abstraction, the type of interaction allowed, and their ability to serve as a support for a design approach.
+
+\medskip
+
+\begin{table}[h!]
+  \centering
+  \caption{Examples of design frameworks for cyberdefense agents}
+  \label{tab:design-frameworks}
+  \renewcommand{\arraystretch}{1.2}
+  \small
+  \begin{tabularx}{\linewidth}{
+      >{\raggedright\arraybackslash\hsize=0.2\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.35\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.35\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.1\hsize}X}
+    \hline
+    \textbf{Name}         & \textbf{Type}                       & \textbf{Main function}                                                & \textbf{Work}                    \\
+    \hline
+    \acn{CybORG}          & Simulated environment               & Training defenders/attackers in virtual networks                      & ~\cite{Standen2021}              \\
+    \acn{NASimEmu}        & Simulator + emulator                & Fine-grained simulation of network attacks for policy generalization  & ~\cite{janisch2023nasimemu}      \\
+    \acn{CSLE}            & Multi-agent \acn{RL} framework      & Design of defensive agents with visualization of learned policies     & ~\cite{hammar_stadler_noms_22}   \\
+    \acn{AutoPentest-DRL} & \acn{DRL} training                  & Automatic generation of attack scenarios by \acn{DRL}                 & ~\cite{CROND}                    \\
+    \acn{EmuLab}          & Network testing platform            & Reproduction of realistic scenarios on virtualized networks \acn{SDN} & ~\cite{7311238}                  \\
+    \acn{CLAP}            & Multi-objective \acn{DRL} framework & Training multi-objective agents in automatic attack                   & ~\cite{yang2022behaviourdiverse} \\
+    \acn {CyberBattleSim} & Simulator for \acn{RL} agents       & Evaluation of defense/attack policies in a vulnerability graph        & ~\cite{cyberbattlesim}           \\
+    \acn{CANDLES}         & Evolutionary framework              & Co-evolution of defensive and offensive agents in a simulated network & ~\cite{10.1145/2739482.2768429}  \\
+    \acn{PenGym}          & Environment \acn{RL}                & Testing pentesting tools with adaptive reinforcement                  & ~\cite{Niculae2018}              \\
+    \acn{ASAP}            & Automatic analysis platform         & Vulnerability analysis by autonomous agents                           & ~\cite{9394285}                  \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\medskip
+
+These environments have varied profiles, which are summarized in \autoref{tab:design-frameworks}. Some aim to provide realistic simulation for policy testing (e.g., \acn{NASimEmu}, \acn{EmuLab}), while others focus on automatic generation or co-evolution of behaviors (e.g., \acn{CLAP}, \acn{CANDLES}). The degree of autonomy granted to agents, the integration of adaptive attacker models, and support for multi-agent policies differ across frameworks.
+
+The value of such diversity lies in the complementarity of the environments. However, it also results in fragmentation of tools, making it difficult to establish a generalizable or reusable design method. In the following sections, we will see how these limitations highlight the need for a unifying framework to structure the design process of \acn{SMA} for cyberdefense. {SMA} design process.
+
+\subsection{Coverage of design criteria (C1 to C5)}
+
+This subsection presents a systematic study of the previous environments in relation to the five criteria set out in \autoref{sec:problematique-sma}. \autoref{tab:revue-cadres-conception} summarizes this study.
+
+\begin{table*}[t]
+  \centering
+  \caption{Coverage of Cyberdefense SMA design frameworks with respect to criteria C1--C5}
+  \label{tab:design-frameworks-review}
+  \renewcommand{\arraystretch}{1.2}
+  \tiny
+  \begin{tabularx}{\textwidth}{
+    p{1.5cm}
+    >{\centering\arraybackslash}p{2.25cm}
+    >{\centering\arraybackslash}p{2.25cm}
+    >{\centering\arraybackslash}p{2.25cm}
+    >{\centering\arraybackslash}p{2.25cm}
+    >{\centering\arraybackslash}p{2.25cm}}
+    \toprule
+    \textbf{Framework}    & \textbf{C1 Autonomy}                                    & \textbf{C2 Performance}                      & \textbf{C3 Adaptation}                             & \textbf{C4 Control}              & \textbf{C5 Explainability}                 \\
+    \midrule
+    \acn{CybORG}          & Partial (simulated agents, but human guidance required) & Good (wide range of scenarios)               & Partial (adaptive attackers, limited defenders)    & Weak (few explicit constraints)  & Weak (trajectories difficult to interpret) \\
+    \acn{NASimEmu}        & Partial                                                 & Good (simulation finesse)                    & Partial (topology variants)                        & Weak                             & Weak                                       \\
+    \acn{CSLE}            & Partial                                                 & Good (multi-agent \acn{RL})                  & Partial (adaptation limited to fixed environments) & Partial (control via parameters) & Partial (policy visualization)             \\
+    \acn{AutoPentest-DRL} & Weak (attacker-centric)                                 & Good (efficient scenario generation)         & Weak (limited adaptation on the defense side)      & Weak                             & Weak                                       \\
+    \acn{EmuLab}          & Weak (agents with little autonomy)                      & Good (network realism)                       & Weak (manual adaptation)                           & Weak                             & Weak                                       \\
+    \acn{CLAP}            & Partial                                                 & Good (multiple objectives)                   & Partial (co-evolution of strategies)               & Low                              & Low                                        \\
+    \acn{CyberBattleSim}  & Partial                                                 & Good (comparison of \acn{RL} policies)       & Partial (diversity of vulnerability graphs)        & Low                              & Low                                        \\
+    \acn{CANDLES}         & Partial                                                 & Good (co-evolution of defense/attack agents) & Good (adaptation through evolution)                & Low                              & Low                                        \\
+    \acn{PenGym}          & Low                                                     & Partial (targeted pentesting)                & Low                                                & Low                              & Low                                        \\
+    \acn{ASAP}            & Low                                                     & Partial (automated analysis)                 & Low                                                & Low                              & Low                                        \\
+    \bottomrule
+  \end{tabularx}
+  \vspace{2mm}
+  {\footnotesize Indicative scale: \textit{Weak} = not addressed or very limited; \textit{Partial} = partially covered, depending on scenarios; \textit{Good} = explicit and generalizable support.}
+\end{table*}
+
+
+\medskip
+
+A few emblematic cases are detailed below to illustrate the main strengths and limitations of these environments.
+
+\paragraph{CSLE.} This multi-agent framework focuses on training and visualizing defense policies. It offers good coverage of criterion \textbf{C2 Performance} thanks to tools that allow agents to be compared and their cumulative rewards to be measured. Its added value is also visible in \textbf{C5 Explainability}, where a visualization interface allows the learned policies to be explained. On the other hand, \textbf{C1 Autonomy} and \textbf{C4 Control} remain partially covered, as explicit organizational guidance and constraint-based governance are not well supported.
+
+\paragraph{CybORG.} One of the most widely used environments in the \acn{ACD} community, \acn{CybORG} offers good coverage of criterion \textbf{C2 Performance} through a wide range of attacker and defender scenarios. It also allows limited exploration of \textbf{C3 Adaptation} through the inclusion of adaptive attackers. However, \textbf{C1 Autonomy} remains partial (simulated agents often require external guidance), while \textbf{C4 Control} and \textbf{C5 Explainability} are very poorly supported, due to a lack of tools to impose organizational constraints or make policies intelligible.
+
+\paragraph{NASimEmu.} This hybrid emulation/simulation simulator is particularly useful for evaluating the \textbf{performance} (C2) and robustness of policies across various topologies. It also allows for some \textbf{adaptation} (C3) by changing the network structure. However, like many simulation environments, \textbf{autonomy} (C1), \textbf{control} (C4), and \textbf{explainability} (C5) are poorly represented.
+
+\paragraph{CANDLES.} This framework proposes an approach for the \textbf{co-evolution} of defensive and offensive agents. It thus achieves significant coverage of \textbf{C3 Adaptation}, by testing emerging behaviors in various contexts. The criteria \textbf{C1 Autonomy} and \textbf{C2 Performance} are partially or well covered, but the dimensions \textbf{C4 Control} and \textbf{C5 Explainability} are not integrated into its methodology.
+
+\
+
+\noindent Current frameworks mainly demonstrate performance gains in controlled scenarios, but they do not yet offer the means to evaluate and guarantee autonomy, control, or explainability of Cyberdefense \acn{SMA}s. These findings reinforce the need for a unifying design framework that explicitly takes into account all of the C1--C5 criteria in order to guide the design, training, and analysis of agents beyond raw performance alone.
+
+\subsection{Current limitations and unmet needs}
+
+Overall, this review highlights that:
+\begin{itemize}
+  \item \textbf{Performance (C2) is the best-addressed criterion.} Most frameworks focus on evaluating policies in terms of cumulative reward, success in given scenarios, or robustness in the face of some variations. This focus reflects the preponderance of reinforcement learning as a training and evaluation method, but it remains insufficient to characterize the long-term sustainability of Cyberdefense \acn{SMA}.
+
+  \item \textbf{Autonomy (C1) remains incomplete.} While several environments simulate agents capable of perceiving and acting, the complete life cycle of the \acn{SMA} remains largely dependent on human intervention. Organizational autonomy and the ability to sustainably limit external supervision are therefore still under-explored.
+
+        Adaptation (C3) is addressed only partially. Some frameworks incorporate co-evolution (e.g., CANDLES) or adaptive attackers (e.g., CybORG), but mechanisms enabling systematic and generalizable adaptation of policies to complex environmental dynamics are still lacking. Recovery times and resilience to topology changes or new adversarial tactics are rarely measured.
+
+        Control (C4) is very poorly represented. No framework provides explicit mechanisms for specifying, enforcing, and verifying compliance with organizational constraints (roles, missions, interaction rules). Control is either absent or reduced to a few manually adjustable parameters, which limits the ability to guide collective behavior according to operational needs.
+
+  \item \textbf{Explainability (C5) is the least covered criterion.} Apart from a few policy visualizations (e.g., \acn{CSLE}), the literature does not offer tools for linking observed behaviors to expected organizational structures or for analyzing the fit between the specified organization and the emerging implicit organization. This hinders operator confidence and the transferability of approaches.
+\end{itemize}
+
+\noindent
+In summary, the state of the art reveals a strong concentration of efforts on \emph{performance demonstration} in simulated scenarios, but a marked deficit in the dimensions of autonomy, control, and explicability. These gaps highlight the need to develop a unifying design framework that explicitly integrates the five criteria C1--C5 in order to enable a cross-cutting, generalizable, and reproducible evaluation of Cyberdefense \acn{SMA}.
+
+
+
+\section{A tension between symbolic and connectionist approaches}\label{sec:limits-existing}
+
+The literature review conducted above reveals very partial coverage of the five design criteria (C1 to C5) identified in \autoref{sec:problematique-sma}. More specifically, no work currently exists that allows for the design of a cyber defense \acn{SMA} that is fully compliant with the \acn{AICA} vision, i.e., one that is robust, explainable, generalizable, and automatable.
+
+Two main families of approaches to the operation and design of a cyber defense \acn{SMA} stand out in the literature: \textit{symbolic} approaches, which focus on explicit modeling of the system's organization, and \textit{connectionist} approaches, which rely on learning techniques such as \acn{RL} or \acn{MARL}. These two paradigms are at opposite ends of the spectrum of \acplu{SMA} cyber defense design, and have complementary strengths and weaknesses.
+
+\subsection{Symbolic approaches}
+
+Symbolic approaches, based on formalisms such as $\mathcal{M}OISE^+$~\cite{hubner2002moise} or \acn{AGR}~\cite{Ferber2004}, provide a rigorous framework for structuring roles, permissions, and obligations within an \acn{SMA}. These models facilitate interpretability, verifiability, and control of the organizational structure (C4).
+
+However, these approaches suffer from a heavy reliance on human expertise (C1), limited adaptability to dynamic environments (C3), and low generalizability. In practice, scaling these models quickly becomes costly and laborious~\cite{Picard2006}.
+
+\subsection{Learning approaches}
+
+Learning approaches, particularly \acn{MARL}, enable adaptive policies to be obtained in complex, partially observable, and dynamic environments. They offer attractive guarantees in terms of performance (C2), resilience (C3), generalizability, and automation (C1).
+
+Nevertheless, these approaches pose serious problems in terms of explainability (C5), controllability (C4), and safety in real environments (C4). The policies obtained are difficult to interpret, which complicates their adoption in critical areas such as cyber defense~\cite{Gunning2019}.
+
+\subsection{A structural opposition revealed by the criteria}
+
+\autoref{fig:tension-symbolic-learning} summarizes this conceptual tension between symbolic and learning approaches through their respective ability to satisfy the five criteria. We observe an inherent trade-off between control (C4) and operational performance (C2).
+
+\begin{figure}[h!]
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \input{figures/symbolic_connexioniste}
+  }
+  \caption{Tension between symbolic and learning approaches: respective coverage of criteria C1 to C5}
+  \label{fig:tension-symbolic-learning}
+\end{figure}
+
+Ultimately, \acplu{SMAs} derived from symbolic approaches can take full advantage of \textbf{reorganization}~: they have explicit structures (roles, missions, groups, etc.) that they can consciously manipulate, promoting both \textbf{explainability} and \textbf {control}. Indeed, organizational reconfiguration relies on internal representations that are accessible to analysis or formal verification. In addition, these \acplu{SMA} can also implement \textbf{self-organization} mechanisms, in particular by using symbolic reasoning. Although this form of self-organization can introduce a certain complexity into behaviors, it nevertheless remains interpretable, as it is based on explicitly modeled rules or structures.
+
+Conversely, \acplu{SMA} produced by \textbf{connectionist} approaches, particularly via \acn{MARL}, are based on \textbf{implicit policies} encoded in neural networks. These policies, learned automatically from environmental interactions, do not directly account for the organization of the system. In particular, the granularity of classical connectionist approaches is often reduced to observation-action transitions, which makes organizational analysis difficult and increases interpretative complexity. However, this does not prevent the emergence of self-organized dynamics: agents can collectively adopt distributed structures or functions without these having been specified or modeled \textit{a priori}. These forms of organization are, however, \textbf{unconscious}, i.e., they cannot be manipulated or accessed by the agents' reasoning. Consequently, explicit reorganization is, as things stand, out of reach in these connectionist SMAs, unless organizational specifications are directly integrated into the learning process, which is not the case with traditional MARL approaches.
+
+\subsection* {Towards an integrated approach}
+
+This observation leads us to consider a hybrid approach: explicit organizational structuring to ensure control, verification, and explainability, coupled with machine learning mechanisms to ensure adaptability, optimization, and scalability. It is this ambition that we will pursue in the following chapters.
+
+\section{Summary}
+This chapter has highlighted the fundamental tension between symbolic and connectionist approaches in the design of Cyberdefense \acn{SMA}, each of which has advantages and limitations in terms of autonomy, performance, adaptability, control, and explainability. This observation justifies the need for an integrated approach capable of reconciling organizational control and operational adaptability. The transition to a formalization of the design problem in the form of a constrained optimization problem thus paves the way for a hybrid method, combining explicit organizational specifications and machine learning. The following chapter will detail this reformulation, identify the associated sub-problems, and specify the research hypotheses that will guide the rest of the manuscript.
+
+\clearpage
+\thispagestyle{empty}
+\null
+\newpage
+
+\chapter{An optimization problem for structuring a method}
+\label{chap:hypotheses}
+
+The design of a cyberdefense \acn{SMA} capable of operating in a dynamic, distributed, and potentially hostile environment requires simultaneously satisfying a variety of requirements: autonomy, coordination, safety, adaptability, explainability, measurability, resilience, and sustainability.
+
+Given the limitations identified in existing approaches (symbolic or learning), we propose to formalize this design as a \textbf{constrained optimization problem}, where the overall objective is maximized while respecting structural, environmental, and organizational constraints.
+This formalization has several major advantages. On the one hand, it allows us to benefit from the power of connectionist methods, in particular machine learning (ML) and MARL (Machine Learning with Constraints) , to effectively explore vast solution spaces and optimize agent policies in complex and dynamic environments. On the other hand, the explicit introduction of structural, environmental, and organizational constraints offers the possibility of integrating the contributions of symbolic approaches, ensuring compliance with safety, explainability, and control requirements. Thus, the constrained optimization framework acts as a bridge between these two paradigms: it allows for the adaptability and performance of learning approaches, while ensuring the control and robustness of symbolic approaches. This hybridization paves the way for the design of Cyberdefense \acplu{SMA} that are effective, adaptive, and interpretable, capable of responding to identified operational and scientific challenges.
+
+This chapter introduces this reformulation and deduces a breakdown into \textbf{fundamental sub-problems} that structure the rest of the manuscript.
+
+\section{Formulation of the global problem}
+
+\subsection{Design challenges}
+
+The design of a cyber defense \acn{SMA} cannot be considered as an exclusively human process (symbolic engineering) or a fully automatic process (autonomous learning). In a context marked by uncertainty, complexity, and the rapid evolution of cyber threats, a hybrid approach is required.
+%
+Criteria C1 to C5 identified above highlight the scope of the requirements to be met: \textbf{autonomy} (C1), \textbf{performance} (C2), \textbf{adaptation} (C3), \textbf{control} (C4), and \textbf{explainability} (C5).
+%
+We therefore make the general assumption of a unifying approach, in which the design of an \acn{SMA} is envisaged as a process guided or constrained by organizational specifications reflecting design requirements, at the intersection of optimization, organization, and automatic resolution methods such as \acn{MARL} . This vision is illustrated in \autoref{fig:constrained_optimization_overview}.
+
+\begin{figure}[h!]
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \input{figures/formel_probleme_illustration}
+  }
+  \caption{Specification of the question from the perspective of a constrained optimization problem}
+  \label{fig:constrained_optimization_overview}
+\end{figure}
+
+\subsection{Constrained optimization problem}
+
+In this perspective, drawing inspiration from the formalism developed by \acn{MARL}, we make the general assumption that the design of an \acn{SMA} amounts to searching for a set of policies $\pi^* = \{\pi^*_1, \dots, \pi^*_n\} \in \Pi$ (also called \textbf{joint policy}\index{Joint policy}) which, in a given target environment $\mathcal{E}$, maximizes a global objective that can be transcribed by quantitative returns $r^{\mathcal{E}, \mathcal{G}}_t$ taking into account a set of constraints $\mathcal {C}$ defined a priori:
+%
+\[
+  \hspace{3cm}\pi^* = \arg\max_{\pi} \mathbb{E}_{\mathcal{E}} \left[ \sum_{t=0}^{T} r^{\mathcal{E}, \mathcal{G}}_t \right] \quad \text{under} \quad \pi \in \mathcal{C}
+\]
+
+\noindent
+This formulation places the design of \acplu{SMA} within a constrained combinatorial optimization framework, where the goal is not only to obtain effective policies, but also policies that are compliant and understandable.
+%
+The constraints $\mathcal{C}$ include, in particular:
+\begin{itemize}
+  \item \textbf{Organizational constraints}~: compliance with roles, hierarchies, missions, and coordination methods defined in an organizational specification~;
+  \item \textbf{Safety or compliance constraints}~: rules that must never be violated in order to avoid dangerous or illegal behavior (e.g., never deactivate a critical sensor, never interrupt vital communication)~;
+  \item \textbf{Explainability or traceability constraints}~: requirement that behaviors be decomposable, interpretable, or analyzable after the fact.
+\end{itemize}
+
+In many contexts, training agents directly in the real environment can be costly, risky, or even impossible. This is particularly the case for critical \acplu{SMA}, such as robotics, cybersecurity, or embedded systems. To circumvent these limitations, it is common to use a simulated environment for training agents. Given the difficulty, or even the risk, of interacting experimentally with the real target environment $\mathcal {E}$, it seems essential to model it in the form of a simulation. This provides a safe space for experimentation, in which agents can test and learn different strategies without affecting the real system. At the heart of this simulation, two elements are essential: the ability to assign a reward via a dedicated function, and the ability to generate the next observation from the current state and the action performed, using transition and observation functions.
+
+
+This simulation can be obtained in several ways:
+\begin{itemize}
+  \item \emph{by explicit reproduction}, based on specifications, rules, and known topologies (e.g., static network models);
+  \item \emph{by learning from data}, using \acn{ML} techniques;
+  \item \emph{by connecting to an emulated environment}, via an emulation platform.
+\end{itemize}
+
+\noindent The overall objective $\mathcal{G}$ corresponds to the achievement of a set of objectives (e.g., network defense, neutralizing a threat, resilience to an attack, etc.). We formalize that the rewards $r^{\mathcal{E}, \mathcal{G}}_t$ corresponding to this objective $g \in \mathcal{G}$ over time are obtained by a global reward function taking a state $s_t \in S$ (or joint observation $\omega^j_t \in \ Omega^j$), the joint action $a^j_t \in A^j$ leading to the next state $s_{t+1} \in S$ (or the next joint observation $\omega^j_{t+1} \in \Omega^j$)~:
+%
+\[
+  \hspace{3.5cm}r^{\mathcal{E}, \mathcal{G}}_t = R_{g}(s_t, \omega^j_t, a_t, s_{t+1}, \omega^j_{t+1})
+\]
+
+\noindent
+This dual requirement (maximizing performance while respecting heterogeneous constraints) justifies the use of hybrid techniques combining learning, explicit organization, and post-learning analysis techniques. It forms the basis for our comprehensive design method in the following chapters.
+
+
+\subsection{Organizational specification vs. emergence}
+
+The literature distinguishes between two main approaches:
+\begin{itemize}
+  \item \textbf{Specified organization} (top-down), in which roles, missions, and coordination rules are explicitly defined, often within an \acn{AOSE}~ framework;
+  \item \textbf{Emergent organization} (bottom-up), resulting from policies learned by agents, without prior specifications.
+\end{itemize}
+
+We propose an intermediate approach: guiding emergence through organizational constraints expressed as constraints in the automatic resolution process, combining flexibility and controllability.
+
+\section{Decomposition into sub-problems}
+
+The hypothesis of designing an \acn{SMA} through a constrained optimization problem leads to four fundamental sub-problems:
+
+\medskip
+\noindent
+\textbf{\textbf{MOD} -- Realistic modeling of the environment}
+The aim is to obtain a credible simulation of interactions, threats, and network behaviors.
+
+\medskip
+\noindent
+\textbf{\textbf{TRN} -- Constrained resolution}
+The core of the problem lies in obtaining agent policies that comply with organizational and security constraints.
+
+\medskip
+\noindent
+\textbf{\textbf{ANL} -- Analysis and explainability of behaviors}
+The goal is to make the behavior of agents explicit after learning, by extracting organizational specifications such as roles or objectives.
+
+\medskip
+\noindent
+\textbf{\textbf{TRF} -- Deployment and transfer to the real world}
+This sub-problem aims to maintain consistency between the digital twin and the real environment, in particular by managing the transfer of policies learned in simulation to the real environment while maintaining the fidelity of the simulated environment to the real environment.
+
+\section{Research hypotheses}
+
+Each of the identified sub-problems covers a vast field of specific research, requiring an in-depth analysis of the literature in order to identify the obstacles to be overcome and the contributions to be made so that each activity can achieve its objectives and thus answer the research question. However, given the breadth of the state of the art associated with each of these sub-problems, it seems appropriate to define these areas of research at this stage through several hypotheses. Although these are not the result of an exhaustive review of the literature, they are based on our current knowledge of the field and will guide the rest of our approach:
+
+\begin{itemize}
+  \item \textbf{\textbf{H-MOD}~:} It is possible to obtain a realistic simulated environment, either by facilitating manual modeling or by using machine learning techniques based on data.
+  \item \textbf{\textbf{H-TRN}~:} It is possible to obtain a joint policy via \acn{MARL} and to integrate design requirements as organizational specifications into the learning process to improve the compliance and safety of the learned policies.
+  \item \textbf{\textbf{H-ANL}~:} Organizational roles and objectives can be automatically inferred from the behavioral trajectories of agents trained using machine learning techniques.
+  \item \textbf{\textbf{H-TRF}~:} Coupling between real and simulated environments enables safe, adaptive, and maintainable deployment of learned policies.
+\end{itemize}
+
+\noindent The \textbf{H-MOD} hypothesis is based on the observation that, in \acn{AOSE} design approaches and beyond, it is generally essential to have a simulated model of the environment in order to perform analyses and evaluations prior to any real-world deployment, particularly in critical contexts. However, manual modeling of the environment is a complex, time-consuming, and error-prone task. A first approach is to structure this work using a dedicated design framework that organizes and optimizes modeling while limiting manual interventions and the risk of error. Furthermore, recent advances in machine learning, particularly in reinforcement learning~\cite{ha2018recurrent}, are paving the way for increased automation of this modeling: it is becoming possible to learn the dynamics of the environment from historical data, and thus to reproduce the dynamic perception of agents without resorting to an explicit internal model of the hidden state, as is traditionally the case in entirely manual modeling.
+
+\medskip
+
+\noindent The \textbf{H-TRN} hypothesis is based on a literature review showing that, among the various approaches to \acplu{SMA} in cyber defense (such as \acn{DCOP} or genetic algorithms), \acn{MARL} has established itself as the reference method, particularly in complex and dynamic environments, thanks to its ability to produce effective joint policies where traditional approaches, which are often accurate but costly, struggle to adapt to operational reality~\cite{Zhang2021} . This trend is reinforced by the emergence of new techniques that facilitate automated learning of interactions between agents~\cite{foerster2018communication}. However, the literature also highlights the limitations of \acn{MARL} with regard to controlling the learning process and mastering the policies obtained, which are crucial issues in cyber defense where safety and compliance are essential. Several studies thus point to the lack of guarantees regarding the compliance of emerging behaviors and the difficulty of imposing explicit organizational constraints during multi-agent learning. It therefore seems appropriate to consider a hybrid approach, combining the adaptive power of \acn{MARL} and the rigor of an explicit organizational model, in order to directly integrate organizational specifications into the learning process to guide the emergence of behaviors, ensure their compliance with design requirements, and preserve the flexibility inherent in machine learning. This approach, which has yet to be fully explored, responds to an identified need to reconcile performance, control, and safety in the design of \acplu{SMA} for cyberdefense.
+
+\medskip
+
+\noindent The \textbf{H-ANL} hypothesis is in line with work in agent-oriented organizational engineering (\acn{AOSE}), where the validation of behavior compliance with organizational specifications is recognized as a central issue for system safety and reliability~\cite{Boella2006, Picard2009reorganisation}. However, the literature highlights the difficulty of automating this validation due to the complexity of collective dynamics and the diversity of possible organizational structures. We therefore postulate that machine learning methods, in particular unsupervised learning, are promising levers for automatically extracting organizational specifications from the behavioral histories of trained agents. This hypothesis is based on recent advances in time series and trajectory analysis, which have demonstrated their ability to reveal recurring patterns and hidden structures in complex sequential data~\cite{Zhang2021, Gunning2019}. By using techniques such as clustering, unsupervised classification, or sequence analysis, it becomes possible to identify, without human supervision, roles, emerging objectives, or characteristic interaction patterns within the \acn{SMA}. Such an approach would both automate organizational compliance analysis, reducing dependence on human expertise, and enhance the explainability of \acplu{SMA}, offering a clear and objective interpretation of observed collective behaviors. This lever is all the more crucial in critical areas such as cyber defense, where trust in automated systems relies on the ability to understand, justify, and audit the decisions made by agents~\cite{Gunning2019}.
+
+\medskip
+
+\noindent The \textbf{H-TRF} hypothesis is based on the need for close coupling between the simulated environment and the real environment, but goes further by postulating that a system inspired by digital twins, capable of dynamically synchronizing and enriching the simulated model based on information collected from the real environment, would enable the training and analysis process to be iterated efficiently to produce robust and appropriate joint policies. Concretely, we hypothesize that a dedicated framework can orchestrate the continuous retrieval of real data, iteratively improve the fidelity of the simulated model, and trigger a multi-agent learning cycle whose results (joint policies) are then deployed in the real environment. This deployment can be done either by installing the policy in each agent (if the embedded resources allow it) or by executing the joint policy on an external node that transmits the actions to be applied to the agents, thus avoiding the need to embed costly policies and facilitating remote management. This approach aims to ensure continuous adaptation, increased robustness, and operational consistency between simulation and reality, thus addressing the challenges identified in the literature while paving the way for a truly dynamic and sustainable multi-agent cyber defense.
+
+
+
+\section{Towards an organizational design method}
+
+Structuring the problem of designing a Cyberdefense \acn{SMA} around four fundamental activities (\textbf{modeling}, \textbf{learning}, \textbf{analysis}, and \textbf{transfer}) paves the way for an integrated approach, articulating these activities in a cyclical and complementary manner to simultaneously meet the five major criteria identified above: autonomy (C1), performance (C2), adaptation (C3), control (C4), and explainability (C5). Each of these activities targets specific issues: modeling aims to ensure a credible and adaptable experimental environment (C1, C3), learning optimizes performance while integrating organizational constraints (C2, C4), analysis promotes explainability and verification of behaviors (C5, C4), while transfer ensures consistency and continuous adaptation between simulation and reality (C1, C3).
+%
+This integrated vision thus suggests the possibility of a general method capable of covering all design criteria and answering the research question, without however detailing it at this stage. The process of developing this method can be seen as a structured process describing how, for each criterion, activities are associated with their objectives, which are themselves linked to the sub-problems to be solved using the hypotheses that delimit the research space, from which barriers are identified in the literature, and finally enabling contributions to be established to overcome these barriers.
+
+\begin{table}[h!]
+  \centering
+  \caption{Summary of the relationships between criteria, activities, sub-problems, and hypotheses, as well as future obstacles and contributions}
+  \label{tab:process-method}
+  \renewcommand{\arraystretch}{1.2}
+  \scriptsize
+  \begin{tabularx}{\textwidth}{
+      >{\raggedright\arraybackslash\hsize=0.20\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.20\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.25\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.26\hsize}X
+      >{\raggedright\arraybackslash\hsize=0.09\hsize}X
+    }
+    \toprule
+    \textbf{Criteria}                                                                                                        & \textbf{Activities (and objectives)} & \textbf{Sub-problems} & \textbf{Assumptions} & \textbf{Barriers and contributions} \\
+    \midrule
+    C1 Autonomy,                                                                                                                                                                                                                                         \\
+    C3 Adaptation
+                                                                                                                             &
+    Modeling                                                                                                                                                                                                                                             \\
+    (Obtaining a credible and adaptable environment)
+                                                                                                                             &
+    \textbf{MOD}: Realistic modeling of the environment
+                                                                                                                             &
+    \vspace{-1.05cm}\textbf{H-MOD}: Possibility of obtaining a realistic simulated environment (manually or through learning)
+                                                                                                                             &
+    \vspace{-1.05cm}Difficulty of manual modeling, lack of automation, limited fidelity of simulations                       & \dots
+    \\
+    \addlinespace[2pt]
+    \hdashline
+    \addlinespace[2pt]
+    C2 Performance,                                                                                                                                                                                                                                      \\
+    C4 Control
+                                                                                                                             &
+    Learning                                                                                                                                                                                                                                             \\
+    (Optimizing performance under organizational constraints)
+                                                                                                                             &
+    \textbf{TRN}: Resolution under constraints
+                                                                                                                             &
+    \vspace{-1.05cm}\textbf{H-TRN}: Integration of organizational requirements into multi-agent learning
+                                                                                                                             &
+    \vspace{-1.05cm}Difficulty in imposing explicit constraints in \acn{MARL}, lack of compliance guarantees                 & \dots
+    \\
+    \addlinespace[2pt]
+    \hdashline
+    \addlinespace[2pt]
+    C5 Explainability,                                                                                                                                                                                                                                   \\
+    C4 Control
+                                                                                                                             &
+    Analysis                                                                                                                                                                                                                                             \\
+    (Explaining and verifying organizational behaviors)
+                                                                                                                             &
+    \textbf{ANL}: Analysis and explainability of behaviors
+                                                                                                                             &
+    \vspace{-1.05cm}\textbf{H-ANL}: Automatic extraction of organizational structures from agent trajectories
+                                                                                                                             &
+    \vspace{-1.15cm}Difficulty in automating analysis, lack of tools to link behaviors and organization                      & \dots
+    \\
+    \addlinespace[2pt]
+    \addlinespace[2pt]
+    \hdashline
+    \addlinespace[2pt] C1 Autonomy,                                                                                                                                                                                                                      \\
+    C3 Adaptation
+                                                                                                                             &
+    Transfer                                                                                                                                                                                                                                             \\
+    (Ensuring consistency and adaptation between simulation and reality)
+                                                                                                                             &
+    \textbf{TRF}: Deployment and transfer to the real world
+                                                                                                                             &
+    \vspace{-1.05cm}\textbf{H-TRF}: Coupling inspired by digital twins between simulation and real environment
+                                                                                                                             &
+    \vspace{-1.15cm}Difficulty in transferring policies, gap between simulation and reality, lack of dynamic synchronization & \dots
+    \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\noindent
+This logical chain structures the progression of the thesis: each activity aims to satisfy one or more criteria, is broken down into sub-problems, the resolution of which is guided by research hypotheses, confronted with the obstacles identified in the literature, and results in contributions that cover these same criteria.
+
+\section{Summary}
+\noindent
+This chapter proposes a formalization of the design of a Cyberdefense \acn{SMA} as a constrained optimization problem, allowing the articulation of performance, adaptation, control, and explainability requirements. It clarifies the design criteria, breaks down the problem into four fundamental sub-problems (\textbf{MOD}, \textbf{TRN}, \textbf{ANL}, \textbf{TRF}), and formulates research hypotheses that structure the scientific approach.
+%
+This chapter lays the methodological foundations for approaching the design of cyberdefense \acn{SMA} in a rigorous and reproducible manner, while preparing the transition to the analysis of barriers and contributions in the following sections.
+
+\clearpage
+\thispagestyle{empty}
+\null
+\newpage
+
+\chapter*{Conclusion}
+\addcontentsline{toc}{chapter}{\textbf{Conclusion}}
+
+The \autoref{part:context} laid the conceptual and scientific foundations for our work, which focuses on the design of an \acn{SMA} for Cyber Defense. Faced with increasingly rapid, distributed, and adaptive threats, architectures such as \acn{AICA}, proposed by \acn{NATO}, offer a promising response. They define an agent capable of perceiving, deciding, acting, and cooperating, which can be adapted to a distributed organization of cyberdefense agents.
+
+We have formulated the central question of the thesis: how to automatically design a self-organizing Cyber Defense \acn{SMA} capable of adapting to a dynamic environment while meeting a set of critical requirements. This reflection has led to the identification of five design criteria (C1 to C5), which serve as a guideline for evaluating existing approaches and structuring our method.
+
+The state of the art highlights a contrast between connectionist approaches (where organization emerges from learning) and symbolic approaches (based on explicit organizational mechanisms). None of the solutions studied fully satisfies all of the criteria. Connectionist approaches offer adaptation and performance, but at the cost of less control and reduced explainability; conversely, symbolic approaches favor control and transparency, but face limitations in terms of automation and adaptability.
+
+This fundamental tension leads us to reconsider the design of the \acn{SMA} not as a simple engineering problem, but as a constrained optimization problem. The goal is then to develop an appropriate organization based on formalized organizational constraints. This reformulation allows us to break down the complexity of the problem into four main activities:
+\begin{itemize}
+  \item \textbf{Modeling}~: obtaining a credible and adaptable simulated environment for experimentation and agent training;
+  \item \textbf{Learning}~: optimizing joint agent policies under organizational and safety constraints;
+  \item \textbf{Analysis}~: explaining, verifying, and interpreting collective behaviors and their adequacy to organizational specifications;
+  \item \textbf{Transfer}: ensuring consistency and continuous adaptation between simulation and real environment during deployment.
+\end{itemize}
+This breakdown leads to the identification of four fundamental sub-problems, corresponding to the objectives of each activity: (\textbf{MOD}) realistic modeling of the environment (\textbf{TRN}) constraint-based resolution (\textbf{ANL}) analysis and explainability of behaviors, and (\textbf{TRF}) deployment and transfer to the real world. For each of these sub-problems, we have formulated research hypotheses (\textbf{H-MOD}, \textbf{H-TRN}, \textbf{H-ANL}, \textbf{H-TRF}) that delimit the scope of investigation and guide the rest of the manuscript.
+
+In order for each activity to achieve its objectives, it is necessary to resolve the sub-problems defined within the framework of these hypotheses. This involves identifying, based on a review of the literature, the barriers that hinder the resolution of these sub-problems, and then proposing contributions that will remove them. This work of reviewing the literature and identifying barriers will be presented in \autoref{part:etat_art}.

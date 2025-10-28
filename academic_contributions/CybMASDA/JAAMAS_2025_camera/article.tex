@@ -295,9 +295,9 @@ Extending the MOISE+MARL framework, we adopt an optimization-based perspective t
 %
 \begin{enumerate*}[label={\roman*)}, itemjoin={; \quad}]
     \item \textbf{(G1) End-to-end automation.} ML techniques (particularly World Models and MARL) have the potential to automate the key activities of MAS design. However, no existing framework integrates these techniques into a unified, iterative design pipeline. Moreover, World Models remain underdeveloped in multi-agent settings, especially for realistic deployment scenarios.
-          
+    
     \item \textbf{(G2) Compliance with design requirements.} Most MARL approaches focus on performance optimization without enforcing structured constraints such as safety rules, roles, or missions. While some recent works have begun to address this limitation, MOISE+MARL~\cite{soule2025moisemarl} has demonstrated that incorporating organizational specifications during training is feasible. However, this framework has not yet been integrated into a fully or partly automated MAS design process.
-          
+    
     \item \textbf{(G3) Organizational-level explainability.} Policies learned via MARL are often opaque, making it difficult to understand how agent behaviors contribute to system-level goals. In contrast, AOSE methods benefit from explicit symbolic structures that facilitate interpretability. Among the few works addressing collective explainability in MARL, MOISE+MARL~\cite{soule2025moisemarl} introduced a trajectory-based analysis method to extract implicit organizational structures. Yet, this approach remains disconnected from a design-oriented pipeline and lacks mechanisms for reintegrating insights into the iterative design process.
 \end{enumerate*}
 
@@ -391,9 +391,9 @@ Let $m$ be the number of teams, each comprising agents in $\mathcal{A}$. For a t
 
 The $\mathcal{M}OISE^+$ model~\cite{Hubner2002, Hubner2007} provides a formal framework for specifying multi-agent organizations. We focus on the core components relevant to our work: \textit{roles}, \textit{missions} (goals), and \textit{permissions/obligations}.
 %
-The $\mathcal{M}OISE^+$ model defines \textbf{structural}, \textbf{functional}, and \textbf{deontic} specifications. \textbf{Structural specifications} include a set of roles $\mathcal{R}$ (with $\rho \in \mathcal{R}$), along with inheritance relations, group structures, inter-role links (e.g., communication, authority), compatibility constraints (specifying roles that may be held concurrently), and cardinality bounds for roles and groups. \textbf{Functional specifications} define global goals $\mathcal{G}$ (with $g \in \mathcal{G}$), missions $\mathcal{M}$ (with $m \in \mathcal{M}$), and a goal-to-mission mapping $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$; goals are hierarchically decomposed through plans, and missions may specify agent cardinality (fixed to 1 in our setting) and optional preference orders. \textbf{Deontic specifications} express normative rules through permissions $\mathcal{PER} = (\rho_a, m, tc)$ and obligations $\mathcal{OBL} = (\rho_a, m, tc)$, indicating that an agent playing role $\rho_a$ is permitted or required to commit to mission $m$ during time constraint $tc \in \mathcal{TC}$ (e.g., $Any$ for always).
+The $\mathcal{M}OISE^+$ model defines \textbf{structural}, \textbf{functional}, and \textbf{deontic} specifications. \textbf{Structural specifications} include a set of roles, denoted as $\mathcal{R}$ (with $\rho \in \mathcal{R}$), along with inheritance relations, group structures, inter-role links (e.g., communication, authority), compatibility constraints (specifying roles that may be held concurrently), and cardinality bounds for roles and groups. \textbf{Functional specifications} define goals, denoted as $\mathcal{G}$ (with $g \in \mathcal{G}$), missions denoted as $\mathcal{M}$ (with $m \in \mathcal{M}$), and a goal-to-mission mapping $mo: \mathcal{M} \rightarrow \mathbb{P}(\mathcal{G})$ (for example, for given $m_a \in \mathcal{M}, mo(m_a) = {g_i \in \mathcal{G}_a}, with \mathcal{G}_a \subseteq \mathcal{G}$); goals are hierarchically decomposed through plans, and missions may specify agent cardinality (fixed to 1 in our setting) and optional preference orders. \textbf{Deontic specifications} express normative rules through permissions, denoted as $\mathcal{PER}$ (with $per \in \mathcal{PER}, per = (\rho_a, m, tc)$) and obligations, denoted as $\mathcal{OBL}$ (with $obl \in \mathcal{OBL}, obl = (\rho_a, m, tc)$), indicating that an agent playing role $\rho_a$ is permitted or obligated to commit to mission $m$ during time constraint $tc \in \mathcal{TC}$ (e.g., $Any$ for always).
 
-\noindent In our setting, only roles, missions, goal mappings, and permissions/obligations are needed to guide policy learning within Dec-POMDPs. Other structural and functional aspects (e.g., links, plans, or cardinalities) are either implicit or effectively captured through these core elements. We therefore define the organizational specification used in MOISE+MARL as $\mathcal{OS} = \langle \mathcal{R}, \mathcal{M}, \mathcal{PER}, \mathcal{OBL}, mo \rangle$.
+\noindent In our setting, only roles, missions, goal mappings, and permissions/obligations are needed to guide policy learning within Dec-POMDPs. Other structural and functional aspects (e.g., links, plans, or cardinalities) are either implicit or effectively captured through these core elements, also enabling to take them into account explicitly in future works. We therefore define the organizational specification used in MOISE+MARL as $\mathcal{OS} = \langle \mathcal{R}, \mathcal{M}, \mathcal{PER}, \mathcal{OBL}, mo \rangle$ where $\mathcal{R}$ is the set of all roles, $\mathcal{M}$ is the set of all missions, $\mathcal{PER}$ is the set of all permissions, $\mathcal{OBL}$ is the set of all obligations, and $mo$ is the goal-to-mission mapping.
 
 
 \subsection{MOISE+MARL for linking $\mathcal{M}OISE^+$ with MARL}
@@ -535,7 +535,7 @@ The MAMAD~\footnotemark[1] method is built around four main activities: (1) mode
 \begin{figure}[h!]
     \centering
     \input{figures/cycle.tex}
-    \caption{Lifecycle of a MAS designed with MAMAD: i) Users start by modeling the environment from a sufficient amount of real trajectories (obtained by initially transfered agents) or any available one, global goal and design requirements as roles and goals; \quad ii) Then, they launch the training of agents with MARL techniques; \quad iii) A post-training analysis is performed to get insights into the emergent agents' roles and goals, guiding the improvement of the applied organizational specifications ; \quad v) Once validated, trained policies are launched to operate the environment's actuators, generating new traces for a better environment modeling}
+    \caption{Lifecycle of a MAS designed with MAMAD: i) Users start by modeling the environment from a sufficient amount of real trajectories (obtained by initially transfered agents) or any available one, global goal and design requirements as roles and goals; \quad ii) Then, they launch the training of agents with MARL techniques; \quad iii) A post-training analysis is performed to get insights into the emergent agents' roles and goals, guiding the improvement of the applied organizational specifications ; \quad iv) Once validated, trained policies are launched to operate the environment's actuators, generating new traces for a better environment modeling}
     \label{fig:cycle}
 \end{figure}
 %
@@ -1327,12 +1327,42 @@ This section presents the results obtained by applying MAMAD across the four tes
 
         
         
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
                       & $R_{cum}$       & $\sigma_R$   & $CR$       & $R_{robust}$
 
         
         
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
                       & $V_c$           & $F_{org}$    & $S_{cons}$
 
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         
                       & $T_{design}$    & $K_{design}$ & $N_{iter}$                                                            \\
@@ -1417,8 +1447,8 @@ While MAMAD offers a structured and automated pipeline for MAS design, it still 
     \item \textbf{Materials availability:} Not applicable.
     \item \textbf{Code availability:} The source code used in this study is publicly available at: \url{https://github.com/julien6/CybMASDE}
     \item \textbf{Author contributions:} Julien Soulé: conceptualization, methodology, implementation, writing—original draft.\\
-          Jean-Paul Jamont, Michel Occello: supervision, writing—review.\\
-          Louis-Marie Traonouez, Paul Théron: validation, writing—review.
+    Jean-Paul Jamont, Michel Occello: supervision, writing—review.\\
+    Louis-Marie Traonouez, Paul Théron: validation, writing—review.
 \end{enumerate*}
 
 \setlength{\bibsep}{4.5pt}

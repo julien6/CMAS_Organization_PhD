@@ -1,0 +1,436 @@
+% **************************************************************************************************************
+% A Classic Thesis Style
+% An Homage to The Elements of Typographic Style
+%
+% Copyright (C) 2015 André Miede http://www.miede.de
+%
+% If you like the style then I would appreciate a postcard. My address 
+% can be found in the file ClassicThesis.pdf. A collection of the 
+% postcards I received so far is available online at 
+% http://postcards.miede.de
+%
+% License:
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program; see the file COPYING.  If not, write to
+% the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+% Boston, MA 02111-1307, USA.
+%
+% **************************************************************************************************************
+\RequirePackage{fix-cm} % fix some latex issues see: http://texdoc.net/texmf-dist/doc/latex/base/fixltx2e.pdf
+\documentclass[ oneside,openright,titlepage,numbers=noenddot,headinclude,%1headlines,% letterpaper a4paper
+                footinclude=true,cleardoublepage=empty,abstractoff, % <--- obsolete, remove (todo)
+                BCOR=5mm,paper=a4,fontsize=11pt,%11pt,a4paper,%
+                french,american%
+                ]{scrreprt}
+
+%********************************************************************
+% Note: Make all your adjustments in here
+%*******************************************************
+\input{classicthesis-config}
+% \KOMAoptions{DIV=15}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+%********************************************************************
+% \usepackage{enumitem}
+\usepackage[left=1.25in,right=1.in,top=1in,bottom=1in]{geometry}
+\usepackage[inline, shortlabels]{enumitem}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{csquotes}
+% \usepackage{showframe}
+\usepackage{stmaryrd}
+\usepackage[inkscapeformat=png]{svg}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\usepackage{amsmath}
+\newcommand{\probP}{\text{I\kern-0.15em P}}
+% \include{figures/ADTreePreamble}
+\usepackage{etoolbox}
+
+% --- PATCH POUR AUTORREF DANS LES ANNEXES ---
+\makeatletter
+% Création d'un toggle pour savoir si on est dans les annexes
+\newtoggle{inappendix}
+\togglefalse{inappendix}
+
+% Quand on appelle \appendix -> on active le toggle
+\pretocmd{\appendix}{\toggletrue{inappendix}}{}{\errmessage{Patch appendices failed}}
+
+% On modifie \hyper@makecurrent pour forcer le bon nom
+\patchcmd{\hyper@makecurrent}{%
+    \ifx\Hy@param\Hy@chapterstring
+        \let\Hy@param\Hy@chapapp
+    \fi
+}{%
+    \iftoggle{inappendix}{%
+        % Pour les sections, sous-sections, sous-sous-sections
+        \@checkappendixparam{section}%
+        \@checkappendixparam{subsection}%
+        \@checkappendixparam{subsubsection}%
+    }{}%
+    \ifx\Hy@param\Hy@chapterstring
+        \let\Hy@param\Hy@chapapp
+    \fi
+}{}{\errmessage{Patch hyper@makecurrent failed}}
+
+\newcommand*{\@checkappendixparam}[1]{%
+    \def\@checkappendixparamtmp{#1}%
+    \ifx\Hy@param\@checkappendixparamtmp
+        \let\Hy@param\Hy@appendixstring
+    \fi
+}
+\makeatother
+
+% --- Tickz
+\usepackage{physics}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usepackage{mathdots}
+\usepackage{yhmath}
+\usepackage{cancel}
+\usepackage{color}
+\usepackage{siunitx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{tabularx}
+\usepackage{extarrows}
+\usepackage{booktabs}
+\usetikzlibrary{fadings}
+\usetikzlibrary{patterns}
+\usetikzlibrary{shadows.blur}
+\usetikzlibrary{shapes}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+\usetikzlibrary{positioning, shapes.geometric, arrows.meta, fit}
+
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=gray!10]
+\tikzstyle{process} = [rectangle, minimum width=3.5cm, minimum height=1.2cm, text centered, draw=black, fill=blue!10]
+\tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=yellow!20, aspect=2]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\usetikzlibrary{decorations.pathreplacing, positioning}
+
+
+\usepackage{amsmath,amssymb,amsfonts}%
+\usepackage{amsthm}%
+\usepackage{mathrsfs}%
+% \usepackage[title]{appendix}%
+% \usepackage{xcolor}%
+% \usepackage{textcomp}%
+% \usepackage{manyfoot}%
+% \usepackage{booktabs}%
+% \usepackage{algorithm}%
+% \usepackage{algorithmicx}%
+% \usepackage{algpseudocode}%
+
+\usepackage{listings}
+\usepackage{hyperref}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+\usepackage{xurl}
+% \usepackage[hidelinks]{hyperref}
+
+\renewcommand\thepart{\Roman{part}}
+
+\newcommand{\fullpartref}[2]{%
+  \hyperref[#1]{\partautorefname~\ref{#1}~:~#2}%
+}
+
+\addto\extrasfrench{%
+\renewcommand{\figureautorefname}{Figure}
+% \renewcommand{\lstlistingautorefname}{Listing}
+\renewcommand{\tableautorefname}{Table}
+\renewcommand{\algorithmautorefname}{Algorithme}
+\renewcommand{\partautorefname}{Partie}
+\renewcommand{\appendixautorefname}{Annexe}
+\renewcommand{\chapterautorefname}{Chapitre}
+\renewcommand{\sectionautorefname}{Section}
+\renewcommand{\subsectionautorefname}{Sous-section}
+\renewcommand{\subsubsectionautorefname}{Sous-sous-section}%
+}
+
+% \newcommand{\acparen}[1]{\textit{\acl{#1}} -- \acs{#1}}
+
+
+
+%%%% For camera-ready, use this
+%\documentclass[sigconf]{aamas}
+
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{stfloats}
+\usepackage{ragged2e}
+\usepackage{float}
+\usepackage[linesnumbered, ruled, vlined]{algorithm2e}
+
+\usepackage{tcolorbox}
+\tcbuselibrary{listings, skins, breakable}
+\usepackage{fontawesome}
+
+\usepackage{tabularray}\UseTblrLibrary{varwidth}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{pdfpages}
+
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+
+\usepackage{arydshln}
+\usepackage{makecell}
+\usepackage{accents}
+\usepackage{imakeidx}
+\makeindex
+
+\renewcommand\theadfont{\bfseries}
+\usepackage{tabularx,booktabs,array,ragged2e,arydshln}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\renewcommand\tabularxcolumn[1]{p{#1}}
+
+% ---------
+
+\setlength{\extrarowheight}{2.5pt}
+
+\renewcommand{\arraystretch}{0.2}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
+
+\definecolor{eclipseStrings}{RGB}{42,0.0,255}
+\definecolor{eclipseKeywords}{RGB}{127,0,85}
+\colorlet{numb}{magenta!60!black}
+
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily,
+    commentstyle=\color{eclipseStrings}, % style of comment
+    stringstyle=\color{eclipseKeywords}, % style of strings
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{white}, %only if you like
+    string=[s]{"}{"},
+    comment=[l]{:\ "},
+    morecomment=[l]{:"},
+    literate=
+        *{0}{{{\color{numb}0}}}{1}
+         {1}{{{\color{numb}1}}}{1}
+         {2}{{{\color{numb}2}}}{1}
+         {3}{{{\color{numb}3}}}{1}
+         {4}{{{\color{numb}4}}}{1}
+         {5}{{{\color{numb}5}}}{1}
+         {6}{{{\color{numb}6}}}{1}
+         {7}{{{\color{numb}7}}}{1}
+         {8}{{{\color{numb}8}}}{1}
+         {9}{{{\color{numb}9}}}{1}
+}
+
+% \renewcommand{\arraystretch}{1.7}
+
+\newcommand{\before}[1]{\textcolor{red}{#1}}
+\newcommand{\after}[1]{\textcolor{green}{#1}}
+
+\newcommand{\old}[1]{\textcolor{orange}{#1}}
+\newcommand{\rem}[1]{\textcolor{red}{#1}}
+\newcommand{\todo}[1]{\textcolor{orange}{\newline \textit{\textbf{TODO:} #1}} \newline \newline }
+
+\DeclareMathAlphabet\mathbfcal{OMS}{cmsy}{b}{n}
+
+\usepackage[export]{adjustbox}
+
+\makeatletter
+\newcommand{\acplu}{\protect\@acplu}
+\newcommand{\@acplu}[1]{%
+  \ifAC@dua
+    \aclp{#1}%
+  \else
+    %
+    \expandafter\ifx\csname ac@#1\endcsname\AC@used
+      \acs{#1}s%
+    \else
+      \aclp{#1} (\acs{#1}s)%
+      \global\expandafter\let\csname ac@#1\endcsname\AC@used%
+    \fi
+  \fi
+}
+\makeatother
+
+\makeatletter
+\newcommand{\acn}{\protect\@acn}
+\newcommand{\@acn}[1]{%
+  \ifAC@dua
+    \acl{#1}%
+  \else
+    %
+    \expandafter\ifx\csname ac@#1\endcsname\AC@used
+      \acs{#1}%
+    \else
+      \acl{#1} (\acs{#1})%
+      \global\expandafter\let\csname ac@#1\endcsname\AC@used%
+    \fi
+  \fi
+}
+\makeatother
+
+\makeatletter
+\newcommand{\acparen}{\protect\@acparen}
+\newcommand{\@acparen}[1]{%
+  \ifAC@dua
+    \acl{#1}%
+  \else
+    %
+    \expandafter\ifx\csname ac@#1\endcsname\AC@used
+      \acs{#1}%
+    \else
+      \acl{#1} -- \acs{#1}%
+      \global\expandafter\let\csname ac@#1\endcsname\AC@used%
+    \fi
+  \fi
+}
+\makeatother
+
+
+%********************************************************************
+
+%********************************************************************
+% Bibliographies
+%*******************************************************
+\addbibresource{references.bib}
+\addbibresource[label=ownpubs]{JSoule_publications.bib}
+%********************************************************************
+% Hyphenation
+%*******************************************************
+%\hyphenation{put special hyphenation here}
+
+% ********************************************************************
+% GO!GO!GO! MOVE IT!
+%*******************************************************
+\begin{document}
+\frenchspacing
+\raggedbottom
+\selectlanguage{french} % american ngerman
+%\renewcommand*{\bibname}{new name}
+%\setbibpreamble{}
+\pagenumbering{roman}
+\pagestyle{plain}
+%********************************************************************
+% Frontmatter
+%*******************************************************
+
+\includepdf[pages=-]{couverture.pdf}
+
+\thispagestyle{empty}
+\null
+\newpage
+
+\include{FrontBackmatter/Titlepage}
+
+% \thispagestyle{empty}
+% \null
+% \newpage
+
+\include{FrontBackmatter/Titleback}
+
+% \thispagestyle{empty}
+% \null
+% \newpage
+
+% \cleardoublepage\include{FrontBackmatter/Dedication}
+% \cleardoublepage\include{FrontBackmatter/Acknowledgments}
+%\cleardoublepage\include{FrontBackmatter/Foreword}
+\cleardoublepage
+\include{FrontBackmatter/Abstract}
+\pagestyle{scrheadings}
+\cleardoublepage \include{FrontBackmatter/Contents}
+
+\cleardoublepage
+\pagenumbering{arabic}
+
+%********************************************************************
+% Mainmatter
+%*******************************************************
+
+% \include{Parts/Introduction}
+% \include{Parts/Part1}
+% \include{Parts/Part2}
+% \include{Parts/Part3}
+\include{Parts/Part4}
+% \include{Parts/Conclusion}
+
+% =================================================================
+
+% ********************************************************************
+% Backmatter
+%*******************************************************
+\appendix
+
+
+\addto\extrasfrench{%
+  \renewcommand{\sectionautorefname}{Annexe}
+  \renewcommand{\subsectionautorefname}{Annexe}
+  \renewcommand{\subsubsectionautorefname}{Annexe}
+}
+
+% \newcommand*{\Appendixautorefname}{Annexe}
+
+
+
+% \renewcommand{\thechapter}{\alph{chapter}}
+\include{Parts/Appendix}
+
+%********************************************************************
+% Other Stuff in the Back
+%*******************************************************
+\cleardoublepage\include{FrontBackmatter/Bibliography}
+% \cleardoublepage\include{FrontBackmatter/Declaration}
+\cleardoublepage\include{FrontBackmatter/Publications}
+\cleardoublepage\include{FrontBackmatter/Index}
+% \cleardoublepage\include{FrontBackmatter/Colophon}
+
+
+\end{document}
+% ********************************************************************
