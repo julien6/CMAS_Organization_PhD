@@ -1,25 +1,25 @@
 \begin{frame}{Appendix}{Challenges in Defining Constraint Guides (RAG, RRG, GRG)}
 
-\textbf{Problem:} Defining constraint guides in MARL is challenging in practice.
+    \textbf{Problem:} Defining constraint guides in MARL is challenging in practice.
 
-\begin{itemize}
-  \item A full specification "by extension" is impractical:
     \begin{itemize}
-      \item Enumerating all possible observation or history cases is intractable.
-      \item Maintaining and updating such rules does not scale.
-    \end{itemize}
+        \item A full specification "by extension" is impractical:
+              \begin{itemize}
+                  \item Enumerating all possible observation or history cases is intractable.
+                  \item Maintaining and updating such rules does not scale.
+              \end{itemize}
 
-  \item \textbf{We propose two intensional strategies to define constraint guides:}
-  \begin{enumerate}
-    \item \textbf{Custom logic scripting:} Users define Python functions (per role/goal) that take in trajectory and observation to return:
-    \begin{itemize}
-      \item RAG: allowed actions with hardness weights
-      \item RRG: reward penalties/bonuses for specific actions
-      \item GRG: reward shaping based on trajectory features
+        \item \textbf{We propose two intensional strategies to define constraint guides:}
+              \begin{enumerate}
+                  \item \textbf{Custom logic scripting:} Users define Python functions (per role/goal) that take in trajectory and observation to return:
+                        \begin{itemize}
+                            \item RAG: allowed actions with hardness weights
+                            \item RRG: reward penalties/bonuses for specific actions
+                            \item GRG: reward shaping based on trajectory features
+                        \end{itemize}
+                  \item \textbf{Trajectory Patterns (TPs):} Compact, declarative patterns inspired by NLP to match a set of trajectories to represent a behavior.
+              \end{enumerate}
     \end{itemize}
-    \item \textbf{Trajectory Patterns (TPs):} Compact, declarative patterns inspired by NLP to match a set of trajectories to represent a behavior.
-  \end{enumerate}
-\end{itemize}
 
 \end{frame}
 
@@ -27,26 +27,26 @@
 
 \begin{frame}{Appendix}{Solution 1: Constraint Guides via Custom Scripting}
 
-\textbf{Principle:} Define a function per role/goal that analyzes trajectory and current observation.
+    \textbf{Principle:} Define a function per role/goal that analyzes trajectory and current observation.
 
-\vspace{0.5em}
-\textbf{Example (Overcooked-AI)}:
+    \vspace{0.5em}
+    \textbf{Example (Overcooked-AI)}:
 
-\begin{itemize}
-  \item \textbf{Role: Primary cook}
-  \item \textbf{Observation:} Agent is holding a dish, a pot is ready, no wall ahead
-  \item \textbf{Trajectory:} Previously picked onion, then chopped
-\end{itemize}
+    \begin{itemize}
+        \item \textbf{Role: Primary cook}
+        \item \textbf{Observation:} Agent is holding a dish, a pot is ready, no wall ahead
+        \item \textbf{Trajectory:} Previously picked onion, then chopped
+    \end{itemize}
 
-\textbf{Script outputs:}
+    \textbf{Script outputs:}
 
-\begin{itemize}
-  \item \textbf{RAG:} \{`interact' $\rightarrow$ 1.0, `nothing' $\rightarrow$ 0.2\}
-  \item \textbf{RRG:} +2 bonus if `interact' is used near ready pot
-  \item \textbf{GRG:} +1 if trajectory ends with delivery of soup
-\end{itemize}
+    \begin{itemize}
+        \item \textbf{RAG:} \{`interact' $\rightarrow$ 1.0, `nothing' $\rightarrow$ 0.2\}
+        \item \textbf{RRG:} +2 bonus if `interact' is used near ready pot
+        \item \textbf{GRG:} +1 if trajectory ends with delivery of soup
+    \end{itemize}
 
-\textbf{Advantage:} Custom logic can consider spatial layout, previous steps, object held, etc.
+    \textbf{Advantage:} Custom logic can consider spatial layout, previous steps, object held, etc.
 
 \end{frame}
 
@@ -54,62 +54,76 @@
 
 \begin{frame}{Appendix}{Solution 2: Constraint Guides via Trajectory Patterns (TPs)}
 
-\textbf{Principle:} Define reusable and human-readable trajectory patterns to match agent behavior.
+    \textbf{Principle:} Define reusable and human-readable trajectory patterns to match agent behavior.
 
-\vspace{0.5em}
-\textbf{Format:} TP = pattern transitions as \textbf{\textit{[obs, act | sub\_TP]($n_{min}$, $n_{max}$)}}
+    \vspace{0.5em}
+    \textbf{Format:} TP = pattern transitions as \textbf{\textit{[obs, act | sub\_TP]($n_{min}$, $n_{max}$)}}
 
-\textbf{Example (Overcooked-AI):}
+    \textbf{Example (Overcooked-AI):}
 
-\begin{itemize}
-  \item \textbf{Pattern:} \\ \textit{[`see\_onion`, `interact`, [\#any](*),`see\_chopped`, `interact`, [\#any](*), `see\_pot`, `interact`](1,1)}
-  \item \textbf{TP Match:} Agent has filled pot with chopped onion
-  \item \textbf{Current Observation:} \texttt{see\_ready\_pot}
-\end{itemize}
+    \begin{itemize}
+        \item \textbf{Pattern:} \\ \textit{[`see\_onion`, `interact`, [\#any](*),`see\_chopped`, `interact`, [\#any](*), `see\_pot`, `interact`](1,1)}
+        \item \textbf{TP Match:} Agent has filled pot with chopped onion
+        \item \textbf{Current Observation:} \texttt{see\_ready\_pot}
+    \end{itemize}
 
-\textbf{Then:}
-\begin{itemize}
-  \item \textbf{RAG:} Only allow `interact`
-  \item \textbf{RRG:} +3 bonus for `interact` now
-  \item \textbf{GRG:} Encourage reaching delivery window afterward
-\end{itemize}
+    \textbf{Then:}
+    \begin{itemize}
+        \item \textbf{RAG:} Only allow `interact`
+        \item \textbf{RRG:} +3 bonus for `interact` now
+        \item \textbf{GRG:} Encourage reaching delivery window afterward
+    \end{itemize}
 
-\textbf{Benefits:}
-\begin{itemize}
-  \item Easier to define symbolic patterns across different environments
-  \item Compact encoding of temporally extended behavior
-  \item TPs can be reused across agents and roles
-\end{itemize}
+    \textbf{Benefits:}
+    \begin{itemize}
+        \item Easier to define symbolic patterns across different environments
+        \item Compact encoding of temporally extended behavior
+        \item TPs can be reused across agents and roles
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}{Appendix}{Le framework MOISE+MARL}
+    \begin{figure}
+        \hspace{-0.76cm}
+        \includegraphics[width=1.05\linewidth]{figures/modified_state_value_function.png}
+    \end{figure}
+
+    \vfill
+
+    {\tiny \begin{spacing}{0.8}
+            \textit{Soulé, J., Jamont, J.-P., Occello, M., Traonouez, L.-M., \& Théron, P. An Organizationally-Oriented Approach to Enhancing Explainability and Control in Multi-Agent Reinforcement Learning. Proceedings of the 24th International Conference on Autonomous Agents and Multiagent Systems (AAMAS 2025), Detroit, Michigan, USA, 2025.}
+        \end{spacing}}
 
 \end{frame}
 
 \begin{frame}{Appendix}{Software and hardware configuration}
 
-  \begin{block}{MMA – MOISE+MARL API}
-    \begin{itemize}
-      \item Python API integrating:
-            \begin{itemize}
-              \item \textbf{PettingZoo} (multi-agent environments)
-              \item \textbf{MARLlib} (training library for MARL algorithms)
-            \end{itemize}
-      \item Features:
-            \begin{itemize}
-              \item Role and goal specifications (via JSON or Python)
-              \item Action masking and reward shaping during learning
-              \item Support for all major MARL paradigms: MADDPG, MAPPO, Q-Mix, COMA\dots
-            \end{itemize}
-    \end{itemize}
-  \end{block}
+    \begin{block}{MMA – MOISE+MARL API}
+        \begin{itemize}
+            \item Python API integrating:
+                  \begin{itemize}
+                      \item \textbf{PettingZoo} (multi-agent environments)
+                      \item \textbf{MARLlib} (training library for MARL algorithms)
+                  \end{itemize}
+            \item Features:
+                  \begin{itemize}
+                      \item Role and goal specifications (via JSON or Python)
+                      \item Action masking and reward shaping during learning
+                      \item Support for all major MARL paradigms: MADDPG, MAPPO, Q-Mix, COMA\dots
+                  \end{itemize}
+        \end{itemize}
+    \end{block}
 
-  \vspace{0.5em}
+    \vspace{0.5em}
 
-  \begin{block}{Computing Resources and Protocol}
-    \begin{itemize}
-      \item Run on HPC cluster: NVIDIA A100/V100 and AMD MI210 GPUs
-      \item 5 parallel runs per env/algorithm combination
-      \item Hyperparameters from MARLlib or optimized via \textbf{Optuna}~\autocite{akiba2019optuna}
-    \end{itemize}
-  \end{block}
+    \begin{block}{Computing Resources and Protocol}
+        \begin{itemize}
+            \item Run on HPC cluster: NVIDIA A100/V100 and AMD MI210 GPUs
+            \item 5 parallel runs per env/algorithm combination
+            \item Hyperparameters from MARLlib or optimized via \textbf{Optuna}~\autocite{akiba2019optuna}
+        \end{itemize}
+    \end{block}
 
 \end{frame}
 
@@ -622,41 +636,41 @@ for agent in env.agent_iter():
         \item \textbf{Value-Based Algorithms}
               \begin{itemize}
                   \item \textbf{Multi-Agent Q-Learning}: Basic multi-agent extension of Q-learning.\newline
-                  \textit{Note: Simple but suffers from scalability and non-stationarity issues.}
+                        \textit{Note: Simple but suffers from scalability and non-stationarity issues.}
                   \item \textbf{MADDPG}: Extension of DDPG for MARL.\newline
-                  \textit{Note: Suitable for continuous actions but data-hungry and complex.}
+                        \textit{Note: Suitable for continuous actions but data-hungry and complex.}
               \end{itemize}
 
         \item \textbf{Policy-Based Algorithms}
               \begin{itemize}
                   \item \textbf{REINFORCE}: Basic policy gradient method for direct policy learning.\newline
-                  \textit{Note: Works in stochastic environments but has high variance.}
+                        \textit{Note: Works in stochastic environments but has high variance.}
                   \item \textbf{MAPPO (Multi-Agent PPO)}: Multi-agent extension of PPO.\newline
-                  \textit{Note: Stabilizes updates, but requires tuning and high compute.}
+                        \textit{Note: Stabilizes updates, but requires tuning and high compute.}
               \end{itemize}
 
         \item \textbf{Hybrid Algorithms}
               \begin{itemize}
                   \item \textbf{A3C}: Combines value and policy learning for balanced exploration.\newline
-                  \textit{Note: Fast training but needs complex synchronization.}
+                        \textit{Note: Fast training but needs complex synchronization.}
                   \item \textbf{MAPPO}: PPO-based hybrid with centralized training.\newline
-                  \textit{Note: Effective for cooperative tasks, but resource-intensive.}
+                        \textit{Note: Effective for cooperative tasks, but resource-intensive.}
               \end{itemize}
 
         \item \textbf{Theoretical and Game-Based Algorithms}
               \begin{itemize}
                   \item \textbf{IQL (Independent Q-Learning)}: Per-agent Q-learning.\newline
-                  \textit{Note: Easy to implement but suffers from non-stationarity.}
+                        \textit{Note: Easy to implement but suffers from non-stationarity.}
                   \item \textbf{COMA}: Uses counterfactual baselines to assess agent contributions.\newline
-                  \textit{Note: Reduces variance, improves cooperation, but computationally heavy.}
+                        \textit{Note: Reduces variance, improves cooperation, but computationally heavy.}
               \end{itemize}
 
         \item \textbf{Centralized Training with Decentralized Execution (CTDE)}
               \begin{itemize}
                   \item \textbf{QMIX}: Decomposes Q-values to support coordination.\newline
-                  \textit{Note: Balances centralized learning and decentralized execution.}
+                        \textit{Note: Balances centralized learning and decentralized execution.}
                   \item \textbf{VDN (Value Decomposition Networks)}: Simplifies coordination via value decomposition.\newline
-                  \textit{Note: Efficient, but limited for complex interactions.}
+                        \textit{Note: Efficient, but limited for complex interactions.}
               \end{itemize}
     \end{itemize}
 
