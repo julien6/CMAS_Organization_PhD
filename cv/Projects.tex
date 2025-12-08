@@ -1,0 +1,287 @@
+% vim: set textwidth=120:
+
+% Example CV based on the 1.5-column-cv template. Main features:
+% * uses the Roboto font family and IcoMoon icon set;
+% * doesn't use colours, different font weights are used instead for styling;
+% * because the CV fits on one page, header and footer is empty, since there isn't much useful info to put there;
+% * includes a photo.
+\documentclass[a4paper,10pt]{article}
+
+
+% package imports
+% ---------------
+
+\usepackage[romanian, french, british]{babel} % for correct language and hyphenation and stuff
+\usepackage{calc}           % for easier length calculations (infix notation)
+\usepackage{enumitem}       % for configuring list environments
+\usepackage{fancyhdr}       % for setting header and footer
+\usepackage{fontspec}       % for fonts
+\usepackage{geometry}       % for setting margins (\newgeometry)
+\usepackage{graphicx}       % for pictures
+\usepackage{microtype}      % for microtypography stuff
+\usepackage{xcolor}         % for colours
+
+
+% margin and column widths
+% ------------------------
+
+% margins
+\newgeometry{left=0mm,right=15mm,top=15mm,bottom=15mm}
+% \newgeometry{left=15mm,right=15mm,top=15mm,bottom=15mm} % original
+
+% width of the gap between left and right column
+\newlength{\cvcolumngapwidth}
+\setlength{\cvcolumngapwidth}{3.5mm}
+
+% left column width
+\newlength{\cvleftcolumnwidth}
+\setlength{\cvleftcolumnwidth}{36mm}
+
+% right column width
+\newlength{\cvrightcolumnwidth}
+\setlength{\cvrightcolumnwidth}{\textwidth-\cvleftcolumnwidth-\cvcolumngapwidth}
+
+% set paragraph indentation to 0, because it screws up the whole layout otherwise
+\setlength{\parindent}{0mm}
+
+
+% style definitions
+% -----------------
+% style categories explanation:
+% * \cvnameXXX is used for the name; 
+
+% * \cvsectionXXX is used for section names (left column, accompanied by a horizontal rule);
+% * \cvtitleXXX is used for job/education titles (right column);
+% * \cvdurationXXX is used for job/education durations (left column);
+% * \cvheadingXXX is used for headings (left column);
+% * \cvmainXXX (and \setmainfont) is used for main text;
+% * \cvruleXXX is used for the horizontal rules denoting sections.
+
+% font families
+\defaultfontfeatures{Ligatures=TeX} % reportedly a good idea, see https://tex.stackexchange.com/a/37251
+
+\newfontfamily{\cvnamefont}{Liberation Serif}
+\newfontfamily{\cvsectionfont}{Liberation Serif}
+\newfontfamily{\cvtitlefont}{Liberation Serif}
+\newfontfamily{\cvdurationfont}{Liberation Serif}
+\newfontfamily{\cvheadingfont}{Liberation Serif}
+\setmainfont{Liberation Serif}
+
+% colours
+\definecolor{cvnamecolor}{RGB}{0,0,255}
+\definecolor{cvsectioncolor}{RGB}{0,0,255}
+\definecolor{cvtitlecolor}{HTML}{000000}
+\definecolor{cvdurationcolor}{HTML}{000000}
+\definecolor{cvheadingcolor}{HTML}{000000}
+\definecolor{cvmaincolor}{HTML}{000000}
+\definecolor{cvrulecolor}{HTML}{000000}
+
+\color{cvmaincolor}
+
+% styles
+\newcommand{\cvnamestyle}[1]{{\huge\cvnamefont\textcolor{cvnamecolor}{#1}}}
+\newcommand{\cvsectionstyle}[1]{{\large\cvsectionfont\textcolor{cvsectioncolor}{#1}}}
+\newcommand{\cvtitlestyle}[1]{{\large\cvtitlefont\textcolor{cvtitlecolor}{#1}}}
+\newcommand{\cvdurationstyle}[1]{{\cvdurationfont\textcolor{cvdurationcolor}{#1}}}
+\newcommand{\cvheadingstyle}[1]{{\cvheadingfont\textcolor{cvheadingcolor}{#1}}}
+
+
+% inter-item spacing
+% ------------------
+
+% vertical space after personal info and standard CV items
+\newlength{\cvafteritemskipamount}
+\setlength{\cvafteritemskipamount}{5mm plus 1.25mm minus 1.25mm}
+
+% vertical space after sections
+\newlength{\cvaftersectionskipamount}
+\setlength{\cvaftersectionskipamount}{2mm plus 0.5mm minus 0.5mm}
+
+% extra vertical space to be used when a section starts with an item with a heading (e.g. in the skills section),
+% so that the heading does not follow the section name too closely
+\newlength{\cvbetweensectionandheadingextraskipamount}
+\setlength{\cvbetweensectionandheadingextraskipamount}{1mm plus 0.25mm minus 0.25mm}
+
+
+% intra-item spacing
+% ------------------
+
+% vertical space after name
+\newlength{\cvafternameskipamount}
+\setlength{\cvafternameskipamount}{3mm plus 0.75mm minus 0.75mm}
+
+% vertical space after personal info lines
+\newlength{\cvafterpersonalinfolineskipamount}
+\setlength{\cvafterpersonalinfolineskipamount}{2mm plus 0.5mm minus 0.5mm}
+
+% vertical space after titles
+\newlength{\cvaftertitleskipamount}
+\setlength{\cvaftertitleskipamount}{1mm plus 0.25mm minus 0.25mm}
+
+% value to be used as parskip in right column of CV items and itemsep in lists (same for both, for consistency)
+\newlength{\cvparskip}
+\setlength{\cvparskip}{0.5mm plus 0.125mm minus 0.125mm}
+
+% set global list configuration (use parskip as itemsep, and no separation otherwise)
+\setlist{parsep=0mm,topsep=0mm,partopsep=0mm,itemsep=\cvparskip}
+
+
+% CV commands
+% -----------
+
+% creates a "personal info" CV item with the given left and right column contents, with appropriate vertical space after
+% @param #1 left column content (should be the CV photo)
+% @param #2 right column content (should be the name and personal info)
+\newcommand{\cvpersonalinfo}[2]{
+    % left and right column
+    \begin{minipage}[t]{\cvleftcolumnwidth}
+        \vspace{0mm} % XXX hack to align to top, see https://tex.stackexchange.com/a/11632
+        \raggedleft #1
+    \end{minipage}% XXX necessary comment to avoid unwanted space
+    \hspace{\cvcolumngapwidth}% XXX necessary comment to avoid unwanted space
+    \begin{minipage}[t]{\cvrightcolumnwidth}
+        \vspace{0mm} % XXX hack to align to top, see https://tex.stackexchange.com/a/11632
+        #2
+    \end{minipage}
+
+    % space after
+    \vspace{\cvafteritemskipamount}
+}
+
+% typesets a name, with appropriate vertical space after
+% @param #1 name text
+\newcommand{\cvname}[1]{
+    % name
+    \cvnamestyle{#1}
+
+    % space after
+    \vspace{\cvafternameskipamount}
+}
+
+% typesets a line of personal info beginning with an icon, with appropriate vertical space after
+% @param #1 parameters for the \includegraphics command used to include the icon
+% @param #2 icon filename
+% @param #3 line text
+\newcommand{\cvpersonalinfolinewithicon}[3]{
+    % icon, vertically aligned with text (see https://tex.stackexchange.com/a/129463)
+    \raisebox{.5\fontcharht\font`E-.5\height}{\includegraphics[#1]{#2}}
+    % text
+    #3
+
+    % space after
+    \vspace{\cvafterpersonalinfolineskipamount}
+}
+
+% creates a "section" CV item with the given left column content, a horizontal rule in the right column, and with
+% appropriate vertical space after
+% @param #1 left column content (should be the section name)
+\newcommand{\cvsection}[1]{
+    % left and right column
+    \begin{minipage}[t]{\cvleftcolumnwidth}
+        \raggedleft\cvsectionstyle{#1}
+    \end{minipage}% XXX necessary comment to avoid unwanted space
+    \hspace{\cvcolumngapwidth}% XXX necessary comment to avoid unwanted space
+    \begin{minipage}[t]{\cvrightcolumnwidth}
+        \textcolor{cvrulecolor}{\rule{\cvrightcolumnwidth}{0.3mm}}
+    \end{minipage}
+
+    % space after
+    \vspace{\cvaftersectionskipamount}
+}
+
+% creates a standard, multi-purpose CV item with the given left and right column contents, parskip set to cvparskip
+% in the right column, and with appropriate vertical space after
+% @param #1 left column content
+% @param #2 right column content
+\newcommand{\cvitem}[2]{
+    % left and right column
+    \begin{minipage}[t]{\cvleftcolumnwidth}
+        \raggedleft #1
+    \end{minipage}% XXX necessary comment to avoid unwanted space
+    \hspace{\cvcolumngapwidth}% XXX necessary comment to avoid unwanted space
+    \begin{minipage}[t]{\cvrightcolumnwidth}
+        \setlength{\parskip}{\cvparskip} #2
+    \end{minipage}
+
+    % space after
+    \vspace{\cvafteritemskipamount}
+}
+
+% typesets a title, with appropriate vertical space after
+% @param #1 title text
+\newcommand{\cvtitle}[1]{
+    % title
+    \cvtitlestyle{#1}
+
+    % space after
+    \vspace{\cvaftertitleskipamount}
+    % XXX need to subtract cvparskip here, because it is automatically inserted after the title "paragraph"
+    \vspace{-\cvparskip}
+}
+
+
+% header and footer
+% -----------------
+
+% set empty header and footer
+\pagestyle{empty}
+
+
+\hyphenation{Romania Uncertainty Engineering surface Informatics}
+
+% preamble end/document start
+% ===========================
+
+\begin{document}
+
+\newgeometry{left=1.5cm,right=1.5cm,top=2.5cm,bottom=2.5cm}
+
+\begin{center}
+ \Large{\textbf{Brief description of most relevant projects}} 
+\end{center}
+%\maketitle
+%\date{}
+\section{Bachelor Diploma internship at Tronics Microsystems, Crolles, France}
+
+\begin{description}
+\item[Time period:] February 2021- July 2021
+\item[Title:] Model and simulate in Matlab-Simulink a high performance MEMS gyrometer sensor to predict its mechanical and electrical behavior 
+%\item[Purpose:] Developing two models of products (accelerometer and gyrometer) made by Tronics Microsystems to simulate their behavior. 
+\item[Keywords:] Accelerometer, Gyrometer, Modeling and simulation (Matlab, Simulink), MEMS sensors, ASIC.
+\item[Subject:] Creating a high-performance Simulink implementation to simulate the performances of an accelerometer and a gyrometer produced in the company in order to test the behavior of the future products without having to build them: gain in cost and time for the company.
+\item[Details:] Both systems are composed of a mechanical part, the MEMS sensor, produced by the company and an electronic part, the ASIC, bought from Si Ware Systems company, to process the signal, close the loop to reach the equilibrium state and return the acceleration experienced by the system. For modelling and interfacing with the ASICs we received ``black blocks'' whose internal states where inaccessible to us. Hence, my task was to first understand the architecture and replace the existing block with a simpler one, to which we had access. This entailed exploring datasheets, manipulating and translating the register input files and, ultimately, do the simulation with the real systems to validate my models and quantify the differences between my models and the real systems. This was seen as a very challenging task by my team, even impossible to handle. Hence, my success in this task was even more important to us. The ability to see what is done in the ASIC gives the opportunity to find better ways to replace the product bought from Si Ware Systems company. 
+%My team  was really proud of my work, some of them did not think that I would succeed it. The ability to see what is done in the ASIC gives the opportunity to find better ways to replace the product bought to the other company. 
+
+The work on this project is in progress and will be finished in July when I will provide a technical report and defend.
+    \end{description}
+
+\section{5th year innovation project: Sense and avoidance strategies for collision avoidance implemented in ROS}
+\begin{description}
+\item[Time period:] September 2020 - January 2021
+\item[Title:] SenseROS: Sense and avoidance strategies for collision
+avoidance implemented in ROS
+\item[Team:] Working as a team leader of four students from different specializations of ESISAR. 
+\item[Keywords:] Collision avoidance, Quadcopter (nanodrones Crazyflie 2.1), ROS, Gazebo, Python, LIDAR.
+\item[Details:] Inspired by some practical applications concerning collision avoidance topics, this project focused on the
+implementation of sense and avoidance strategies for collision avoidance coded in Python, interfaced through ROS (Robot Operating System) within the Gazebo simulation environment. The Unmanned Aerial Vehicle (UAV) used a LIDAR to detect the obstacles and calculated a trajectory to reach the destination without collision with the static and dynamic obstacles in his path. Static obstacles were modelled as cylindrical shapes, set at the map initialization, and the dynamic obstacles were used to denote other drone(s) in the environment. In order to illustrate the benefits of the proposed method, typical applications involving the control of multi-agent systems were considered.
+
+This project extended my knowledge in computer programming and trajectory planning and control acquired at Esisar.
+
+The results of this project were gathered in a report and a presentation. The defense was appreciated by the jury members and the rest of the class (80 students), which elected this project as the best one among 20 projects.
+\end{description}
+
+\section{Technician internship at UNIFEI, Itajuba, Brazil}
+\begin{description}
+\item[Time period:] June 2019 - August 2019
+\item[Title:]  First proposal of a communication between Petri nets and a Java
+applet
+\item[Keywords:] CPN Tools, Petri nets, conveyor, Java, applet, communication.
+\item[Details:] The main purpose of this internship was to study the ability to communicate with the \emph{CPN Tools} software in order to help a student preparing her final project on a conveyor. I had to learn about communication protocols in order to exchange send/receive messages between computers to activate a transition in CPN Tools, execute a process and send its validation acknowledgment. To illustrate this communication process, I created an applet in Java interfacing with the hardware (push buttons and LED indicators). %Pushing this button sends a message to CPN Tools explaining if the user wants to switch the LED on or off. The software then does the transitions depending on this message and finally send a message back to the applet in Java to print the gif of a LED in the state that was asked with the first message.
+
+The results were gathered in a report and the student I collaborated with succeeded in preparing and defending her final project. 
+\end{description}
+
+
+
+\end{document}
+

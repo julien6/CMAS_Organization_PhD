@@ -1,0 +1,257 @@
+ \documentclass[a4paper,11pt]{article}
+
+\usepackage[french, british]{babel} % for correct language and hyphenation and stuff
+\usepackage{calc}           % for easier length calculations (infix notation)
+\usepackage{enumitem}       % for configuring list environments
+\usepackage{fancyhdr}       % for setting header and footer
+\usepackage{fontspec}       % for fonts
+\usepackage{geometry}       % for setting margins (\newgeometry)
+\usepackage{graphicx}       % for pictures
+% \usepackage{microtype}      % for microtypography stuff
+\usepackage{xcolor}         % for colours
+
+
+% margin and column widths
+% ------------------------
+
+% margins
+\newgeometry{left=0mm,right=15mm,top=15mm,bottom=15mm}
+% \newgeometry{left=15mm,right=15mm,top=15mm,bottom=15mm} % original
+
+% width of the gap between left and right column
+\newlength{\cvcolumngapwidth}
+\setlength{\cvcolumngapwidth}{3.5mm}
+
+% left column width
+\newlength{\cvleftcolumnwidth}
+\setlength{\cvleftcolumnwidth}{36mm}
+
+% right column width
+\newlength{\cvrightcolumnwidth}
+\setlength{\cvrightcolumnwidth}{\textwidth-\cvleftcolumnwidth-\cvcolumngapwidth}
+
+% set paragraph indentation to 0, because it screws up the whole layout otherwise
+\setlength{\parindent}{0mm}
+
+% font families
+\defaultfontfeatures{Ligatures=TeX} % reportedly a good idea, see https://tex.stackexchange.com/a/37251
+
+\newfontfamily{\cvnamefont}{Liberation Serif}
+\newfontfamily{\cvsectionfont}{Liberation Serif}
+\newfontfamily{\cvtitlefont}{Liberation Serif}
+\newfontfamily{\cvdurationfont}{Liberation Serif}
+\newfontfamily{\cvheadingfont}{Liberation Serif}
+\setmainfont{Liberation Serif}
+
+% colours
+\definecolor{cvnamecolor}{RGB}{0,0,255}
+\definecolor{cvsectioncolor}{RGB}{0,0,255}
+\definecolor{cvtitlecolor}{HTML}{000000}
+\definecolor{cvdurationcolor}{HTML}{000000}
+\definecolor{cvheadingcolor}{HTML}{000000}
+\definecolor{cvmaincolor}{HTML}{000000}
+\definecolor{cvrulecolor}{HTML}{000000}
+
+\color{cvmaincolor}
+
+% styles
+\newcommand{\cvnamestyle}[1]{{\huge\cvnamefont\textcolor{cvnamecolor}{#1}}}
+\newcommand{\cvsectionstyle}[1]{{\large\cvsectionfont\textcolor{cvsectioncolor}{#1}}}
+\newcommand{\cvtitlestyle}[1]{{\large\cvtitlefont\textcolor{cvtitlecolor}{#1}}}
+\newcommand{\cvdurationstyle}[1]{{\cvdurationfont\textcolor{cvdurationcolor}{#1}}}
+\newcommand{\cvheadingstyle}[1]{{\cvheadingfont\textcolor{cvheadingcolor}{#1}}}
+
+
+% inter-item spacing
+% ------------------
+
+% vertical space after personal info and standard CV items
+\newlength{\cvafteritemskipamount}
+\setlength{\cvafteritemskipamount}{5mm plus 1.25mm minus 1.25mm}
+
+% vertical space after sections
+\newlength{\cvaftersectionskipamount}
+\setlength{\cvaftersectionskipamount}{2mm plus 0.5mm minus 0.5mm}
+
+% extra vertical space to be used when a section starts with an item with a heading (e.g. in the skills section),
+% so that the heading does not follow the section name too closely
+\newlength{\cvbetweensectionandheadingextraskipamount}
+\setlength{\cvbetweensectionandheadingextraskipamount}{1mm plus 0.25mm minus 0.25mm}
+
+
+% intra-item spacing
+% ------------------
+
+% vertical space after name
+\newlength{\cvafternameskipamount}
+\setlength{\cvafternameskipamount}{3mm plus 0.75mm minus 0.75mm}
+
+% vertical space after personal info lines
+\newlength{\cvafterpersonalinfolineskipamount}
+\setlength{\cvafterpersonalinfolineskipamount}{2mm plus 0.5mm minus 0.5mm}
+
+% vertical space after titles
+\newlength{\cvaftertitleskipamount}
+\setlength{\cvaftertitleskipamount}{1mm plus 0.25mm minus 0.25mm}
+
+% value to be used as parskip in right column of CV items and itemsep in lists (same for both, for consistency)
+\newlength{\cvparskip}
+\setlength{\cvparskip}{0.5mm plus 0.125mm minus 0.125mm}
+
+% set global list configuration (use parskip as itemsep, and no separation otherwise)
+\setlist{parsep=0mm,topsep=0mm,partopsep=0mm,itemsep=\cvparskip}
+
+
+% CV commands
+% -----------
+
+% creates a "personal info" CV item with the given left and right column contents, with appropriate vertical space after
+% @param #1 left column content (should be the CV photo)
+% @param #2 right column content (should be the name and personal info)
+\newcommand{\cvpersonalinfo}[2]{
+    % left and right column
+    \begin{minipage}[t]{\cvleftcolumnwidth}
+        \vspace{0mm} % XXX hack to align to top, see https://tex.stackexchange.com/a/11632
+        \raggedleft #1
+    \end{minipage}% XXX necessary comment to avoid unwanted space
+    \hspace{\cvcolumngapwidth}% XXX necessary comment to avoid unwanted space
+    \begin{minipage}[t]{\cvrightcolumnwidth}
+        \vspace{0mm} % XXX hack to align to top, see https://tex.stackexchange.com/a/11632
+        #2
+    \end{minipage}
+
+    % space after
+    \vspace{\cvafteritemskipamount}
+}
+
+% typesets a name, with appropriate vertical space after
+% @param #1 name text
+\newcommand{\cvname}[1]{
+    % name
+    \cvnamestyle{#1}
+
+    % space after
+    \vspace{\cvafternameskipamount}
+}
+
+% typesets a line of personal info beginning with an icon, with appropriate vertical space after
+% @param #1 parameters for the \includegraphics command used to include the icon
+% @param #2 icon filename
+% @param #3 line text
+\newcommand{\cvpersonalinfolinewithicon}[3]{
+    % icon, vertically aligned with text (see https://tex.stackexchange.com/a/129463)
+    \raisebox{.5\fontcharht\font`E-.5\height}{\includegraphics[#1]{#2}}
+    % text
+    #3
+
+    % space after
+    \vspace{\cvafterpersonalinfolineskipamount}
+}
+
+% creates a "section" CV item with the given left column content, a horizontal rule in the right column, and with
+% appropriate vertical space after
+% @param #1 left column content (should be the section name)
+\newcommand{\cvsection}[1]{
+    % left and right column
+    \begin{minipage}[t]{\cvleftcolumnwidth}
+        \raggedleft\cvsectionstyle{#1}
+    \end{minipage}% XXX necessary comment to avoid unwanted space
+    \hspace{\cvcolumngapwidth}% XXX necessary comment to avoid unwanted space
+    \begin{minipage}[t]{\cvrightcolumnwidth}
+        \textcolor{cvrulecolor}{\rule{\cvrightcolumnwidth}{0.3mm}}
+    \end{minipage}
+
+    % space after
+    \vspace{\cvaftersectionskipamount}
+}
+
+% creates a standard, multi-purpose CV item with the given left and right column contents, parskip set to cvparskip
+% in the right column, and with appropriate vertical space after
+% @param #1 left column content
+% @param #2 right column content
+\newcommand{\cvitem}[2]{
+    % left and right column
+    \begin{minipage}[t]{\cvleftcolumnwidth}
+        \raggedleft #1
+    \end{minipage}% XXX necessary comment to avoid unwanted space
+    \hspace{\cvcolumngapwidth}% XXX necessary comment to avoid unwanted space
+    \begin{minipage}[t]{\cvrightcolumnwidth}
+        \setlength{\parskip}{\cvparskip} #2
+    \end{minipage}
+
+    % space after
+    \vspace{\cvafteritemskipamount}
+}
+
+% typesets a title, with appropriate vertical space after
+% @param #1 title text
+\newcommand{\cvtitle}[1]{
+    % title
+    \cvtitlestyle{#1}
+
+    % space after
+    \vspace{\cvaftertitleskipamount}
+    % XXX need to subtract cvparskip here, because it is automatically inserted after the title "paragraph"
+    \vspace{-\cvparskip}
+}
+
+
+% header and footer
+% -----------------
+
+% set empty header and footer
+
+
+% preamble end/document start
+% ===========================
+
+\usepackage{ragged2e}
+\begin{document}
+
+\newgeometry{left=2cm,right=2cm,top=2.5cm,bottom=2.5cm}
+
+\newpage
+
+\normalsize{
+    Vincent MARGUET\\
+    51 Rue Antoine Martin\\
+    69400 Villefranche sur Saône\\
+    Tel: 06 44 24 74 30\\
+    vincent.marguet@etu.esisar.grenoble-inp.fr\\
+
+
+    \raggedleft Direction Générale de l'Armement (DGA)\\
+    Ministère des Armées\\
+    \justify
+    \vspace{0.5cm}
+    \hspace{1cm}
+    A Grenoble, le 14 avril 2021
+    \vspace{0.5cm}\\
+    \hspace{1cm}A l'intention de la Direction Générale de l'Armement,
+
+    \vspace{0.5cm}
+    \hspace{1cm}Cette lettre de motivation a pour objectif d'appuyer ma candidature à la bourse de doctorat de l'Agence de l'Innovation de Défense. Cette thèse débutant en 2021 s'intitule \emph{« Collecte de données fiable et économe en énergie dans un environnement complexe par une équipe de véhicules aériens autonomes »} et sera dirigée par Prof. Ionela Prodan au Laboratoire de Conception et d'Intégration des Systèmes (LCIS) en collaboration avec l'University College London (UCL). Cette thèse de part son sujet attractif  couvre à la fois des aspects théoriques liés a la plannification et le suivi de trajectoires (optimisation, communication, contrôle-commande), et des aspects applicatifs avec la validation des résultats par des tests expérimentaux similaires aux missions exigées par les entitées commerciales telles que l'agriculture de précision. De plus, le sujet est en parfaite adéquation avec mes compétences et mon projet de carrière.
+
+
+    \vspace{0.5cm}
+    \hspace{1cm}Étant fasciné par l’aéronautique car ce domaine permet à l’homme de réaliser ce que la nature ne lui a pas permis de faire, je souhaite dédier ma carrière à cette science. En particulier, l'obtention du Brevet d'Initiation à l'Aéronautique (BIA) témoigne de mon intérêt pour cette spécialité. Le sujet de cette thèse m'intéresse tout particulièrement car il est lié aux véhicules aériens autonomes donc à l'aéronautique. Ainsi, cette thèse me permettra de mettre en œuvre les notions d'automatique et d'informatique apprises au cours de ma scolarité à l'ESISAR-Grenoble INP et de les appliquer dans le domaine qui me tient à cœur. Les aspects économiques et écologiques soulevés par le sujet sont également essentiels pour le monde de demain. Cette thèse me permettra donc de saisir  les meilleures opportunités pour développer ma carrière en aéronautique aussi bien dans le monde académique que dans le monde industriel.
+    Actuellement en stage de fin d'études dans l’entreprise Tronics Microsystems (Crolles), je modélise et simule le comportement d’un accéléromètre et d’un gyromètre, deux composants utilisés sur les drones aériens pour déterminer leurs orientation dans l'espace. Ainsi, j'ai une première expérience dans un contexte industriel et je suis sûr que les connaissances acquises au cours de ce stage peuvent être utiles dans le cadre de cette thèse.
+
+    \vspace{0.5cm}
+    \hspace{1cm}
+    Au cours de mes études à l'ESISAR-Grenoble INP, j’ai suivi la filière « Electronique, Informatique et Systèmes » et j’ai donc assisté à des cours en systèmes embarqués, en informatique, en cybersécurité et en automatique qui m’ont permis d’approfondir mes connaissances dans ces différents domaines. Je me suis spécialisé en automatique en choisissant la filière ISC (Ingénierie des Systèmes Complexes). Etant très intéressé par l’automatique, domaine regroupant la modélisation, l’analyse, l’identification et la commande des systèmes dynamiques, j’ai suivi d’autres cours en portugais liés à la commande robuste, la commande non linéaire de systèmes multivariables lors de mon semestre à l’\'Ecole Polytechnique de l’Université de São Paulo. La programmation est également un domaine dans lequel j’ai des compétences grâce non seulement à ma formation, mais aussi aux projets que j'ai développés lors de mes stages académiques et industriels. Ces compétences me permettent d'avoir un avantage significatif lors de la phase d'implémentation et de test des algorithmes de commande des drones prévue dans le cadre de cette thèse.
+
+    \vspace{0.5cm}
+    \hspace{1cm}La directrice de thèse est le Dr. Ionela Prodan. En plus de partager la nationalité roumaine avec elle, j'ai eu l'honneur d'être son élève pendant trois ans à l'Esisar. Elle était, par ailleurs, responsable de mon projet innovation sur l'algorithme d'anticollision de véhicules aériens autonomes décrit en annexe. Ce projet s'inscrit parfaitement dans mes intérets de recheche et complète ma formation scientifique. La directrice de thèse me connait donc très bien et j'ai l'habitude de travailler sous sa tutelle en étant efficace. De plus, elle est très dévouée pour l'encadrement des étudiants et prend un soin particuler pour les former au monde de la recherche. De nombreux professeurs de mon école d'ingénieur travaillent également au Laboratoire de Conception et d'Intégration des Systèmes (LCIS) situé au sein de mon école d'ingénieur à Valence. Mon tuteur école pour mon projet de fin d'études, Prof. L. Lef\`evre est d'ailleurs le directeur de ce laboratoire. Ma proximité avec le LCIS et ses chercheurs ainsi que mes trois années passées à Valence faciliteront grandement mon adaptation. Enfin, la prestigieuse UCL me permettra de sortir du milieu académique français et d'avoir un point de vue international et d'excellence grâce aux connaissances des Dr. Francesca Boem et Dr. Laura Toni travaillant au Département d’Ingénierie \'Electrique et \'Electronique de l'UCL. Ce sera un plaisir de me rendre au Royaume-Uni pour faire avancer mes recherches ainsi que d'écrire et publier des articles internationaux pour partager le fruit de mon travail avec l'ensemble de la communauté scientifique.
+
+    \vspace{0.5cm}
+    \hspace{1cm}Pour toutes les raisons évoquées précédemment, je suis convaincu que je peux apporter ma contribution au développement des activités de recherche par le biais de \emph{l’AAP thèses AID classiques 2021} et je me réjouis de pouvoir rejoindre le laboratoire LCIS (Grenoble INP, Univ. Grenoble Alpes) et le Dép. d’Ingénierie Électrique et Électronique (University College London), de profiter d'un environnement idéal afin de trouver des idées intéressantes et découvrir de nouveaux aspects qui pourront accroître mes capacités scientifiques.
+
+    \vspace{1cm}
+    Sincèrement, \\
+    Vincent MARGUET \\
+    \includegraphics[width=0.5\textwidth]{signature.png}
+}
+
+\end{document}
+
