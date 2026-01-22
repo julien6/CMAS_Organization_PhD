@@ -1,0 +1,89 @@
+% In the preamble (if not already present):
+% \usepackage{tikz}
+% \usetikzlibrary{arrows.meta,positioning,fit,calc}
+
+\begin{figure}[t]
+    \centering
+
+    \resizebox{\textwidth}{!}{%
+
+        \begin{tikzpicture}[
+                font=\small,
+                node distance=10mm and 14mm,
+                box/.style={draw, rounded corners, align=center, minimum height=9mm, minimum width=18mm},
+                smallbox/.style={draw, rounded corners, align=center, minimum height=8mm, minimum width=16mm},
+                io/.style={draw, rounded corners, align=center, fill=white, minimum height=8mm, minimum width=20mm},
+                loss/.style={draw, rounded corners, align=center, minimum height=9mm, minimum width=18mm},
+                group/.style={draw, rounded corners, inner sep=4mm},
+                arr/.style={-Latex, line width=0.6pt}
+            ]
+
+            % ====== Main WM pipeline ======
+            \node[io] (obs) {$o_t^{1:N}$\\(joint obs)};
+            \node[io, below=7mm of obs] (act) {$a_t^{1:N}$\\(joint act)};
+
+            \node[box, right=18mm of obs] (enc) {Encoder\\$e_\theta$};
+            \node[smallbox, right=14mm of enc] (zt) {Latent\\$z_t$};
+
+            \node[box, right=14mm of zt] (dyn) {Dynamics\\$d_\theta$};
+            \node[smallbox, right=14mm of dyn] (znext) {Pred.\ latent\\$\hat z_{t+1}$};
+
+            \node[box, right=14mm of znext] (dec) {Decoder\\$g_\theta$};
+            \node[io, right=14mm of dec] (opred) {$\hat o_{t+1}^{1:N}$\\(pred.\ obs)};
+
+            % arrows main
+            \draw[arr] (obs) -- (enc);
+            \draw[arr] (enc) -- (zt);
+            \draw[arr] (zt) -- (dyn);
+            \draw[arr] (dyn) -- (znext);
+            \draw[arr] (znext) -- (dec);
+            \draw[arr] (dec) -- (opred);
+
+            % action into dynamics
+            \draw[arr] (act) -| (dyn.south west);
+
+            % ====== Losses ======
+            \node[loss, below=14mm of znext] (lwm) {$\mathcal{L}_{wm}$\\(WM loss)};
+            \draw[arr] (opred.south) |- ($(lwm.north)+(0,0.5mm)$);
+            \draw[arr] (obs.south)  |- ($(lwm.west)+(-2mm,0)$); % indicates supervision / target
+            \draw[arr] (act.south)  |- ($(lwm.west)+(2mm,0)$);
+
+            % ====== Neuro-symbolic constraint path ======
+            \node[box, above=12mm of znext] (rules) {Rule Checker\\\& Instantiation\\$\mathcal{R}$};
+            \node[smallbox, right=14mm of rules] (viol) {Applicability\\$A_r(t,i)$\\Violation\\$v_r(t,i)$};
+
+            \draw[arr] (opred.north) |- (rules.west);
+            \draw[arr] (act.north)  |- (rules.south);
+            \draw[arr] (rules) -- (viol);
+
+            % gating (optional)
+            \node[box, above=12mm of rules] (gate) {Gating (opt.)\\$h_\phi$};
+            \node[smallbox, right=14mm of gate] (gcoef) {Gate\\$g_r(t,i)$};
+
+            \draw[arr] (zt.north) |- (gate.west);
+            \draw[arr] (act.north) |- (gate.south);
+            \draw[arr] (gate) -- (gcoef);
+
+            % logic loss
+            \node[loss, below=12mm of viol] (llogic) {$\mathcal{L}_{logic}$\\(consistency)};
+            \draw[arr] (viol) -- (llogic);
+            \draw[arr] (gcoef) |- (llogic.north);
+
+            % total objective
+            \node[loss, right=18mm of lwm] (ltot) {Total\\$\mathcal{L}=\mathcal{L}_{wm}+\lambda\mathcal{L}_{logic}$};
+            \draw[arr] (lwm) -- (ltot);
+            \draw[arr] (llogic) -| (ltot.south);
+
+            % parameter update annotation
+            \node[smallbox, right=16mm of ltot] (upd) {Update\\$\theta$ (and $\phi$)};
+            \draw[arr] (ltot) -- (upd);
+
+            % ====== Group boxes (optional, for readability) ======
+            \node[group, fit=(enc)(zt)(dyn)(znext)(dec), label={[yshift=2mm]above:Multi-Agent World Model}] (wmgroup) {};
+            \node[group, fit=(rules)(viol)(gate)(gcoef)(llogic), label={[yshift=2mm]above:Neuro-Symbolic Consistency}] (nsgroup) {};
+
+        \end{tikzpicture}}
+
+    \caption{Overview of NS-MAWM. A multi-agent world model encodes joint observations, predicts latent dynamics conditioned on joint actions, and decodes predicted observations. Neuro-symbolic rules are instantiated on predictions to compute applicability and violation scores; an optional gating network modulates rule enforcement. Training minimizes $\mathcal{L}_{wm} + \lambda \mathcal{L}_{logic}$.}
+    \label{fig:overview}
+\end{figure}
