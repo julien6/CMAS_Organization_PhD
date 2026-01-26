@@ -224,9 +224,10 @@ For instance, a trained WM might predict that two agents occupy the same grid ce
 Several works have injected inductive biases into latent representations~\cite{kipf2020contrastivelearningstructuredworld,mondal2022eqr}, but a general framework for integrating symbolic rules into WMs is still facing the following key gaps:
 %
 \begin{itemize}
-  \item[\textbf{G1}] \textbf{Lack of structured latent spaces.} Most WMs operate over unstructured latent vectors without disentangling entities or semantics, limiting interpretability and generalization across varying agent/object configurations~\cite{zhang2021worldmodelgraph}. Without explicit compositionality, models struggle with systematic generalization to unseen settings.
+  \item[\textbf{G1}] \textbf{Lack of latent representations capturing multi-agent complexity.}
+    Most WMs ignore the asymmetry in complex multi-agent settings between easily capturable and difficult-to-capture elements (such as static objects vs. evolving agents). They treat all observations uniformly, neglecting issues such as non-stationarity and partial observability~\cite{zhang2021worldmodelgraph}.
 
-  \item[\textbf{G2}] \textbf{Lack of symbolic rule integration.} Most WMs treat dynamics as fully learnable black-box functions, despite the availability of known rules (movement constraints, interaction patterns, etc.). While prior work explores logic layers and structured regularization~\cite{dy2018semanticloss, fan2017differentiablelearninglogicalrules}, no unified method integrates symbolic knowledge during training, causing WMs to learn what could be injected as prior structure.
+  \item[\textbf{G2}] \textbf{Lack of symbolic rule integration.} Most WMs treat dynamics as fully learnable black-box functions, despite the availability of known rules (such as movement or interaction patterns). While prior work explores logic layers and structured regularization~\cite{dy2018semanticloss, fan2017differentiablelearninglogicalrules}, no unified method integrates symbolic knowledge during training, causing WMs to learn what could be injected as prior structure.
 
   \item[\textbf{G3}] \textbf{Absence of symbolic evaluation metrics.} Model quality is typically assessed via likelihood, reconstruction error, or downstream task reward. However, these metrics fail to reflect whether predicted trajectories respect symbolic constraints, such as conservation laws or collision rules~\cite{talvitie2014modelbias}.
 \end{itemize}
@@ -342,229 +343,46 @@ TODO
 \section{Evaluation}
 \label{sec:eval}
 
-This section evaluates whether enforcing neuro-symbolic consistency in multi-agent world models effectively reduces semantic drift, improves long-horizon prediction fidelity, and benefits downstream decision-making.
-Our evaluation protocol is explicitly designed to address the four gaps identified in the Introduction:
-(G1) semantic invariants,
-(G2) action-conditioned equivariances,
-(G3) uncertainty-aware constraint application,
-and (G4) semantic evaluation of world models.
+This section evaluates... TODO
 
-\subsection{Environments}
+\subsection{Implementation}
+\label{sec:impl_overview}
+
+TODO...
+
+\subsection{Environments and rule sets}
 \label{sec:envs}
 
-We consider two classes of environments: a controlled grid-based multi-agent environment designed to precisely test semantic consistency, and a standard multi-agent benchmark to assess scalability and downstream impact.
+We consider two classes of environments: ... TODO
 
-\paragraph{Gridworld with Objects and Multiple Agents.}
-We introduce a configurable gridworld environment in which $N\in\{2,3,4\}$ agents interact with static and dynamic objects placed on a discrete 2D grid.
-Each cell may contain at most one object and at most one agent.
-Agents perceive only a local $k\times k$ observation window centered on their position (with $k=3$ unless otherwise specified), inducing partial observability.
-Observations are represented as multi-channel tensors encoding object types, agent presence, and free space.
+\subsection{Computing resources and hyperparameters}
+\label{sec:resources}
 
-Agents can execute primitive actions (move up/down/left/right, no-op), which induce deterministic or stochastic transitions depending on the experimental setting.
-Crucially, this environment admits a rich set of semantic invariants and equivariances, including:
-(i) object permanence,
-(ii) spatial translation consistency under agent motion,
-(iii) exclusivity constraints (no overlapping objects),
-and (iv) conservation of object count.
-These properties make the environment particularly suitable for studying semantic drift in learned world models.
+TODO
 
-We vary map sizes ($10\times10$ to $20\times20$), number of agents, object densities, and observability radii to systematically test generalization.
-Out-of-distribution (OOD) evaluation is performed by increasing map size and object count at test time.
+\subsection{Evaluation metrics, baselines and protocol}
+\label{sec:metrics_baselines_protocol}
+% Comment on fait pour évaluer que NS-MAWM est mieux que les autres et permet d'atteindre les objectifs fixés dans l'intro :
+%  - est-ce qu'on prend mieux en compte l'aspect multi-agent ?
+%  - est-ce qu'on réduit le drift sémantique sur le long terme grâce à l'intégration symbolique ? Si oui, comment ?
+%  - est-ce que ça améliore la performance en planification / RL downstream ?
+%  - est-ce que ça améliore la généralisation à de nouvelles configurations d'agents/objets ?
+%  - est-ce que ça améliore l'efficacité des données (moins de données nécessaires pour atteindre une certaine performance) ?
+%  - est-ce qu'on peut faire une ablation pour montrer l'importance de chaque composant (invariants vs equivariances, stratégies d'intégration, etc.) ?
+%  - est-ce qu'on peut tester la robustesse aux règles incomplètes ou incorrectes ?
+%  - est-ce qu'on peut tester la scalabilité avec le nombre d'agents/règles ?
+%  - est-ce qu'on peut évaluer correctement les performances avec des métriques symboliques (RVR) en plus des métriques classiques (log-likelihood, erreur de reconstruction, récompense downstream) ?
 
-\paragraph{Standard Multi-Agent Benchmark.}
-To assess whether improved world model consistency translates to realistic multi-agent domains, we additionally evaluate on a standard MARL benchmark with partial observability and coordination requirements.
-We use a grid-based cooperative benchmark inspired by Overcooked-style layouts, where agents must coordinate to reach shared goals while observing only local information.
-This benchmark is widely used in the MARL literature and provides a non-trivial test of scalability and robustness.
+% 1) donner les métriques utilisées
+% 2) présenter les baselines comparées pour permettre d'évaluer l'apport de NS-MAWM
+% 3) expliquer le protocole expérimental (nombre de seeds, durée d'entraînement, etc.) afin de fournir un moyen scientifique de voir si on couvre bien les gaps identifiés dans l'intro en faisant le lien avec les métriques et baselines via le protocole expérimental
 
-For this benchmark, the world model is trained on logged trajectories generated by a pretrained policy, and is evaluated both as a predictive model and as a simulator for planning-based or imagination-augmented control.
-
-\subsection{Metrics}
-\label{sec:metrics}
-
-We employ a comprehensive set of metrics designed to jointly evaluate predictive accuracy, semantic consistency, and downstream utility.
-
-\paragraph{Prediction Error.}
-We report standard prediction metrics for world models:
-(i) one-step prediction error and
-(ii) $H$-step rollout error for horizons $H\in\{5,10,25,50\}$.
-For discrete grid observations, prediction error is measured using cross-entropy and accuracy; for continuous features, we report mean squared error.
-These metrics allow comparison with prior work on world models and model-based MARL.
-
-\paragraph{Rule Violation Rate (RVR).}
-To explicitly evaluate semantic correctness (G4), we introduce the \emph{Rule Violation Rate (RVR)}.
-For a rollout of length $H$, RVR is defined as the average fraction of violated rules across agents and timesteps:
-\[
-  \mathrm{RVR}(H) = \frac{1}{H N |\mathcal{R}|}
-  \sum_{t=1}^{H}\sum_{i=1}^{N}\sum_{r\in\mathcal{R}}
-  \mathbb{I}\big[v_r(t,i) > 0\big].
-\]
-We also report a \emph{Soft-RVR}, which averages the continuous violation scores $v_r(t,i)$ and captures violation severity.
-
-\paragraph{Long-Horizon Semantic Drift Curves.}
-To visualize error accumulation, we report RVR as a function of rollout horizon $H$.
-These curves directly quantify semantic drift and allow fine-grained comparison between models with similar predictive accuracy but different long-horizon behavior.
-
-\paragraph{Downstream Control Performance.}
-When the world model is used for planning or imagination-based policy learning, we additionally report:
-(i) episodic return,
-(ii) success rate,
-and (iii) data efficiency (return versus number of environment interactions).
-This evaluates whether improvements in world model consistency translate into practical benefits.
-
-\subsection{Baselines}
-\label{sec:baselines}
-
-We compare NS-MAWM against a diverse set of baselines to isolate the effect of neuro-symbolic constraints.
-
-\paragraph{Neural Multi-Agent World Model (MAWM).}
-A purely neural world model with the same backbone architecture as NS-MAWM, trained using only $\mathcal{L}_{wm}$.
-This baseline isolates the contribution of symbolic consistency.
-
-\paragraph{Capacity-Controlled Baseline.}
-To rule out gains due to increased model capacity, we include a neural MAWM with a larger latent dimension and deeper dynamics network, matched in parameter count to NS-MAWM.
-
-\paragraph{Ablation Variants.}
-We evaluate several ablations of our method:
-(i) NS-MAWM without gating ($g_r \equiv 1$),
-(ii) NS-MAWM with subsets of rules (e.g., invariants only or equivariances only),
-(iii) varying the consistency weight $\lambda$,
-and (iv) hard constraint variants where violations are projected rather than penalized (when applicable).
-
-\paragraph{Structured and Object-Centric Models.}
-When feasible, we compare against structured world models that incorporate relational or object-centric inductive biases but do not explicitly enforce symbolic constraints.
-This assesses whether structure alone suffices to prevent semantic drift.
-
-\subsection{Implementation Details}
-\label{sec:impl}
-
-All world models share the same backbone architecture unless otherwise specified.
-Encoders and decoders are implemented as convolutional networks for grid observations, while dynamics models use either multilayer perceptrons or attention-based modules.
-Latent dimensionality is set to $d=128$ by default.
-
-Models are trained using Adam with learning rate $3\times10^{-4}$ and batch size 64.
-Rule evaluation is vectorized across agents and rules, adding negligible overhead (less than 10\% additional computation per training step).
-Training is performed on a single GPU; full training times range from 2 to 6 hours depending on environment size.
-
-To ensure reproducibility, all experiments are run with 5 random seeds.
-Hyperparameters are selected using a held-out validation set.
-Code, environments, and rule specifications will be released upon publication.
+TODO
 
 \subsection{Results}
 \label{sec:results}
 
-\paragraph{Semantic Consistency and Long-Horizon Prediction.}
-Table~\ref{tab:wm_consistency} summarizes prediction accuracy and semantic consistency for different world models on the gridworld benchmark.
-All models achieve comparable one-step prediction accuracy, indicating that short-horizon predictive performance alone does not distinguish semantic quality.
-However, as the rollout horizon increases, purely neural world models exhibit rapidly increasing semantic violations, reflected by sharply higher Rule Violation Rates (RVR).
-In contrast, NS-MAWM maintains low violation rates even for long horizons ($H=50$), demonstrating substantially reduced semantic drift.
-
-\begin{table}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{5pt}
-  \begin{tabular}{lcccc}
-    \toprule
-    \textbf{Model}                  &
-    \textbf{1-step CE $\downarrow$} &
-    \textbf{RVR@10 $\downarrow$}    &
-    \textbf{RVR@25 $\downarrow$}    &
-    \textbf{RVR@50 $\downarrow$}                                                                     \\
-    \midrule
-    Neural MAWM
-                                    & 0.183          & 0.21          & 0.38          & 0.57          \\
-    Neural MAWM (large)
-                                    & 0.176          & 0.19          & 0.34          & 0.52          \\
-    Structured WM
-                                    & 0.179          & 0.17          & 0.29          & 0.44          \\
-    \midrule
-    NS-MAWM (full)
-                                    & \textbf{0.175} & \textbf{0.07} & \textbf{0.10} & \textbf{0.14} \\
-    \bottomrule
-  \end{tabular}
-  \caption{Prediction accuracy and semantic consistency on gridworld environments.
-    CE denotes cross-entropy loss.
-    RVR@H is the Rule Violation Rate after an $H$-step rollout.
-    Lower is better ($\downarrow$).
-  }
-  \label{tab:wm_consistency}
-\end{table}
-
-\paragraph{Ablation Analysis.}
-To isolate the contribution of different components, we report ablation results in Table~\ref{tab:ablation}.
-Using only invariants or only equivariances significantly improves semantic consistency over the neural baseline, but neither is sufficient on its own.
-Removing the gating mechanism increases violation rates in stochastic or partially observable settings, confirming the importance of uncertainty-aware constraint application (G3).
-The full NS-MAWM model consistently achieves the best trade-off between flexibility and semantic correctness.
-
-\begin{table}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{6pt}
-  \begin{tabular}{lccc}
-    \toprule
-    \textbf{Variant}                  &
-    \textbf{RVR@25 $\downarrow$}      &
-    \textbf{Soft-RVR@25 $\downarrow$} &
-    \textbf{1-step CE}                                                                 \\
-    \midrule
-    Neural MAWM
-                                      & 0.38          & 0.44          & 0.183          \\
-    + Invariants only
-                                      & 0.21          & 0.26          & 0.181          \\
-    + Equivariances only
-                                      & 0.24          & 0.29          & 0.180          \\
-    NS-MAWM w/o gating
-                                      & 0.16          & 0.20          & 0.177          \\
-    \midrule
-    NS-MAWM (full)
-                                      & \textbf{0.10} & \textbf{0.13} & \textbf{0.175} \\
-    \bottomrule
-  \end{tabular}
-  \caption{Ablation study on semantic consistency.
-    Soft-RVR averages continuous violation magnitudes.
-  }
-  \label{tab:ablation}
-\end{table}
-
-\paragraph{Downstream Performance.}
-Table~\ref{tab:downstream} reports downstream control performance when world models are used for imagination-based planning or policy improvement.
-Despite similar one-step prediction error, NS-MAWM yields higher episodic returns and better data efficiency.
-Importantly, gains correlate more strongly with reduced RVR than with prediction loss, highlighting the central role of semantic consistency for effective planning.
-
-\begin{table}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{6pt}
-  \begin{tabular}{lccc}
-    \toprule
-    \textbf{Model}                   &
-    \textbf{Return $\uparrow$}       &
-    \textbf{Success Rate $\uparrow$} &
-    \textbf{Samples to 80\% $\downarrow$}                                             \\
-    \midrule
-    Neural MAWM
-                                     & 42.1          & 0.61          & 1.0M           \\
-    Neural MAWM (large)
-                                     & 44.3          & 0.64          & 0.9M           \\
-    Structured WM
-                                     & 46.7          & 0.68          & 0.8M           \\
-    \midrule
-    NS-MAWM (full)
-                                     & \textbf{53.9} & \textbf{0.78} & \textbf{0.55M} \\
-    \bottomrule
-  \end{tabular}
-  \caption{Downstream planning and control performance.
-    Higher return and success rate are better ($\uparrow$);
-    fewer samples indicate higher data efficiency ($\downarrow$).
-  }
-  \label{tab:downstream}
-\end{table}
-
-\paragraph{Qualitative Analysis.}
-Qualitative rollouts corroborate the quantitative results.
-Neural world models frequently hallucinate objects, violate exclusivity constraints, or break spatial coherence after a few steps.
-In contrast, NS-MAWM preserves object permanence and spatial relations over long rollouts, producing trajectories that remain visually and semantically plausible.
-
-Overall, these results demonstrate that neuro-symbolic consistency constraints substantially improve the reliability, interpretability, and downstream utility of multi-agent world models, especially in long-horizon and partially observable regimes.
+TODO
 
 % ============================
 % 7. Conclusion
