@@ -66,6 +66,8 @@
 \newcommand{\RVR}{\textsc{RVR}}
 \newcommand{\KL}{\mathrm{KL}}
 
+\newcommand{\probP}{\text{I\kern-0.15em P}}
+
 % Spell-checker exceptions for acronyms and domain-specific terms
 % \usepackage{spellcheck}
 % \spellcheck{MAWM,NS-MAWM,gridworld,SMAC,neuro-symbolic}
@@ -81,6 +83,7 @@
 \usepackage{color}
 \usepackage{siunitx}
 \usepackage{array}
+\usepackage{stmaryrd}
 \usepackage{multirow}
 % \usepackage{amssymb}
 \usepackage{gensymb}
@@ -139,7 +142,7 @@
 \begin{document}
 
 \twocolumn[
-  \icmltitle{Invariant-Aware Neuro-Symbolic Multi-Agent World Models\\
+  \icmltitle{A Neuro-Symbolic Multi-Agent World Model Framework\\
     for Model-Based Multi-Agent Reinforcement Learning}
 
   % It is OKAY to include author information, even for blind submissions: the
@@ -204,8 +207,8 @@
 % Abstract
 % ============================
 \begin{abstract}
-  Model-based reinforcement learning enables planning through learned world models, but extending these approaches to multi-agent settings is challenging due to partial observability and error accumulation in joint observation dynamics. Purely neural multi-agent world models often produce semantically inconsistent predictions, violating spatial coherence, object persistence, and interaction constraints.
-  We introduce \textbf{Neuro-Symbolic Multi-Agent World Models (NS-MAWM)}, which incorporate symbolic invariants and action-conditioned equivariances as differentiable consistency constraints during world model training. These constraints act as structured inductive biases that reduce long-horizon semantic drift.
+  Model-based reinforcement learning enables planning through learned WMs, but extending these approaches to multi-agent settings is challenging due to partial observability and error accumulation in joint observation dynamics. Purely neural multi-agent WMs often produce semantically inconsistent predictions, violating spatial coherence, object persistence, and interaction constraints.
+  We introduce \textbf{Neuro-Symbolic Multi-Agent WMs (NS-MAWM)}, which incorporate symbolic invariants and action-conditioned equivariances as differentiable consistency constraints during WM training. These constraints act as structured inductive biases that reduce long-horizon semantic drift.
   We evaluate NS-MAWM on four representative multi-agent environments with three proposed neuro-symbolic integration strategies. Experimental results show that NS-MAWM improves long-horizon prediction consistency, planning performance, and generalization compared to a purely neural baseline.
 \end{abstract}
 
@@ -215,24 +218,26 @@
 \section{Introduction}
 \label{sec:intro}
 
-Learning predictive models of environment dynamics, known as \emph{World Models} (WMs)~\cite{ha2018worldmodels}, is a central paradigm in model-based reinforcement learning (MBRL)~\cite{hafner2019learning,hafner2020dreamer,hafner2021dreamerv2}. By encoding the agent's interaction history into a latent space, these models enable imagination-based planning, policy learning, and long-horizon credit assignment~\cite{schrittwieser2020}. Recent progress in this area has shown strong results in single-agent and fully observable environments; however, their extension to multi-agent settings with partial observability remains an open frontier~\cite{Wong2023,Venugopal2024MABL,agravante-etal-2023-learning}.
+Learning predictive models of environment dynamics, known as \emph{WMs} (WMs)~\cite{ha2018worldmodels}, is a central paradigm in model-based reinforcement learning (MBRL)~\cite{hafner2019learning,hafner2020dreamer,hafner2021dreamerv2}. By encoding the agent's interaction history into a latent space, these models enable imagination-based planning, policy learning, and long-horizon credit assignment~\cite{schrittwieser2020}. Recent progress in this area has shown strong results in single-agent and fully observable environments; however, their extension to multi-agent settings with partial observability remains an open frontier~\cite{Wong2023,Venugopal2024MABL,agravante-etal-2023-learning}.
 
-In such environments, observations typically consist of multiple interacting entities governed by spatial, logical, or physical rules (for instance two agents cannot occupy the same location, objects follow deterministic transitions, etc.). Yet, most world models treat observations as flat, unstructured vectors~\cite{ha2018worldmodels,hafner2019learning}, and learn monolithic latent dynamics end-to-end from raw pixels. This often leads to latent representations that fail to disentangle semantics (such as agent identity, object types) or to reflect the compositional structure of the environment~\cite{kipf2020contrastivelearningstructuredworld,bronstein2021geometric}. As a result, models may produce high-likelihood predictions that are logically inconsistent or physically implausible.
+In such environments, observations typically consist of multiple interacting entities governed by spatial, logical, or physical rules (for instance two agents cannot occupy the same location, objects follow deterministic transitions, etc.). Yet, most WMs treat observations as flat, unstructured vectors~\cite{ha2018worldmodels,hafner2019learning}, and learn monolithic latent dynamics end-to-end from raw pixels. This often leads to latent representations that fail to disentangle semantics (such as agent identity, object types) or to reflect the compositional structure of the environment~\cite{kipf2020contrastivelearningstructuredworld,bronstein2021geometric}. As a result, models may produce high-likelihood predictions that are logically inconsistent or physically implausible.
 
 For instance, a trained WM might predict that two agents occupy the same grid cell, violating collision rules. Such symbolic inconsistencies are not penalized by standard likelihood or reconstruction losses, often going unnoticed during evaluation. Worse, these errors compound during long rollouts, degrading planning performance and breaking environment logic~\cite{talvitie2014modelbias,venkatraman2015improving}.
 
-Several works have injected inductive biases into latent representations~\cite{kipf2020contrastivelearningstructuredworld,mondal2022eqr}, but a general framework for integrating symbolic rules into WMs is still facing the following key gaps:
+Several works have pioneered the incorporation of prior knowledge as inductive biases into WMs~\cite{kipf2020contrastivelearningstructuredworld,mondal2022eqr}. However, a general framework for integrating symbolic reasoning into WMs learning has yet to be established, especially regarding three general gaps:
 %
 \begin{itemize}
-  \item[\textbf{G1}] \textbf{Lack of latent representations capturing multi-agent complexity.}
-    Most WMs ignore the asymmetry in complex multi-agent settings between easily capturable and difficult-to-capture elements (such as static objects vs. evolving agents). They treat all observations uniformly, neglecting issues such as non-stationarity and partial observability~\cite{zhang2021worldmodelgraph}.
+  \item[\textbf{G1}] \textbf{Lack of Multi-Agent-Oriented WM Structures.}
+    Existing WMs neglect structural priors for multi-agent environments: explicit representation of partial observability, interaction-induced non-stationarity, and entity modularity~\cite{zhang2021worldmodelgraph, Willemsen2021MAMBPO, Venugopal2024MABL}. They assume stationary dynamics and treat agents uniformly, failing to generalize across varied configurations.
 
-  \item[\textbf{G2}] \textbf{Lack of symbolic rule integration.} Most WMs treat dynamics as fully learnable black-box functions, despite the availability of known rules (such as movement or interaction patterns). While prior work explores logic layers and structured regularization~\cite{dy2018semanticloss, fan2017differentiablelearninglogicalrules}, no unified method integrates symbolic knowledge during training, causing WMs to learn what could be injected as prior structure.
+  \item[\textbf{G2}] \textbf{Lack of Neuro-Symbolic Integration in WMs.}
+    While symbolic priors (action constraints, physical laws, interaction rules) enhance sample efficiency and robustness, few models incorporate them into WM learning or architecture~\cite{Xu2018semanticloss, Fan2017differentiablelearninglogicalrules, balloch2023neurosymbolicworldmodelsadapting, garcez2023neurosymbolic}. Most rely solely on black-box latent dynamics, missing opportunities to leverage symbolic knowledge as inductive bias.
 
-  \item[\textbf{G3}] \textbf{Absence of symbolic evaluation metrics.} Model quality is typically assessed via likelihood, reconstruction error, or downstream task reward. However, these metrics fail to reflect whether predicted trajectories respect symbolic constraints, such as conservation laws or collision rules~\cite{talvitie2014modelbias}.
+  \item[\textbf{G3}] \textbf{Lack of Symbolic Coherence as an Optimization Principle.}
+    Standard WM metrics focus on predictive accuracy or downstream reward, overlooking symbolic consistency. Yet reasoning in dynamic environments benefits from verifying whether predictions respect constraints~\cite{talvitie2014modelbias, balloch2023neurosymbolicworldmodelsadapting}.
 \end{itemize}
 
-Building on neuro-symbolic integration frameworks~\cite{manhaeve2018deepproblog,garcez2023neurosymbolic,dy2018semanticloss,fan2017differentiablelearninglogicalrules}, we propose \textbf{NS-MAWM} to augment world models with symbolic reasoning through:
+Building on neuro-symbolic integration frameworks~\cite{manhaeve2018deepproblog,garcez2023neurosymbolic,Xu2018semanticloss,Fan2017differentiablelearninglogicalrules}, we propose \textbf{NS-MAWM} to augment WMs with symbolic reasoning through:
 %
 \begin{itemize}
   \item A \emph{structured latent space} that decomposes observations into typed entities (agents, objects) with interpretable attributes (such as position or type), enabling effective symbolic rule application.
@@ -251,7 +256,7 @@ Building on neuro-symbolic integration frameworks~\cite{manhaeve2018deepproblog,
 
 We evaluate NS-MAWM across four discrete and continuous environments: a proposed Minecraft-like gridworld, Overcooked~\cite{Micah2020overcooked}, a Predator-Prey environment~\cite{lowe2017multi} and the SMAC environment~\cite{Ellis2023smacv2}. Our comparison includes various integration strategies alongside a vanilla WM baseline, utilizing both standard and symbolic metrics for assessment. The results demonstrate that NS-MAWM not only improves prediction accuracy but also enhances generalization to new configurations, significantly reducing symbolic violations. Among the integration strategies, for similar performance, the residual symbolic dynamics strategy shows the fastest convergence, while the combination of the symbolic loss regularization strategy and the symbolic projection one provide stronger coherence over longer time horizons.
 
-The remainder of the paper is organized as follows: \autoref{sec:related_work} surveys related work, \autoref{sec:method} details NS-MAWM, \autoref{sec:eval} presents experiments, and \autoref{sec:conclusion} concludes.
+The remainder of the paper is organized as follows: \autoref{sec:related_work} surveys related work, \autoref{sec:background} briefly reviews background concepts, \autoref{sec:method} details NS-MAWM, \autoref{sec:eval} presents experiments, and \autoref{sec:conclusion} concludes.
 
 
 
@@ -261,18 +266,55 @@ The remainder of the paper is organized as follows: \autoref{sec:related_work} s
 
 \section{Related Work}
 \label{sec:related_work}
+% TODO: On cherche les travaux qui permettent d'avoir un WM qui permette une meilleure prise en compte de :
+%  - l'observabilité partielle,
+%  - de la non-stationnarité (autres agents qui interagissent en même temps),
+%  - l'aspect multi-agent dans l'architecture du modèle,
+%  - l'interpretation des observations en particulier au regard d'un environnement multi-agent complexe
+%  - la possibilité d'injecter des règles symboliques
+%  - la possibilité d'évaluer la cohérence au regard des règles symboliques
+%  - la robustesse à des variations de l'environnement
+%  - la généralisation à de nouvelles configurations d'agents/objets
+%  - l'efficacité en termes de temps de calcul et de données pour converger vers une performance comparable par rapport à un WM classique (la frugalité du temps de calcul)
+%  - la frugalité en termes de données (moins de données nécessaires pour atteindre une certaine performance)
+%  - la scalabilité avec le nombre d'agents/objets/règles
+%  - le drift sémantique sur le long terme (est-ce que le modèle reste cohérent sur le long terme ?)
 
-\paragraph{World Models in Model-Based Reinforcement Learning.} Learning latent dynamics from raw observations enables agents to perform planning through imagined rollouts~\cite{ha2018worldmodels,hafner2019learning,hafner2020dreamer,hafner2021dreamerv2,schrittwieser2020}. Yet, traditional world models often rely on unstructured latent spaces, learning monolithic representations without semantic compositionality. This impairs generalization to novel configurations or long-horizon planning~\cite{kipf2020contrastivelearningstructuredworld,zhang2021worldmodelgraph}.
+We review the landscape of related works across four major axes of relevance to NS-MAWM:
 
-\paragraph{Multi-Agent World Models.} Extending world models to multi-agent scenarios has been tackled in model-based MARL~\cite{Willemsen2021MAMBPO,Venugopal2024MABL,Xu2022mingling}, with approaches typically assuming centralized training and using shared encoders or joint dynamics models. However, such models struggle to preserve agent identity, handle partial observability, or represent spatial and relational constraints in a modular fashion~\cite{Micah2020overcooked,Ellis2023smacv2,lowe2017multi}. Despite structured settings being common, current approaches offer limited compositionality and poor interpretability across agents.
+\paragraph{Architectures of World Models.} Early approaches such as Dreamer~\cite{hafner2020dreamer, hafner2021dreamerv2} and PlaNet~\cite{hafner2019learning} proposed powerful black-box latent dynamics models, often using a monolithic latent space without architectural bias toward entities or agents. More recent efforts adopt a structured representation. For instance, World Model as Graph~\cite{zhang2021worldmodelgraph} and MABL~\cite{Venugopal2024MABL} propose latent modularity aligned with environment entities and topology. MAMBPO~\cite{Willemsen2021MAMBPO} incorporates explicit multi-agent structure, allowing rollouts conditioned on individual agent views.
 
-\paragraph{Symbolic Constraints and Neuro-Symbolic Learning.} Neuro-symbolic systems aim to integrate logical priors into differentiable learning~\cite{manhaeve2018deepproblog,garcez2023neurosymbolic}. Techniques like semantic loss~\cite{dy2018semanticloss} or differentiable logic rules~\cite{fan2017differentiablelearninglogicalrules} encode soft constraints during training, but have rarely been deployed within world models. A few recent efforts~\cite{balloch2023neurosymbolicworldmodelsadapting,agravante-etal-2023-learning} explore neuro-symbolic WMs, yet often use symbolic structure in post-processing or auxiliary training signals rather than integrating rules tightly into latent transition learning.
+\paragraph{Learning in Multi-Agent Environments.} Some models simply treat other agents as part of the environment, hence implicitly stationary. Mingling Foresight~\cite{Xu2022mingling} and Multi-Timescale MARL~\cite{nekoei2023dealing} improve handling of concurrent interactions via hierarchical reasoning or timescale adaptation. Opponent modeling is tackled explicitly in~\cite{Yuxiaopeng2022modelbased}, which proposes world models conditioned on latent opponent policies.
 
-\paragraph{Structured Inductive Biases and Geometric Constraints.} Imposing equivariance or structure in the latent space has shown promise in enabling sample-efficient and generalizable world models~\cite{mondal2022eqr,park2022learning,bronstein2021geometric,cohen2016group}. These works introduce geometric inductive biases but often stop short of modeling logical constraints or symbolic invariants—such as collision prevention or object permanence—which are essential for multi-agent coherence.
+\paragraph{Symbolic Knowledge in World Models.} Symbolic priors are sparsely represented in world model literature. Several efforts inject domain knowledge as constraints, such as Semantic Loss~\cite{Xu2018semanticloss} and differentiable logic rules~\cite{Fan2017differentiablelearninglogicalrules}. DeepProbLog~\cite{manhaeve2018deepproblog} merges probabilistic logic with deep models. Recent neuro-symbolic world models~\cite{balloch2023neurosymbolicworldmodelsadapting, agravante-etal-2023-learning} propose explicit symbolic structure over latent dynamics to support adaptation and interpretability.
 
-\paragraph{Evaluation of Symbolic Consistency.} Evaluation of WMs typically relies on standard generative metrics: log-likelihood, reconstruction error, or downstream task rewards~\cite{hafner2019learning,schrittwieser2020}. Yet, these fail to detect semantic violations such as agents occupying the same space, or disappearing objects. While some works acknowledge model bias from compounding errors~\cite{talvitie2014modelbias,venkatraman2015improving}, few explicitly evaluate symbolic consistency. Dedicated metrics for symbolic validity remain largely absent from mainstream WM literature.\\
+\paragraph{Evaluation Dimensions.} Most WMs are evaluated using reconstruction loss or control performance, but few assess coherence with symbolic rules or generalization under structural shifts. Some recent benchmarks~\cite{Duan_2025_ICCV} and surveys~\cite{Wong2023, Delvecchio2025p1157} advocate for broader evaluation metrics, including semantic consistency, rule violation rates, and frugality in data/time.
 
-Taken together, these directions reveal three core limitations in the state of the art. First (\textbf{G1}), most world models operate over unstructured latent vectors and lack compositional representations of entities or roles. This prevents modular reasoning and hampers systematic generalization across different agent-object configurations~\cite{zhang2021worldmodelgraph}. Second (\textbf{G2}), although symbolic rules are well studied in logic-guided learning, they are rarely integrated directly into the training of world models. Instead, symbolic knowledge is often applied after rollout or as auxiliary signals, missing the opportunity to shape latent transitions and reduce hallucinations~\cite{dy2018semanticloss,manhaeve2018deepproblog}. Third (\textbf{G3}), the evaluation of WMs remains largely statistical or reward-based, without metrics that assess whether predictions obey known symbolic constraints (e.g., conservation laws, action-conditioned transitions). Without such metrics, progress on semantically coherent modeling remains difficult to quantify.
+\begin{table*}[t]
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \footnotesize
+    \begin{tabular}{p{4.69cm}cccccccc}
+      \toprule
+      \textbf{Work}                                                  & Struct. WM & MA-aware & NS-aware & Symb. Priors & Symb. Coher. & Robust & Gen.   & Frugal \\
+      \midrule
+      Dreamer~\cite{hafner2020dreamer}                               & \xmark     & \xmark   & \xmark   & \xmark       & \xmark       & \xmark & $\sim$ & $\sim$ \\
+      WM as Graph~\cite{zhang2021worldmodelgraph}                    & \cmark     & $\sim$   & \xmark   & \xmark       & \xmark       & \xmark & $\sim$ & \xmark \\
+      MABL~\cite{Venugopal2024MABL}                                  & \cmark     & \cmark   & $\sim$   & \xmark       & \xmark       & $\sim$ & \cmark & $\sim$ \\
+      MAMBPO~\cite{Willemsen2021MAMBPO}                              & \cmark     & \cmark   & \xmark   & \xmark       & \xmark       & \xmark & $\sim$ & \cmark \\
+      WorldCloner~\cite{balloch2023neurosymbolicworldmodelsadapting} & \cmark     & \cmark   & \cmark   & \cmark       & \cmark       & $\sim$ & \cmark & \xmark \\
+      Mingling~\cite{Xu2022mingling}                                 & $\sim$     & \cmark   & \cmark   & \xmark       & \xmark       & \cmark & \cmark & \cmark \\
+      OppMod~\cite{Yuxiaopeng2022modelbased}                         & \xmark     & \cmark   & \cmark   & \xmark       & \xmark       & $\sim$ & $\sim$ & \xmark \\
+      DeepProbLog~\cite{manhaeve2018deepproblog}                     & \xmark     & \xmark   & \xmark   & \cmark       & \xmark       & \xmark & \xmark & \xmark \\
+      NS-WM~\cite{agravante-etal-2023-learning}                      & \cmark     & \cmark   & $\sim$   & \cmark       & \cmark       & $\sim$ & $\sim$ & \xmark \\
+      \bottomrule
+    \end{tabular}
+  }
+  \caption{Comparison of representative works. Struct. WM: structured world model; MA-aware: multi-agent awareness; NS-aware: non-stationarity; Symb. Priors: symbolic priors; Symb. Coher.: symbolic coherence evaluation; Robust: robustness; Gen.: generalization; Frugal: data/time efficiency.}
+  \label{tab:related_work}
+\end{table*}
+
+\autoref{tab:related_work} summarizes this landscape, highlighting how existing works address (or neglect) the critical dimensions we target. Despite significant progress, most existing world models fail to simultaneously address the three critical dimensions we target. Specifically, they often lack : (\textbf{G1}) multi-agent specific architectural bias, (\textbf{G2}) integration of symbolic priors or reasoning mechanisms, and (\textbf{G3}) coherence verification against symbolic knowledge. These gaps motivate our proposed framework to support structured, interpretable, and efficient learning in multi-agent partially observable environments with evolving dynamics.
 
 
 \section{Background and basics}
@@ -281,30 +323,95 @@ Taken together, these directions reveal three core limitations in the state of t
 \subsection{MARL framework}
 \label{sec:decpomdp}
 
-TODO
+To apply MARL techniques, we rely on the \textit{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP) \cite{Oliehoek2016}. Dec-POMDPs naturally model decentralized multi-agent coordination under partial observability, making them well suited for integrating organizational constraints. Unlike \textit{Partially Observable Stochastic Games} (POSG), the Dec-POMDP allows for a common reward function for agents, which promotes collaboration~\cite{Beynier2013}.
+
+A Dec-POMDP $d \in D$ (where $D$ is the set of Dec-POMDPs) is defined as a 7-tuple $d = \langle S, \{A_i\}, T, R, \{\Omega_i\}, O, \gamma \rangle$, where $S = \{s_1,\dots,s_{|S|}\}$ is the set of possible states; $A_{i} = \{a_{1}^{i},\dots,a_{|A_{i}|}^{i}\}$ is the set of possible actions for agent $i$; $T$ represents the set of transition probabilities, with $T(s,a,s') = \probP(s'|s,a)$ as the probability of transitioning from state $s$ to state $s'$ following action $a$; $R: S \times A \times S \rightarrow \mathbb{R}$ is the reward function, assigning a reward based on the initial state, the action taken, and the resulting state; $\Omega_{i} = \{o_{1}^{i},\dots,o_{|\Omega_{i}|}^{i}\}$ is the set of possible observations for agent $i$; $O$ represents the set of observation probabilities, where $O(s',a,o) = \probP(o|s',a)$ is the probability of obtaining observation $o$ after performing action $a$ and reaching state $s'$; and $\gamma \in [0,1]$ is the discount factor
+%, used to weight future rewards.
+
+The following formalism is used to solve the Dec-POMDP~\cite{Beynier2013,Albrecht2024}: $\mathcal{A}$ represents the set of $n$ \textbf{agents}; $\Pi$ denotes the set of \textbf{policies}, where a policy $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action, representing the agent's internal strategy; $\Pi_{joint}$ represents the set of \textbf{joint policies}, with a joint policy $\pi_{joint} \in \Pi_{joint}, \pi_{joint}: \Omega^n \rightarrow A^n = \Pi^n$, which selects an action for each agent based on their respective observations, acting as a collection of policies used by agents within a team; $H$ is the set of \textbf{histories}, where a history (or trajectory) over $z \in \mathbb{N}$ steps (typically the maximum number of steps in an episode) is represented as the $z$-tuple $h = \langle \langle \omega_{k}, a_{k}\rangle | k \leq z, \omega \in \Omega, a \in A\rangle$, capturing successive observations and actions; $H_{joint}$ stands for the set of \textbf{joint histories}, with a joint history $h_{joint} \in H_{joint}$ over $z$ steps defined as the set of agent histories: $h_{joint} = \{h_1, h_2, \dots, h_n\}$; and finally, $V_{joint}(\pi_{joint}): \Pi_{joint} \rightarrow \mathbb{R}$ denotes the \textbf{expected cumulative reward} over a finite horizon (assuming $\gamma < 1$ or if the number of steps in an episode is finite), where $\pi_{joint}$ represents the joint policy for team $i$, with $\pi_{joint,-i}$ being the joint policies of other teams, considered as fixed.
 
 \subsection{Model-Based MARL}
 \label{sec:mb-marl}
 
 TODO
 
-\subsection{From World Models to Multi-Agent World Models}
-\label{sec:mawm}
+\subsection{The WM basics}
+\label{sec:wm_basics}
 
-TODO
+In \textbf{RL}, and particularly under partial observability, \textbf{WMs}~\cite{ha2018worldmodels, hafner2020dreamer} aim to learn internal models that jointly approximate both transition and observation dynamics. \textit{WMs} enable agents to perform planning, improve sample efficiency, and facilitate safe exploration by allowing the agent to simulate future scenarios. This approach belongs to the \textbf{MBRL} paradigm~\cite{moerland2020model}, and proves particularly useful for automatically constructing high-fidelity simulation models even in the absence of an explicit environment representation.
+
+Formally, at each time step $t$, let $\omega_t \in \Omega$ denote the current observation, $a_t \in A$ the executed action, and $\tilde{h}_{t-1} \in \mathcal{H}$ the recurrent hidden state summarizing the interaction history up to $t-1$. Since observations are generally high-dimensional (e.g., images or complex state vectors), an encoder $Enc: \Omega \rightarrow Z$ is applied to project observations into a compact latent space $Z$, with $z_t = Enc(\omega_t)$, where $\dim(Z) \ll \dim(\Omega)$.
+
+The main temporal structure is modeled using a \textbf{Recurrent Latent Dynamics Model (\textbf{RLDM})}~\cite{hafner2020dreamer} $\mathcal{T}^{z} = f(g(h_{t-1}, z_t, a_t))$, which predicts the next latent state $\hat{z}_{t+1}$ by updating the recurrent state via $f$ and applying latent dynamics via $g$:
+\[
+  h_t = f(h_{t-1}, z_t, a_t), \quad \hat{z}_{t+1} = g(h_t)
+\]
+where $f(\cdot)$ typically corresponds to a recurrent neural network \textbf{Recurrent Neural Network} (RNN) such as a \textbf{Long Short-Term Memory}~\cite{hochreiter1997long} (LSTM), applied to the concatenation of $h_{t-1}$, $z_t$, and $a_t$, and $g(\cdot)$ is a function (often implemented as an \textbf{MLP}) mapping the recurrent state to the latent representation of the next observation.
+
+The predicted latent state is then decoded by $Dec: Z \rightarrow \Omega$ to produce the predicted observation $\hat{\omega}_{t+1} = Dec(\hat{z}_{t+1})$. The entire model is trained jointly to minimize both the \emph{reconstruction loss} $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$ in observation space, and optionally a \emph{latent prediction loss} to stabilize learning of the latent dynamics.
+
+The recurrent hidden state $\tilde{h}_t$ serves as a compact summary of the complete interaction history up to time $t$, thus avoiding the need to explicitly store long observation-action sequences.
+
+For conciseness, we define the full composition that directly maps the current observation, action, and recurrent state to the next predicted observation as the \textbf{Observation Prediction Model} (\textbf{OPM}):
+\begin{align*}
+  \mathcal{T}(h_{t-1}, \omega_t, a_t) := Dec(g(f(h_{t-1}, Enc(\omega_t), a_t))) = \hat{\omega}_{t+1}
+\end{align*}
+
+\begin{figure}[h!]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+    \input{figures/single_agent_world_model}
+  }
+  \caption{Illustration of a \textit{World Model} architecture including the Autoencoder and the OPM}
+  \label{fig:single_agent_world_model}
+\end{figure}
+
+\autoref{fig:single_agent_world_model} illustrates the architecture of a \textit{World Model} including the Autoencoder and the \textbf{OPM}.
+
+\textbf{Autoencoder training phase:} An autoencoder, such as a \textbf{VAE}, is first trained to encode and decode observations into latent representations. The objective is to minimize the discrepancy between real observations and reconstructed observations.
+
+\textbf{Initialization and transition processing:} Initially, the recurrent hidden state $\tilde{h}_{t-1}$ is initialized to the zero vector. For each history and each transition, an input vector is constructed by concatenating three elements: the observation representation $z_t$, the action $a_t$ (after one-hot encoding), and the recurrent hidden state $\tilde{h}_{t-1}$.
+
+\textbf{Operation of the \textbf{RLDM}:} This input vector is processed by the \textbf{RLDM} through a two-step procedure. First, it passes through the \textbf{RNN}, which updates the recurrent hidden state with new transitions to obtain $\hat{h}_t$. Then, this vector is fed into an \textbf{MLP}, which determines the latent representation of the next observation $\hat{z}_{t+1}$.
+
+\textbf{Training and prediction:} The \textbf{RLDM} is trained to minimize the mean squared error between the predicted observation and the actual observation. Once training is completed, a predicted latent observation representation can be decoded into a predicted observation $\omega_{t+1}$.
+
+\subsection{An extension to Multi-Agent WMs}
+\label{sec:mawm_basics}
+
+Following a simple extension to multi-agent settings, we aim to constructing an \textbf{Joint-Observation Prediction Model} (JOPM) $\mathcal{T}^j~: H^j \times \Omega^j \times A^j \rightarrow \mathcal{H} \times \hat{\Omega}^j$ from the traces of real interactions $\mathcal{D}_{H^j}$ (with $h^j \in \mathcal{D}_{H^j}$, $h^j = (h^1, h^2 \dots h^{|\mathcal{A}|})$ and for $i \in \{0\dots|\mathcal{A}|\}$, $h^i = \langle (\omega_t, a_t) \rangle\phantom{X}_{t \in \llbracket 0, n_{step} \rrbracket}$) . At a time step $t \in \llbracket 0, n_{step} \rrbracket$, for a recurrent hidden state $\tilde{h}_{t-1} \in \mathcal{H}$ representing the joint history up to $t-1$ (with $\tilde{h}_{-1} = \mathbf{0}$), the joint observation received $\omega_t^j \in \Omega^j$ and the joint action $a_t^j \in A^j$, \textbf{JOPM} $\mathcal{T}^j$ returns the new hidden state $\tilde{h}_t \in \mathcal{H}$ as well as the prediction of the next joint observation $\hat{\omega}^j \in \hat {\Omega}^j$. This architecture, illustrated in \autoref{fig:jopm_architecture}, allows to learn the dynamics of environmental observations in order to build a simulation from scratch.
+
+In multi-agent environments, joint observations quickly become large as the number of agents increases. To overcome this, joint encoding functions are introduced for observations and actions.
+
+\begin{figure}[h]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+    \input{figures/jopm_synthesis}
+  }
+  \caption{Schematic of the architecture of a JOPM including the RLDM and the Auto-encoder.}
+  \label{fig:jopm_architecture}
+\end{figure}
+
+% \widetilde{\hat{\omega }}_{t}
+
+More precisely, each joint observation $\omega_t^{j} = (\omega_t^1, \dots, \omega_t^{|\mathcal{A}|}) \in \Omega^{j}$ is flattened into a single vector $\tilde{\omega}_t = vec (\omega_t^1, \dots, \omega_t^{|\mathcal{A}|})$, then passed through an encoder $Enc~: \tilde{\Omega}\rightarrow Z$ to produce a latent representation $z_t = Enc(\tilde{\omega}_t)$. A decoder $Dec~: Z \rightarrow \widetilde{\hat{\Omega}}$ allows the flattened joint observation $\widetilde{\hat{\omega}}_t = Dec(z_t)$ to be reconstructed before being recomposed into an approximate joint observation $\hat{\omega}_t^{j} = unvec(\widetilde{\hat{\omega}}_t) = (\hat{\omega}_t^1, \dots, \hat{\omega}_t^{|\mathcal{A}|}) \in \Omega^ {j}$.
+
+MLPs or attention-based architectures are generally used for the autoencoder (encoder-decoder set) in order to aggregate multi-agent information into fixed-size feature vectors while capturing critical dependencies between agents.
+
+Once encoding has been performed on the set of joint observations $\omega^j \in \Omega^{j}$ to obtain the latent representations $z_t \in Z_t$, the multi-agent World Model operates as in a single-agent context, using the encoded observations $z_t$ in the histories transmitted to the \textbf{RLDM} $\mathcal{T}^{z}$; an \textbf{RLDM} can also be used. For each of the collected episodes $h^j \in \mathcal{D}_{H^j} $, for each step $t \in \llbracket 0, n_{step} \rrbracket$, the latent representation of the joint observation $z_t$ is concatenated with the recurrent hidden state vector $\tilde{h}_{t-1}$ and the flattened joint action vector $\tilde{a}_t$. The vector resulting from this concatenation is passed through the \textbf{RNN} (\textbf{LSTM}) to update the recurrent hidden state vector $\tilde{h}_{t}$ and then passed through an \textbf{MLP} to determine the latent representation of the approximate joint observation at the next time step $z_{t+1} $. Next, the decoder $Dec$ is used to reconstruct the flattened approximate joint observation $\tilde{\hat{\omega}}_{t+1}^{j}$. Finally, this flattened approximate joint observation is recomposed into a predicted joint observation for the next state $\hat{\omega}_{t+1}^{j}$.
 
 
-% ============================
-% 4. Method: Neuro-Symbolic MA World Models
-% ============================
-
-
-\section{Neuro-Symbolic Multi-Agent World Models}
+\section{Neuro-Symbolic Multi-Agent WMs}
 \label{sec:method}
 
-We propose \emph{Neuro-Symbolic Multi-Agent World Models (NS-MAWM)}, a framework... TODO
+We propose \emph{Neuro-Symbolic Multi-Agent WMs (NS-MAWM)}, a framework... TODO... A schematic overview of NS-MAWM is provided in \autoref{fig:ns-mawm_overview}.
 
-\include{figures/method_figure}
+% \begin{figure}[t]
+%   \centering
+%   \include{figures/method_figure}
+%   \caption{Overview of the NS-MAWM framework: ...TODO}
+%   \label{fig:ns-mawm_overview}
+% \end{figure}
 
 \subsection{Structured observation latent space and unified neuro-symbolic formalism}
 \label{sec:ns}
@@ -390,39 +497,12 @@ TODO
 \section{Conclusion and future work}
 \label{sec:conclusion}
 
-This paper addressed a fundamental limitation of multi-agent world models: while neural world models can achieve strong short-horizon prediction accuracy, they often fail to preserve semantic consistency under long-horizon rollouts, particularly in partially observable multi-agent settings.
-We introduced \textbf{Neuro-Symbolic Multi-Agent World Models (NS-MAWM)}, a framework that integrates symbolic invariants and action-conditioned equivariances as soft, differentiable consistency constraints during world model training.
-By treating symbolic knowledge as an inductive bias rather than a hard restriction, NS-MAWM reduces semantic drift while preserving uncertainty and flexibility.
-
-Empirically, we demonstrated that NS-MAWM substantially improves long-horizon semantic consistency, as measured by the proposed Rule Violation Rate (RVR), while maintaining comparable one-step predictive accuracy.
-Across controlled gridworld environments and a standard multi-agent benchmark, these improvements translated into more reliable imagination rollouts, improved downstream planning performance, and higher data efficiency.
-Ablation studies further showed that both invariants and equivariances contribute to performance, and that uncertainty-aware gating is critical in stochastic or partially observable regimes.
-
-Beyond the specific instantiation presented in this work, NS-MAWM opens several promising research directions.
-First, richer rule languages could be explored, including relational, temporal, or probabilistic rules that capture higher-level interaction patterns.
-Second, while we focused on soft consistency constraints, investigating hybrid approaches that combine soft regularization with occasional hard projection or constraint satisfaction may further improve robustness.
-Third, evaluating neuro-symbolic world models in more complex environments—such as continuous control, heterogeneous agent populations, or large-scale coordination tasks—remains an important step toward real-world applicability.
-
-Another key direction concerns the source and reliability of symbolic knowledge.
-In this work, rules were specified manually, which is appropriate for controlled settings but may not scale.
-Future work could explore learning rules directly from data, combining representation learning with structure discovery, or adapting rules online as the environment changes.
-Handling partial, incorrect, or conflicting rules, as well as stochastic events that temporarily violate invariants, is another important challenge.
-The proposed gating mechanism is a first step in this direction, but more principled uncertainty-aware or Bayesian treatments are worth exploring.
-
-Finally, scalability and transfer remain open questions.
-As the number of agents or rules increases, efficient rule evaluation and selection becomes critical.
-Investigating modular rule sets, rule sharing across agents, and transfer of learned constraints across domains may significantly broaden the applicability of neuro-symbolic world models.
-
-\paragraph{Take-home message.}
-Semantic consistency is a first-class requirement for reliable multi-agent world models.
-By integrating neuro-symbolic consistency constraints into model-based MARL, NS-MAWM provides a principled and effective way to reduce long-horizon drift, improve interpretability, and enhance downstream decision-making.
-We hope this work encourages further research at the intersection of world modeling, multi-agent systems, and neuro-symbolic learning.
-
+TODO
 
 \section*{Impact Statement}
 
 This paper presents work whose goal is to advance the field of Machine Learning by improving the reliability of model-based multi-agent reinforcement learning.
-By reducing semantic inconsistencies in learned world models, this work may contribute to safer and more interpretable decision-making in multi-agent systems.
+By reducing semantic inconsistencies in learned WMs, this work may contribute to safer and more interpretable decision-making in multi-agent systems.
 We do not identify ethical concerns specific to this work beyond those commonly associated with reinforcement learning research.
 
 
