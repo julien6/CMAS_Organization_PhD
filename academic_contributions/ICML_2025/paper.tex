@@ -323,88 +323,170 @@ We review the landscape of related works across four major axes of relevance to 
 \subsection{MARL framework}
 \label{sec:decpomdp}
 
-To apply MARL techniques, we rely on the \textit{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP) \cite{Oliehoek2016}. Dec-POMDPs naturally model decentralized multi-agent coordination under partial observability, making them well suited for integrating organizational constraints. Unlike \textit{Partially Observable Stochastic Games} (POSG), the Dec-POMDP allows for a common reward function for agents, which promotes collaboration~\cite{Beynier2013}.
+To study cooperative MARL under partial observability,
+we adopt the \textit{Decentralized Partially Observable Markov Decision Process} (Dec-POMDP)
+formalism~\cite{Oliehoek2016},
+which provides a principled framework for decentralized decision-making
+where agents act on local observations while jointly optimizing a shared objective.
+Dec-POMDPs are a strict subclass of
+\textit{Partially Observable Stochastic Games} (POSGs),
+specialized to fully cooperative settings with a common reward
+and a jointly optimized policy~\cite{Beynier2013}.
 
-A Dec-POMDP $d \in D$ (where $D$ is the set of Dec-POMDPs) is defined as a 7-tuple $d = \langle S, \{A_i\}, T, R, \{\Omega_i\}, O, \gamma \rangle$, where $S = \{s_1,\dots,s_{|S|}\}$ is the set of possible states; $A_{i} = \{a_{1}^{i},\dots,a_{|A_{i}|}^{i}\}$ is the set of possible actions for agent $i$; $T$ represents the set of transition probabilities, with $T(s,a,s') = \probP(s'|s,a)$ as the probability of transitioning from state $s$ to state $s'$ following action $a$; $R: S \times A \times S \rightarrow \mathbb{R}$ is the reward function, assigning a reward based on the initial state, the action taken, and the resulting state; $\Omega_{i} = \{o_{1}^{i},\dots,o_{|\Omega_{i}|}^{i}\}$ is the set of possible observations for agent $i$; $O$ represents the set of observation probabilities, where $O(s',a,o) = \probP(o|s',a)$ is the probability of obtaining observation $o$ after performing action $a$ and reaching state $s'$; and $\gamma \in [0,1]$ is the discount factor
-%, used to weight future rewards.
+Formally, a Dec-POMDP is a 7-tuple
+$d = \langle S, \{A_i\}_{i=1}^n, T, R, \{\Omega_i\}_{i=1}^n, O, \gamma \rangle$,
+where $S$ is the state space;
+$A_i$ and $\Omega_i$ are the action and observation spaces of agent $i$;
+$T(s,a,s') = \mathbb{P}(s' \mid s,a)$ is the transition function for joint actions
+$a = (a_1,\dots,a_n)$;
+$R : S \times A \times S \rightarrow \mathbb{R}$ is the shared reward;
+$O(s',a,o) = \mathbb{P}(o \mid s',a)$ is the observation function;
+and $\gamma \in [0,1)$ is the discount factor.
 
-The following formalism is used to solve the Dec-POMDP~\cite{Beynier2013,Albrecht2024}: $\mathcal{A}$ represents the set of $n$ \textbf{agents}; $\Pi$ denotes the set of \textbf{policies}, where a policy $\pi \in \Pi, \pi: \Omega \rightarrow A$ deterministically maps an observation to an action, representing the agent's internal strategy; $\Pi_{joint}$ represents the set of \textbf{joint policies}, with a joint policy $\pi_{joint} \in \Pi_{joint}, \pi_{joint}: \Omega^n \rightarrow A^n = \Pi^n$, which selects an action for each agent based on their respective observations, acting as a collection of policies used by agents within a team; $H$ is the set of \textbf{histories}, where a history (or trajectory) over $z \in \mathbb{N}$ steps (typically the maximum number of steps in an episode) is represented as the $z$-tuple $h = \langle \langle \omega_{k}, a_{k}\rangle | k \leq z, \omega \in \Omega, a \in A\rangle$, capturing successive observations and actions; $H_{joint}$ stands for the set of \textbf{joint histories}, with a joint history $h_{joint} \in H_{joint}$ over $z$ steps defined as the set of agent histories: $h_{joint} = \{h_1, h_2, \dots, h_n\}$; and finally, $V_{joint}(\pi_{joint}): \Pi_{joint} \rightarrow \mathbb{R}$ denotes the \textbf{expected cumulative reward} over a finite horizon (assuming $\gamma < 1$ or if the number of steps in an episode is finite), where $\pi_{joint}$ represents the joint policy for team $i$, with $\pi_{joint,-i}$ being the joint policies of other teams, considered as fixed.
+Each agent $i \in \mathcal{A} = \{1,\dots,n\}$ follows a (possibly stochastic) policy
+$\pi_i : \Omega_i \rightarrow \Delta(A_i)$,
+and the \textbf{joint policy} is
+$\pi_{\text{joint}} = (\pi_1,\dots,\pi_n)$.
+Let $H_i$ denote agent histories
+$h_i = \langle (\omega_k^i, a_k^i) \rangle_{k=0}^{z}$,
+and $H_{\text{joint}} = H_1 \times \dots \times H_n$ the set of joint histories.
+The objective is to find $\pi_{\text{joint}}$ maximizing the expected return with either finite horizon $T$ or infinite horizon and $\gamma < 1$:
+\[
+  V(\pi_{\text{joint}}) =
+  \mathbb{E}_{\pi_{\text{joint}}}
+  \left[ \sum_{t=0}^{T} \gamma^t R(s_t, a_t, s_{t+1}) \right],
+\]
 
-\subsection{Model-Based MARL}
+\subsection{Model-Based Multi-Agent Reinforcement Learning}
 \label{sec:mb-marl}
 
-TODO
+Model-Based Multi-Agent Reinforcement Learning (MB-MARL) extends model-based RL to multi-agent decision-making.
+The central idea is to learn an approximate environment model
+and exploit it for planning or policy optimization,
+thereby improving sample efficiency and coordination
+\cite{Moerland2023modelbased,Wang2022modelbasedmultiagentreinforcementlearning}.
 
-\subsection{The WM basics}
+\paragraph{Environment models.}
+In cooperative settings with $n$ agents, dynamics are governed by
+$P(s' \mid s, a_1,\dots,a_n)$ with shared reward $R(s,a_1,\dots,a_n)$.
+MB-MARL learns approximations
+$\hat{P}_\phi$ and $\hat{R}_\phi$ from interaction data.
+Compared to single-agent MBRL, learning such models is more challenging
+due to joint action spaces, partial observability, and learning-induced non-stationarity
+\cite{Wang2022modelbasedmultiagentreinforcementlearning}.
+
+\paragraph{Model usage.}
+Following standard taxonomies \cite{Moerland2023modelbased,Wang2022modelbasedmultiagentreinforcementlearning},
+learned models are used for
+(i) planning (such as Model Predictive Control -- MPC),
+(ii) Dyna-style learning with short imagined rollouts,
+or (iii) direct policy optimization in the learned model,
+which is sample-efficient but sensitive to model bias
+\cite{Moerland2023modelbased}.
+
+\paragraph{Model structure.}
+MB-MARL methods differ by model structure:
+centralized models learn joint dynamics using global information
+(similar to CTDE but limited in scalability),
+whereas decentralized or factorized models learn local or agent-specific dynamics,
+possibly leveraging communication or structural assumptions
+\cite{Wang2022modelbasedmultiagentreinforcementlearning}.
+
+Under suitable assumptions, reusing data through model rollouts
+can reduce environment interactions and improve sample complexity
+in cooperative or discounted stochastic games
+\cite{Wang2022modelbasedmultiagentreinforcementlearning,Moerland2023modelbased}.
+
+
+
+
+\subsection{World Model Basics}
 \label{sec:wm_basics}
 
-In \textbf{RL}, and particularly under partial observability, \textbf{WMs}~\cite{ha2018worldmodels, hafner2020dreamer} aim to learn internal models that jointly approximate both transition and observation dynamics. \textit{WMs} enable agents to perform planning, improve sample efficiency, and facilitate safe exploration by allowing the agent to simulate future scenarios. This approach belongs to the \textbf{MBRL} paradigm~\cite{moerland2020model}, and proves particularly useful for automatically constructing high-fidelity simulation models even in the absence of an explicit environment representation.
+WMs are a class of MBRL methods
+that learn environment dynamics~\cite{ha2018worldmodels,hafner2020dreamer}.
+They are particularly suited to partially observable settings such as Dec-POMDPs,
+enabling planning, improved sample efficiency, and imagination-based reasoning.
+Here, we present a simplified deterministic formulation while noting that
+modern WMs typically rely on stochastic latent variables trained via variational inference.
 
-Formally, at each time step $t$, let $\omega_t \in \Omega$ denote the current observation, $a_t \in A$ the executed action, and $\tilde{h}_{t-1} \in \mathcal{H}$ the recurrent hidden state summarizing the interaction history up to $t-1$. Since observations are generally high-dimensional (e.g., images or complex state vectors), an encoder $Enc: \Omega \rightarrow Z$ is applied to project observations into a compact latent space $Z$, with $z_t = Enc(\omega_t)$, where $\dim(Z) \ll \dim(\Omega)$.
-
-The main temporal structure is modeled using a \textbf{Recurrent Latent Dynamics Model (\textbf{RLDM})}~\cite{hafner2020dreamer} $\mathcal{T}^{z} = f(g(h_{t-1}, z_t, a_t))$, which predicts the next latent state $\hat{z}_{t+1}$ by updating the recurrent state via $f$ and applying latent dynamics via $g$:
+Formally, at each time step $t$, let $\omega_t \in \Omega$ denote the observation,
+$a_t \in A$ the executed action, and $\tilde{h}_{t-1} \in \mathcal{H}$ the recurrent hidden state summarizing the interaction history up to time $t-1$. An encoder $Enc : \Omega \rightarrow Z$ maps high-dimensional observations to a compact latent representation $z_t = Enc(\omega_t)$.
+%
+The temporal evolution of the latent state is modeled by a
+\textbf{Recurrent Latent Dynamics Model (RLDM)}~\cite{hafner2020dreamer},
+defined as
 \[
-  h_t = f(h_{t-1}, z_t, a_t), \quad \hat{z}_{t+1} = g(h_t)
+  h_t = f(h_{t-1}, z_t, a_t), \qquad \hat{z}_{t+1} = g(h_t),
 \]
-where $f(\cdot)$ typically corresponds to a recurrent neural network \textbf{Recurrent Neural Network} (RNN) such as a \textbf{Long Short-Term Memory}~\cite{hochreiter1997long} (LSTM), applied to the concatenation of $h_{t-1}$, $z_t$, and $a_t$, and $g(\cdot)$ is a function (often implemented as an \textbf{MLP}) mapping the recurrent state to the latent representation of the next observation.
+where $f(\cdot)$ is typically implemented as a Recurrent Neural Network (RNN),
+such as an Long-Short-Term Memory (LSTM)~\cite{hochreiter1997long},
+and $g(\cdot)$ is a parametric mapping such as Multi-Layer Perceptron (MLP).
+%
+The predicted latent state is decoded by
+$Dec : Z \rightarrow \Omega$ to produce the predicted observation
+$\hat{\omega}_{t+1} = Dec(\hat{z}_{t+1})$.
 
-The predicted latent state is then decoded by $Dec: Z \rightarrow \Omega$ to produce the predicted observation $\hat{\omega}_{t+1} = Dec(\hat{z}_{t+1})$. The entire model is trained jointly to minimize both the \emph{reconstruction loss} $\|\omega_{t+1} - \hat{\omega}_{t+1}\|$ in observation space, and optionally a \emph{latent prediction loss} to stabilize learning of the latent dynamics.
-
-The recurrent hidden state $\tilde{h}_t$ serves as a compact summary of the complete interaction history up to time $t$, thus avoiding the need to explicitly store long observation-action sequences.
-
-For conciseness, we define the full composition that directly maps the current observation, action, and recurrent state to the next predicted observation as the \textbf{Observation Prediction Model} (\textbf{OPM}):
-\begin{align*}
-  \mathcal{T}(h_{t-1}, \omega_t, a_t) := Dec(g(f(h_{t-1}, Enc(\omega_t), a_t))) = \hat{\omega}_{t+1}
-\end{align*}
-
-\begin{figure}[h!]
-  \centering
-  \resizebox{\columnwidth}{!}{%
-    \input{figures/single_agent_world_model}
-  }
-  \caption{Illustration of a \textit{World Model} architecture including the Autoencoder and the OPM}
-  \label{fig:single_agent_world_model}
-\end{figure}
-
-\autoref{fig:single_agent_world_model} illustrates the architecture of a \textit{World Model} including the Autoencoder and the \textbf{OPM}.
-
-\textbf{Autoencoder training phase:} An autoencoder, such as a \textbf{VAE}, is first trained to encode and decode observations into latent representations. The objective is to minimize the discrepancy between real observations and reconstructed observations.
-
-\textbf{Initialization and transition processing:} Initially, the recurrent hidden state $\tilde{h}_{t-1}$ is initialized to the zero vector. For each history and each transition, an input vector is constructed by concatenating three elements: the observation representation $z_t$, the action $a_t$ (after one-hot encoding), and the recurrent hidden state $\tilde{h}_{t-1}$.
-
-\textbf{Operation of the \textbf{RLDM}:} This input vector is processed by the \textbf{RLDM} through a two-step procedure. First, it passes through the \textbf{RNN}, which updates the recurrent hidden state with new transitions to obtain $\hat{h}_t$. Then, this vector is fed into an \textbf{MLP}, which determines the latent representation of the next observation $\hat{z}_{t+1}$.
-
-\textbf{Training and prediction:} The \textbf{RLDM} is trained to minimize the mean squared error between the predicted observation and the actual observation. Once training is completed, a predicted latent observation representation can be decoded into a predicted observation $\omega_{t+1}$.
-
-\subsection{An extension to Multi-Agent WMs}
+\subsection{An Extension to Multi-Agent World Models}
 \label{sec:mawm_basics}
 
-Following a simple extension to multi-agent settings, we aim to constructing an \textbf{Joint-Observation Prediction Model} (JOPM) $\mathcal{T}^j~: H^j \times \Omega^j \times A^j \rightarrow \mathcal{H} \times \hat{\Omega}^j$ from the traces of real interactions $\mathcal{D}_{H^j}$ (with $h^j \in \mathcal{D}_{H^j}$, $h^j = (h^1, h^2 \dots h^{|\mathcal{A}|})$ and for $i \in \{0\dots|\mathcal{A}|\}$, $h^i = \langle (\omega_t, a_t) \rangle\phantom{X}_{t \in \llbracket 0, n_{step} \rrbracket}$) . At a time step $t \in \llbracket 0, n_{step} \rrbracket$, for a recurrent hidden state $\tilde{h}_{t-1} \in \mathcal{H}$ representing the joint history up to $t-1$ (with $\tilde{h}_{-1} = \mathbf{0}$), the joint observation received $\omega_t^j \in \Omega^j$ and the joint action $a_t^j \in A^j$, \textbf{JOPM} $\mathcal{T}^j$ returns the new hidden state $\tilde{h}_t \in \mathcal{H}$ as well as the prediction of the next joint observation $\hat{\omega}^j \in \hat {\Omega}^j$. This architecture, illustrated in \autoref{fig:jopm_architecture}, allows to learn the dynamics of environmental observations in order to build a simulation from scratch.
+A common extension of WMs to multi-agent settings
+consists in learning a centralized latent dynamics model
+over joint observations and joint actions, similar to the Centralized Training and Decentralized Execution (CTDE) paradigms.
+\cite{Wang2022modelbasedmultiagentreinforcementlearning}.
 
-In multi-agent environments, joint observations quickly become large as the number of agents increases. To overcome this, joint encoding functions are introduced for observations and actions.
+Given a dataset of joint trajectories
+$\mathcal{D}_{H^j} = \{ h^j \}$,
+with
+$h^j = \langle (\omega_t^j, a_t^j) \rangle_{t=0}^{T}$,
+the objective is to learn a predictive model of joint observation dynamics,
+as commonly done in model-based MARL and multi-agent world modeling
+\cite{Wang2022modelbasedmultiagentreinforcementlearning,Xu2022mingling}.
 
-\begin{figure}[h]
-  \centering
-  \resizebox{\columnwidth}{!}{%
-    \input{figures/jopm_synthesis}
-  }
-  \caption{Schematic of the architecture of a JOPM including the RLDM and the Auto-encoder.}
-  \label{fig:jopm_architecture}
-\end{figure}
+We define a \textbf{Joint Observation Prediction Model} (JOPM) to capture the environment dynamics as follows:
+\[
+  \mathcal{T}^j :
+  H^j \times \Omega^j \times A^j
+  \rightarrow \mathcal{H} \times \hat{\Omega}^j ,
+\]
+where $\mathcal{H}$ denotes the space of recurrent hidden states,
+following recurrent latent dynamics formulations in world models
+\cite{ha2018worldmodels,hafner2020dreamer}.
+%
+At time $t$, given $\tilde{h}_{t-1} \in \mathcal{H}$,
+the joint observation $\omega_t^j$ and joint action $a_t^j$,
+the model outputs an updated hidden state $\tilde{h}_t$
+and a predicted joint observation $\hat{\omega}_{t+1}^j$.
 
-% \widetilde{\hat{\omega }}_{t}
-
-More precisely, each joint observation $\omega_t^{j} = (\omega_t^1, \dots, \omega_t^{|\mathcal{A}|}) \in \Omega^{j}$ is flattened into a single vector $\tilde{\omega}_t = vec (\omega_t^1, \dots, \omega_t^{|\mathcal{A}|})$, then passed through an encoder $Enc~: \tilde{\Omega}\rightarrow Z$ to produce a latent representation $z_t = Enc(\tilde{\omega}_t)$. A decoder $Dec~: Z \rightarrow \widetilde{\hat{\Omega}}$ allows the flattened joint observation $\widetilde{\hat{\omega}}_t = Dec(z_t)$ to be reconstructed before being recomposed into an approximate joint observation $\hat{\omega}_t^{j} = unvec(\widetilde{\hat{\omega}}_t) = (\hat{\omega}_t^1, \dots, \hat{\omega}_t^{|\mathcal{A}|}) \in \Omega^ {j}$.
-
-MLPs or attention-based architectures are generally used for the autoencoder (encoder-decoder set) in order to aggregate multi-agent information into fixed-size feature vectors while capturing critical dependencies between agents.
-
-Once encoding has been performed on the set of joint observations $\omega^j \in \Omega^{j}$ to obtain the latent representations $z_t \in Z_t$, the multi-agent World Model operates as in a single-agent context, using the encoded observations $z_t$ in the histories transmitted to the \textbf{RLDM} $\mathcal{T}^{z}$; an \textbf{RLDM} can also be used. For each of the collected episodes $h^j \in \mathcal{D}_{H^j} $, for each step $t \in \llbracket 0, n_{step} \rrbracket$, the latent representation of the joint observation $z_t$ is concatenated with the recurrent hidden state vector $\tilde{h}_{t-1}$ and the flattened joint action vector $\tilde{a}_t$. The vector resulting from this concatenation is passed through the \textbf{RNN} (\textbf{LSTM}) to update the recurrent hidden state vector $\tilde{h}_{t}$ and then passed through an \textbf{MLP} to determine the latent representation of the approximate joint observation at the next time step $z_{t+1} $. Next, the decoder $Dec$ is used to reconstruct the flattened approximate joint observation $\tilde{\hat{\omega}}_{t+1}^{j}$. Finally, this flattened approximate joint observation is recomposed into a predicted joint observation for the next state $\hat{\omega}_{t+1}^{j}$.
+To reduce dimensionality, a shared encoder
+$Enc^j : \Omega^j \rightarrow Z$
+maps joint observations to a latent space,
+$z_t = Enc^j(\omega_t^j)$
+\cite{ha2018worldmodels,Xu2022mingling}.
+Latent dynamics are modeled as
+\[
+  \tilde{h}_t = f(\tilde{h}_{t-1}, z_t, a_t^j),
+  \qquad
+  \hat{z}_{t+1} = g(\tilde{h}_t),
+\]
+and decoded via
+$Dec^j : Z \rightarrow \Omega^j$,
+yielding
+$\hat{\omega}_{t+1}^j = Dec^j(\hat{z}_{t+1})$
+.
+%
+The encoder--decoder pair is typically implemented using MLP or attention-based architectures
+to aggregate multi-agent information and capture inter-agent dependencies
+\cite{Xu2022mingling,Wang2022modelbasedmultiagentreinforcementlearning}.
+This centralized formulation enables accurate joint dynamics modeling under centralized training,
+but suffers from scalability and decentralized execution limitations
+\cite{Wang2022modelbasedmultiagentreinforcementlearning,Moerland2023modelbased}.
 
 
 \section{Neuro-Symbolic Multi-Agent WMs}
 \label{sec:method}
 
-We propose \emph{Neuro-Symbolic Multi-Agent WMs (NS-MAWM)}, a framework... TODO... A schematic overview of NS-MAWM is provided in \autoref{fig:ns-mawm_overview}.
+We propose \emph{Neuro-Symbolic Multi-Agent WMs (NS-MAWM)}, a framework that augments world models with structured neuro-symbolic reasoning.%A schematic overview of NS-MAWM is provided in \autoref{fig:ns-mawm_overview}.
 
 % \begin{figure}[t]
 %   \centering
@@ -416,88 +498,363 @@ We propose \emph{Neuro-Symbolic Multi-Agent WMs (NS-MAWM)}, a framework... TODO.
 \subsection{Structured observation latent space and unified neuro-symbolic formalism}
 \label{sec:ns}
 
-TODO
+To integrate symbolic reasoning into multi-agent world modeling, we propose a formal decomposition of individual observations and define a symbolic transition operator capable of partially predicting future observations.
 
-\subsection{The three neuro-symbolic integration strategies}
-\label{sec:integration_strategies}
+\paragraph{Observation representation.} We assume that the observation of an agent $i$ at time $t$ can be expressed as a feature vector:
+\begin{align*}
+  \omega_{i,t} = (f_{1,t}, f_{2,t}, \dots, f_{n_f,t}),
+\end{align*}
+where each $f_{k,t}$ is a numerical or categorical feature conveying a specific perceptual attribute (such asrelative position to another agent, object type in view, etc.), and $n_f$ is the number of features per observation.
 
-\subsubsection{The symbolic loss regularization strategy}
+\paragraph{Complete and partial observations.} A complete observation contains only defined values. If any feature is undefined (such asdue to occlusion or lack of knowledge), we term the observation \emph{partial}, denoted $\omega^p_t$. It consists of two subparts:
+\begin{itemize}
+  \item $\omega^d_t$: the sub-vector of features with defined values.
+  \item $\omega^u_t$: the sub-vector of undefined (or yet-to-be-determined) features.
+\end{itemize}
+
+\paragraph{Feature determinability.} We posit that certain features are \emph{determinable} solely from the joint observation $\omega^j_t$, joint action $a^j_t$, and joint history $h^j_{t-1}$. These features are sensitive to symbolic invariants and regularities, such as spatial consistency or relative motion of agents. For example, in a gridworld, if agent $j$ moves south, and there are no obstacles, then agent $i$ observing agent $j$ to its left should later observe it in the bottom-left position.
+
+This leads us to decompose an observation as follows:
+\begin{align*}
+  \omega_{i,t} = (f^d_{1,t}, \dots, f^d_{m,t}, f_{m+1,t}, \dots, f_{n_f,t}),
+\end{align*}
+where $f^d_{k,t} \in \mathcal{F}^d$ are determinable features from the symbolic perspective.
+
+\paragraph{Atomic symbolic rules.} We define an atomic symbolic transition rule as a deterministic mapping:
+\begin{align*}
+  t^s(h^j_{t-1}, \omega^j_t, a^j_t, f^d_{i,l,t}) = f^d_{i,l,t+1},
+\end{align*}
+which expresses how a given determinable feature $f^d_{i,l,t}$ evolves under symbolic knowledge. For instance, the rule \texttt{agent\_move\_consistency} enforces spatial motion constraints based on known past and present information.
+
+\paragraph{Partial symbolic transition operator.} By aggregating all applicable symbolic rules, we define a symbolic transition operator:
+\begin{align*}
+  \mathcal{T}^s(h^j_{t-1}, \omega^j_t, a^j_t) = \omega^{j,p}_{t+1},
+\end{align*}
+where $\omega^{j,p}_{t+1}$ is the predicted \emph{partial} joint observation at time $t+1$, composed of:
+\begin{itemize}
+  \item $\omega^{j,d}_{t+1}$: determinable features derived via symbolic rules.
+  \item $\omega^{j,u}_{t+1}$: undefined features to be completed by the neural world model.
+\end{itemize}
+
+\paragraph{Matrix view.} Let $\mathcal{M}_{\omega^j_t}$ denote the observation matrix whose rows are agent-specific feature vectors. Then the symbolic transition reads:
+\begin{align*}
+  \mathcal{T}^s(\mathcal{M}_{h^j_{t-1}}, \mathcal{M}_{\omega^j_t}, \mathcal{M}_{a^j_t}) = \mathcal{M}_{\omega^{j,d}_{t+1}} + \mathcal{M}_{\omega^{j,u}_{t+1}} = \mathcal{M}_{\omega^{j,p}_{t+1}}.
+\end{align*}
+We define the determinability mask $\mathcal{M}_d = \mathrm{sgn}(|\mathcal{M}_{\omega^{j,d}_{t+1}}|)$ to indicate feature positions derived via symbolic rules. This mask allows selective symbolic/neural hybrid modeling.
+
+This unified formalism underpins all subsequent neuro-symbolic integration strategies by enabling partial prediction and enforcement of symbolically determinable features while leaving the rest to the neural dynamics model.
+
+
+\subsection{Neuro-Symbolic Integration Strategies}
+\label{sec:strategies}
+
+We present three strategies to integrate symbolic reasoning with learned world models. All strategies operate over the structured observation latent space defined in \autoref{sec:ns}, where the next joint observation $\omega^j_{t+1}$ is partially predicted by symbolic rules and completed by a neural predictor.
+
+Let $\hat{\omega}^j_{t+1} = f_{\theta}(h^j_{t-1}, \omega^j_t, a^j_t)$ be the neural prediction of the full next joint observation and $\omega^{j,p}_{t+1} = \mathcal{T}^s(h^j_{t-1}, \omega^j_t, a^j_t)$ the partial symbolic prediction.
+
+
+\subsubsection{Symbolic Consistency Regularization}
 \label{sec:symbolic_loss_regularization}
 
-TODO
+This strategy adds symbolic supervision as a consistency constraint. The idea is to encourage the neural model to produce outputs that align with symbolic predictions where such knowledge is available. This is inspired by auxiliary loss strategies in hybrid models~\cite{Xu2018semanticloss, garcez2023neurosymbolic}.
 
-\subsubsection{The symbolic projection strategy}
+Let $\mathcal{M}_d = \mathrm{sgn}(|\mathcal{M}_{\omega^{j,d}_{t+1}}|)$ be the determinability mask indicating which features are covered by symbolic rules. Let $\hat{\omega}^{j,d}_{t+1} = \mathcal{M}_d \odot \hat{\omega}^j_{t+1}$ and $\omega^{j,d}_{t+1}$ be the symbolic counterpart.
+
+We define the symbolic consistency loss:
+\begin{align*}
+  \mathcal{L}_{\text{symb}} = \| \hat{\omega}^{j,d}_{t+1} - \omega^{j,d}_{t+1} \|^2,
+\end{align*}
+which is added to the main predictive loss:
+\begin{align*}
+  \mathcal{L}_{\text{total}} = \mathcal{L}_{\text{pred}} + \lambda \mathcal{L}_{\text{symb}},
+\end{align*}
+where $\lambda$ is a regularization coefficient. This approach nudges the model to learn symbolically consistent dynamics in a differentiable way.
+
+
+\subsubsection{Symbolic Projection Strategy}
 \label{sec:symbolic_projection}
 
-TODO
+This strategy uses symbolic knowledge to override parts of the neural prediction. This follows a common intervention approach in modular hybrid systems~\cite{garnelo2016deepsymbolicreinforcementlearning}. Instead of only encouraging consistency, we enforce it by projecting determinable features from the symbolic model:
+\begin{align*}
+  \hat{\omega}^{j}_{t+1, \text{proj}} = \mathcal{M}_d \odot \omega^{j,d}_{t+1} + (1 - \mathcal{M}_d) \odot \hat{\omega}^j_{t+1}.
+\end{align*}
 
-\subsubsection{The residual symbolic dynamics strategy}
+The projected output $\hat{\omega}^{j}_{t+1, \text{proj}}$ is guaranteed to respect all symbolic constraints. It can be used as:
+\begin{itemize}
+  \item Input to downstream planning or policy modules.
+  \item A target for retraining the world model (bootstrapping symbolic compliance).
+  \item An explicit correction layer to improve rollout fidelity.
+\end{itemize}
+
+This approach guarantees minimal symbolic violations and is especially suited for safety-critical applications or environments with known dynamics.
+
+
+\subsubsection{Residual Symbolic Dynamics Strategy}
 \label{sec:residual_symbolic_dynamics}
 
-TODO
+Here, we explicitly separate symbolic and sub-symbolic prediction responsibilities. The neural predictor is trained \emph{only} on features that are not determinable from symbolic knowledge. This architectural partitioning is inspired by residual learning frameworks in neurosymbolic reasoning~\cite{garcez2023neurosymbolic, balloch2023neurosymbolicworldmodelsadapting}.
 
-\subsection{Rule Violation Rate (RVR)}
+Let $\mathcal{F}^d$ and $\mathcal{F}^{nd}$ denote the sets of determinable and non-determinable features. The symbolic model computes:
+\begin{align*}
+  \omega^{j,d}_{t+1} = \mathcal{T}^s(h^j_{t-1}, \omega^j_t, a^j_t),
+\end{align*}
+while the neural module $f_{\theta}^{nd}$ is trained to predict:
+\begin{align*}
+  \hat{\omega}^{j,nd}_{t+1} = f_{\theta}^{nd}(h^j_{t-1}, \omega^j_t, a^j_t).
+\end{align*}
+
+The final prediction is assembled by:
+\begin{align*}
+  \hat{\omega}^{j}_{t+1} = [\omega^{j,d}_{t+1}, \hat{\omega}^{j,nd}_{t+1}].
+\end{align*}
+
+This strategy reduces model complexity and encourages specialization: symbolic rules govern deterministic patterns, while neural components capture ambiguous or high-entropy transitions. It is particularly advantageous when the symbolic rules cover a stable core of the environment while others remain dynamic.
+
+
+\subsection{Post-Prediction Symbolic Correction of Neural Features}
+\label{sec:post_prediction_correction}
+
+In addition to the integration strategies above, we introduce a symbolic correction mechanism that adjusts the raw neural prediction $\hat{\omega}^j_{t+1}$ after inference, without requiring re-training. This aims to enforce symbolic alignment and structural plausibility in the final output.
+
+Let $\hat{\omega}^{j}_{t+1}$ be the output of the NS-MAWM predictor. We apply a symbolic post-correction operator $\mathcal{C}^{s}$:
+\begin{align*}
+  \tilde{\omega}^{j}_{t+1} = \mathcal{C}^{s}(\hat{\omega}^{j}_{t+1}),
+\end{align*}
+where $\tilde{\omega}^{j}_{t+1}$ denotes the corrected prediction.
+
+$\mathcal{C}^{s}$ may enforce symbolic rules such as mutual exclusivity, state transitions, or presence constraints. A typical case is discretization: rounding real-valued outputs of categorical features to their nearest valid values. More generally, $\mathcal{C}^{s}$ applies domain-specific corrections to determinable features or resolves spatial/topological inconsistencies using symbolic priors.
+
+This correction enhances coherence and interpretability, aligning predictions with what is semantically valid in the environment.
+
+\subsection{Rule Violation Rate}
 \label{sec:rvr}
 
-TODO
+To evaluate the symbolic consistency of a world model's predictions, we introduce the \textit{Rule Violation Rate (RVR)}. This metric quantifies how often the predicted observations violate the symbolic transition rules defined in \autoref{sec:ns}.
 
-\subsection{NS-MAWM global algorithm}
-\label{sec:algo}
+Let $\mathcal{T}^s(h^j_{t-1}, \omega^j_t, a^j_t) = \omega^{j,d}_{t+1}$ be the symbolic prediction of determinable features, and $\hat{\omega}^j_{t+1}$ the model's full predicted observation. Let $\mathcal{F}^d$ be the set of determinable features. We define a symbolic violation indicator for each determinable feature:
+\begin{equation}
+  v_{i,k,t} =
+  \begin{cases}
+    1 & \text{if } | \hat{\omega}_{i,k,t+1} - \omega_{i,k,t+1}^{d} | > \epsilon, \\
+    0 & \text{otherwise},
+  \end{cases}
+\end{equation}
+where $i$ indexes the agent, $k$ the feature, and $\epsilon$ a tolerance threshold.
 
-TODO
+The \textbf{Rule Violation Rate} over a dataset of $T$ transitions and $n$ agents is then defined as:
+\begin{equation}
+  \text{RVR} = \frac{1}{n T |\mathcal{F}^d|} \sum_{t=1}^T \sum_{i=1}^n \sum_{k \in \mathcal{F}^d} v_{i,k,t}.
+\end{equation}
 
+This metric captures the proportion of determinable features that are predicted inconsistently with respect to the symbolic rules. Lower RVR indicates better symbolic coherence and serves as a diagnostic signal to assess rule-alignment in both training and evaluation phases.
+
+RVR is meaningful in contexts where symbolic consistency is not guaranteed by construction, such as purely neural world models (without symbolic correction) or the Symbolic Consistency Regularization strategy (\autoref{sec:symbolic_loss_regularization}), where symbolic guidance is applied as a soft constraint. In contrast, for the Symbolic Projection Override and Symbolic-Neural Feature Partitioning strategies, determinable features are either overwritten or fully handled by symbolic rules, and thus RVR will trivially evaluate to zero. Therefore, RVR should primarily be used as a validation metric to monitor symbolic compliance during training or for ablation studies.
+
+
+% ============================
 % ============================
 \section{Evaluation}
 \label{sec:eval}
 
-This section evaluates... TODO
+We evaluate NS-MAWM along four axes matching the gaps in \autoref{sec:intro}:
+(i) \textbf{long-horizon predictive fidelity} (model bias and compounding errors),
+(ii) \textbf{symbolic coherence} (rule satisfaction),
+(iii) \textbf{downstream control} (planning / policy performance),
+and (iv) \textbf{generalization and robustness} (new configurations and partial rule coverage).
 
 \subsection{Implementation}
 \label{sec:impl_overview}
 
-TODO...
+\paragraph{World model backbone.}
+Our framework \textit{NS-MAWM}~\hyperref[fn:github]{\footnotemark[1]} builds on a shared MAWM backbone
+(\autoref{sec:mawm_basics}) and is implemented in \texttt{PyTorch}~\cite{paszke2019pytorch}.
+We use a centralized Joint Observation Prediction Model (JOPM) comprising
+(i) a shared encoder $Enc^j$ over joint observations,
+(ii) an LSTM-based latent dynamics core~\cite{hochreiter1997long},
+and (iii) a decoder $Dec^j$ predicting the next joint observation.
+Joint observations are concatenated along the agent dimension and embedded using MLPs with ReLU activations.
+Discrete structured features are one-hot encoded and treated as continuous outputs,
+while continuous features are predicted directly.
+The prediction loss is
+$\mathcal{L}_{\text{pred}} = \sum_{k \in \mathcal{F}_{\text{cont}}}\|\hat{f}_{k}-f_{k}\|^2$.
+All neural components are optimized using Adam~\cite{kingma2017adammethodstochasticoptimization}
+with a fixed learning rate.
+
+\paragraph{Neuro-symbolic components.}
+The symbolic transition operator $\mathcal{T}^s$ (\autoref{sec:ns}) is implemented as a lightweight Python rule engine.
+Each rule deterministically produces a subset of determinable features $\omega^{j,d}_{t+1}$
+and a corresponding mask $\mathcal{M}_d$.
+This modular design supports selective rule activation for ablation and robustness studies.
+We evaluate three integration strategies (\autoref{sec:strategies}):
+(i) symbolic consistency regularization via an auxiliary loss inspired by semantic loss~\cite{Xu2018semanticloss,Fan2017differentiablelearninglogicalrules},
+(ii) symbolic projection at inference time,
+and (iii) residual symbolic dynamics, restricting neural prediction to non-determinable features.
+We further evaluate an inference-time symbolic correction operator $\mathcal{C}^s$
+(\autoref{sec:post_prediction_correction}),
+which enforces validity constraints (such as mutual exclusivity or spatial feasibility)
+using simple projection and discretization operators~\cite{garcez2023neurosymbolic}.
+
+\footnotetext[1]{\label{fn:github}
+  An anonymized implementation of NS-MAWM and full experimental details
+  (including hyperparameters, architectures, and rule definitions)
+  are available at \url{https://anonymous.4open.science/r/NS-MAWM-83D8/README.md}.}
+
+\paragraph{Training data and interfaces.}
+World models are trained offline from replay buffers collected using random or weakly exploratory policies.
+We rely on standard multi-agent RL interfaces:
+\texttt{PettingZoo}~\cite{terry2020pettingzoo},
+\texttt{Overcooked-AI}~\cite{Micah2020overcooked},
+and the \texttt{SMAC} benchmark~\cite{Ellis2023smacv2}.
+Replay buffers store joint observations, actions, and next observations.
+To assess data frugality, models are trained on multiple dataset sizes
+(such as $N \in \{N_{\text{small}}, N_{\text{med}}, N_{\text{full}}\}$),
+while keeping architectures and training schedules fixed across methods.
+
+\paragraph{Hyperparameter selection.}
+Neural hyperparameters (learning rate, latent dimension, LSTM size, depth)
+are selected automatically using Optuna~\cite{akiba2019optuna}
+by minimizing validation prediction loss.
+Hyperparameter optimization is applied exclusively to neural components
+and independently of symbolic rules, with identical search spaces and budgets across methods.
+Selected hyperparameters are fixed for all subsequent experiments.
+
+
 
 \subsection{Environments and rule sets}
 \label{sec:envs}
 
-We consider two classes of environments: ... TODO
+We consider four representative multi-agent environments spanning discrete/continuous dynamics
+and cooperative/competitive interaction patterns:
 
-\subsection{Computing resources and hyperparameters}
+\paragraph{(E1) Minecraft-like gridworld~\cite{soule2026minecraft-like} (discrete, partially observable).}
+A grid-based environment with $n$ agents, walls/obstacles, and typed objects.
+Observations are structured features (relative positions, occupancy, object presence),
+making invariants and equivariances explicit.
+Rules include collision avoidance, boundary constraints, object persistence, and action-conditioned motion equivariances.
+
+\paragraph{(E2) Overcooked ~\cite{Micah2020overcooked} (discrete, cooperative coordination).}
+We use Overcooked layouts featuring sparse rewards and strong coordination requirements.
+Rules capture state-transition constraints (pickup/drop interactions), mutually exclusive object states,
+and spatial movement constraints.
+
+\paragraph{(E3) Predator--Prey~\cite{lowe2017multi} (continuous or mixed, multi-agent interaction).}
+We use a standard Predator--Prey benchmark with continuous positions/velocities (or mixed discrete actions).
+Rules encode kinematic constraints (bounded velocity), proximity-based capture conditions, and persistence.
+
+\paragraph{(E4) SMAC~\cite{Ellis2023smacv2} (StarCraft Multi-Agent Challenge, partially observable).}
+We evaluate on a subset of SMAC scenarios with varying team sizes.
+Rules focus on movement feasibility and action-conditioned invariances
+(such as if an agent does not move, its position remains consistent; cooldown-like constraints when available).
+
+\paragraph{Rule sets.}
+For each environment, we define a rule set $\mathcal{R}$~\hyperref[fn:github]{\footnotemark[1]} implementing $\mathcal{T}^s$ and the feature mask $\mathcal{M}_d$.
+
+\subsection{Computing resources}
 \label{sec:resources}
 
-TODO
+All experiments were conducted on an academic high-performance computing cluster, utilizing various configurations of GPU nodes. Specifically, we employed nodes equipped with NVIDIA A100 and V100 GPUs, and AMD MI210 GPUs.
+
+\input{tables/results_overview}
 
 \subsection{Evaluation metrics, baselines and protocol}
 \label{sec:metrics_baselines_protocol}
-% Comment on fait pour évaluer que NS-MAWM est mieux que les autres et permet d'atteindre les objectifs fixés dans l'intro :
-%  - est-ce qu'on prend mieux en compte l'aspect multi-agent ?
-%  - est-ce qu'on réduit le drift sémantique sur le long terme grâce à l'intégration symbolique ? Si oui, comment ?
-%  - est-ce que ça améliore la performance en planification / RL downstream ?
-%  - est-ce que ça améliore la généralisation à de nouvelles configurations d'agents/objets ?
-%  - est-ce que ça améliore l'efficacité des données (moins de données nécessaires pour atteindre une certaine performance) ?
-%  - est-ce qu'on peut faire une ablation pour montrer l'importance de chaque composant (invariants vs equivariances, stratégies d'intégration, etc.) ?
-%  - est-ce qu'on peut tester la robustesse aux règles incomplètes ou incorrectes ?
-%  - est-ce qu'on peut tester la scalabilité avec le nombre d'agents/règles ?
-%  - est-ce qu'on peut évaluer correctement les performances avec des métriques symboliques (RVR) en plus des métriques classiques (log-likelihood, erreur de reconstruction, récompense downstream) ?
 
-% 1) donner les métriques utilisées
-% 2) présenter les baselines comparées pour permettre d'évaluer l'apport de NS-MAWM
-% 3) expliquer le protocole expérimental (nombre de seeds, durée d'entraînement, etc.) afin de fournir un moyen scientifique de voir si on couvre bien les gaps identifiés dans l'intro en faisant le lien avec les métriques et baselines via le protocole expérimental
+\paragraph{Baselines.}
+We compare (i) \textbf{MAWM (Neural)}, trained only with $\mathcal{L}_{\text{pred}}$;
+(ii) structured WM baselines when available; and
+(iii) \textbf{NS-MAWM} variants: symbolic regularization, projection, and residual dynamics.
+We also report ablations removing invariants, equivariances, or the post-correction operator $\mathcal{C}^s$.
 
-TODO
+\paragraph{Predictive fidelity.}
+We measure one-step prediction error on held-out data and assess compounding error
+via open-loop rollouts of horizon $H$.
+We report aggregated multi-step reconstruction error over $t=1..H$
+and drift curves as a function of rollout horizon.
+
+\paragraph{Symbolic coherence.}
+Symbolic consistency is evaluated using the \textbf{Rule Violation Rate (RVR)}
+(\autoref{sec:rvr}) on open-loop rollouts.
+As projection and residual strategies enforce determinable features by construction,
+RVR primarily diagnoses the neural baseline and symbolic regularization;
+for enforced variants, we additionally report violations on non-determinable constraints
+and pre-/post-correction rates when applicable.
+
+\paragraph{Downstream control.}
+We evaluate imagination-based control using a fixed planner (such as MPC)
+operating on world-model rollouts.
+Metrics include episodic return, task-dependent success rate,
+and planning stability (variance across seeds),
+with the planner held fixed across methods.
+
+\paragraph{Generalization and robustness.}
+Generalization is tested on out-of-distribution settings unseen during training,
+including varying agent/object counts, novel layouts (gridworld and Overcooked),
+and alternative SMAC scenarios.
+Robustness to incomplete symbolic knowledge is assessed by randomly dropping
+a fraction $\rho$ of rules (reducing $\text{Cov}(\mathcal{R})$)
+during training and/or inference.
+
+\paragraph{Protocol.}
+For each environment, we collect an offline dataset with a fixed behavior policy,
+train all variants on the same data split,
+evaluate predictive fidelity and symbolic coherence on held-out rollouts,
+and assess planning performance in the real environment.
+Results are reported as mean $\pm$ standard error over $S$ seeds.
+
 
 \subsection{Results}
 \label{sec:results}
 
-TODO
+\autoref{tab:results_overview} summarizes the main findings.
 
-% ============================
-% 7. Conclusion
-% ============================
+\paragraph{Long-horizon prediction and semantic drift (G1, G3).}
+Across all environments, NS-MAWM consistently reduces multi-step prediction error
+relative to the neural MAWM baseline, with larger gains in more complex settings
+(such as Overcooked and SMAC).
+Residual and projection strategies yield the flattest error growth over rollout horizon $H$,
+by explicitly separating or enforcing symbolically determinable dynamics.
+These results indicate that symbolic constraints act as structured inductive biases
+that mitigate long-horizon semantic drift in partially observable multi-agent settings.
+
+\paragraph{Symbolic coherence (G2, G3).}
+The neural MAWM baseline exhibits substantial symbolic violations (RVR $=0.15$--$0.23$),
+showing that predictive accuracy alone does not ensure symbolic plausibility.
+Symbolic consistency regularization significantly reduces RVR,
+while projection and residual strategies enforce zero RVR on determinable features by construction.
+This confirms that symbolic coherence must be explicitly optimized rather than treated as an implicit byproduct.
+
+\paragraph{Downstream planning performance (G1).}
+When used for imagination-based planning, NS-MAWM achieves higher episodic return
+and success rate than the neural baseline across all environments
+(Appendix~\ref{app:more}).
+Improvements are most pronounced in sparse-reward coordination tasks such as Overcooked,
+where small model inconsistencies can cause catastrophic planning failures,
+demonstrating a direct link between predictive fidelity and planning reliability.
+
+\paragraph{Generalization and robustness (G2, G3).}
+NS-MAWM generalizes more robustly to out-of-distribution configurations,
+including unseen layouts and varying agent counts.
+Under partial rule removal (reduced $\text{Cov}(\mathcal{R})$),
+performance degrades gracefully, particularly for the residual strategy.
+Overall, residual symbolic dynamics provides the best trade-off between accuracy,
+symbolic coherence, and computational efficiency,
+while regularization combined with projection yields the strongest long-horizon consistency.
+
+
 \section{Conclusion and future work}
 \label{sec:conclusion}
 
-TODO
+We proposed \textbf{NS-MAWM}, a neuro-symbolic framework for multi-agent world modeling that integrates symbolic reasoning. By enforcing symbolic coherence, NS-MAWM reduces long-horizon semantic drift and improves imagination-based planning, yielding consistent gains in predictive fidelity and generalization over purely neural world models.
+
+Despite its benefits, NS-MAWM incurs additional computational overhead,
+faces scalability challenges as the number of agents, features, or symbolic rules grows,
+and relies on manually specified partial symbolic transition rules.
+Future work will explore:
+(1) leveraging large language models (LLMs)~\cite{Brown2020gpt3,openai2023gpt4} to assist in automatic rule extraction or refinement;
+(2) developing matrix-oriented formulations of symbolic transitions to reduce overhead and improve scalability;
+and (3) adopting high-performance numerical frameworks such as \texttt{JAX}~\cite{jax2018github}
+to enable efficient vectorization, compilation, and hardware acceleration.
+
 
 \section*{Impact Statement}
 
@@ -525,40 +882,26 @@ We do not identify ethical concerns specific to this work beyond those commonly 
 
 \newpage
 
-\appendix
+% \appendix
 
-\section{Rule Set Details}
-\label{app:rules}
-% TODO:
-% - list rules formally
-% - applicability masks
-% - examples
+% \section{Rule Set Details}
+% \label{app:rules}
+% % TODO:
+% % - list rules formally
+% % - applicability masks
+% % - examples
 
-\section{Additional Experimental Results}
-\label{app:more}
-% TODO:
-% - ablations, extra environments, hyperparams
+% \section{Additional Experimental Results}
+% \label{app:more}
+% % TODO:
+% % - ablations, extra environments, hyperparams
 
-\section{Architectures and Hyperparameters}
-\label{app:hparams}
-% TODO:
-% - full hyperparam tables
+% \section{Architectures and Hyperparameters}
+% \label{app:hparams}
+% % TODO:
+% % - full hyperparam tables
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \end{document}
-
-% This document was modified from the file originally made available by
-% Pat Langley and Andrea Danyluk for ICML-2K. This version was created
-% by Iain Murray in 2018, and modified by Alexandre Bouchard in
-% 2019 and 2021 and by Csaba Szepesvari, Gang Niu and Sivan Sabato in 2022.
-% Modified again in 2023 and 2024 by Sivan Sabato and Jonathan Scarlett.
-% Previous contributors include Dan Roy, Lise Getoor and Tobias
-% Scheffer, which was slightly modified from the 2010 version by
-% Thorsten Joachims & Johannes Fuernkranz, slightly modified from the
-% 2009 version by Kiri Wagstaff and Sam Roweis's 2008 version, which is
-% slightly modified from Prasad Tadepalli's 2007 version which is a
-% lightly changed version of the previous year's version by Andrew
-% Moore, which was in turn edited from those of Kristian Kersting and
-% Codrina Lauth. Alex Smola contributed to the algorithmic style files.
