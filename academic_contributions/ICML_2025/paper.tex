@@ -486,14 +486,37 @@ but suffers from scalability and decentralized execution limitations
 \section{Neuro-Symbolic Multi-Agent WMs}
 \label{sec:method}
 
-We propose \emph{Neuro-Symbolic Multi-Agent WMs (NS-MAWM)}, a framework that augments world models with structured neuro-symbolic reasoning.%A schematic overview of NS-MAWM is provided in \autoref{fig:ns-mawm_overview}.
+We propose \emph{Neuro-Symbolic Multi-Agent WMs (NS-MAWM)}, a framework that augments world models with structured neuro-symbolic reasoning. A schematic overview of NS-MAWM is provided in \autoref{fig:ns-mawm_overview}.
 
-% \begin{figure}[t]
-%   \centering
-%   \include{figures/method_figure}
-%   \caption{Overview of the NS-MAWM framework: ...TODO}
-%   \label{fig:ns-mawm_overview}
-% \end{figure}
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}[
+      font=\small,
+      node distance=5mm and 7mm,
+      box/.style={draw, rounded corners, align=center, inner sep=3pt},
+      arrow/.style={-Latex, thick},
+      dashedarrow/.style={-Latex, thick, dashed}
+    ]
+    \node[box, fill=gray!10] (inputs) {History $h^j_{t-1}$\\Obs. $\omega^j_t$\\Action $a^j_t$};
+    \node[box, right=of inputs, fill=blue!10] (neural) {Neural WM\\$f_\theta$\\$\hat{\omega}^j_{t+1}$};
+    \node[box, above=of neural, fill=orange!10] (symbolic) {Symbolic rules\\$\mathcal{T}^s$\\$\omega^{j,p}_{t+1}$ + mask $\mathcal{M}_d$};
+    \draw[arrow] (inputs) -- (neural);
+    \draw[arrow] (inputs) -- (symbolic);
+
+    \node[box, below left=of neural, fill=green!10, text width=0.27\linewidth] (reg) {Consistency\\regularization\\$\mathcal{L}_{sym}=\|\mathcal{M}_d \odot (\hat{\omega}-\omega^{j,p}_{t+1})\|$};
+    \node[box, below=of neural, fill=green!10, text width=0.27\linewidth] (proj) {Symbolic\\projection\\$\hat{\omega}'=\mathcal{C}^s(\hat{\omega})$};
+    \node[box, below right=of neural, fill=green!10, text width=0.27\linewidth] (res) {Residual\\dynamics\\$\hat{\omega}=\omega^{j,p}_{t+1}+r_\theta$};
+
+    \draw[arrow] (neural) -- (reg);
+    \draw[arrow] (neural) -- (proj);
+    \draw[arrow] (neural) -- (res);
+    \draw[dashedarrow] (symbolic) -- (reg);
+    \draw[dashedarrow] (symbolic) -- (proj);
+    \draw[dashedarrow] (symbolic) -- (res);
+  \end{tikzpicture}
+  \caption{Overview of NS-MAWM. The shared neural world model predicts the next joint observation, while symbolic rules provide partial predictions and a determinability mask. Three integration strategies enforce symbolic consistency: regularization, projection, or residual symbolic dynamics.}
+  \label{fig:ns-mawm_overview}
+\end{figure}
 
 \subsection{Structured observation latent space and unified neuro-symbolic formalism}
 \label{sec:ns}
