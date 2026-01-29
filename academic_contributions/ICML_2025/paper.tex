@@ -264,7 +264,7 @@ The remainder of the paper is organized as follows: \autoref{sec:related_work} s
 % 3. Related Work
 % ============================
 
-\section{Related Work}
+\section{Related work}
 \label{sec:related_work}
 % TODO: On cherche les travaux qui permettent d'avoir un WM qui permette une meilleure prise en compte de :
 %  - l'observabilité partielle,
@@ -400,7 +400,7 @@ in cooperative or discounted stochastic games
 
 
 
-\subsection{World Model Basics}
+\subsection{World Model basics}
 \label{sec:wm_basics}
 
 WMs are a class of MBRL methods
@@ -413,21 +413,19 @@ modern WMs typically rely on stochastic latent variables trained via variational
 Formally, at each time step $t$, let $\omega_t \in \Omega$ denote the observation,
 $a_t \in A$ the executed action, and $\tilde{h}_{t-1} \in \mathcal{H}$ the recurrent hidden state summarizing the interaction history up to time $t-1$. An encoder $Enc : \Omega \rightarrow Z$ maps high-dimensional observations to a compact latent representation $z_t = Enc(\omega_t)$.
 %
-The temporal evolution of the latent state is modeled by a
-\textbf{Recurrent Latent Dynamics Model (RLDM)}~\cite{hafner2020dreamer},
-defined as
+The temporal evolution of the latent state is modeled by:
 \[
-  h_t = f(h_{t-1}, z_t, a_t), \qquad \hat{z}_{t+1} = g(h_t),
+  \tilde{h}_t = f_{\theta}(concat(\tilde{h}_{t-1}, z_t, a_t)), \qquad \hat{z}_{t+1} = g_{\theta}(\tilde{h}_t),
 \]
-where $f(\cdot)$ is typically implemented as a Recurrent Neural Network (RNN),
+where $f_{\theta}(\cdot)$ is typically implemented as a Recurrent Neural Network (RNN),
 such as an Long-Short-Term Memory (LSTM)~\cite{hochreiter1997long},
-and $g(\cdot)$ is a parametric mapping such as Multi-Layer Perceptron (MLP).
+and $g_{\theta}(\cdot)$ is a parametric mapping such as Multi-Layer Perceptron (MLP).
 %
 The predicted latent state is decoded by
 $Dec : Z \rightarrow \Omega$ to produce the predicted observation
 $\hat{\omega}_{t+1} = Dec(\hat{z}_{t+1})$.
 
-\subsection{An Extension to Multi-Agent World Models}
+\subsection{An extension to Multi-Agent World Models}
 \label{sec:mawm_basics}
 
 A common extension of WMs to multi-agent settings
@@ -435,45 +433,49 @@ consists in learning a centralized latent dynamics model
 over joint observations and joint actions, similar to the Centralized Training and Decentralized Execution (CTDE) paradigms.
 \cite{Wang2022modelbasedmultiagentreinforcementlearning}.
 
-Given a dataset of joint trajectories
-$\mathcal{D}_{H^j} = \{ h^j \}$,
-with
-$h^j = \langle (\omega_t^j, a_t^j) \rangle_{t=0}^{T}$,
-the objective is to learn a predictive model of joint observation dynamics,
-as commonly done in model-based MARL and multi-agent world modeling
-\cite{Wang2022modelbasedmultiagentreinforcementlearning,Xu2022mingling}.
-
-We define a \textbf{Joint Observation Prediction Model} (JOPM) to capture the environment dynamics as follows:
-\[
-  \mathcal{T}^j :
-  H^j \times \Omega^j \times A^j
-  \rightarrow \mathcal{H} \times \hat{\Omega}^j ,
-\]
-where $\mathcal{H}$ denotes the space of recurrent hidden states,
-following recurrent latent dynamics formulations in world models
-\cite{ha2018worldmodels,hafner2020dreamer}.
+Given a dataset of joint trajectories $\mathcal{D}_{H^j} = \{ h^j \}$, with $h^j = \langle (\omega_t^j, a_t^j) \rangle_{t=0}^{T}$, the objective is to learn a predictive model of joint observation dynamics, as commonly done in model-based MARL\cite{Wang2022modelbasedmultiagentreinforcementlearning,Xu2022mingling}.
 %
-At time $t$, given $\tilde{h}_{t-1} \in \mathcal{H}$,
-the joint observation $\omega_t^j$ and joint action $a_t^j$,
-the model outputs an updated hidden state $\tilde{h}_t$
-and a predicted joint observation $\hat{\omega}_{t+1}^j$.
-
-To reduce dimensionality, a shared encoder
-$Enc^j : \Omega^j \rightarrow Z$
-maps joint observations to a latent space,
-$z_t = Enc^j(\omega_t^j)$
-\cite{ha2018worldmodels,Xu2022mingling}.
+We define a \textbf{Joint-Observation Prediction Model} (JOPM) as a neuronal model to capture the environment dynamics:
+%
+\[
+  \mathcal{T}_{\theta}^j :
+  \mathcal{H} \times \Omega^j \times A^j
+  \rightarrow \hat{\Omega}^j
+\]
+%
+where $\mathcal{H}$ denotes the space of recurrent hidden states as a compact representation of the joint-history to capture dynamics \cite{ha2018worldmodels,hafner2020dreamer}. It is parameterized by $\theta$ and possibly implemented as:
+%
+\begin{equation*}
+  \begin{aligned}
+    \mathcal{T}_{\theta}^j(\tilde{h}_{t-1}, \omega^j_t, a^j_t)
+    =
+    \mathrm{unflatten}\Big(
+     & Dec^j\Big(
+    g_{\theta}\Big(
+    f_{\theta}\Big(                      \\
+     & \hspace{-12.7em} \mathrm{concat}(
+    \tilde{h}_{t-1},
+    Enc^j(\mathrm{flatten}(\omega^j_t)),
+    \mathrm{flatten}(a^j_t)
+    )
+    \hspace{-0.2em}\Big)\hspace{-0.2em}
+    \Big)\hspace{-0.2em}
+    \Big)\hspace{-0.2em}
+    \Big)
+    \hspace{-0.1em} = \hspace{-0.1em} \hat{\omega}^j_{t+1}
+  \end{aligned}
+\end{equation*}
+%
+At time $t$, given $\tilde{h}_{t-1} \in \mathcal{H}$, the joint observation $\omega_t^j$ and joint action $a_t^j$, the model outputs an updated hidden state $\tilde{h}_t$ and a predicted joint observation $\hat{\omega}_{t+1}^j$.
+%
+To reduce dimensionality, a shared encoder $Enc^j : \overline{\Omega^j} \rightarrow Z$ maps flattened joint-observations to a latent space, $z_t = Enc^j(flatten(\omega_t^j))$\cite{ha2018worldmodels,Xu2022mingling}.
 Latent dynamics are modeled as
 \[
-  \tilde{h}_t = f(\tilde{h}_{t-1}, z_t, a_t^j),
+  \tilde{h}_t = f_{\theta}(concat(\tilde{h}_{t-1}, z_t, a_t^j)),
   \qquad
-  \hat{z}_{t+1} = g(\tilde{h}_t),
+  \hat{z}_{t+1} = g_{\theta}(\tilde{h}_t),
 \]
-and decoded via
-$Dec^j : Z \rightarrow \Omega^j$,
-yielding
-$\hat{\omega}_{t+1}^j = Dec^j(\hat{z}_{t+1})$
-.
+and decoded via $Dec^j : Z \rightarrow \overline{\Omega^j}$, yielding $\hat{\omega}_{t+1}^j$ from $Dec^j(\hat{z}_{t+1})$.
 %
 The encoder--decoder pair is typically implemented using MLP or attention-based architectures
 to aggregate multi-agent information and capture inter-agent dependencies
@@ -486,83 +488,80 @@ but suffers from scalability and decentralized execution limitations
 \section{Neuro-Symbolic Multi-Agent WMs}
 \label{sec:method}
 
-We propose \emph{Neuro-Symbolic Multi-Agent WMs (NS-MAWM)}, a framework that augments world models with structured neuro-symbolic reasoning.%A schematic overview of NS-MAWM is provided in \autoref{fig:ns-mawm_overview}.
-
-% \begin{figure}[t]
-%   \centering
-%   \include{figures/method_figure}
-%   \caption{Overview of the NS-MAWM framework: ...TODO}
-%   \label{fig:ns-mawm_overview}
-% \end{figure}
+We propose \emph{Neuro-Symbolic Multi-Agent WMs (NS-MAWM)}, a framework that augments world models with structured neuro-symbolic reasoning. A schematic overview of NS-MAWM is provided in \autoref{fig:ns-mawm_overview}.
 
 \subsection{Structured observation latent space and unified neuro-symbolic formalism}
 \label{sec:ns}
 
 To integrate symbolic reasoning into multi-agent world modeling, we propose a formal decomposition of individual observations and define a symbolic transition operator capable of partially predicting future observations.
 
-\paragraph{Observation representation.} We assume that the observation of an agent $i$ at time $t$ can be expressed as a feature vector:
+\paragraph{Observation representation.} We assume that the observation of an agent $i$ at time $t$ can be expressed as a vector:
 \begin{align*}
   \omega_{i,t} = (f_{1,t}, f_{2,t}, \dots, f_{n_f,t}),
 \end{align*}
-where each $f_{k,t}$ is a numerical or categorical feature conveying a specific perceptual attribute (such asrelative position to another agent, object type in view, etc.), and $n_f$ is the number of features per observation.
+where each $f_{k,t}$ (with $0 \leq k \leq n_f$) is a numerical or categorical feature conveying a specific perceptual attribute (such as relative position to another agent, object type in view, etc.), and $n_f$ is the number of features per observation.
 
-\paragraph{Complete and partial observations.} A complete observation contains only defined values. If any feature is undefined (such asdue to occlusion or lack of knowledge), we term the observation \emph{partial}, denoted $\omega^p_t$. It consists of two subparts:
-\begin{itemize}
-  \item $\omega^d_t$: the sub-vector of features with defined values.
-  \item $\omega^u_t$: the sub-vector of undefined (or yet-to-be-determined) features.
-\end{itemize}
+\paragraph{Feature determinability.} We posit that certain features are \emph{determinable} solely from the joint observation $\omega^j_t$, joint action $a^j_t$, and joint history $h^j_{t-1}$. These features are sensitive to symbolic invariants and regularities, such as spatial consistency or relative motion of agents. For example, in a gridworld, if agent $j$ moves south, and there are no obstacles, then agent $i$ observing agent $j$ to its left should later observe it in the bottom-left position. This leads us to define an observation as follows:
+%
+\begin{equation*}
+  \begin{aligned}
+    \omega_{i,t} \hspace{-0.2em} = \hspace{-0.2em} (f^d_{1,t}\dots, f^d_{m,t}, f^u_{m+1,t} \dots, f^u_{n_f,t}) \hspace{-0.2em} = \hspace{-0.2em} concat(\omega^d_t, \omega^u_t),
+  \end{aligned}
+\end{equation*}
+%
+where $f^d_{k,t} \in \mathcal{F}^d$ are determinable features via symbolic reasoning while $f^u_{k,t} \in \mathcal{F}^u$ are undeterminable ones. Consequently, an observation consists of two subparts:
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
+  \item $\omega^d_t$: the sub-vector of determinable features.
+  \item $\omega^u_t$: the sub-vector of undeterminable features.
+\end{enumerate*}
 
-\paragraph{Feature determinability.} We posit that certain features are \emph{determinable} solely from the joint observation $\omega^j_t$, joint action $a^j_t$, and joint history $h^j_{t-1}$. These features are sensitive to symbolic invariants and regularities, such as spatial consistency or relative motion of agents. For example, in a gridworld, if agent $j$ moves south, and there are no obstacles, then agent $i$ observing agent $j$ to its left should later observe it in the bottom-left position.
-
-This leads us to decompose an observation as follows:
+\paragraph{Atomic symbolic rules.} We define an atomic symbolic transition rule $s \in \mathcal{S}$ as:
 \begin{align*}
-  \omega_{i,t} = (f^d_{1,t}, \dots, f^d_{m,t}, f_{m+1,t}, \dots, f_{n_f,t}),
+  s(h^j_{t-1}, \omega^j_t, a^j_t, f^d_{l,t}) = f^d_{l,t+1},
 \end{align*}
-where $f^d_{k,t} \in \mathcal{F}^d$ are determinable features from the symbolic perspective.
+which expresses how a given determinable feature $f^d_{l,t} \in \mathcal{F}^d$ (with $0\leq l \leq n_f$) evolves under symbolic knowledge (such as enforcing spatial motion constraints based on past and present information to predict value in related features).
 
-\paragraph{Atomic symbolic rules.} We define an atomic symbolic transition rule as a deterministic mapping:
+\paragraph{Partial symbolic transition.} By aggregating all symbolic rules, we define a partial symbolic transition operator:
 \begin{align*}
-  t^s(h^j_{t-1}, \omega^j_t, a^j_t, f^d_{i,l,t}) = f^d_{i,l,t+1},
+  \mathcal{T}^j_s(h^j_{t-1}, \omega^j_t, a^j_t) = \omega^{d,j}_{t+1},
 \end{align*}
-which expresses how a given determinable feature $f^d_{i,l,t}$ evolves under symbolic knowledge. For instance, the rule \texttt{agent\_move\_consistency} enforces spatial motion constraints based on known past and present information.
+where $\omega^{d,j}_{t+1}$ is the predicted joint observation at time $t+1$, consisting only of determinable features for all agents.
 
-\paragraph{Partial symbolic transition operator.} By aggregating all applicable symbolic rules, we define a symbolic transition operator:
-\begin{align*}
-  \mathcal{T}^s(h^j_{t-1}, \omega^j_t, a^j_t) = \omega^{j,p}_{t+1},
-\end{align*}
-where $\omega^{j,p}_{t+1}$ is the predicted \emph{partial} joint observation at time $t+1$, composed of:
-\begin{itemize}
-  \item $\omega^{j,d}_{t+1}$: determinable features derived via symbolic rules.
-  \item $\omega^{j,u}_{t+1}$: undefined features to be completed by the neural world model.
-\end{itemize}
-
-\paragraph{Matrix view.} Let $\mathcal{M}_{\omega^j_t}$ denote the observation matrix whose rows are agent-specific feature vectors. Then the symbolic transition reads:
-\begin{align*}
-  \mathcal{T}^s(\mathcal{M}_{h^j_{t-1}}, \mathcal{M}_{\omega^j_t}, \mathcal{M}_{a^j_t}) = \mathcal{M}_{\omega^{j,d}_{t+1}} + \mathcal{M}_{\omega^{j,u}_{t+1}} = \mathcal{M}_{\omega^{j,p}_{t+1}}.
-\end{align*}
-We define the determinability mask $\mathcal{M}_d = \mathrm{sgn}(|\mathcal{M}_{\omega^{j,d}_{t+1}}|)$ to indicate feature positions derived via symbolic rules. This mask allows selective symbolic/neural hybrid modeling.
-
+\paragraph{Partial symbolic transition matrix view.} Let $\mathcal{M}_{\omega^j_t}$ denote the observation matrix whose columns are agent-specific feature vectors. Elements with joint notation (such as $\omega^j_t$) are also possibly implicitly matrix-valued for convenience. Then the symbolic transition reads:
+%
+\begin{equation*}
+  \begin{aligned}
+    \mathcal{T}^j_s\!\left(
+    \mathcal{M}_{h^j_{t-1}},
+    \mathcal{M}_{\omega^j_t},
+    \mathcal{M}_{a^j_t}
+    \right)
+     & = \mathcal{M}_{\omega^{d,j}_{t+1}}, \\
+    \mathcal{M}_{\omega^{d,j}_{t+1}}
+    + \mathcal{M}_{\omega^{u,j}_{t+1}}
+     & = \mathcal{M}_{\omega^{j}_{t+1}} .
+  \end{aligned}
+\end{equation*}
+%
+We define the determinability mask $\mathcal{M}_d = \mathrm{sgn}\!\left(\left| \mathcal{M}_{\omega^{d,j}_{t+1}} \right| \right)$ to indicate feature positions derived via symbolic rules. This mask allows selective symbolic/neural hybrid modeling.
 This unified formalism underpins all subsequent neuro-symbolic integration strategies by enabling partial prediction and enforcement of symbolically determinable features while leaving the rest to the neural dynamics model.
 
-
-\subsection{Neuro-Symbolic Integration Strategies}
+\subsection{Neuro-symbolic integration strategies}
 \label{sec:strategies}
 
 We present three strategies to integrate symbolic reasoning with learned world models. All strategies operate over the structured observation latent space defined in \autoref{sec:ns}, where the next joint observation $\omega^j_{t+1}$ is partially predicted by symbolic rules and completed by a neural predictor.
 
-Let $\hat{\omega}^j_{t+1} = f_{\theta}(h^j_{t-1}, \omega^j_t, a^j_t)$ be the neural prediction of the full next joint observation and $\omega^{j,p}_{t+1} = \mathcal{T}^s(h^j_{t-1}, \omega^j_t, a^j_t)$ the partial symbolic prediction.
+Let $\hat{\omega}^j_{t+1} = \mathcal{T}_{\theta}(h^j_{t-1}, \omega^j_t, a^j_t)$ be the neural prediction of the full next joint observation and $\omega^{d,j}_{t+1} = \mathcal{T}^j_s(h^j_{t-1}, \omega^j_t, a^j_t)$ the partial symbolic prediction.
 
 
-\subsubsection{Symbolic Consistency Regularization}
+\subsubsection{Symbolic consistency regularization}
 \label{sec:symbolic_loss_regularization}
 
-This strategy adds symbolic supervision as a consistency constraint. The idea is to encourage the neural model to produce outputs that align with symbolic predictions where such knowledge is available. This is inspired by auxiliary loss strategies in hybrid models~\cite{Xu2018semanticloss, garcez2023neurosymbolic}.
-
-Let $\mathcal{M}_d = \mathrm{sgn}(|\mathcal{M}_{\omega^{j,d}_{t+1}}|)$ be the determinability mask indicating which features are covered by symbolic rules. Let $\hat{\omega}^{j,d}_{t+1} = \mathcal{M}_d \odot \hat{\omega}^j_{t+1}$ and $\omega^{j,d}_{t+1}$ be the symbolic counterpart.
-
-We define the symbolic consistency loss:
+This strategy adds symbolic supervision as a soft constraint. The idea is to encourage the neural model (JOPM) to produce outputs ($\hat{\omega}^{j}_{t+1} = \hat{\omega}^{reg,j}_{t+1}$) that align with symbolic predictions where such knowledge is available. This is inspired by auxiliary loss strategies in hybrid models~\cite{Xu2018semanticloss, garcez2023neurosymbolic}. Let $\hat{\omega}^{d,j}_{t+1} = \mathcal{M}_d \odot \hat{\omega}^j_{t+1}$ and $\omega^{d,j}_{t+1}$ be the symbolic counterpart.
+%
+The symbolic consistency loss is defined as:
 \begin{align*}
-  \mathcal{L}_{\text{symb}} = \| \hat{\omega}^{j,d}_{t+1} - \omega^{j,d}_{t+1} \|^2,
+  \mathcal{L}_{\text{symb}} = \| \hat{\omega}^{d,j}_{t+1} - \omega^{d,j}_{t+1} \|^2,
 \end{align*}
 which is added to the main predictive loss:
 \begin{align*}
@@ -570,85 +569,109 @@ which is added to the main predictive loss:
 \end{align*}
 where $\lambda$ is a regularization coefficient. This approach nudges the model to learn symbolically consistent dynamics in a differentiable way.
 
+\begin{figure}[t]
+  \centering
+  \include{figures/method_figure}
+  \caption{
+  Overview of the NS-MAWM framework.
+  Given the joint history $h^j_{t-1}$, joint observation $\omega^j_t$, and joint action $a^j_t$,
+  a symbolic transition operator $\mathcal{T}^j_s$ produces determinable features $\omega^{d,j}_{t+1}$
+  and a determinability mask $\mathcal{M}_d$, while a neural world model $\mathcal{T}^j_\theta$
+  predicts the full next observation.
+  Three integration strategies are illustrated:
+  (\emph{left}) symbolic consistency regularization, which aligns neural predictions with symbolic ones via an auxiliary loss;
+  (\emph{center}) symbolic projection, which enforces symbolic features by overwriting neural outputs;
+  (\emph{right}) residual symbolic dynamics, where symbolic rules predict determinable features and the neural model predicts only undeterminable ones.
+  }
+  \label{fig:ns-mawm_overview}
+\end{figure}
 
-\subsubsection{Symbolic Projection Strategy}
+\subsubsection{Symbolic projection strategy}
 \label{sec:symbolic_projection}
 
 This strategy uses symbolic knowledge to override parts of the neural prediction. This follows a common intervention approach in modular hybrid systems~\cite{garnelo2016deepsymbolicreinforcementlearning}. Instead of only encouraging consistency, we enforce it by projecting determinable features from the symbolic model:
 \begin{align*}
-  \hat{\omega}^{j}_{t+1, \text{proj}} = \mathcal{M}_d \odot \omega^{j,d}_{t+1} + (1 - \mathcal{M}_d) \odot \hat{\omega}^j_{t+1}.
+  \hat{\omega}^{j}_{t+1} = \hat{\omega}^{proj,j}_{t+1} = \mathcal{M}_d \odot \omega^{d,j}_{t+1} + (1 - \mathcal{M}_d) \odot \hat{\omega}^j_{t+1}.
 \end{align*}
 
-The projected output $\hat{\omega}^{j}_{t+1, \text{proj}}$ is guaranteed to respect all symbolic constraints. It can be used as:
-\begin{itemize}
-  \item Input to downstream planning or policy modules.
+The projected output $\hat{\omega}^{proj,j}_{t+1}$ is guaranteed to respect all symbolic constraints. It can be used as:
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
+  \item Input to downstream planning.
   \item A target for retraining the world model (bootstrapping symbolic compliance).
   \item An explicit correction layer to improve rollout fidelity.
-\end{itemize}
+\end{enumerate*}
 
 This approach guarantees minimal symbolic violations and is especially suited for safety-critical applications or environments with known dynamics.
 
 
-\subsubsection{Residual Symbolic Dynamics Strategy}
+\subsubsection{Residual symbolic dynamics strategy}
 \label{sec:residual_symbolic_dynamics}
 
-Here, we explicitly separate symbolic and sub-symbolic prediction responsibilities. The neural predictor is trained \emph{only} on features that are not determinable from symbolic knowledge. This architectural partitioning is inspired by residual learning frameworks in neurosymbolic reasoning~\cite{garcez2023neurosymbolic, balloch2023neurosymbolicworldmodelsadapting}.
-
-Let $\mathcal{F}^d$ and $\mathcal{F}^{nd}$ denote the sets of determinable and non-determinable features. The symbolic model computes:
+Here, we explicitly separate symbolic and symbolic prediction. The neural predictor is trained \emph{only} on features that are not determinable from symbolic knowledge. This architectural partitioning is inspired by residual learning frameworks in neurosymbolic reasoning~\cite{garcez2023neurosymbolic, balloch2023neurosymbolicworldmodelsadapting}. The symbolic model computes:
 \begin{align*}
-  \omega^{j,d}_{t+1} = \mathcal{T}^s(h^j_{t-1}, \omega^j_t, a^j_t),
+  \omega^{d,j}_{t+1} = \mathcal{T}^j_s(h^j_{t-1}, \omega^j_t, a^j_t),
 \end{align*}
-while the neural module $f_{\theta}^{nd}$ is trained to predict:
+while the neural model $\mathcal{T}_{\theta}^{u,j}$ is trained to predict:
 \begin{align*}
-  \hat{\omega}^{j,nd}_{t+1} = f_{\theta}^{nd}(h^j_{t-1}, \omega^j_t, a^j_t).
+  \hat{\omega}^{u,j}_{t+1} = \mathcal{T}_{\theta}^{u,j}(h^j_{t-1}, \omega^{u,j}_t, a^j_t).
 \end{align*}
 
 The final prediction is assembled by:
 \begin{align*}
-  \hat{\omega}^{j}_{t+1} = [\omega^{j,d}_{t+1}, \hat{\omega}^{j,nd}_{t+1}].
+  \hat{\omega}^{j}_{t+1} = \hat{\omega}^{res,j}_{t+1} = [\omega^{d,j}_{t+1}, \hat{\omega}^{u,j}_{t+1}].
 \end{align*}
 
 This strategy reduces model complexity and encourages specialization: symbolic rules govern deterministic patterns, while neural components capture ambiguous or high-entropy transitions. It is particularly advantageous when the symbolic rules cover a stable core of the environment while others remain dynamic.
 
 
-\subsection{Post-Prediction Symbolic Correction of Neural Features}
+\subsection{Post-prediction symbolic correction of neural features}
 \label{sec:post_prediction_correction}
 
-In addition to the integration strategies above, we introduce a symbolic correction mechanism that adjusts the raw neural prediction $\hat{\omega}^j_{t+1}$ after inference, without requiring re-training. This aims to enforce symbolic alignment and structural plausibility in the final output.
-
-Let $\hat{\omega}^{j}_{t+1}$ be the output of the NS-MAWM predictor. We apply a symbolic post-correction operator $\mathcal{C}^{s}$:
+We introduce a symbolic post-correction mechanism that enforces symbolic consistency
+on the neural prediction $\hat{\omega}^j_{t+1}$ at inference time, without retraining via:
 \begin{align*}
   \tilde{\omega}^{j}_{t+1} = \mathcal{C}^{s}(\hat{\omega}^{j}_{t+1}),
 \end{align*}
-where $\tilde{\omega}^{j}_{t+1}$ denotes the corrected prediction.
+where $\mathcal{C}^{s}$ applies domain-specific symbolic constraints
+(such as mutual exclusivity, valid state transitions, or discretization of categorical features).
+This lightweight correction improves semantic coherence and interpretability
+of predicted observations.
 
-$\mathcal{C}^{s}$ may enforce symbolic rules such as mutual exclusivity, state transitions, or presence constraints. A typical case is discretization: rounding real-valued outputs of categorical features to their nearest valid values. More generally, $\mathcal{C}^{s}$ applies domain-specific corrections to determinable features or resolves spatial/topological inconsistencies using symbolic priors.
-
-This correction enhances coherence and interpretability, aligning predictions with what is semantically valid in the environment.
 
 \subsection{Rule Violation Rate}
 \label{sec:rvr}
 
-To evaluate the symbolic consistency of a world model's predictions, we introduce the \textit{Rule Violation Rate (RVR)}. This metric quantifies how often the predicted observations violate the symbolic transition rules defined in \autoref{sec:ns}.
+We quantify symbolic consistency using the \textit{Rule Violation Rate (RVR)},
+which measures how often model predictions violate the symbolic transition rules
+defined in \autoref{sec:ns}.
 
-Let $\mathcal{T}^s(h^j_{t-1}, \omega^j_t, a^j_t) = \omega^{j,d}_{t+1}$ be the symbolic prediction of determinable features, and $\hat{\omega}^j_{t+1}$ the model's full predicted observation. Let $\mathcal{F}^d$ be the set of determinable features. We define a symbolic violation indicator for each determinable feature:
+Given the symbolic prediction
+$\omega^{d,j}_{t+1} = \mathcal{T}^j_s(h^j_{t-1}, \omega^j_t, a^j_t)$
+and the JOPM prediction $\hat{\omega}^j_{t+1}$,
+we define the violation indicator:
 \begin{equation}
   v_{i,k,t} =
   \begin{cases}
-    1 & \text{if } | \hat{\omega}_{i,k,t+1} - \omega_{i,k,t+1}^{d} | > \epsilon, \\
+    1 & \text{if } \left| \hat{\omega}^{d}_{i,k,t+1} - \omega^{d}_{i,k,t+1} \right| > \epsilon, \\
     0 & \text{otherwise},
   \end{cases}
 \end{equation}
-where $i$ indexes the agent, $k$ the feature, and $\epsilon$ a tolerance threshold.
+where $(i,k)$ indexes agents and determinable features, and $\epsilon$ is a tolerance threshold.
 
-The \textbf{Rule Violation Rate} over a dataset of $T$ transitions and $n$ agents is then defined as:
+The \textbf{Rule Violation Rate} over $T$ transitions is then:
 \begin{equation}
-  \text{RVR} = \frac{1}{n T |\mathcal{F}^d|} \sum_{t=1}^T \sum_{i=1}^n \sum_{k \in \mathcal{F}^d} v_{i,k,t}.
+  \text{RVR} =
+  \frac{1}{n T |\mathcal{F}^d|}
+  \sum_{t=1}^T \sum_{i=1}^n \sum_{k \in \mathcal{F}^d} v_{i,k,t}.
 \end{equation}
 
-This metric captures the proportion of determinable features that are predicted inconsistently with respect to the symbolic rules. Lower RVR indicates better symbolic coherence and serves as a diagnostic signal to assess rule-alignment in both training and evaluation phases.
+Lower RVR indicates stronger symbolic coherence.
+RVR is primarily informative for purely neural world models
+and for symbolic consistency regularization (\autoref{sec:symbolic_loss_regularization});
+for symbolic projection and residual symbolic dynamics,
+determinable features are enforced by construction and RVR trivially evaluates to zero,
+in which case it is mainly used for ablation and diagnostic analysis.
 
-RVR is meaningful in contexts where symbolic consistency is not guaranteed by construction, such as purely neural world models (without symbolic correction) or the Symbolic Consistency Regularization strategy (\autoref{sec:symbolic_loss_regularization}), where symbolic guidance is applied as a soft constraint. In contrast, for the Symbolic Projection Override and Symbolic-Neural Feature Partitioning strategies, determinable features are either overwritten or fully handled by symbolic rules, and thus RVR will trivially evaluate to zero. Therefore, RVR should primarily be used as a validation metric to monitor symbolic compliance during training or for ablation studies.
 
 
 % ============================
@@ -673,7 +696,7 @@ and (iv) \textbf{generalization and robustness} (new configurations and partial 
 \paragraph{World model backbone.}
 Our framework \textit{NS-MAWM}~\hyperref[fn:github]{\footnotemark[1]} builds on a shared MAWM backbone
 (\autoref{sec:mawm_basics}) and is implemented in \texttt{PyTorch}~\cite{paszke2019pytorch}.
-We use a centralized Joint Observation Prediction Model (JOPM) comprising
+We use a centralized JOPM comprising
 (i) a shared encoder $Enc^j$ over joint observations,
 (ii) an LSTM-based latent dynamics core~\cite{hochreiter1997long},
 and (iii) a decoder $Dec^j$ predicting the next joint observation.
@@ -686,8 +709,8 @@ All neural components are optimized using Adam~\cite{kingma2017adammethodstochas
 with a fixed learning rate.
 
 \paragraph{Neuro-symbolic components.}
-The symbolic transition operator $\mathcal{T}^s$ (\autoref{sec:ns}) is implemented as a lightweight Python rule engine.
-Each rule deterministically produces a subset of determinable features $\omega^{j,d}_{t+1}$
+The symbolic transition operator $\mathcal{T}^j_s$ (\autoref{sec:ns}) is implemented as a lightweight Python rule engine.
+Each rule deterministically produces a subset of determinable features $\omega^{d,j}_{t+1}$
 and a corresponding mask $\mathcal{M}_d$.
 This modular design supports selective rule activation for ablation and robustness studies.
 We evaluate three integration strategies (\autoref{sec:strategies}):
@@ -750,7 +773,7 @@ Rules focus on movement feasibility and action-conditioned invariances
 (such as if an agent does not move, its position remains consistent; cooldown-like constraints when available).
 
 \paragraph{Rule sets.}
-For each environment, we define a rule set $\mathcal{R}$~\hyperref[fn:github]{\footnotemark[1]} implementing $\mathcal{T}^s$ and the feature mask $\mathcal{M}_d$.
+For each environment, we define a rule set $\mathcal{R}$~\hyperref[fn:github]{\footnotemark[1]} implementing $\mathcal{T}^j_s$ and the feature mask $\mathcal{M}_d$.
 % TODO : donner un aperçu du nombre/type de règles par environnement
 
 \subsection{Computing resources}
