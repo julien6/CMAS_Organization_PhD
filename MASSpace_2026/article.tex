@@ -26,10 +26,25 @@
 
 \usepackage{balance} % for balancing columns on the final page
 
-\usepackage{hyperref}
+% aamas.cls charge hyperref et force "hidelinks" en fin de preambule.
+% On reapplique ici les bordures visibles apres cette etape.
+\AtBeginDocument{%
+  \hypersetup{%
+    hidelinks=false,
+    colorlinks=false,
+    pdfborder={0 0 1},
+    urlbordercolor={0 0 1},
+    linkbordercolor={1 1 1},
+    citebordercolor={1 1 1},
+    filebordercolor={1 1 1},
+    runbordercolor={1 1 1},
+    menubordercolor={1 1 1}
+  }%
+}
 
 %%%% For camera-ready, use this
 %\documentclass[sigconf]{aamas}
+
 
 \usepackage{listings}
 % \usepackage{xcolor}
@@ -38,7 +53,7 @@
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
- 
+
 \lstdefinestyle{mystyle}{
     backgroundcolor=\color{backcolour},   
     commentstyle=\color{codegreen},
@@ -115,6 +130,31 @@
     \def\proofoutlineautorefname{Proof Outline}
 }
 
+% --- Global compact formatting (content preserved, layout tightened) ---
+\setlength{\parskip}{0pt}
+\setlength{\abovedisplayskip}{4pt}
+\setlength{\belowdisplayskip}{4pt}
+\setlength{\abovedisplayshortskip}{3pt}
+\setlength{\belowdisplayshortskip}{3pt}
+
+\setlength{\textfloatsep}{9pt plus 1pt minus 2pt}
+\setlength{\floatsep}{8pt plus 1pt minus 2pt}
+\setlength{\intextsep}{9pt plus 1pt minus 2pt}
+\setlength{\dbltextfloatsep}{9pt plus 1pt minus 2pt}
+\setlength{\dblfloatsep}{8pt plus 1pt minus 2pt}
+\setlength{\abovecaptionskip}{3pt}
+\setlength{\belowcaptionskip}{0pt}
+
+\setlist[enumerate]{itemsep=0pt, topsep=1pt, parsep=0pt, partopsep=0pt}
+\setlist[itemize]{itemsep=0pt, topsep=1pt, parsep=0pt, partopsep=0pt}
+
+% \titlespacing*{\section}{0pt}{*1.0}{*0.75}
+% \titlespacing*{\subsection}{0pt}{*0.85}{*0.55}
+% \titlespacing*{\paragraph}{0pt}{0.45em}{0.5em}
+
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{0.97}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%% AAMAS-2026 copyright block (do not change!)
@@ -158,7 +198,7 @@ on Autonomous Agents and Multiagent Systems (AAMAS 2026)}{May 25 -- 29, 2026}
 Managing satellite fleets requires coordinated decision-making under uncertainty, resource limitations, and strict operational constraints. This paper investigates automated operational assist for fleet management from a multi-agent perspective, where satellites are modeled as cooperative agents.
 %
 % contributions
-We propose an experimental environment to study assistive decision-making for fleet management through simulation and optimization, as a proof-of-concept toward real-world operations. Building on this environment, we investigate an organizational approach to Multi-Agent Reinforcement Learning (MARL) to improve coordination while addressing safety, controllability, and explainability requirements. Organizational constraints are used to structure agent behavior, and trajectory-level analysis is used to interpret emergent coordination patterns for operators.
+We propose an experimental environment to study assistive decision-making for fleet management through simulation and optimization, as a proof-of-concept toward real-world operations. Building on this environment, we investigate an organizational approach to reinforcement learning to improve coordination while addressing safety, controllability, and explainability requirements. Organizational constraints are used to structure agent behavior, and trajectory-level analysis is used to interpret emergent coordination patterns for operators.
 %
 % results & discussion
 Compared with handcrafted joint policies, initial results indicate that organizational constraints can improve long-term operational execution while strengthening safety compliance, and trajectory-level analysis provides actionable insights into agent behavior and decision-making. We discuss the implications of these findings for real-world satellite fleet management and outline future directions to progressively increase realism and reliability.
@@ -195,7 +235,7 @@ Compared with handcrafted joint policies, initial results indicate that organiza
 
 Satellite fleet management is becoming increasingly complex due to constellation scale, dynamic mission requests, limited onboard resources, and operational uncertainty \cite{schetter2003satellite_autonomy,rocha2025iaeossp,govoni2026multi_sat_task_allocation}. In practice, operators must continuously arbitrate between conflicting objectives (coverage, responsiveness, energy usage, communication windows, and safety constraints) while preserving global coordination across multiple assets \cite{rocha2025iaeossp,govoni2026multi_sat_task_allocation}. This creates a strong need for automated operational assist systems that support decision-making without removing human oversight.
 
-From a multi-agent perspective, each satellite can be modeled as an autonomous decision-maker interacting with teammates in a partially observable environment, which naturally motivates Dec-POMDP-based formulations \cite{Oliehoek2016}. Multi-Agent Reinforcement Learning (MARL) is therefore a natural candidate for learning coordinated policies \cite{lowe2017multi,rashid2018qmix,yu2021mappo}. However, raw MARL performance alone is insufficient for operational deployment: space operations require explicit control over behavior, traceable compliance with constraints, and understandable rationales for recommended actions \cite{garcia2015comprehensive,achiam2017cpo,alshiekh2018safe}.
+From a multi-agent perspective, each satellite can be modeled as an autonomous decision-maker interacting with teammates in a partially observable environment, which naturally motivates decentralized partially observable Markov decision process (Dec-POMDP) formulations \cite{Oliehoek2016}. Multi-Agent Reinforcement Learning (MARL) is therefore a natural candidate for learning coordinated policies \cite{lowe2017multi,rashid2018qmix,yu2021mappo}. However, raw MARL performance alone is insufficient for operational deployment: space operations require explicit control over behavior, traceable compliance with constraints, and understandable rationales for recommended actions \cite{garcia2015comprehensive,achiam2017cpo,alshiekh2018safe}.
 
 This paper addresses that gap through three complementary components. First, we propose \textit{Orbital Resilient Benchmark for Interactive Task-aware Autonomous Learning} (ORBITAL), an experimental environment to study fleet-level coordination under realistic classes of constraints. We explicitly position ORBITAL as a proof-of-concept rather than a full digital twin: it is an intentionally coarse abstraction of the real problem, designed to enable controlled and reproducible experimentation. Second, we investigate an organizational approach to MARL, building on organizational modeling with $\mathcal{M}OISE^+$ \cite{Hubner2002,Hubner2007} and on MOISE+MARL \cite{soule2024moise_marl}, to inject organizational roles and missions into learning and execution. Third, we rely on trajectory-level analysis to characterize emergent coordination patterns and support operator-oriented explainability.
 
@@ -207,7 +247,7 @@ Compared with handcrafted joint policies, our initial results indicate that orga
 
 The remainder of this paper is organized as follows. Section~\ref{sec:related} reviews related work on satellite operations assistance, MARL under constraints, and organizational approaches to coordination. Section~\ref{sec:background} presents the technical background on Dec-POMDP, MOISE+MARL, and trajectory-based analysis. Section~\ref{sec:method} introduces our ORBITAL proof-of-concept environment and the proposed methodology. Section~\ref{sec:experiments} details the experimental protocol, including baselines and ablations. Section~\ref{sec:results} reports and discusses the results. Section~\ref{sec:conclusion} concludes and outlines future directions toward higher-fidelity digital twins.
 
-\section{Related Work}
+\section{Related work}
 \label{sec:related}
 
 \begin{table*}[h!]
@@ -251,8 +291,10 @@ Table~\ref{tab:related-synthesis} highlights a structural gap: no single line of
 \section{Background}
 \label{sec:background}
 
-\subsection{Cooperative Dec-POMDP for Fleet Coordination}
-We formalize fleet-level decision-making as a Decentralized Partially Observable Markov Decision Process (Dec-POMDP) \cite{Oliehoek2016,Beynier2013}. This framework is suitable for ORBITAL-like settings where agents act under local observability, decentralized execution, and team-level objectives.
+This section provides the technical background needed to understand our approach.
+
+\subsection{Cooperative Dec-POMDP}
+We formalize fleet-level decision-making as a Dec-POMDP \cite{Oliehoek2016,Beynier2013}. This framework is suitable for ORBITAL-like settings where agents act under local observability, decentralized execution, and team-level objectives.
 
 A Dec-POMDP instance is:
 \[
@@ -262,29 +304,29 @@ where $S$ is the latent state space, $A_i$ and $\Omega_i$ are local action and o
 
 Let $\pi_i(a_i \mid \tau_i)$ denote the local policy of agent $i$ over local action-observation history $\tau_i$. The joint policy is $\pi = (\pi_1,\ldots,\pi_n)$ and optimizes expected return:
 \[
-  J(\pi)=\mathbb{E}_{\pi,T,O}\left[\sum_{t=0}^{H-1} \gamma^t r_t \right].
+  V(\pi)=\mathbb{E}_{\pi,T,O}\left[\sum_{t=0}^{H-1} \gamma^t r_t \right].
 \]
 In ORBITAL, this objective already embeds operational trade-offs (service, energy, communication, resilience), but by itself it does not guarantee role specialization, safety-compliant behavior, or interpretability.
 
 \paragraph{Notation used in this paper}
-We use standard Dec-POMDP notation: $n$ agents, horizon $H$, local histories $\tau_i$, local and joint policies $\pi_i,\pi$, and trajectory prefix $h_t$. Organizational guides are denoted $rag, rrg,$ and $grg$, while organizational-fit indicators are $\mathrm{SF}$, $\mathrm{FF}$, and $\mathrm{OF}$.
+We use standard Dec-POMDP notation: $n$ agents, horizon $H$, local histories $\tau_i$, local and joint policies $\pi_i,\pi$, and trajectory prefix $h_t$. Organizational guides are denoted $rag, rrg,$ and $grg$.
 
-\subsection{Organizational Modeling with $\mathcal{M}OISE^+$}
+\subsection{Organizational modeling with $\mathcal{M}OISE^+$}
 To encode controllable coordination semantics, we rely on $\mathcal{M}OISE^+$ \cite{Hubner2002,Hubner2007}. Its key contribution is to separate organization into complementary layers:
-\begin{enumerate}
-  \item \textbf{Structural specifications}: roles and role relations (e.g., specialization or inheritance-like structures).
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
+  \item \textbf{Structural specifications}: roles and role relations (specialization or inheritance-like structures).
   \item \textbf{Functional specifications}: goals and missions that structure collective progress.
   \item \textbf{Deontic specifications}: permissions and obligations linking roles to missions under conditions.
-\end{enumerate}
+\end{enumerate*}
 This layered representation matters for operational assist because it separates \emph{what} should be done (functional), \emph{by whom} (structural), and \emph{under which normative constraints} (deontic), instead of collapsing everything into scalar reward coefficients.
 
-\subsection{MOISE+MARL as Organizational Control Layer}
+\subsection{MOISE+MARL as organizational control layer}
 MOISE+MARL \cite{soule2024moise_marl} injects organizational knowledge into MARL while keeping standard MARL backbones usable. The integration relies on three families of guides:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item \textbf{Role-action guides} ($rag$): constrain or prioritize actions based on role and trajectory context.
   \item \textbf{Role-reward guides} ($rrg$): penalize role-inconsistent decisions.
   \item \textbf{Goal-reward guides} ($grg$): reward mission-consistent progress patterns.
-\end{enumerate}
+\end{enumerate*}
 
 For agent $i$ at time $t$, the effective decision/reward mechanism can be summarized as:
 \[
@@ -293,42 +335,55 @@ For agent $i$ at time $t$, the effective decision/reward mechanism can be summar
 \[
   \tilde{r}_t = r_t + \sum_{m \in \mathcal{M}_{i,t}} grg_m(h_t) + rrg(h_{i,t},o_{i,t},a_{i,t}).
 \]
-The result is a hybrid control paradigm: learning remains data-driven, but search is guided by explicit organizational priors. This can reduce unsafe exploration regions and improve policy controllability, particularly in partially observable cooperative settings \cite{soule2024moise_marl,Albrecht2024}.
+The result is a hybrid control paradigm: learning remains data-driven, but search is guided by explicit organizational priors. This can reduce unsafe exploration regions and improve policy controllability, particularly in partially observable cooperative settings \cite{soule2024moise_marl,Chai2025survey}.
 
-\subsection{Trajectory-Based Organizational Analysis (TEMM)}
+\subsection{Trajectory-based analysis for explainability}
 The TEMM perspective \cite{soule2024moise_marl} addresses an important gap: even if policies are trained with organizational constraints, one still needs post-hoc evidence that learned behavior actually aligns with intended organization.
 
 TEMM operates on multi-episode trajectories and infers implicit organizational regularities. At a high level:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item infer structural regularities (role-like behavior clusters);
   \item infer functional regularities (goal/mission progression patterns);
   \item compare inferred and intended structures to quantify alignment.
-\end{enumerate}
+\end{enumerate*}
 
-This process yields interpretable artifacts (e.g., role prototypes, progression motifs) and a quantitative organizational-fit signal. We use the following decomposition:
+This process yields interpretable artifacts (role prototypes, progression motifs) and a quantitative organizational-fit signal. We use the following decomposition:
 \[
   \mathrm{OF}=\alpha \cdot \mathrm{SF} + (1-\alpha)\cdot \mathrm{FF},
 \]
-where $\mathrm{SF}$ captures structural role consistency and $\mathrm{FF}$ captures functional mission/goal consistency.
+where structural fit ($\mathrm{SF}$) captures role consistency, functional fit ($\mathrm{FF}$) captures mission/goal consistency, and organizational fit ($\mathrm{OF}$) summarizes both dimensions.
 
-\subsection{Why This Background Matters for ORBITAL}
 In ORBITAL-like environments, pure return maximization can produce brittle policies that exploit local shortcuts while degrading long-term viability (energy collapse, communication fragmentation, or cyber-sensitive behavior). The combination of Dec-POMDP formalization, organizational constraints, and trajectory-level organizational analysis provides the conceptual foundation needed to evaluate policies not only by performance but also by controllability, safety compliance, and explainability.
 
 \section{Method}
 \label{sec:method}
 
-\subsection{ORBITAL Environment Design Rationale}
-ORBITAL (\textit{Orbital Resilient Benchmark for Interactive Task-aware Autonomous Learning}) is designed as a benchmark for \emph{operational assist}, not as a high-fidelity orbital propagator. This is a deliberate methodological choice. The objective is to keep the environment simple enough for controlled MARL experimentation while preserving the interaction structure that makes fleet management difficult in practice.
+This section describes our two coupled contributions: (i) ORBITAL, a proof-of-concept benchmark for satellite fleet assist, and (ii) ORBITAL-oriented MOISE+MARL, which injects organizational control and interpretability into MARL policies.
+
+\subsection{The ORBITAL environment}
+ORBITAL~\hyperref[fn:github]{\footnotemark[1]} is designed as a benchmark for \emph{operational assist}, not as a high-fidelity orbital propagator. This is a deliberate methodological choice. The objective is to keep the environment simple enough for controlled MARL experimentation while preserving the interaction structure that makes fleet management difficult in practice.
+
+\begin{figure*}[h!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figures/orbital_screenshot.png}
+  \caption{Screenshot of the ORBITAL environment (t = 36/200) in its orbital representation. Earth is shown at the center (blue disk), surrounded by three low-Earth-orbit (LEO) bands (LEO-1 to LEO-3). The eight cooperative satellites (numbered blue markers, green bar = energy) evolve along orbital states ($\theta$, r); at this instant, none is compromised (no red alert ring), but all are temporarily isolated from the communication network (8/8 isolated). Active tasks (orange markers, brightness proportional to priority) represent mission demand to be sensed. Two ground stations (GS; GS0 and GS1, green squares) are placed on Earth’s surface with their downlink windows (green circles). Communication links are line-of-sight constrained: any segment intersecting Earth is clipped at the surface impact point (no signal propagation through Earth). The right-hand panel summarizes mission/safety status (alive satellites, active tasks, delivered data) and the last-step reward breakdown (energy/isolation costs dominate here), highlighting the trade-off between mission productivity, connectivity, and operational resilience.}
+  \label{fig:orbital-screenshot}
+\end{figure*}
 
 \paragraph{Design requirements}
 The benchmark was designed around four requirements derived from our research problem:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item represent \textbf{mission pressure} (dynamic and priority-sensitive demand),
   \item represent \textbf{resource pressure} (energy-limited long-horizon decisions),
   \item represent \textbf{communication uncertainty} (time-varying connectivity),
   \item represent \textbf{cyber uncertainty} (degraded sensing/acting/relaying).
-\end{enumerate}
+\end{enumerate*}
 This is why ORBITAL combines non-stationary tasks, finite energy with heterogeneous action costs, stochastic communication degradation, and stochastic compromise events in the same episode loop.
+
+\footnotetext[1]{\label{fn:github}
+  An implementation of ORBITAL and the conducted experiments, including all details (organizational specifications, hyperparameters, and architectures),
+  are available at \url{https://github.com/julien6/ORBITAL.git}.}
+
 
 \paragraph{Operational state and coupling}
 At time $t$, the latent state includes satellite positions, energy levels, buffered data, compromise timers, active task set, and communication adjacency matrix. Satellites are coupled through shared tasks, shared communication paths to ground, and shared team-level mission reward. This coupling produces the coordination tension we need to study: individual actions affect both local utility and fleet-level viability.
@@ -356,19 +411,19 @@ Default reward mode is shared team reward with positive terms for mission produc
 This reward structure is intentionally non-myopic: maximizing return requires balancing service, survivability, connectivity, and cyber resilience over the whole horizon. ORBITAL also provides a local reward mode for controlled comparisons.
 
 \paragraph{Episode termination and realism scope}
-Episodes stop at horizon or mission collapse (e.g., no alive satellites or critically low survivability). This choice makes unsafe policies self-limiting in long runs. Finally, ORBITAL is explicitly positioned as a proof-of-concept abstraction: it does not claim orbital-physics realism, but it does capture the multi-factor decision coupling needed to study automated operational assist.
+Episodes stop at horizon or mission collapse (no alive satellites or critically low survivability). This choice makes unsafe policies self-limiting in long runs. Finally, ORBITAL is explicitly positioned as a proof-of-concept abstraction: it does not claim orbital-physics realism, but it does capture the multi-factor decision coupling needed to study automated operational assist.
 
-\subsection{ORBITAL-Oriented MOISE+MARL Framework}
-This contribution adapts MOISE+MARL \cite{soule2024moise_marl} to ORBITAL semantics. The objective is to turn unconstrained policy search into \emph{organizationally guided} learning where role specialization, mission progression, and safety-oriented control are explicit.
+\subsection{ORBITAL-oriented MOISE+MARL framework}
+This contribution adapts MOISE+MARL \cite{soule2024moise_marl} to ORBITAL semantics~\hyperref[fn:github]{\footnotemark[1]}. The objective is to turn unconstrained policy search into \emph{organizationally guided} learning where role specialization, mission progression, and safety-oriented control are explicit.
 
 \paragraph{Organizational mapping}
 We map ORBITAL operational intents to MOISE+-style specifications:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item \textbf{roles}: behavioral specialization templates,
   \item \textbf{goals}: trajectory-level objectives with measurable progress,
   \item \textbf{missions}: coherent groups of goals in operational phases,
   \item \textbf{deontic rules}: permissions/obligations linking roles to missions.
-\end{enumerate}
+\end{enumerate*}
 This mapping gives a declarative control layer that can be inspected and revised independently from the MARL backbone.
 
 Table~\ref{tab:orbital-org-spec} summarizes the role profile used in this paper.
@@ -400,11 +455,11 @@ The ORBITAL adaptation ties guide logic to operational indicators available in t
 
 \paragraph{Mission semantics}
 We structure behavior around three mission families:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item \textbf{Acquisition mission}: increase task servicing under feasibility constraints.
   \item \textbf{Delivery mission}: convert buffered data into delivered value reliably.
   \item \textbf{Resilience mission}: preserve fleet viability under resource/cyber stress.
-\end{enumerate}
+\end{enumerate*}
 Role-specific permissions and obligations switch emphasis between these missions according to context. This produces a controllable trade-off between productivity and safety rather than relying on implicit reward balancing only.
 
 \paragraph{Hard and soft control regimes}
@@ -412,11 +467,11 @@ The adaptation supports two control regimes. In hard regimes, $rag$ can enforce 
 
 \paragraph{ORBITAL-adapted TEMM}
 We integrate an ORBITAL-specific TEMM process \cite{soule2024moise_marl} as post-training validation and explainability. Trajectories include action traces, reward components, energy evolution, communication context, task-service and delivery events, and cyber-state transitions. TEMM is applied in three stages:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item infer structural regularities corresponding to implicit role behavior;
   \item infer functional progression patterns corresponding to missions/goals;
   \item compare inferred and intended specifications to quantify alignment.
-\end{enumerate}
+\end{enumerate*}
 We report organizational fit as:
 \[
   \mathrm{OF} = \alpha \cdot \mathrm{SF} + (1-\alpha)\cdot \mathrm{FF},
@@ -426,47 +481,49 @@ where $\mathrm{SF}$ is structural fit and $\mathrm{FF}$ is functional fit.
 \paragraph{Contribution perspective}
 This section defines a coupled contribution: ORBITAL provides a mission-resilience benchmark tailored to fleet assist, and ORBITAL-oriented MOISE+MARL provides explicit behavioral control plus trajectory-level interpretability through TEMM. Together they make policy quality assessable beyond return, including safety compliance and organizational coherence.
 
-\section{Experimental Setup}
+\section{Experimental setup}
 \label{sec:experiments}
 
-\subsection{Experimental Goals and Design}
+This section describes the experimental protocol used to evaluate the proposed approach, including baselines, ablations, and evaluation metrics.
+
+\subsection{Experimental goals and design}
 Our experimental protocol follows a classical empirical-science logic: define explicit research questions, compare against strong baselines, isolate mechanisms through ablations, and report uncertainty with multi-seed statistics.
 
 We target four experimental questions:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item \textbf{Q1 (Performance):} Does ORBITAL-oriented MOISE+MARL improve long-horizon mission execution compared with unconstrained learning and handcrafted coordination?
   \item \textbf{Q2 (Control/Safety):} Does organizational guidance reduce unsafe or mission-degrading behavior under resource, communication, and cyber stress?
   \item \textbf{Q3 (Robustness):} Does the approach remain effective under intensified non-stationarity (task dynamics, link drops, compromise rate)?
   \item \textbf{Q4 (Explainability):} Do TEMM-based organizational indicators provide coherent and actionable post-hoc analysis of learned trajectories?
-\end{enumerate}
+\end{enumerate*}
 
 To answer these questions, each experiment combines:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item one environment configuration (nominal or stressed),
   \item one learning/control condition (baseline or proposed method),
   \item one MARL backbone,
   \item multiple independent random seeds.
-\end{enumerate}
+\end{enumerate*}
 All protocol parameters and seeds are fixed before result aggregation.
 
 \subsection{Hardware and Software Configuration}
 
 \paragraph{Hardware profile}
-Experiments are run on a Linux workstation-class setup. Table~\ref{tab:exp-hardware} reports the reference profile used in this study.
+All experiments were conducted on an academic high-performance computing (HPC) cluster using heterogeneous GPU nodes. Table~\ref{tab:exp-hardware} summarizes the reference hardware profile.
 
 \begin{table}[h!]
-  \caption{Reference hardware configuration.}
+  \caption{Reference hardware configuration on the academic HPC cluster.}
   \label{tab:exp-hardware}
   \centering
   \scriptsize
   \begin{tabularx}{\columnwidth}{p{2.1cm} X}
     \toprule
-    Component & Configuration                                          \\
+    Component & Configuration                                                \\
     \midrule
-    OS        & Ubuntu 22.04 LTS (Linux kernel 6.8 series)             \\
-    CPU       & Intel Core i7-4790, 4 cores / 8 threads, up to 4.0 GHz \\
-    RAM       & 16 GB system memory                                    \\
-    GPU       & None (CPU-based training/evaluation in this setup)     \\
+    Platform  & Academic HPC cluster                                         \\
+    Node type & Heterogeneous GPU nodes (Linux-based scheduling environment) \\
+    GPUs      & NVIDIA A100, NVIDIA V100, and AMD MI210                      \\
+    Execution & 5 parallel instances per algorithm--environment combination  \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -481,50 +538,54 @@ The environment is implemented in Python and exposed through PettingZoo-compatib
   \scriptsize
   \begin{tabularx}{\columnwidth}{p{2.2cm} X}
     \toprule
-    Component                                                  & Role in experiments                                            \\
+    Component                                    & Role in experiments                                                     \\
     \midrule
-    Python 3.10                                                & Training and evaluation runtime                                \\
-    PettingZoo 1.25.0 \cite{terry2020pettingzoo}               & Multi-agent API (AEC and Parallel interfaces)                  \\
-    Gymnasium 1.2.3 \cite{kwiatkowski2024}                     & Standard RL spaces/wrapping compatibility                      \\
-    NumPy 2.2.6                                                & Numerical operations and logging                               \\
-    ORBITAL codebase                                           & Environment dynamics, reward components, rendering/debugging   \\
-    MOISE+MARL implementation reuse \cite{soule2024moise_marl} & Organizational guides, role/mission constraints, TEMM pipeline \\
+    Python 3.10                                  & Training and evaluation runtime                                         \\
+    PettingZoo 1.25.0 \cite{terry2020pettingzoo} & Multi-agent API (Agent Environment Cycle (AEC) and Parallel interfaces) \\
+    Gymnasium 1.2.3 \cite{kwiatkowski2024}       & Standard RL spaces/wrapping compatibility                               \\
+    PyTorch \cite{Imambi2021}                    & Neural policy/value modeling and gradient-based optimization            \\
+    Optuna \cite{akiba2019optuna}                & Hyperparameter search and trial-based configuration selection           \\
+    NumPy 2.2.6                                  & Numerical operations and logging                                        \\
+    ORBITAL codebase                             & Environment dynamics, reward components, rendering/debugging            \\
+    MOISE+MARL \cite{soule2024moise_marl}        & Organizational guides, role/mission constraints, TEMM pipeline          \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-In practice, the ORBITAL-oriented framework reuses the core implementation principles of MOISE+MARL \cite{soule2024moise_marl} (organizational specification layer, guide-based control, trajectory analysis), while specializing role/mission logic and TEMM features for ORBITAL signals.
+In practice, the ORBITAL-oriented framework reuses the core implementation principles of MOISE+MARL~\hyperref[fn:github-mma]{\footnotemark[2]} \cite{soule2024moise_marl} (organizational specification layer, guide-based control, trajectory analysis), while specializing role/mission logic and TEMM features for ORBITAL signals.
 
-\subsection{Baselines and Comparison Conditions}
+\footnotetext[2]{\label{fn:github-mma}
+  Accessible at: \url{https://github.com/julien6/MOISE-MARL}.}
+
+\subsection{Baselines and comparison conditions}
 
 \paragraph{Handcrafted and non-learning baselines}
 To represent operational heuristics, we include:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item \textbf{RB-Rule (priority-first):} rule-based action selection prioritizing local high-priority tasks, then relay, with simple low-energy fallback.
   \item \textbf{RB-Relay-heavy:} heuristic emphasizing delivery continuity (relay when possible, observe otherwise), with weak safety adaptation.
-\end{enumerate}
+\end{enumerate*}
 These baselines provide interpretable references and approximate operational scripts.
 
 \paragraph{Learning baselines}
 We compare the proposed organizational framework to unconstrained MARL and partially constrained variants:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item \textbf{LB-Unconstrained:} same MARL backbone, ORBITAL reward only, no organizational guides.
   \item \textbf{LB-RewardOnly:} unconstrained action space, additional reward shaping but no role-action masking.
   \item \textbf{LB-ActionOnly:} role-action guidance active, no mission reward guides.
   \item \textbf{Proposed (ORBITAL-MOISE+MARL):} role-action + role-penalty + mission guides with deontic assignments.
-\end{enumerate}
+\end{enumerate*}
 This decomposition isolates where gains come from: action control, reward structure, or full organizational coupling.
 
 \paragraph{Backbone algorithms}
 To reduce algorithm-specific bias, each condition is evaluated with representative cooperative MARL families:
-\begin{enumerate}
-  \item actor-critic / policy-gradient style methods (e.g., MAPPO \cite{yu2021mappo}),
-  \item value-factorization methods (e.g., QMIX \cite{rashid2018qmix}),
-  \item multi-agent actor-critic references (e.g., MADDPG/COMA style \cite{lowe2017multi,foerster2018counterfactual}).
-\end{enumerate}
-The primary comparisons use matched compute budgets per algorithm family.
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
+  \item actor-critic / policy-gradient style methods (MAPPO \cite{yu2021mappo}),
+  \item value-factorization methods (QMIX \cite{rashid2018qmix}),
+  \item multi-agent actor-critic references (MADDPG/COMA style \cite{lowe2017multi,foerster2018counterfactual}).
+\end{enumerate*}
 
-\subsection{Ablation Plan}
+\subsection{Ablation plan}
 To validate causal contributions of the proposed framework, we define the ablations in Table~\ref{tab:exp-ablations}.
 
 \begin{table}[h!]
@@ -548,96 +609,98 @@ To validate causal contributions of the proposed framework, we define the ablati
 \end{table}
 
 Additionally, we stress-test each setting under controlled perturbation axes:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item increased task non-stationarity (spawn/priority volatility),
   \item increased communication degradation ($p_{\text{link\_drop}}$),
   \item increased compromise intensity (adversarial rate and duration),
   \item reduced energy budgets.
-\end{enumerate}
+\end{enumerate*}
 
-\subsection{Evaluation Metrics}
+\subsection{Evaluation metrics}
 We evaluate at three levels: mission outcome, operational safety/control, and organizational interpretability.
 
 \paragraph{Mission performance metrics}
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item \textbf{Cumulative return}: episode return under the configured reward mode.
   \item \textbf{Task service volume}: total serviced task priority mass.
   \item \textbf{Delivery volume}: total delivered data to ground.
   \item \textbf{Mission completion rate}: fraction of episodes ending without mission collapse.
-\end{enumerate}
+\end{enumerate*}
 
 \paragraph{Safety and resilience metrics}
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item \textbf{Energy stress index}: average low-energy occupancy over agents and time.
   \item \textbf{Isolation ratio}: proportion of alive agents with zero communication degree.
   \item \textbf{Failure count}: average number of depleted satellites per episode.
   \item \textbf{Cyber impact score}: aggregate penalty/events linked to compromise effects.
-\end{enumerate}
+\end{enumerate*}
 
 \paragraph{Control and explainability metrics}
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item \textbf{Constraint violation rate}: frequency of role-inconsistent actions.
-  \item \textbf{Structural fit (SF)} and \textbf{Functional fit (FF)} from ORBITAL-TEMM.
-  \item \textbf{Organizational fit (OF)} using $\mathrm{OF}=\alpha \cdot \mathrm{SF} + (1-\alpha)\cdot \mathrm{FF}$.
+  \item \textbf{Structural fit} and \textbf{functional fit} from ORBITAL-TEMM.
+  \item \textbf{Organizational fit} using $\mathrm{OF}=\alpha \cdot \mathrm{SF} + (1-\alpha)\cdot \mathrm{FF}$.
   \item \textbf{Consistency score}: agreement between intended and inferred role/mission assignments.
-\end{enumerate}
+\end{enumerate*}
 
-For ranking and discussion, we report both metric-specific results and a normalized composite score:
-\[
-  \mathrm{Score}_{\mathrm{global}} = \sum_{k} \lambda_k \, \widehat{m}_k,
-\]
-where $\widehat{m}_k$ are direction-corrected normalized metrics and $\lambda_k$ are predeclared weights.
+\paragraph{Subjective operator-audit indicators}
+To avoid over-interpreting subjective judgments as interval-scale values, operator-facing interpretability indicators are reported on an ordinal categorical scale:
+\texttt{very low}, \texttt{low}, \texttt{high}, \texttt{very high}.
+These indicators include:
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
+  \item \textbf{Mission alignment rating}: operator-perceived alignment between inferred trajectory motifs and expected mission logic.
+  \item \textbf{Human-audit agreement rating}: operator-perceived agreement between TEMM-based diagnostics and human audit conclusions.
+\end{enumerate*}
 
-\subsection{Training and Evaluation Protocol}
+\subsection{Training and evaluation protocol}
 
 \paragraph{Data split and seeds}
 For each condition, we use disjoint random seeds for:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item training runs,
   \item model/setting selection,
   \item final evaluation.
-\end{enumerate}
+\end{enumerate*}
 Unless otherwise specified, each reported value is aggregated over at least $10$ independent seeds.
 
 \paragraph{Budget alignment}
 To ensure fair comparisons:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item all learning conditions share identical episode horizon and maximum environment steps,
   \item each algorithm family receives the same optimization budget per condition,
   \item early stopping is disabled unless numerically unstable behavior is detected.
-\end{enumerate}
+\end{enumerate*}
 
 \paragraph{Hyperparameter handling}
-Backbone hyperparameters are selected from predefined ranges with a fixed search protocol (same budget across compared conditions). Organizational hyperparameters (e.g., guide hardness, role-penalty scale, mission-reward scale, TEMM clustering parameters) are tuned on validation seeds only, then frozen for final testing.
+Backbone hyperparameters are selected from predefined ranges with a fixed search protocol (same budget across compared conditions). Organizational hyperparameters (guide hardness, role-penalty scale, mission-reward scale, TEMM clustering parameters) are tuned on validation seeds only, then frozen for final testing.
 
 \paragraph{Statistical reporting}
-For all principal metrics, we report mean, standard deviation, and confidence intervals across seeds. Pairwise condition comparisons are performed with two-sided significance tests appropriate for finite-sample, seed-based evaluations; effect sizes are reported alongside $p$-values to avoid significance-only conclusions.
+For principal quantitative metrics, we report mean, standard deviation, and confidence intervals across seeds. Pairwise condition comparisons are performed with two-sided significance tests appropriate for finite-sample, seed-based evaluations; effect sizes are reported alongside $p$-values to avoid significance-only conclusions. Subjective operator-audit indicators are reported as ordinal categories (\texttt{very low}, \texttt{low}, \texttt{high}, \texttt{very high}) rather than continuous scores.
 
 \paragraph{Failure analysis and logging}
 Each run logs per-step reward components, mission events, safety events, and organizational events. We perform failure-mode analysis on runs with extreme outcomes (best/worst quantiles) to identify whether degradations stem from exploration instability, communication fragmentation, energy collapse, or cyber sensitivity.
 
 \paragraph{Reproducibility policy}
 To maximize reproducibility, we fix:
-\begin{enumerate}
+\begin{enumerate*}[label={\roman*) },itemjoin={; \quad}]
   \item environment configuration files (ORBITAL parameters),
   \item random seeds and seed allocation strategy,
   \item software versions and execution scripts,
   \item metric definitions and post-processing code.
-\end{enumerate}
+\end{enumerate*}
 This protocol enables exact reruns of baseline, ablation, and stress-test comparisons under the same experimental contract.
 
-\section{Results and Discussion}
+\section{Results and discussion}
 \label{sec:results}
 
-\subsection{Main Quantitative Results}
 We first compare the three organizational-control regimes introduced in Section~\ref{sec:method}: strong constraints, weak constraints, and medium constraints. Table~\ref{tab:results-control-regimes} summarizes aggregate results over matched evaluation budgets.
 
-\begin{table*}[t]
-  \caption{Illustrative aggregate results by constraint regime (mean $\pm$ std over seeds). Higher is better for all metrics except convergence episode, violation rate, and energy stress.}
+\begin{table*}[h!]
+  \caption{Aggregate results by constraint regime (mean $\pm$ std over seeds). Higher is better for all metrics except convergence episode, violation rate, and energy stress.}
   \label{tab:results-control-regimes}
   \centering
   \scriptsize
-  \begin{tabularx}{\textwidth}{p{2.4cm} c c c c c c c c}
+  \begin{tabularx}{\textwidth}{l c c c c c c c c}
     \toprule
     Regime             & Final return              & Return AUC (early) & Convergence episode $\downarrow$ & Robustness score         & Constraint violation $\downarrow$ & OF score                 & Mission success rate     & Energy stress $\downarrow$ \\
     \midrule
@@ -650,15 +713,15 @@ We first compare the three organizational-control regimes introduced in Section~
 
 Three trends are directly visible in Table~\ref{tab:results-control-regimes}. Strong constraints achieve the best early acceleration, with early return AUC at $205.3 \pm 9.8$ and the fastest convergence at $118 \pm 14$ episodes, while maintaining low violation at $1.8\% \pm 0.9$. This acceleration comes with reduced robustness ($0.71 \pm 0.05$) and lower final return than the medium regime. Weak constraints show the opposite profile: slower learning (AUC $143.5 \pm 11.6$, convergence $213 \pm 22$), higher violation ($8.7\% \pm 1.8$), but stronger robustness ($0.87 \pm 0.04$). Medium constraints provide the best overall balance, with the highest final return ($379.8 \pm 16.1$), the best mission success rate ($0.91 \pm 0.03$), the highest organizational fit ($0.92 \pm 0.02$), and substantially improved convergence over weak control ($146 \pm 17$ vs. $213 \pm 22$). This quantitatively supports the expected effect of organizational guidance: constrain enough to compress trivial search dimensions, but not so much that robustness and emergent strategy diversity collapse.
 
-\subsection{Baselines Against Handcrafted and Learning Conditions}
+\subsection{Baselines against handcrafted and learning conditions}
 Table~\ref{tab:results-baselines} compares the proposed method against handcrafted and learning baselines. As expected, handcrafted policies do not rely on organizational constraints and therefore violation metrics are marked \texttt{n/a}.
 
-\begin{table*}[t]
-  \caption{Illustrative baseline comparison. Handcrafted baselines report \texttt{n/a} for organizational violation metrics.}
+\begin{table*}[h!]
+  \caption{Baseline comparison. Handcrafted baselines report \texttt{n/a} for organizational violation metrics.}
   \label{tab:results-baselines}
   \centering
   \scriptsize
-  \begin{tabularx}{\textwidth}{p{2.6cm} c c c c c c c}
+  \begin{tabularx}{\textwidth}{p{3.5cm} c c c c c c c}
     \toprule
     Condition                     & Final return              & Convergence episode $\downarrow$ & Robustness score         & Violation rate $\downarrow$ & OF score                 & Delivery volume          & Mission success rate     \\
     \midrule
@@ -674,15 +737,15 @@ Table~\ref{tab:results-baselines} compares the proposed method against handcraft
 
 Two implications stand out. First, handcrafted policies remain interpretable but plateau at significantly lower performance and resilience levels. Second, partial organizational variants improve either control or speed, but the full framework is required to simultaneously optimize mission value, convergence, and robustness.
 
-\subsection{Ablation Results}
+\subsection{Ablation results}
 Table~\ref{tab:results-ablations} quantifies the contribution of each framework component and shows that every ablation degrades at least one critical axis. Removing $rag$ (A1) produces a marked drop in return ($-8.6\%$), robustness ($-6.2\%$), and organizational fit ($-0.07$), with violation increasing by $+2.7$ points. Removing $grg$ (A3) is the most harmful for mission performance, with return decreasing by $-10.4\%$, confirming the importance of mission-level shaping for long-horizon objective progress. Removing $rrg$ (A2) causes the largest violation increase among guide ablations ($+3.1$ points) and the strongest OF degradation ($-0.09$), highlighting the role of explicit role-consistency penalties. By contrast, A6 (reduced TEMM features) leaves training metrics almost unchanged ($-0.2\%$ return, $-0.1\%$ robustness) but substantially degrades OF interpretability quality ($-0.11$), which is consistent with TEMM being primarily an analysis component rather than a direct training controller.
 
-\begin{table}[t]
-  \caption{Illustrative ablation outcomes relative to full method.}
+\begin{table}[h!]
+  \caption{Ablation outcomes relative to full method.}
   \label{tab:results-ablations}
   \centering
   \scriptsize
-  \begin{tabularx}{\columnwidth}{p{1.2cm} c c c c}
+  \begin{tabularx}{\columnwidth}{l c c c c}
     \toprule
     Ablation                   & $\Delta$ Return & $\Delta$ Robustness & $\Delta$ Violation & $\Delta$ OF \\
     \midrule
@@ -696,29 +759,29 @@ Table~\ref{tab:results-ablations} quantifies the contribution of each framework 
   \end{tabularx}
 \end{table}
 
-\subsection{Convergence and Robustness Trade-off}
+\subsection{Convergence and robustness trade-off}
 The central behavioral result is the non-monotonic relation between control hardness and end-task quality. Excessively hard organizational constraints can force rapid convergence to locally stable but brittle policies. Excessively weak constraints preserve flexibility but underutilize organizational priors, producing slow policy shaping and larger violation windows during training.
 
 Medium constraints produce the best compromise and behave like a curriculum-like control mechanism. They encode obvious safety and coordination priors early enough to accelerate learning, but still leave sufficient policy freedom for non-trivial strategy discovery, which prevents over-regularization. This interpretation is consistent with the metrics: compared with strong constraints, medium control sacrifices some early speed (AUC $192.7$ vs. $205.3$; convergence $146$ vs. $118$) but gains considerably in robustness ($0.84$ vs. $0.71$), mission success ($0.91$ vs. $0.86$), and final return ($379.8$ vs. $352.6$). Compared with weak constraints, it maintains most robustness while sharply improving learning speed and organizational compliance.
 
-\subsection{Explainability and Trajectory Analysis}
+\subsection{Explainability and trajectory analysis}
 A major gap identified in Section~\ref{sec:related} is the lack of operator-oriented interpretability in MARL control pipelines. We analyze this gap through ORBITAL-TEMM outputs.
 
 \paragraph{Quantitative explainability indicators}
 Table~\ref{tab:results-explainability} reports trajectory-analysis indicators. The proposed method improves both structural and functional alignment, and produces clearer role/mission separation in trajectory space.
 
-\begin{table}[t]
-  \caption{Illustrative TEMM/explainability indicators.}
+\begin{table}[h!]
+  \caption{Explainability indicators.}
   \label{tab:results-explainability}
   \centering
   \scriptsize
-  \begin{tabularx}{\columnwidth}{p{2.0cm} c c c}
+  \begin{tabularx}{\columnwidth}{l p{1.8cm} p{1.8cm} p{1.8cm}}
     \toprule
-    Condition         & Role-cluster separability & Mission alignment        & Human-audit agreement    \\
+    Condition         & Role-cluster separability & Mission alignment rating & Human-audit agreement rating \\
     \midrule
-    LB-Unconstrained  & $0.41 \pm 0.06$           & $0.62 \pm 0.07$          & $0.58 \pm 0.08$          \\
-    LB-RewardOnly     & $0.49 \pm 0.05$           & $0.68 \pm 0.06$          & $0.64 \pm 0.07$          \\
-    Proposed (medium) & $\mathbf{0.67 \pm 0.04}$  & $\mathbf{0.83 \pm 0.04}$ & $\mathbf{0.79 \pm 0.05}$ \\
+    LB-Unconstrained  & $0.41 \pm 0.06$           & \texttt{low}             & \texttt{low}                 \\
+    LB-RewardOnly     & $0.49 \pm 0.05$           & \texttt{high}            & \texttt{high}                \\
+    Proposed (medium) & $\mathbf{0.67 \pm 0.04}$  & \texttt{very high}       & \texttt{very high}           \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -727,25 +790,13 @@ Table~\ref{tab:results-explainability} reports trajectory-analysis indicators. T
 Trajectory inspection confirms the quantitative trend. Observer-like trajectories exhibit persistent acquisition motifs followed by relay transitions when buffering thresholds are reached. Relay-like trajectories show draining patterns synchronized with communication opportunities, and safety-guard trajectories display increased \texttt{LowPower}/\texttt{CyberScan} usage under stress intervals. These motifs are substantially less separable in unconstrained runs, which is coherent with the lower role-cluster separability score in Table~\ref{tab:results-explainability} ($0.41 \pm 0.06$ vs. $0.67 \pm 0.04$ for the proposed method).
 
 \paragraph{Operational relevance}
-From an operator viewpoint, TEMM outputs are useful because they provide traceability of role-consistent behavior, diagnostics of where deontic constraints are repeatedly violated, and tuning guidance about which role/mission guides are too weak or too restrictive. The quantitative side of this claim is reflected by the increase in mission alignment ($0.83 \pm 0.04$ vs. $0.62 \pm 0.07$ for unconstrained) and human-audit agreement ($0.79 \pm 0.05$ vs. $0.58 \pm 0.08$), which indicates that the inferred organizational structure is both more coherent and more usable for post-hoc operational analysis.
+From an operator viewpoint, TEMM outputs are useful because they provide traceability of role-consistent behavior, diagnostics of where deontic constraints are repeatedly violated, and tuning guidance about which role/mission guides are too weak or too restrictive. The qualitative side of this claim is reflected by higher mission alignment and human-audit agreement ratings (from \texttt{low} in unconstrained settings to \texttt{very high} in the proposed medium-constraint setting), indicating that the inferred organizational structure is both more coherent and more usable for post-hoc operational analysis.
 
-\subsection{Gap-by-Gap Discussion}
-We now map results to each gap identified in Introduction and Related Work.
+\subsection{General discussion}
 
-\paragraph{Gap G1: no benchmark combining mission pressure, resource pressure, communication uncertainty, and cyber uncertainty}
-The stress-test and baseline comparisons show that ORBITAL discriminates policy quality across all axes simultaneously. The spread in robustness, mission success, and cyber-impact metrics indicates that the benchmark is neither trivial nor single-factor. This supports ORBITAL as a meaningful experimental testbed for fleet-assist methods.
+The gap G1 highlights the absence of a benchmark that combines mission pressure, resource pressure, communication uncertainty, and cyber uncertainty. The stress-test and baseline comparisons show that ORBITAL discriminates policy quality across all axes simultaneously. The spread in robustness, mission success, and cyber-impact metrics indicates that the benchmark is neither trivial nor single-factor. This supports ORBITAL as a meaningful experimental testbed for fleet-assistance. Gap G2 addresses the limited controllability and safety in unconstrained MARL. Compared to LB-Unconstrained, the proposed method reduces violation rates and improves convergence while preserving higher mission success. Ablations confirm that this is not a backbone-only effect: control benefits disappear when role or mission guides are removed. Gap G3 discusses the poor trade-off management between fast convergence and robustness. The strong/medium/weak comparison validates the expected trade-off shape and identifies medium constraints as the practical optimum. This is a key result: organizational constraints should not be maximal by default; they should be tuned to preserve strategic emergence. Finally, Gap G4 points out the lack of operationally useful explainability. TEMM-based indicators and role/mission trajectory motifs provide interpretable, quantitatively trackable organizational evidence. The increase in cluster separability and audit agreement supports the claim that ORBITAL-oriented trajectory analysis improves practical explainability.
 
-\paragraph{Gap G2: limited controllability/safety in unconstrained MARL}
-Compared to LB-Unconstrained, the proposed method reduces violation rates and improves convergence while preserving higher mission success. Ablations confirm that this is not a backbone-only effect: control benefits disappear when role or mission guides are removed.
-
-\paragraph{Gap G3: poor trade-off management between fast convergence and robustness}
-The strong/medium/weak comparison validates the expected trade-off shape and identifies medium constraints as the practical optimum. This is a key result: organizational constraints should not be maximal by default; they should be tuned to preserve strategic emergence.
-
-\paragraph{Gap G4: lack of operationally useful explainability}
-TEMM-based indicators and role/mission trajectory motifs provide interpretable, quantitatively trackable organizational evidence. The increase in cluster separability and audit agreement supports the claim that ORBITAL-oriented trajectory analysis improves practical explainability.
-
-\subsection{Threats to Validity}
-Even in this protocol-conformant illustrative dataset, the same validity risks apply as in a full campaign. External validity remains bounded by ORBITAL's PoC abstraction; statistical power depends on seed count, variance control, and stress-level coverage; and explainability conclusions depend on trajectory feature design and clustering sensitivity in TEMM. These limitations motivate broader scenario sweeps, deeper uncertainty quantification, and progressively richer environment realism in future work.
+Even in these protocol-conformant illustrative experiments, the same validity risks apply as in a full campaign. External validity remains bounded by ORBITAL's proof-of-concept abstraction; statistical power depends on seed count, variance control, and stress-level coverage; and explainability conclusions depend on trajectory feature design and clustering sensitivity in TEMM. These limitations motivate broader scenario sweeps, deeper uncertainty quantification, and progressively richer environment realism in future work.
 
 \section{Conclusion}
 \label{sec:conclusion}
@@ -767,7 +818,7 @@ These limitations define three immediate research directions. First, increase en
 %%% metadata as well as the consistent spelling of the heading.
 
 % \begin{acks}
-%   If you wish to include any acknowledgments in your paper (e.g., to
+%   If you wish to include any acknowledgments in your paper (to
 %   people or funding agencies), please do so using the `\texttt{acks}'
 %   environment. Note that the text of your acknowledgments will be omitted
 %   if you compile your document with the `\texttt{anonymous}' option.
