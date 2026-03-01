@@ -270,7 +270,7 @@ Une fois le modèle simulé de l'environnement généré, les agents sont entra�
 \textbf{Analyse} \quad
 Dans l'étape de configuration, l'utilisateur a fixé un seuil de performance, par exemple une récompense moyenne de 3.5 par épisode. Après l'entraînement, l'activité d'analyse \acn{CybMASDE} calcule la moyenne des récompenses obtenues par les agents et la compare à ce seuil. Dans le cas d'Overcooked-AI, il n'est pas rare que les agents atteignent une moyenne inférieure après les premières itérations.
 
-La comande \texttt{cybmasde analyze --auto-temm} applique la méthode \acn{Auto-TEMM} sur les trajectoires collectées (voir \autoref{lst:cybmasde_auto_temm_output}). Cette analyse consiste à regrouper les trajectoires en clusters selon leur similarité, à inférer les rôles implicites joués par les agents et à calculer des métriques de stabilité et d'adéquation organisationnelle. Dans l'environnement Overcooked-AI, on peut par exemple observer que l'agent 0 adopte systématiquement un comportement de serveur tandis que l'agent 1 assume celui de polyvalent. Les résultats de cette analyse sont sauvegardés dans le dossier \texttt{analyzing/} et peuvent être consultés par l'utilisateur (voir \autocite{lst:cybmasde_auto_temm_spec_output}).
+La commande \texttt{cybmasde analyze --auto-temm} applique la méthode \acn{Auto-TEMM} sur les trajectoires collectées (voir \autoref{lst:cybmasde_auto_temm_output}). Cette analyse consiste à regrouper les trajectoires en clusters selon leur similarité, à inférer les rôles implicites joués par les agents et à calculer des métriques de stabilité et d'adéquation organisationnelle. Dans l'environnement Overcooked-AI, on peut par exemple observer que l'agent 0 adopte systématiquement un comportement de serveur tandis que l'agent 1 assume celui de polyvalent. Les résultats de cette analyse sont sauvegardés dans le dossier \texttt{analyzing/} et peuvent être consultés par l'utilisateur (voir \autoref{lst:cybmasde_auto_temm_spec_output}).
 
 
 \begin{lstlisting}[language={},basicstyle=\scriptsize, label={lst:cybmasde_auto_temm_output}, caption={Extrait de la sortie de log après entrainement et application de TEMM}]
@@ -290,7 +290,7 @@ Finished TEMM analysis
 \end{lstlisting}
 
 
-\begin{lstlisting}[language=json,basicstyle=\tiny, label={lst:cybmasde_auto_temm_spec_output}, caption={Extrait de spécifications organisationnelles après inferrés à analyser pour être raffinées manuellement}]
+\begin{lstlisting}[language=json,basicstyle=\tiny, label={lst:cybmasde_auto_temm_spec_output}, caption={Extrait de spécifications organisationnelles inférées à analyser puis raffiner manuellement}]
 {
     "role_2": {
         "rules": [
@@ -549,7 +549,7 @@ L'intégration de MOISE+MARL dans le pipeline d'apprentissage multi-agent a perm
 
 Malgré ces apports, des limites subsistent : dépendance à la qualité des traces, besoins computationnels élevés, difficulté de généralisation à des systèmes distribués contraints, et explicabilité encore perfectible. Ce chapitre pose ainsi les bases pour une automatisation avancée de la conception organisationnelle en \acn{MARL}, ouvrant la voie à des optimisations futures et à des applications sur des \acplu{SMA} réels.
 
-\footnotetext[1]{ \label{fn:github} L'implémentation \textquote{CybMASDE} en plus de rassembler nos contributions, intègre un nombre important de packages conduisant à un logiciel relativement conséquent en taille ($\sim$250000 lignes de code) une fois les dépendances installées : \url{https://github.com/julien6/CybMASDE}.}
+\footnotetext[1]{ \label{fn:github-cybmasde} L'implémentation \textquote{CybMASDE} en plus de rassembler nos contributions, intègre un nombre important de packages conduisant à un logiciel relativement conséquent en taille ($\sim$250000 lignes de code) une fois les dépendances installées : \url{https://github.com/julien6/CybMASDE}.}
 
 \clearpage
 \thispagestyle{empty}
@@ -1818,11 +1818,14 @@ Plusieurs facteurs peuvent influencer l'interprétation des résultats :
   \item \textbf{Choix des algorithmes MARL} : la prédominance de \acn{MAPPO} et \acn{QMIX} dans les profils par défaut favorise des résultats stables, mais limite la généralisation à d'autres algorithmes (ex. \acparen{DQN} multi-agent).
   \item \textbf{Conditions expérimentales} : l'usage d'un cluster \acn{HPC} réduit la variance liée aux ressources, mais ne reflète pas toujours des déploiements contraints réels (edge, IoT).
   \item \textbf{Conception des contraintes} : la définition des rôles et missions influe directement sur le contrôle et l'explicabilité (une dureté excessive peut biaiser les comparaisons).
+  \item \textbf{Impact de la pondération des contraintes} : l'effet des coefficients de pondération et des niveaux de dureté est observé empiriquement (profils forts/doux), mais nous ne proposons pas encore d'étude systématique de sensibilité sur l'ensemble des environnements.
+  \item \textbf{Diversité des solveurs} : bien que plusieurs algorithmes soient comparés, le cœur des meilleurs résultats repose sur \acn{MAPPO}. Des alternatives comme \textit{Soft Actor-Critic} en version multi-agent restent à évaluer de façon homogène dans notre protocole.
+  \item \textbf{Schéma d'entraînement attaquant/défenseur} : l'apprentissage simultané favorise la co-adaptation, mais ne couvre pas encore des variantes itératives de type bilevel (alternance attaquant puis défenseur) qui pourraient améliorer la stabilité dans certains scénarios compétitifs.
   \item \textbf{Mesures d'explicabilité} : la similarité Jaccard et le score de cohérence reposent sur des trajectoires limitées ; des métriques plus fines (traçabilité causale, \acparen{SHAP}) pourraient améliorer la validité.
 \end{enumerate}
 
 \medskip
-En résumé, la méthode \acn{MAMAD} couvre particulièrement la performance, adaptation et autonomie. Les biais identifiés ouvrent des perspectives pour raffiner l'évaluation (plus d'algorithmes, déploiements physiques, métriques avancées).
+En résumé, la méthode \acn{MAMAD} couvre particulièrement la performance, adaptation et autonomie. Les biais identifiés ouvrent des perspectives directes pour raffiner l'évaluation (études de sensibilité des contraintes, élargissement des solveurs, variantes d'entraînement attaquant/défenseur, déploiements physiques, métriques avancées), sans remettre en cause les tendances principales observées dans ce chapitre.
 
 \section{Bilan}
 

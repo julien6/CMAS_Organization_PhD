@@ -78,6 +78,16 @@ La méthode \acn{MAMAD} ambitionne de réunir les forces des approches symboliqu
 \chapter{Présentation globale de la méthode}
 \label{chap:mamad_global}
 
+\textbf{Guide de lecture du chapitre.}
+Ce chapitre présente la logique globale de \acn{MAMAD} avant le détail activité par activité.
+Pour une lecture rapide, le fil directeur est le suivant :
+\begin{enumerate}
+  \item comprendre la vue d'ensemble du cycle (voir \autoref{fig:cycle}) ;
+  \item lire la formalisation algorithmique complète (voir \autoref{alg:mamad}) ;
+  \item distinguer le rôle du processus \textit{Transferring} et du processus \acn{MTA} ;
+  \item retenir les points de contrôle du raffinement (\(\texttt{org\_fit}_{min}\), \(\overline{r}_{min}\), \(\sigma_{max}\)).
+\end{enumerate}
+
 La méthode \acn{MAMAD}~\footnotemark[2] repose sur quatre grandes activités~: (1) la modélisation de l'environnement, de l'objectif global et des contraintes organisationnelles, (2) l'apprentissage des politiques à l'aide de divers algorithmes \acn{MARL}, (3) l'analyse des comportements et l'inférence des spécifications organisationnelles à l'aide d'une méthode proposée, et (4) le maintien de la cohérence entre l'environnement simulé et l'environnement réel en déployant les politiques entraînées et en mettant à jour la simulation. Cette approche guide le processus d'apprentissage des agents tout en imposant des contraintes organisationnelles strictes, garantissant ainsi l'efficacité des politiques apprises.
 
 Le cycle de vie d'un \acn{SMA} conçu avec \acn{MAMAD} est illustré en \autoref{fig:cycle}. Il commence par la modélisation de l'environnement, réalisée à partir d'un ensemble suffisant de trajectoires réelles (issues d'agents déjà transférés ou de toute autre source disponible), ainsi que la définition de l'objectif global et des contraintes de conception sous forme de rôles et d'objectifs. Ensuite, les agents sont entraînés dans cet environnement simulé à l'aide de techniques \acn{MARL}. Une fois l'entraînement terminé, une analyse post-entraînement permet d'extraire les rôles et objectifs émergents des agents, ce qui conduit à l'amélioration des spécifications organisationnelles appliquées. Enfin, après validation, les politiques apprises sont déployées pour contrôler les actionneurs de l'environnement, générant ainsi de nouvelles traces qui serviront à affiner la modélisation lors des itérations suivantes.
@@ -108,6 +118,15 @@ La récompense moyenne $\overline{r}$ et l'écart-type $\sigma$ sont des métriq
 
 
 La méthode \acn{MAMAD} propose un cadre méthodologique permettant une conception continue du \acn{SMA} via la coordination itérative et asynchrone de deux processus distincts~: le \textit{processus de Transfert}, qui est connecté à l'environnement réel et gère l'exécution en temps réel et la collecte d'historiques conjoints~; et le \textit{processus \acn{MTA}}, qui consomme les données stockées pour améliorer itérativement le modèle simulé, la politique conjointe et les spécifications organisationnelles du \acn{SMA}.
+
+\paragraph{Schéma opératoire (vue synthétique).}
+La lecture de l'\autoref{alg:mamad} peut être résumée en quatre transitions de flux :
+\begin{enumerate}
+  \item \textbf{TRF} déploie \(\pi^j_{\text{latest}}\) et accumule des trajectoires réelles ;
+  \item un \textbf{déclencheur événementiel} active \textbf{MTA} quand le volume de données est suffisant ;
+  \item \textbf{MTA} enchaîne \textbf{MOD} \(\rightarrow\) \textbf{TRN} \(\rightarrow\) \textbf{ANL} avec mise à jour de \(\mathcal{MM}\) et \(\pi^j_{\text{latest}}\) ;
+  \item le système revient en \textbf{TRF}, ce qui ferme la boucle sim2real.
+\end{enumerate}
 
 \paragraph{Processus de Transfert~: déploiement des politiques et collecte de données}
 
@@ -336,6 +355,18 @@ Dans le contexte de la Cyberdéfense, ni l'une ni l'autre de ces approches n'est
 
 Ce double positionnement permet de tirer parti à la fois de l'explicabilité et de la réutilisabilité offerts par les modèles formels, et de la capacité d'adaptation offerte par les approches connexionnistes.
 
+\subsection{Spécificité Cyberdéfense : éléments génériques vs spécialisés}
+
+Un point important de positionnement est de distinguer clairement ce qui relève d'un cadre \textbf{générique} de conception de \acplu{SMA} et ce qui constitue une \textbf{spécialisation Cyberdéfense}.
+
+\begin{itemize}
+  \item \textbf{Composants génériques}~: la structuration \textbf{MOD}--\textbf{TRN}--\textbf{ANL}--\textbf{TRF}, le formalisme \acn{Dec-POMDP}/\acn{ODec-POMDP}, la boucle de raffinement, et les mécanismes d'apprentissage/évaluation sont réutilisables dans d'autres domaines multi-agents.
+  \item \textbf{Composants spécialisés Cyberdéfense}~: le modèle pré-spécialisé orienté réseau (nœuds, propriétés, privilèges), l'intégration des scénarios attaque/défense via MITRE ATT\&CK et arbres \acn{AD}, les métriques de sécurité (détection, violation, robustesse) et les environnements cibles (Company Infrastructure, Kubernetes, Drone Swarm).
+  \item \textbf{Impact sur les critères}~: la spécialisation sert principalement C2/C3 (performance/adaptation en contexte opérationnel) et C4/C5 (contrôle/explicabilité) en rendant explicites les contraintes de sécurité, tandis que la structure générique de la méthode soutient C1 (autonomie) et la transférabilité globale.
+\end{itemize}
+
+Ainsi, la méthode n'est pas limitée à la Cyberdéfense, mais sa déclinaison présentée dans ce manuscrit intègre explicitement les artefacts du domaine pour assurer un alignement opérationnel réel.
+
 
 \subsection{Les \textit{World Models} Multi-Agents pour la génération automatique du modèle simulé}
 
@@ -463,6 +494,18 @@ Ces défis sont directement liés aux questions étudiées concernant la génér
 Ce modèle, illustré en \autoref{fig:model_example_illustration}, permet de générer un simulateur multi-agents fidèle, où chaque action et observation est explicitement définie, facilitant l'extension à divers contextes de Cyberdéfense.
 
 \
+
+\noindent
+\textbf{Traduction opérationnelle des arbres \acn{AD} vers le modèle séquentiel.}
+La chaîne de traduction utilisée dans ce manuscrit est la suivante :
+\begin{itemize}
+  \item les nœuds et branches \acn{AD} sont convertis en actions d'attaque/défense avec préconditions et postconditions ;
+  \item ces actions alimentent les composantes du modèle \acn{Dec-POMDP} (\(A\), \(T\), \(O\), \(R\)) via les propriétés des nœuds réseau ;
+  \item les objectifs de défense associés sont ensuite exprimés au niveau organisationnel (missions/rôles) puis injectés dans MOISE+MARL via les guides de contraintes.
+\end{itemize}
+
+\noindent
+Dans l'état actuel, cette traduction reste semi-manuelle et pilotée par le concepteur. L'automatisation complète de la projection \acn{AD} $\rightarrow$ spécifications $\mathcal{M}OISE^+$ est identifiée comme une perspective.
 
 \noindent
 \textbf{Approche d'intégration MITRE ATT\&CK} : Nous suggérons une approche manuelle de haut niveau que nous avons utilisée pour intégrer les informations MITRE ATT\&CK sous forme d'arborescence AD, car elle formalise les actions à jouer dans un scénario et leurs interactions avec l'environnement. Elle vise à aider à établir les actions d'attaque/défense qui seront finalement intégrées dans le simulateur :
@@ -711,6 +754,8 @@ La définition de $V^{\pi^j}$ suit le schéma d'exécution d'agent séquentiel e
 
 
 \begin{figure*}[h!]
+  % \phantomcaption
+  \caption*{}
   \label{eq:single_value_function}
   \raggedright
   \textbf{\textit{Definition 1} \quad Fonction État-Valeur adaptée aux guides de contraintes en \acn{AEC} :}
@@ -765,7 +810,50 @@ ii) des pénalités du guide de récompenses de rôle, échelonnées par $ch_t$.
 %
 Le processus se poursuit dans l'état $s_{t+1}$ avec l'agent $(i + 1) \bmod n$.
 
-\subsubsection*{Faciliter l'implémentation des \textbf{Guides de contraintes}}
+\subsection{Détails algorithmiques et passage à l'échelle}
+
+Dans l'implémentation expérimentale, plusieurs familles d'algorithmes \acn{MARL} sont mobilisées (notamment \acn{MAPPO}, \acn{MADDPG}, \acn{QMIX}, \acn{COMA}), avec une prédominance de \acn{MAPPO} comme compromis stabilité/performance sur les cas étudiés.
+
+Le coût d'entraînement dépend principalement :
+\begin{itemize}
+  \item du nombre d'agents \(|\mathcal{A}|\), de la longueur d'épisode \(T\), du nombre d'itérations de mise à jour et de la taille des réseaux ;
+  \item de la dimension des observations/actions conjointes, qui croît rapidement avec la taille du système ;
+  \item de la non-stationnarité induite par l'apprentissage simultané de plusieurs politiques.
+\end{itemize}
+
+De manière indicative, le coût suit un ordre de grandeur de type
+\[
+  O\!\big(|\mathcal{A}| \times T \times \text{taille\_modèle} \times \text{updates}\big),
+\]
+auquel s'ajoute le coût d'application des guides de contraintes
+\[
+  O\!\big(|\mathcal{A}| \times T \times \text{nombre\_de\_règles}\big).
+\]
+
+Les atténuations déjà intégrées dans la thèse sont : (i) compression latente des observations via \acn{JOPM}/auto-encodeurs, (ii) contraintes organisationnelles qui réduisent l'espace d'actions effectif (\textit{action masking} + \textit{reward guides}), (iii) protocole d'évaluation reproductible multi-runs (seeds, baselines, ablations) pour contrôler la variance, et (iv) boucle de raffinement MAMAD qui permet des itérations courtes et validées par seuils (\(\texttt{org\_fit}_{min}\), \(\overline{r}_{min}\), \(\sigma_{max}\)).
+
+Cette discussion complète les résultats sans introduire de nouvelles expérimentations : elle explicite les compromis de scalabilité observés et justifie les choix algorithmiques effectués.
+
+\subsection{Portée des contraintes : multi-objectif, shielding et contraintes temporelles}
+
+Dans cette thèse, la dimension \textbf{multi-objectif} est traitée de façon opérationnelle dans la fonction de récompense via les guides \(grg\) associés aux missions, et non comme une optimisation de Pareto dédiée avec front explicite.
+Autrement dit, plusieurs objectifs peuvent être poursuivis simultanément, mais leur arbitrage passe par des pondérations et des priorités définies dans les spécifications organisationnelles et les guides.
+Cette formulation est cohérente avec l'objectif de contrôle (C4) et d'explicabilité (C5), tout en conservant des algorithmes \acn{MARL} standards.
+
+Le \textbf{shielding} est implémenté selon deux niveaux complémentaires déjà présents dans MOISE+MARL :
+\begin{itemize}
+  \item un niveau \textbf{dur} via le \textit{action masking} (\(rag\), \(ch_t=1\)), qui interdit explicitement certaines actions ;
+  \item un niveau \textbf{souple} via le \textit{reward shaping} (\(rrg\), \(grg\), \(0 \leq ch_t < 1\)), qui pénalise ou récompense des trajectoires sans blocage strict.
+\end{itemize}
+Cette combinaison explicite le compromis performance/contrôle : plus le masquage est strict, plus le respect des contraintes est assuré, au prix d'une exploration réduite.
+
+Enfin, les \textbf{contraintes temporelles et de précédence} sont prises en compte à deux niveaux :
+\begin{itemize}
+  \item au niveau déontique, via \(rds(\rho)=\langle tc, y, m \rangle\) et \(v_m(t)\), qui activent obligations/permissions selon des fenêtres temporelles ;
+  \item au niveau de la modélisation de scénario, via des préconditions/postconditions et des enchaînements d'actions issus des arbres \acn{AD}, ensuite traduits en missions et guides.
+\end{itemize}
+Cette prise en compte est déjà opérationnelle dans le pipeline, mais son automatisation complète (notamment pour la génération systématique des dépendances de précédence) reste un axe d'amélioration identifié.
+
 \subsection{Faciliter l'implémentation des \textbf{Guides de Contrainte}}
 
 Puisque les rôles, objectifs et missions sont de simples étiquettes, leur définition est implicite. Cependant, implémenter une relation \(rag\), \(rrg\) ou \(grg\) nécessite de définir de nombreux historiques, souvent redondants, rendant une définition extensionnelle fastidieuse et peu évolutive. De plus, la logique de chaque \textbf{Guide de Contrainte} repose sur l’analyse de trajectoires d’agents : pour chaque historique observé, il faut décider s’il appartient à un ensemble d’historiques attendus et quelles conséquences en tirer (masquage d’actions, ajout de pénalités ou de bonus de récompense). Par exemple, \(rag\) restreint les actions disponibles selon l’appartenance de la trajectoire courante à un ensemble \(H_g\) et la nouvelle observation.
@@ -876,6 +964,8 @@ La définition complète de $V_{\mathcal{T}^j}^{\pi^j}$ est donnée dans \hyperr
 \medskip
 
 \begin{figure*}[h!]
+  \caption*{}
+  % \phantomcaption
   \label{eq:single_value_function_parallel}
   \raggedright
   \textbf{\textit{Definition 2} \quad Fonction Observation-Valeur adaptée aux guides de contraintes en mode parallèle:}
@@ -1341,7 +1431,7 @@ L'activité retourne :
 
 \section{Bilan}
 
-En synthèse, l'activité d'analyse permet d'établir un lien objectif entre les comportements émergents des agents et les structures organisationnelles attendues. Grâce à la méthode \acn{TEMM} et à son extension \acn{Auto-TEMM}, il devient possible d'inférer automatiquement des rôles, objectifs et missions à partir des trajectoires, et de quantifier leur adéquation organisationnelle par un indicateur robuste. Cette démarche favorise l'explicabilité, la traçabilité et le raffinement itératif des spécifications organisationnelles, tout en fournissant des outils d'évaluation pour comparer différentes politiques ou configurations. Toutefois, la qualité de l'analyse dépend de la diversité des trajectoires collectées et du choix des hyperparamètres de clustering, même si l'automatisation par optimisation conjointe permet de limiter l'intervention humaine. Cette activité constitue ainsi un pivot essentiel pour la boucle de conception \acn{MAMAD}, en préparant le transfert et l'amélioration continue des politiques dans l'environnement réel.
+En synthèse, l'activité d'analyse permet d'établir un lien objectif entre les comportements émergents des agents et les structures organisationnelles attendues. Grâce à la méthode \acn{TEMM} et à son extension \acn{Auto-TEMM}, il devient possible d'inférer automatiquement des rôles, objectifs et missions à partir des trajectoires, et de quantifier leur adéquation organisationnelle par un indicateur robuste. Cette démarche favorise l'explicabilité, la traçabilité et le raffinement itératif des spécifications organisationnelles, tout en fournissant des outils d'évaluation pour comparer différentes politiques ou configurations. Toutefois, la qualité de l'analyse dépend de la diversité des trajectoires collectées et du choix des hyperparamètres de clustering, même si l'automatisation par optimisation conjointe permet de limiter l'intervention humaine. De plus, bien que permissions et obligations soient inférées, leur évaluation reste aujourd'hui agrégée dans l'indicateur global~: une mesure déontique dédiée constitue un axe d'amélioration direct pour renforcer C4 et C5. Cette activité constitue ainsi un pivot essentiel pour la boucle de conception \acn{MAMAD}, en préparant le transfert et l'amélioration continue des politiques dans l'environnement réel.
 
 
 \clearpage
@@ -1407,6 +1497,17 @@ Ce double mécanisme assure la continuité du fonctionnement des agents, tout en
 L'\autoref{alg:transferring} formalise le fonctionnement de l'activité de transfert.
 Chaque élément est décrit ci-dessous afin de préciser les mécanismes et leur rôle dans la boucle de conception.
 
+\subsection*{Schéma opératoire du transfert}
+Pour clarifier la lecture de l'\autoref{alg:transferring}, le flux de contrôle est le suivant :
+\begin{enumerate}
+  \item exécuter la politique courante en mode \texttt{DIRECT} ou \texttt{REMOTE} ;
+  \item stocker les transitions dans un tampon temporaire \(\mathcal{B}\) ;
+  \item tester le seuil \(\texttt{batch\_size}\) ;
+  \item en cas de seuil atteint, fusionner \(\mathcal{B}\) dans \(\mathcal{D}_{H^j}\) puis déclencher une mise à jour asynchrone ;
+  \item reprendre immédiatement la boucle de transfert avec la dernière politique disponible.
+\end{enumerate}
+Ce schéma distingue explicitement le plan \textbf{d'exécution en ligne} (déploiement) et le plan \textbf{de mise à jour hors-ligne} (relance \acn{MTA}), ce qui réduit l'ambiguïté sur la synchronisation.
+
 
 \vspace{-0.3em}
 \begin{algorithm}[h!]
@@ -1447,7 +1548,7 @@ Chaque élément est décrit ci-dessous afin de préciser les mécanismes et leu
   \If{$|\mathcal{B}| \geq \texttt{batch\_size}$}{
     Ajouter $\mathcal{B}$ à $\mathcal{D}_{H^j}$ et vider $\mathcal{B}$ \;
     $\texttt{need\_update} \gets \texttt{True}$ \;
-    \If{$\texttt{not running\_update} = \texttt{False}$}{
+    \If{$\texttt{not running\_update} = \texttt{True}$}{
       \texttt{launch\_update()} \tcp*[r]{Appel asynchrone du processus MTA}
     }
   }

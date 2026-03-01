@@ -56,6 +56,12 @@ La \autoref{fig:organisation_manuscrit_partie_2} synthétise l'organisation de c
 \noindent
 Ce chapitre a pour objectif d'introduire et d'analyser les principaux verrous scientifiques liés à la conception automatisée de \acplu{SMA}, tels qu'ils émergent de la décomposition du problème en quatre grandes activités : modélisation, résolution, analyse et transfert. Pour chacune de ces activités, un sous-problème fondamental (\textbf{MOD} à \textbf{TRF}) a été identifié, associé à une hypothèse de restriction de l'espace de recherche (\textbf{H-MOD} à \textbf{H-TRF}). Nous définissons pour chaque sous-problème un ensemble de critères spécifiques permettant d'évaluer la couverture des approches existantes. La revue de littérature conduite selon ces critères permet de cartographier les travaux les plus pertinents, d'identifier les avancées majeures, ainsi que les verrous et lacunes qui subsistent. Ce chapitre propose ainsi une analyse critique de l'état de l'art pour chaque hypothèse, en vue de dégager les défis à relever et de motiver les contributions méthodologiques présentées dans la suite du manuscrit.
 
+\medskip
+
+\noindent
+\textbf{Repères de lecture.}
+Afin de rendre la lecture plus fluide malgré la densité des acronymes et tableaux croisés, chaque section suit la même structure~: (i) recontextualisation du sous-problème, (ii) hypothèse de restriction, (iii) couverture des critères, puis (iv) analyse des verrous. Les sous-problèmes \textbf{MOD}, \textbf{TRN}, \textbf{ANL} et \textbf{TRF} sont systématiquement reliés aux critères \textbf{C1} à \textbf{C5} pour garder un fil directeur unique.
+
 \section{La modélisation d'un environnement en simulation (H-MOD)}
 
 \subsection*{Recontextualisation du sous-problème dans la démarche de la thèse}
@@ -494,6 +500,14 @@ L'objectif est double :
 (i) disposer d'un socle théorique solide pour circonscrire les verrous mis en évidence, et
 (ii) préparer la formalisation de la méthode proposée.
 
+\medskip
+
+\noindent
+\textbf{Guide de lecture du chapitre.}
+Ce chapitre peut être lu en suivant la chaîne \textbf{MOD $\rightarrow$ TRN $\rightarrow$ ANL $\rightarrow$ TRF}.
+Pour chaque bloc, nous explicitons d'abord les concepts mobilisés, puis leur rôle dans la méthode \acn{MAMAD}.
+Ce choix vise à limiter la surcharge cognitive liée aux acronymes, tout en conservant la précision de la revue.
+
 \section{Modélisation de l'environnement (MOD)}
 
 \noindent
@@ -554,9 +568,22 @@ Parmi les travaux notables, citons~: Panfili et al.~\cite{MPanfili2018}, où un 
 \noindent
 Certaines approches fondées sur la théorie des jeux s'inscrivent dans le cadre des \textquote{jeux stochastiques partiellement observables} (\acparen{POSG}) ou, plus précisément, dans celui des \textquote{processus de décision markoviens décentralisés partiellement observables} (\acparen{Dec-POMDP}). Les \acn{POSG} et les \acn{Dec-POMDP} sont tous deux des cadres de modélisation mathématique des problèmes de prise de décision dans lesquels des agents interagissent entre eux et dans un environnement stochastique~\cite{beynier2010}. Dans un \acn{POSG}, un groupe d'agents interagit avec un environnement stochastique et partiellement observable. Chaque agent agit en fonction de ses propres observations et d'une politique locale. Les agents peuvent avoir des objectifs différents, car chaque agent a sa propre fonction de récompense et le jeu est généralement supposé être non coopératif~\cite{terry2020pettingzoo}. Dans un \acn{Dec-POMDP}, plusieurs agents peuvent avoir une fonction de récompense commune et peuvent coordonner leurs actions pour atteindre un objectif commun, notamment en étant capables de communiquer~\cite{bernstein2013}.
 
+\subsection{Positionnement vis-à-vis des Stackelberg Security Games}
+
+Les \textit{Stackelberg Security Games} (SSG) constituent un cadre majeur de la cybersécurité décisionnelle~\cite{manshaei2013game}. Ils formalisent une interaction leader/suiveur~: le défenseur choisit une stratégie de protection, puis l'attaquant réagit.
+
+Ce cadre partage un objectif commun avec notre formulation~: optimiser une politique de défense sous contraintes de ressources et face à un adversaire. Néanmoins, il existe trois différences structurantes avec notre périmètre :
+\begin{itemize}
+  \item les SSG reposent souvent sur une vision stratégique statique ou quasi-statique, alors que nous traitons un processus séquentiel et partiellement observable ;
+  \item notre cadre vise des \acplu{SMA} avec coordination explicite entre plusieurs défenseurs (et éventuellement plusieurs attaquants), plutôt qu'un couple leader/suiveur agrégé ;
+  \item les contraintes organisationnelles (rôles, missions, obligations/permissions) sont représentées explicitement via $\mathcal{M}OISE^+$ puis injectées dans l'apprentissage, ce qui dépasse la seule allocation stratégique.
+\end{itemize}
+
+Notre choix de formulation par \acn{Dec-POMDP}/\acn{ODec-POMDP} et \acn{MARL} contraint permet ainsi d'articuler, dans une même boucle, les quatre activités \textbf{MOD}--\textbf{TRN}--\textbf{ANL}--\textbf{TRF}. Les SSG restent néanmoins complémentaires~: ils peuvent servir de cadre de positionnement théorique et de point d'entrée pour des allocations défensives tactiques en amont de l'apprentissage.
 
 
-\subsection{Le modèle Dec-PODMP}\label{sec:dec-podmp}
+
+\subsection{Le modèle Dec-POMDP}\label{sec:dec-podmp}
 
 Pour appliquer des techniques \acn{MARL}, il est nécessaire de s'appuyer sur un cadre Markovien pour formaliser les observations, actions, récompense, etc. Nous nous basons sur le cadre du \acn{Dec-POMDP}~\cite{Oliehoek2016}. Les \acn{Dec-POMDP} permettent de modéliser la coordination décentralisée entre agents dans des contextes à observabilité partielle, ce qui les rend particulièrement adaptés à l'intégration de contraintes organisationnelles. Contrairement aux \acn{POSG}, le \acn{Dec-POMDP} utilise une fonction de récompense commune, favorisant ainsi la collaboration~\cite{Beynier2013}.
 
@@ -819,6 +846,18 @@ Elles régulent qui doit, peut ou ne peut pas exécuter certaines missions. On l
 
 \noindent Les spécifications organisationnelles appliquées aux agents sont les rôles et les objectifs (en tant que missions) à travers les permissions ou obligations. En effet, les autres spécifications structurelles comme les compatibilités ou les liens sont inhérentes aux rôles. De même, nous considérons que les objectifs, missions et leur association ($mo$) permettent de relier les autres spécifications fonctionnelles comme les plans, les cardinalités ou les préférences.
 Par conséquent, nous considérons qu'il est suffisant de prendre en compte les rôles, les missions (objectifs et correspondance) et les permissions/obligations pour décrire l'essentiel de l'organisation d'un \acn{SMA}.
+
+\subsection{Pourquoi le choix de $\mathcal{M}OISE^+$ ?}
+
+Le choix de $\mathcal{M}OISE^+$ repose sur un compromis entre expressivité, opérationalisation et traçabilité. D'autres cadres existent dans la littérature (\acn{AGR}, méthodologies orientées conception, cadres fortement normatifs), mais ils couvrent moins bien simultanément les besoins de la thèse.
+
+\begin{itemize}
+  \item \textbf{Expressivité organisationnelle}~: $\mathcal{M}OISE^+$ combine structure (rôles/groupes), fonction (missions/plans) et déontique (permissions/obligations), ce qui permet de relier directement les contraintes de conception aux critères C4 (contrôle) et C5 (explicabilité).
+  \item \textbf{Compatibilité avec l'optimisation sous contraintes}~: les éléments organisationnels peuvent être traduits en guides de contraintes exploitables par le \acn{MARL} (masquage d'actions, pondération de récompense, objectifs), ce qui soutient C2 (performance) et C3 (adaptation).
+  \item \textbf{Traçabilité pour le cycle MAMAD}~: la structure explicite facilite l'audit des décisions et le raffinement itératif dans la boucle \textbf{TRN}--\textbf{ANL}--\textbf{TRF}, au lieu d'un simple guidage implicite difficile à interpréter.
+\end{itemize}
+
+En contexte Cyberdéfense, ce choix est particulièrement pertinent car il permet de formaliser des responsabilités différenciées (détection, mitigation, supervision), d'imposer des contraintes critiques, et de conserver une base explicative exploitable lors du transfert vers des environnements opérationnels.
 
 
 \section{Explicabilité et extraction organisationnelle (ANL)}
