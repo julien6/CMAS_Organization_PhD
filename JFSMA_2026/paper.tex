@@ -39,6 +39,7 @@
 \usepackage{mathdots}
 \usepackage{cancel}
 \usepackage{color}
+\usepackage{csquotes}
 \usepackage{siunitx}
 \usepackage{array}
 \usepackage{stmaryrd}
@@ -81,6 +82,8 @@
   #1
 }
 
+\newcommand{\jpj}[1]{\textcolor{red}{(JPJ) #1}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % THEOREMS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -96,7 +99,7 @@
 \newtheorem{remark}[theorem]{Remarque}
 % ==========================================
 
-\titre{Un Cadre Neuro-Symbolique pour les Modèles Du Monde Multi-Agents}
+\titre{Un Cadre Neuro-Symbolique pour les Modèles du Monde Multi-Agents}
 % \\ pour l'apprentissage par renforcement multi-agents basé modèle}
 
   % julien.soule@hotmail.fr
@@ -115,7 +118,7 @@
 \maketitle
 
 \begin{resume}
-  Les \textbf{modèles du monde} (World Models -- WMs) sont des modèles prédictifs de la dynamique d'un environnement, essentiels en \textbf{apprentissage par renforcement basé modèle} (MBRL). En contexte multi-agents partiellement observable, ils souffrent de l'ambiguïté des observations locales et de l'accumulation d'erreurs multi-pas. Les \textbf{WMs multi-agents} (MAWMs) neuronaux produisent souvent des prédictions incohérentes, violant la cohérence spatiale et les contraintes d'interaction. Nous proposons \textbf{Neuro-Symbolic Multi-Agent World Models} (NS-MAWM), intégrant un raisonnement symbolique dans les transitions d'observation via des contraintes différentiables, agissant comme biais inductifs pour limiter la dérive sémantique. Nous évaluons NS-MAWM sur quatre environnements avec trois stratégies d'intégration, montrant une amélioration de la cohérence et des performances.
+  Les modèles du monde (World Models -- WMs) sont des modèles prédictifs de la dynamique d'un environnement, essentiels en apprentissage par renforcement basé modèle (MBRL). En contexte multi-agents partiellement observable, ils souffrent de l'ambiguïté des observations locales et de l'accumulation d'erreurs multi-pas. Les WMs multi-agents (MAWMs) neuronaux produisent souvent des prédictions incohérentes, violant la cohérence spatiale et les contraintes d'interaction. Nous proposons Neuro-Symbolic Multi-Agent World Models (NS-MAWM), intégrant un raisonnement symbolique dans les transitions d'observation via des contraintes différentiables, agissant comme biais inductifs pour limiter la dérive sémantique. Nous évaluons NS-MAWM sur quatre environnements avec trois stratégies d'intégration, montrant une amélioration de la cohérence et des performances.
 \end{resume}
 
 \motscles{Apprentissage par Renforcement Multi-Agent Basé Modèle, Modèles du Monde Multi-Agents, Neuro-Symbolique}
@@ -123,7 +126,7 @@
 \bigskip
 
 \begin{abstract}
-  \textbf{World Models} (WMs) are predictive models of environment dynamics and are essential in \textbf{Model-Based Reinforcement Learning} (MBRL). In partially observable multi-agent settings, they suffer from ambiguity in local observations and multi-step error accumulation. Neural \textbf{Multi-Agent WMs} (MAWMs) often produce inconsistent predictions, violating spatial consistency and interaction constraints. We propose \textbf{Neuro-Symbolic Multi-Agent World Models} (NS-MAWM), which integrate symbolic reasoning into observation transitions through differentiable constraints that act as inductive biases to limit semantic drift. We evaluate NS-MAWM on four environments with three integration strategies, showing improved consistency and performance.
+  World Models (WMs) are predictive models of environment dynamics and are essential in Model-Based Reinforcement Learning (MBRL). In partially observable multi-agent settings, they suffer from ambiguity in local observations and multi-step error accumulation. Neural Multi-Agent WMs (MAWMs) often produce inconsistent predictions, violating spatial consistency and interaction constraints. We propose Neuro-Symbolic Multi-Agent World Models (NS-MAWM), which integrate symbolic reasoning into observation transitions through differentiable constraints that act as inductive biases to limit semantic drift. We evaluate NS-MAWM on four environments with three integration strategies, showing improved consistency and performance.
 \end{abstract}
 \keywords{Model-Based MARL, Multi-Agent World Models, Neuro-Symbolic}
 
@@ -133,24 +136,26 @@
 % ============================
 \section{Introduction}
 \label{sec:intro}
+% \jpj{je n'ai pas compris ta logique de mise en gras ? pq "modèles du monde" et pas "neuro-symbolique dans la suite?}
 
-Les \textbf{modèles du monde} (World Models -- WMs) sont au cœur de l'\textbf{apprentissage par renforcement basé modèle} (MBRL)~\cite{ha2018worldmodels,hafner2019learning,hafner2020dreamer,hafner2021dreamerv2}. Ils soutiennent la \emph{planification par imagination}, mais leur extension au multi-agent partiellement observable reste difficile~\cite{Wong2023,Venugopal2024MABL,agravante-etal-2023-learning}.
 
-Dans ces contextes, les observations décrivent des entités interactives soumises à des contraintes spatiales, logiques et physiques. Les WMs latents monolithiques peinent à préserver cette structure~\cite{kipf2020contrastivelearningstructuredworld} : ils peuvent produire des prédictions numériquement plausibles mais sémantiquement invalides (par exemple, deux agents sur la même cellule). Ces erreurs se cumulent sur les rollouts longs et dégradent la planification~\cite{talvitie2014modelbias}.
+Les \textbf{modèles du monde} (World Models -- WMs) sont au cœur de l'\textbf{apprentissage par renforcement basé modèle} (MBRL)~\cite{ha2018worldmodels,hafner2019learning,hafner2020dreamer,hafner2021dreamerv2}. Ils soutiennent la \emph{planification par imagination}~\cite{hafner2019learning}, mais leur extension à un environnement multi-agent partiellement observable reste difficile~\cite{Wong2023,Venugopal2024MABL,agravante-etal-2023-learning}.
 
-Cette problématique prolonge nos travaux antérieurs en MARL neuro-symbolique~\cite{soule2025moisemarl}, qui visaient surtout l'explicabilité et le contrôle des comportements. Ce retour d'expérience motive ici un déplacement du focus vers le MB-MARL : avant de guider ou contraindre les politiques, il est crucial de disposer d'un modèle du monde fidèle dans les contextes multi-agents.
+Dans ce contexte, les observations décrivent des entités interactives soumises à des contraintes spatiales, logiques et physiques. Les WMs à base de réseaux de neurone peinent souvent à préserver cette structure~\cite{kipf2020contrastivelearningstructuredworld} : ils peuvent produire des prédictions numériquement plausibles mais sémantiquement invalides (par exemple, deux agents sur la même cellule). Ces erreurs se cumulent sur les \textit{rollouts} dégradent la planification~\cite{talvitie2014modelbias}.
 
-Plusieurs travaux ont intégré de manière pionnière des connaissances a priori comme biais inductifs dans les WMs~\cite{kipf2020contrastivelearningstructuredworld}. Cependant, un cadre général pour intégrer le raisonnement symbolique dans l'apprentissage des WMs reste à établir, en particulier concernant trois lacunes transversales :
+Cette problématique prolonge nos travaux en MARL \textbf{neuro-symbolique}~\cite{soule2025moisemarl,Soule2026JAAMAS}. En effet, si nos précédentes contributions ont permis d’intégrer des abstractions organisationnelles dans l'apprentissage pour améliorer le contrôle et l’explicabilité, elles ont aussi révélé une dépendance critique à la qualité du modèle environnemental. Cela motive ici un recentrage vers le MB-MARL, en considérant l’apprentissage d’un modèle du monde multi-agents fiable comme un préalable au guidage organisationnel.
+
+Plusieurs travaux ont intégré de manière pionnière des connaissances a priori comme biais inductifs dans les WMs~\cite{kipf2020contrastivelearningstructuredworld}. Cependant, un cadre général pour intégrer le raisonnement symbolique dans l'apprentissage des WMs reste à établir, en particulier concernant trois verrous :
 %
 \begin{itemize}
   \item[\textbf{G1}] \textbf{Manque de structures de WMs orientées multi-agents.}
-        Les WMs existants négligent des a priori structurels pour les environnements multi-agents : représentation explicite de l'observabilité partielle, non-stationnarité induite par les interactions, et modularité des entités~\cite{zhang2021worldmodelgraph, Willemsen2021MAMBPO, Venugopal2024MABL}. Ils supposent des dynamiques stationnaires et traitent les agents de manière uniforme, échouant à généraliser sur des configurations variées.
+        Les WMs existants négligent souvent des a priori structurels nécessaires en multi-agents : représentation explicite de l'observabilité partielle, non-stationarité induite par les interférences mutuelles des agents, et modularité des entités (représenter séparément agents et objets)~\cite{zhang2021worldmodelgraph, Willemsen2021MAMBPO, Venugopal2024MABL}. Ils supposent fréquemment des dynamiques quasi stationnaires et traitent les agents de manière uniforme, ce qui limite la généralisation à des configurations variées.
 
   \item[\textbf{G2}] \textbf{Manque d'intégration neuro-symbolique dans les WMs.}
-        Bien que des a priori symboliques (contraintes d'action, lois physiques, règles d'interaction) améliorent l'efficacité en échantillons et la robustesse, peu de modèles les intègrent dans l'apprentissage ou l'architecture des WMs~\cite{Xu2018semanticloss, Fan2017differentiablelearninglogicalrules, balloch2023neurosymbolicworldmodelsadapting, garcez2023neurosymbolic}. La plupart s'appuient uniquement sur des dynamiques latentes boîte noire, manquant des opportunités d'exploiter la connaissance symbolique comme biais inductif.
+        Bien que des a priori symboliques (contraintes d'action, lois physiques, règles d'interaction) améliorent l'efficacité et la robustesse des politiques entraînées, peu de modèles les intègrent dans l'apprentissage ou l'architecture des WMs~\cite{Xu2018semanticloss, Fan2017differentiablelearninglogicalrules, balloch2023neurosymbolicworldmodelsadapting, garcez2023neurosymbolic}. La plupart s'appuient uniquement sur des dynamiques latentes \textquote{boîte noire}, manquant des opportunités d'exploiter la connaissance symbolique comme biais inductif. Cette limitation est en partie due au coût de formalisation des règles et à la difficulté d'intégrer des contraintes discrètes dans un entraînement différentiable stable.
 
-  \item[\textbf{G3}] \textbf{Manque de cohérence symbolique comme principe d'optimisation.}
-        Les métriques standard des WMs se concentrent sur la précision prédictive ou la récompense en aval, en ignorant la cohérence symbolique. Pourtant, le raisonnement dans des environnements dynamiques bénéficie de la vérification du respect des contraintes par les prédictions~\cite{talvitie2014modelbias, balloch2023neurosymbolicworldmodelsadapting}.
+  \item[\textbf{G3}] \textbf{Absence de métriques unifiées pour la cohérence des MAWMs neuro-symboliques}
+        Les métriques standard des WMs se concentrent sur la précision prédictive ou la récompense en aval, en ignorant la cohérence symbolique. Pourtant, le raisonnement dans des environnements dynamiques bénéficie de la vérification du respect des contraintes par les prédictions~\cite{talvitie2014modelbias, balloch2023neurosymbolicworldmodelsadapting}. En pratique, les benchmarks rapportent rarement des métriques de validité logique explicites, ce qui rend cette dimension moins visible dans l'évaluation comparative.
 \end{itemize}
 
 En nous appuyant sur des cadres d'intégration neuro-symbolique~\cite{manhaeve2018deepproblog,garcez2023neurosymbolic,Xu2018semanticloss,Fan2017differentiablelearninglogicalrules}, nous proposons \textbf{Neuro-Symbolic Multi-Agent World Models (NS-MAWM)} pour augmenter les WMs avec du raisonnement symbolique via :
@@ -172,7 +177,7 @@ En nous appuyant sur des cadres d'intégration neuro-symbolique~\cite{manhaeve20
 
 Nous évaluons NS-MAWM sur quatre environnements discrets et continus : Gridcraft, Overcooked~\cite{Micah2020overcooked}, Predator--Prey~\cite{lowe2017multi} et \textbf{SMAC}~\cite{Ellis2023smacv2}. La comparaison entre base neuronale et variantes neuro-symboliques, avec des métriques prédictives et symboliques, met en évidence des gains de précision, de cohérence et de généralisation dans notre cadre expérimental. La dynamique symbolique résiduelle apparaît comme le meilleur compromis global.
 
-
+% \jpj{L'introduction me parait tres bien MAIS... si on voit bien les contributions on a du mal à se rendre compte de ce qui est nouveau : en effet, tu dis que tu t'appuies sur 18 17 14 15 mais pas vraiment ce qui différe ? c'est une remarque mineure à ce niveau mais je crois qu'arrivé à la conclusion ce n'est pas plus claire}
 
 % ============================
 % 3. Related Work
@@ -181,7 +186,7 @@ Nous évaluons NS-MAWM sur quatre environnements discrets et continus : Gridcraf
 \section{Travaux connexes}
 \label{sec:related_work}
 
-Nous passons en revue le paysage des travaux connexes selon quatre axes d'amélioration de la modélisation d'environnements multi-agents complexes : architecture des WMs, modélisation des interactions multi-agents, intégration de connaissances symboliques et dimensions d'évaluation.
+Pour situer notre contribution, nous analysons l’état de l’art à travers quatre défis majeurs de la modélisation multi-agent sous-jacente : (1) l’architecture des WMs, (2) la représentation des interactions entre agents, (3) l’intégration de connaissances symboliques, et (4) les méthodes d’évaluation. Cette structuration met en lumière les limites actuelles.
 
 \paragraph{Architectures de WMs.} Sur l'axe architectural, les approches fondatrices telles que Dreamer~\cite{hafner2020dreamer, hafner2021dreamerv2} et PlaNet~\cite{hafner2019learning} proposent des modèles de dynamique latente boîte noire puissants, mais avec un espace latent souvent monolithique sans biais explicite vers les entités ou les agents. Des efforts plus récents adoptent une représentation structurée. Par exemple, WM as Graph~\cite{zhang2021worldmodelgraph} et \textbf{Bi-Level Latent-Variable World Model for Sample-Efficient Multi-Agent Reinforcement Learning} (MABL)~\cite{Venugopal2024MABL} proposent une modularité latente alignée avec les entités et la topologie de l'environnement. \textbf{Multi-Agent Model-Based Policy Optimization} (MAMBPO)~\cite{Willemsen2021MAMBPO} intègre une structure multi-agents explicite, permettant des simulations conditionnées par les vues individuelles des agents. Ces travaux améliorent la structure interne des modèles, mais n'adressent pas systématiquement la cohérence symbolique explicite.
 
@@ -191,7 +196,7 @@ Nous passons en revue le paysage des travaux connexes selon quatre axes d'améli
 
 \paragraph{Dimensions d'évaluation.} Sur l'axe évaluation, la plupart des WMs sont comparés via la perte de reconstruction ou la performance de contrôle, mais peu d'études évaluent explicitement la cohérence aux règles symboliques ou la généralisation sous changements structurels. Des enquêtes récentes~\cite{Wong2023} recommandent des métriques plus larges, incluant la cohérence sémantique, les taux de violation de règles et la frugalité en données/temps. Cet axe motive l'introduction de métriques dédiées comme le RVR dans notre protocole.
 
-En synthèse, les quatre axes précédents structurent l'état de l'art, tandis que notre proposition cible directement trois lacunes techniques transversales : (\textbf{G1}) l'absence de biais architecturaux explicitement multi-agents, (\textbf{G2}) la faible intégration de mécanismes neuro-symboliques dans les WMs, et (\textbf{G3}) le manque de vérification explicite de la cohérence symbolique. Ces lacunes motivent NS-MAWM pour soutenir un apprentissage structuré, interprétable et efficace dans des environnements multi-agents partiellement observables à dynamique évolutive.
+En synthèse, les quatre axes précédents structurent l'état de l'art, tandis que notre proposition cible directement trois verrous techniques : (\textbf{G1}) l'absence de biais architecturaux explicitement multi-agents, (\textbf{G2}) la faible intégration de mécanismes neuro-symboliques dans les WMs, et (\textbf{G3}) le manque de vérification explicite de la cohérence symbolique. Ces verrous motivent NS-MAWM pour soutenir un apprentissage structuré, interprétable et efficace dans des environnements multi-agents partiellement observables à dynamique évolutive.
 
 
 \section{Contexte et bases théoriques}
@@ -288,7 +293,7 @@ Une extension courante des WMs aux contextes multi-agents consiste à apprendre 
 Étant donné un jeu de trajectoires conjointes $\mathcal{D}_{H^j} = \{ h^j \}$, avec $h^j = \langle (\omega_t^j, a_t^j) \rangle_{t=0}^{T}$, l'objectif est d'apprendre un modèle prédictif de la dynamique des observations conjointes, comme cela est courant en MB-MARL\cite{Wang2022modelbasedmultiagentreinforcementlearning,Xu2022mingling}.
 %
 
-Nous introduisons un \textbf{modèle de prédiction d'observations conjointes} (Joint-Observation Prediction Model, \textbf{JOPM}) comme brique de base des MAWMs considérés dans cet article :
+Nous avons introduit dans \cite{Soule2026JAAMAS} un \textbf{modèle de prédiction d'observations conjointes} (Joint-Observation Prediction Model, \textbf{JOPM}) que nous considérons comme une brique de base des MAWMs considérés dans cet article :
 %
 \[
   \mathcal{T}_{\theta}^j :
@@ -520,7 +525,7 @@ auquel cas il est surtout utilisé pour l'ablation et l'analyse diagnostique.
 \section{Évaluation}
 \label{sec:eval}
 
-Nous évaluons NS-MAWM selon quatre axes correspondant aux lacunes de la \autoref{sec:intro} :
+Nous évaluons NS-MAWM selon quatre axes correspondant aux verrous de la \autoref{sec:intro} :
 (i) \textbf{fidélité prédictive à long horizon} (biais de modèle et erreurs cumulées),
 (ii) \textbf{cohérence symbolique} (respect des règles),
 (iii) \textbf{contrôle en aval} (planification / performance de politique),
@@ -646,7 +651,7 @@ Les nœuds GPU sont équipés de 4 NVIDIA Tesla V100 SXM2 (16--32GB) associés �
   \label{tab:results_overview}
 \end{table*}
 
-\subsection{Métriques d'évaluation, bases et protocole}
+\subsection{Cadre d'évaluation}
 \label{sec:metrics_baselines_protocol}
 
 \paragraph{Bases de comparaison.}
@@ -711,14 +716,14 @@ Les gains les plus nets en MSE$_H$ apparaissent dans Overcooked et SMAC, où les
 La hiérarchie observée est stable : \textit{résiduel} $<$ \textit{projection} $<$ \textit{régularisation} $<$ \textit{neuronal} en MSE$_H$ sur les quatre environnements. L'écart entre résiduel et projection reste modéré mais systématique (par exemple $0.087$ vs $0.095$ sur Overcooked, $0.116$ vs $0.125$ sur SMAC), suggérant qu'apprendre explicitement la composante non déterminable apporte un gain additionnel au-delà de la seule correction symbolique.
 
 \paragraph{Lecture vis-à-vis des objectifs G1--G3.}
-Pour \textbf{G1} (fidélité prédictive), les baisses de MSE$_H$ montrent que les contraintes symboliques n'introduisent pas de dégradation de précision ; au contraire, elles limitent l'accumulation d'erreurs. Pour \textbf{G2} et \textbf{G3}, le contraste MAWM vs NS-MAWM est net : la version neuronale conserve des violations significatives alors que les variantes projetée et résiduelle imposent la cohérence sur $\mathcal{F}^d$. La régularisation occupe une position intermédiaire utile : elle réduit fortement le RVR sans imposer de correction dure à l'inférence.
+Pour \textbf{G1} (fidélité prédictive), les baisses de MSE$_H$ montrent que les contraintes symboliques n'introduisent pas de dégradation de précision ; au contraire, elles limitent l'accumulation d'erreurs. La différence entre MAWM vs NS-MAWM (\textbf{G2} et \textbf{G3}) montre que la version neuronale conserve des violations significatives alors que les variantes projetée et résiduelle imposent la cohérence sur $\mathcal{F}^d$. La régularisation occupe une position intermédiaire utile : elle réduit fortement le RVR sans imposer de correction dure à l'inférence.
 %
 Pour une intégration minimale dans un pipeline existant, la régularisation est souvent l'option la plus simple. Quand la validité symbolique doit être garantie à l'inférence, la projection est la plus adaptée. Si l'objectif est le meilleur compromis global précision/cohérence, la variante résiduelle est la plus robuste.
 
 \section{Conclusion et travaux futurs}
 \label{sec:conclusion}
 
-Nous avons proposé \textbf{NS-MAWM}, un cadre neuro-symbolique pour les MAWMs. Le problème adressé est le suivant : des modèles du monde multi-agents très précis numériquement peuvent rester incohérents vis-à-vis des règles de l'environnement. Le pas franchi dans cet article est l'intégration explicite de règles symboliques dans la prédiction multi-agents, via trois stratégies complémentaires, avec un protocole d'évaluation qui mesure à la fois la précision et la cohérence logique. Dans notre étude, les résultats montrent une réduction de la dérive sémantique à long horizon et des gains de fidélité prédictive et de généralisation.
+Nous avons proposé \textbf{NS-MAWM}, un cadre neuro-symbolique pour les MAWMs. Le problème adressé est le suivant : des modèles du monde multi-agents très précis numériquement peuvent rester incohérents vis-à-vis des règles de l'environnement. L'originalité de cette contribution est l'intégration explicite de règles symboliques dans la prédiction multi-agents, via trois stratégies complémentaires, avec un protocole d'évaluation qui mesure à la fois la précision et la cohérence logique. Nos résultats montrent une réduction de la dérive sémantique à long horizon et des gains de fidélité prédictive et de généralisation.
 
 Cependant, NS-MAWM entraîne un surcoût computationnel,
 pose des défis de scalabilité à mesure que le nombre d'agents, de caractéristiques ou de règles symboliques augmente,
