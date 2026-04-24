@@ -1,0 +1,42 @@
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+  >=Latex,
+  font=\footnotesize,
+  node distance=0.85cm and 1.0cm,
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=0.85cm, inner sep=4pt},
+  op/.style={draw, rounded corners=2pt, align=center, minimum height=0.7cm, inner sep=4pt, fill=gray!8},
+  line/.style={->, thick},
+  soft/.style={->, thick, dashed},
+  every node/.style={align=center}
+]
+
+\node[box] (input) {history $h^j_{t-1}$\\joint action $a^j_t$\\observation $\omega^j_t$};
+\node[box, right=of input] (split) {semantic\\decomposition\\$P_d\omega^j_t,\ P_u\omega^j_t$\\mask $M_d$};
+
+\node[op, above right=0.45cm and 1.1cm of split] (symb) {symbolic transition\\$\mathcal{T}^j_s$\\covered features\\$\omega^{d,j}_{t+1}$};
+\node[op, below right=0.45cm and 1.1cm of split] (neural) {neural dynamics\\$\mathcal{T}^j_\theta$\\residual prediction\\$\hat{\omega}^{u,j}_{t+1}$};
+
+\node[box, right=1.25cm of symb] (reg) {regularization\\$\mathcal{L}_{pred}+\lambda\mathcal{L}_{symb}$\\soft coupling};
+\node[box, right=1.25cm of split] (proj) {projection\\$\iota_d(\omega^{d,j}_{t+1})+\iota_u(P_u\hat{\omega}^{pre,j}_{t+1})$\\hard correction};
+\node[box, right=1.25cm of neural] (resid) {residual dynamics\\$\iota_d(\omega^{d,j}_{t+1})+\iota_u(\hat{\omega}^{u,j}_{t+1})$\\factorized output};
+
+\node[box, right=1.2cm of proj] (out) {rollout prediction\\$\hat{\omega}^j_{t+1}$\\evaluate MSE, RVR$_{pre}$,\\RVR$_{post}$, $\Delta_{corr}$};
+
+\draw[line] (input) -- (split);
+\draw[line] (split) -- (symb);
+\draw[line] (split) -- (neural);
+\draw[soft] (symb) -- (reg);
+\draw[soft] (neural) -- (reg);
+\draw[line] (symb) -- (proj);
+\draw[line] (neural) -- (proj);
+\draw[line] (symb) -- (resid);
+\draw[line] (neural) -- (resid);
+\draw[line] (reg.east) -- ++(0.35,0) |- (out.north west);
+\draw[line] (proj) -- (out);
+\draw[line] (resid.east) -- ++(0.35,0) |- (out.south west);
+
+\node[draw, rounded corners=2pt, fit=(symb) (neural), inner sep=7pt, label={[font=\footnotesize]above:NS-MAWM core}] {};
+\node[draw, rounded corners=2pt, fit=(reg) (proj) (resid), inner sep=7pt, label={[font=\footnotesize]above:three coupling modes}] {};
+
+\end{tikzpicture}
+}
