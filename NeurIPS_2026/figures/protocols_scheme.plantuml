@@ -1,0 +1,149 @@
+@startuml
+
+start
+
+partition "Baseline Design Space" {
+
+:Select representative baselines
+from the design space;
+
+note right
+Each baseline is defined as:
+B[D1,D2,D3,D4,D5,D6]
+
+D1: WM backbone
+D2: Joint-policy
+D3: Environment
+D4: Symbolic coverage κ
+D5: Integration strategy
+D6: Training regime
+end note
+
+}
+
+partition "Experimental Protocol - Training" {
+
+repeat
+
+:Initialize environment variant;
+
+if (Training regime?) then (SV)
+:Reuse same environment variant;
+else (MV)
+:Sample a new environment variant;
+endif
+
+:Run real-environment interactions;
+
+if (Model-based baseline?) then (yes)
+
+:Store trajectories
+in replay buffer;
+
+:Update world model;
+
+:Generate imagination rollouts;
+
+:Update joint-policy
+from real + imagined trajectories;
+
+else (no)
+
+:Update joint-policy
+from real trajectories only;
+
+endif
+
+:Collect training measurements;
+
+repeat while (Maximum episode budget not reached?)
+
+}
+
+partition "Experimental Protocol - Testing" {
+
+fork
+
+:Evaluate trained world model;
+
+repeat
+
+:Initialize evaluation episode;
+
+:Run open-loop rollout;
+
+:Recursively feed predicted
+observations back into WM;
+
+:Measure prediction errors
+over horizon H;
+
+repeat while (All horizons evaluated?)
+
+fork again
+
+:Evaluate trained policies;
+
+repeat
+
+switch (Evaluation regime?)
+case (KV)
+  :Evaluate on known variants;;
+case (SV)
+  :Evaluate on same variant;
+case (UV)
+  :Evaluate on unseen variants;
+endswitch
+
+:Run policies directly
+in real environment;
+
+:Collect downstream metrics;
+
+repeat while (All evaluation episodes completed?)
+
+end fork
+
+:Aggregate collected measurements;
+
+}
+
+partition "Evaluation Protocol" {
+
+:Process collected measurements;
+
+:Compute metrics:
+- Fidelity
+- Efficiency
+- Downstream performance
+- Robustness;
+
+:Compute claim indicators:
+C1, C2, C3, C4;
+
+:Perform targeted ablations
+(κ, WM backbone,
+integration strategy);
+
+}
+
+partition "Visual and Quantitative Evidence" {
+
+:Generate learning curves;
+
+:Generate compounding
+error curves;
+
+:Generate robustness tables;
+
+:Generate PCA / low-dimensional
+baseline projections;
+
+:Generate claim-space
+visualizations;
+
+}
+
+stop
+
+@enduml

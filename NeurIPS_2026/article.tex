@@ -107,20 +107,20 @@ We address this gap with \textbf{Neuro-Symbolic Multi-Agent World Models (NS-MAW
 NS-MAWM is model-agnostic and augments any NMAWM through three mechanisms: (i) \emph{symbolic consistency regularization}, which aligns neural predictions with symbolic reasoning; (ii) \emph{symbolic projection}, which enforces consistency at inference time; and (iii) \emph{residual symbolic dynamics}, which lets the neural model learn only non-symbolic components.
 
 % Claims and results (both theoretical and empirical)
-We evaluate NS-MAWM on \emph{Gridcraft}, \emph{Overcooked}~\cite{Micah2020overcooked}, \emph{Predator-Prey}~\cite{lowe2017multi}, and \emph{SMACv2}~\cite{Ellis2023smacv2}, using multiple WM architectures, including Dreamer-style latent models~\cite{hafner2019dreamer}. We compare against neural WMs and model-free agents, measuring long-horizon fidelity, convergence, downstream control, robustness, and ablations over symbolic coverage and rule complexity. Our theoretical and empirical claims are:
+We evaluate NS-MAWM on \emph{Gridcraft}, \emph{Overcooked}~\cite{Micah2020overcooked}, \emph{Predator-Prey}~\cite{lowe2017multi}, and \emph{SMACv2}~\cite{Ellis2023smacv2}, using multiple WM architectures, including Dreamer-style latent models~\cite{hafner2019dreamer}. We compare against neural WMs and model-free agents, measuring long-horizon fidelity, convergence, downstream control, robustness, and ablations over symbolic coverage implying rule complexity. Our theoretical and empirical claims are:
 %
 \begin{itemize}
   \item[\textbf{(C1)}] \textbf{Improved long-horizon fidelity.}
-    Symbolic coverage removes error on structurally predictable features; under mild consistency assumptions, cumulative error scales with residual dynamics, and empirically multi-step prediction error decreases across environments.
+        Symbolic coverage removes error on structurally predictable features; under mild consistency assumptions, cumulative error scales with residual dynamics, and empirically multi-step prediction error decreases across environments.
 
   \item[\textbf{(C2)}] \textbf{Improved rollout construction efficiency.}
-    Decomposition reduces the effective dynamics learned online, yielding faster stabilization and lower rollout-construction cost across architectures and tasks.
+        Decomposition reduces the effective dynamics learned online, yielding faster stabilization and lower rollout-construction cost across architectures and tasks.
 
   \item[\textbf{(C3)}] \textbf{Improved downstream control performance.}
-    Better long-horizon fidelity improves policy evaluation and optimization; planners and policies using NS-MAWM rollouts achieve higher returns than neural baselines.
+        Better long-horizon fidelity improves policy evaluation and optimization; planners and policies using NS-MAWM rollouts achieve higher returns than neural baselines.
 
   \item[\textbf{(C4)}] \textbf{Robustness to environment variations.}
-    Invariant symbolic rules provide a stable bias under distribution shift, and NS-MAWM controllers degrade less than purely neural models across environment variants.
+        Invariant symbolic rules provide a stable bias under distribution shift, and NS-MAWM controllers degrade less than purely neural models across environment variants.
 \end{itemize}
 %
 Across settings, neuro-symbolic variants improve predictive fidelity and downstream performance; residual symbolic dynamics gives the best consistency-cost trade-off, and even partial symbolic coverage yields substantial gains.
@@ -268,7 +268,7 @@ where $\kappa=1$ is a complete symbolic transition model, $\kappa=0$ is a purely
 Rules specify plausible next observations, not rewards: they constrain admissible successor states through no-overlap, action-effect, cooldown, bounded-variable, object-persistence, or kinematic constraints. Because rules may be incomplete or wrong, we report coverage and robustness to rule dropout rather than assuming perfect symbolic knowledge.
 
 \paragraph{Automating Partial Symbolic Coverage}
-NS-MAWM accepts audited or generated rules. For LLM-assisted rule acquisition, an LLM receives environment descriptions (observations, actions, valid/invalid transitions), emits structured candidate rules, and these are parsed into predicates and mapped to $M_d$. We evaluate \textbf{LLM-Raw} (syntactically valid parsed rules) and \textbf{LLM-Refined} (manual filtering for consistency) to test robustness to imperfect coverage.
+NS-MAWM accepts audited or generated rules. For LLM-assisted rule acquisition, an LLM receives environment descriptions (observations, actions, valid/invalid transitions), emits structured candidate rules, and these are parsed into predicates and mapped to $M_d$. We evaluate \textbf{LLM-Raw} (syntactically valid parsed rules) and \textbf{LLM-Refined} (further manual filtering for consistency) to test robustness to imperfect coverage.
 
 \begin{figure}[h!]
   \centering
@@ -313,7 +313,7 @@ $
   \mathcal{L}_{\text{total}} = \mathcal{L}_{\text{pred}} + \lambda \mathcal{L}_{\text{symb}},
 $
 where $\lambda$ controls symbolic regularization strength.
-This gives a soft version of the covered/residual argument: minimizing $\mathcal{L}_{\text{symb}}$ reduces $e^d_t$, so under Lipschitz rollout dynamics the long-horizon error bound tightens by the covered-alignment term (C1; Appendix~\ref{app:proof-c1}). The auxiliary symbolic gradient also makes updates partly aligned with admissible transitions, reducing effort spent fitting implausible covered dynamics (C2; Appendix~\ref{app:proof-c2}). The resulting rollout-error reduction propagates through the standard simulation-lemma control bound (C3; Appendix~\ref{app:proof-c3}), and invariant symbolic rules provide the same auxiliary target across environment variants, making the covered part a stable learning signal (C4; Appendix~\ref{app:proof-c4}).
+This gives a soft version of the covered/residual argument: minimizing $\mathcal{L}_{\text{symb}}$ reduces $e^d_t$, so under Lipschitz rollout dynamics the long-horizon error bound tightens by the covered-alignment term (c.f. \autoref{app:proofs:c1}). The auxiliary symbolic gradient also makes updates partly aligned with admissible transitions, reducing effort spent fitting implausible covered dynamics (c.f. \autoref{app:proofs:c2}). The resulting rollout-error reduction propagates through the standard simulation-lemma control bound (c.f. \autoref{app:proofs:c3}), and invariant symbolic rules provide the same auxiliary target across environment variants, making the covered part a stable learning signal (c.f. \autoref{app:proofs:c4}).
 
 \paragraph{Symbolic Projection}
 \label{sec:symbolic_projection}
@@ -324,7 +324,7 @@ $\hat{\omega}^{proj,j}_{t+1}
   \iota_d(\omega^{d,j}_{t+1})
   + \iota_u(P_u\hat{\omega}^{pre,j}_{t+1}).$
 
-The output $\hat{\omega}^{proj,j}_{t+1}$ can be used for downstream planning, rollout evaluation under hard symbolic coverage, or bootstrapping symbolic compliance. Under correct rules and masks, projection sets $P_d\hat{\omega}^{proj,j}_{t+1}=\omega^{d,j}_{t+1}=P_d\omega^j_{t+1}$, eliminating covered-feature error so long-horizon error depends only on residual and rule errors (C1; Appendix~\ref{app:proof-c1}). Because covered validity no longer requires the neural model to learn covered coordinates in the final rollout, the effective accuracy requirement is reduced for a target rollout error (C2; Appendix~\ref{app:proof-c2}). The improved rollout-fidelity bound then tightens downstream value-error bounds under matched planning assumptions (C3; Appendix~\ref{app:proof-c3}). Finally, any rule shared by environment variants is enforced identically on covered coordinates, confining variant sensitivity to residual dynamics and rule/mask errors (C4; Appendix~\ref{app:proof-c4}).
+The output $\hat{\omega}^{proj,j}_{t+1}$ can be used for downstream planning, rollout evaluation under hard symbolic coverage, or bootstrapping symbolic compliance. Under correct rules and masks, projection sets $P_d\hat{\omega}^{proj,j}_{t+1}=\omega^{d,j}_{t+1}=P_d\omega^j_{t+1}$, eliminating covered-feature error so long-horizon error depends only on residual and rule errors (c.f. \autoref{app:proofs:c1}). Because covered validity no longer requires the neural model to learn covered coordinates in the final rollout, the effective accuracy requirement is reduced for a target rollout error (c.f. \autoref{app:proofs:c2}). The improved rollout-fidelity bound then tightens downstream value-error bounds under matched planning assumptions (c.f. \autoref{app:proofs:c3}). Finally, any rule shared by environment variants is enforced identically on covered coordinates, confining variant sensitivity to residual dynamics and rule/mask errors (c.f. \autoref{app:proofs:c4}).
 
 \paragraph{Residual Symbolic Dynamics}
 \label{sec:residual_symbolic_dynamics}
@@ -337,7 +337,7 @@ $
   \hat{\omega}^{res,j}_{t+1} =
   \iota_d(\omega^{d,j}_{t+1}) + \iota_u(\hat{\omega}^{u,j}_{t+1}).
 $
-Thus symbolic rules govern deterministic patterns, while neural dynamics model uncovered, stochastic, or high-entropy transitions. Under correct rules, residual assembly cancels covered-feature error as in projection (C1; Appendix~\ref{app:proof-c1}). It also reduces the neural output dimension from $n n_f$ to $(1-\kappa)n n_f$, lowering the statistical complexity term for vector-valued prediction when $\kappa>0$ (C2; Appendix~\ref{app:proof-c2}). The resulting long-horizon error bound propagates to tighter policy-evaluation or planning bounds (C3; Appendix~\ref{app:proof-c3}). Since invariant covered rules remain unchanged across environment variants, only residual dynamics must adapt, giving the strongest robustness guarantee among the three modes (C4; Appendix~\ref{app:proof-c4}).
+Thus symbolic rules govern deterministic patterns, while neural dynamics model uncovered, stochastic, or high-entropy transitions. Under correct rules, residual assembly cancels covered-feature error as in projection (c.f. \autoref{app:proofs:c1}). It also reduces the neural output dimension from $n n_f$ to $(1-\kappa)n n_f$, lowering the statistical complexity term for vector-valued prediction when $\kappa>0$ (c.f. \autoref{app:proofs:c2}). The resulting long-horizon error bound propagates to tighter policy-evaluation or planning bounds (c.f. \autoref{app:proofs:c3}). Since invariant covered rules remain unchanged across environment variants, only residual dynamics must adapt, giving the strongest robustness guarantee among the three modes (c.f. \autoref{app:proofs:c4}).
 
 \subsection{Rule Violation Rate}
 \label{sec:rvr}
@@ -386,46 +386,19 @@ We evaluate on four multi-agent environments varying observability, action type,
 
 \paragraph{Baselines as design space} We define each baseline as a configuration within a six-dimensional design space, denoted as $B[D_1, D_2, D_3, D_4, D_5, D_6]$, where $D_1$ denotes the world model backbone (model-free, RSSM, deterministic, transformer-based), $D_2$ the policy or data generator (random, scripted, MAPPO, QMIX), $D_3$ the environment (Gridcraft, Overcooked, Predator--Prey, SMACv2), $D_4$ the symbolic rule source and symbolic coverage $\kappa \in [0,1]$, $D_5$ the neuro-symbolic integration strategy (regularization, projection, residual dynamics), and $D_6$ the training regime. We distinguish three regimes: \emph{single-variant} (SV), where training and evaluation use the same environment configuration; \emph{known-variants} (KV), where multiple variants are seen during training and evaluation; and \emph{unknown-variants} (UV), where evaluation includes unseen variants to measure robustness under distribution shifts. For example, the \emph{B(RSSM, MAPPO, GC, 0.3, Reg, SV)} baseline uses an RSSM backbone, MAPPO agent policy, GridCraft environment, rules with 30\% symbolic coverage, regularization strategy, and single-variant training/evaluation.
 
-\paragraph{Experimental and evaluation protocol}
-During training, agents continuously alternate between
-real-environment interactions and imagination rollouts when a world model is
-available in model-based baselines. The replay buffer is progressively populated online by the agents
-themselves, and model-based baselines jointly optimize the world model and the
-joint policy throughout training. In contrast, model-free baselines optimize
-their policies directly from real-environment interactions only. Training is
-performed over a maximum budget number of fixed-horizon episodes, allowing us to track
-both policy performance and, when applicable, world-model convergence over
-time.
+\paragraph{Experimental methodology}
 
-We distinguish two training regimes: \emph{single-variant} (SV), where all
-episodes are generated from the same environment variant to maximize local
-fidelity, and \emph{multi-variant} (MV), where episodes are generated from
-different variants to encourage robustness and generalization.
+% Experimental protocol paragraph
+The experimental protocol executes a representative subset of baselines from the proposed design space and collects measurements from both training and testing phases (a complete description of baselines, metrics, and claim assessments is provided in \autoref{app:protocols}).
+% Training part of the paragraph
+During training, agents continuously alternate between real-environment interactions and imagination rollouts whenever a world model is available. Replay buffers are progressively populated online by the agents themselves, and model-based baselines jointly optimize the world model and the joint policy in a Dreamer-style manner. In contrast, model-free baselines optimize policies only from real-environment interactions. Training is performed over a fixed maximum budget of fixed-horizon episodes, enabling us to track both policy performance and world-model convergence over time.
+We distinguish two training regimes: \emph{single-variant} (SV), where all episodes are generated from the same environment variant to maximize local fidelity, and \emph{multi-variant} (MV), where episodes are generated from multiple variants to encourage robustness and generalization.
+% Testing part of the paragraph
+During testing, world models are runned using open-loop rollouts over horizons $H \in \{1,5,10,25,50,100\}$, where predicted observations are recursively fed back into the model to measure compounding error. Policies are runned directly in the real environment without using the world model at inference time, similarly to Dreamer-style inference. We distinguish three testing regimes: \emph{single-variant} (SV), \emph{known-variants} (KV), and \emph{unknown-variants} (UV), corresponding respectively to testing on the same variant, variants seen during training, and unseen variants.
 
-Evaluation separately assesses trained world models and trained policies. World
-models are evaluated using open-loop rollouts over horizons
-$H \in \{1,5,10,25,50,100\}$, where predicted observations are recursively fed
-back into the model to measure compounding error. Policies are evaluated
-directly in the real environment without using the world model at inference
-time, similarly to Dreamer-style evaluation. We distinguish three evaluation
-regimes: \emph{single-variant} (SV), \emph{known-variants} (KV), and
-\emph{unknown-variants} (UV), corresponding respectively to evaluation on the
-same variant, variants seen during training, and unseen variants.
-
-Rather than restricting the analysis to isolated pairwise comparisons, we
-sample a representative subset of baselines across the design space and study
-how world-model backbones, symbolic coverage levels, integration strategies,
-training regimes, and environments jointly affect fidelity, efficiency,
-downstream control, and robustness. Controlled comparisons are then used as
-targeted ablations to isolate the effect of specific dimensions such as
-$\kappa$, integration strategy, or world-model architecture.
-
-C1 is assessed using MSE@H, drift slope, and RVR; C2 using convergence speed,
-training cost, and resource usage; C3 using cumulative reward and sample
-efficiency; and C4 using performance degradation and variance across SV, KV,
-and UV regimes. Results are reported as mean $\pm$ standard error over
-multiple seeds and visualized through learning curves, compounding error
-curves, summary tables, and low-dimensional projections.
+% Evaluation protocol paragraph
+The evaluation protocol processes the collected measurements to assess the four claims. Rather than restricting the analysis to isolated pairwise comparisons, we analyze how world-model backbones, symbolic coverage levels, integration strategies, environments, and training regimes jointly affect fidelity, efficiency, downstream control, and robustness. Some baselines comparisons are then considered as targeted ablations to isolate the effect of specific dimensions such as symbolic coverage $\kappa$, integration strategy, or world-model architecture.
+C1 is assessed using MSE@H, drift slope, and RVR; C2 using convergence speed, training cost, and resource usage; C3 using cumulative reward and sample efficiency; and C4 using performance degradation and variance across SV, KV, and UV regimes. Results are reported as mean $\pm$ standard error over multiple seeds and visualized through learning curves, compounding error curves, summary tables, and low-dimensional projections.
 
 
 \section{Results and discussion}
@@ -439,7 +412,7 @@ This section discuss salient results concerning NS-MAWM's claims (full results a
 NS-MAWM substantially reduces long-horizon prediction drift and semantic inconsistency. In GridCraft, the purely neural RSSM baseline $B[\text{RSSM},\text{MAPPO},\text{GC},0,\text{--},\text{SV}]$ reaches $\mathrm{MSE}@50=0.145\pm0.006$ with RVR $=0.182\pm0.011$, whereas residual symbolic dynamics at $\kappa=0.6$ reduces these values to $0.051\pm0.003$ and $0.008\pm0.002$, respectively, corresponding to approximately $65\%$ lower long-horizon error and more than one order of magnitude lower semantic violation rate. Similar trends appear across all environments. In Overcooked, the Transformer-based neural baseline exhibits $\mathrm{MSE}@50=0.162\pm0.008$ and RVR $=0.205\pm0.012$, while the residual neuro-symbolic variant reduces them to $0.064\pm0.004$ and $0.011\pm0.003$. Predator--Prey and SMACv2 show the same pattern, with long-horizon errors reduced from $0.181$ to $0.073$ and from $0.194$ to $0.082$, respectively. These results support Claim~C1 and confirm that symbolic coverage effectively constrains recursive rollout drift. Importantly, projection and residual dynamics consistently outperform regularization, suggesting that enforcing symbolic validity during rollout is more effective than only encouraging consistency during training.
 
 \paragraph{C2: Rollout construction efficiency.}
-NS-MAWM also improves rollout construction efficiency across architectures and environments. In GridCraft, symbolic regularization reduces convergence cost from $1.00\times$ to $0.82\times$, projection to $0.79\times$, and residual symbolic dynamics to $0.58\times$, while wall-clock time decreases from $1.00\times$ to $0.69\times$. Similar reductions are observed in Overcooked ($0.61\times$ steps, $0.71\times$ time), Predator--Prey ($0.63\times$ steps, $0.73\times$ time), and SMACv2 ($0.66\times$ steps, $0.75\times$ time). These gains are consistent with Proposition~\ref{app:proof-c2}: symbolic coverage reduces the effective learning burden by removing structurally predictable coordinates from the neural target space. Residual symbolic dynamics performs best because the neural model only predicts uncovered residual dynamics, whereas projection still trains a full predictor and regularization keeps all coordinates neural while adding symbolic supervision.
+NS-MAWM also improves rollout construction efficiency across architectures and environments. In GridCraft, symbolic regularization reduces convergence cost from $1.00\times$ to $0.82\times$, projection to $0.79\times$, and residual symbolic dynamics to $0.58\times$, while wall-clock time decreases from $1.00\times$ to $0.69\times$. Similar reductions are observed in Overcooked ($0.61\times$ steps, $0.71\times$ time), Predator--Prey ($0.63\times$ steps, $0.73\times$ time), and SMACv2 ($0.66\times$ steps, $0.75\times$ time). These gains are consistent with Proposition~\ref{app:proofs:c2}: symbolic coverage reduces the effective learning burden by removing structurally predictable coordinates from the neural target space. Residual symbolic dynamics performs best because the neural model only predicts uncovered residual dynamics, whereas projection still trains a full predictor and regularization keeps all coordinates neural while adding symbolic supervision.
 
 \paragraph{C3: Downstream control performance.}
 Improvements in model fidelity translate directly into stronger downstream control performance. In GridCraft, residual symbolic dynamics increases cumulative return from $0.63\pm0.02$ to $0.79\pm0.01$ and success rate from $0.57\pm0.03$ to $0.73\pm0.02$ under identical planning budgets. Similar improvements are observed in Overcooked ($0.58\rightarrow0.77$ return), Predator--Prey ($0.49\rightarrow0.74$), and SMACv2 ($0.46\rightarrow0.71$). Notably, improvements correlate more strongly with reductions in RVR than with one-step prediction accuracy. For example, projection and residual symbolic dynamics often exhibit relatively similar short-horizon prediction quality but substantially different semantic violation rates and downstream returns. This suggests that semantically valid imagined trajectories are critical for reliable planning and policy optimization, supporting Claim~C3. Model-free baselines remain consistently below world-model approaches, further emphasizing the importance of reliable imagination in multi-agent decision-making.
@@ -477,6 +450,39 @@ NS-MAWM assumes symbolic rules are available; automating rule extraction and han
 %    - éviter les formules du type : "X: Y..."
 %    - éviter les redondances, formulations alambiqués
 %    - dire qu'on veut un contenu propre scientifiquement (sobre, clair, précis) et pas du style "chatgpt writes a paper" (ex: éviter les formulations du type "the key insight is that...")
+%  - dans la table sybthétique, les noms des baselines doivent être cohérents entre eux et consistent
+
+\section{Experimental methodology details}
+\label{app:protocols}
+
+\begin{figure}
+  \label{fig:protocols_scheme}
+  \begin{center}
+    \includegraphics[height=0.9\textheight,trim={0 0 0 1cm},clip]{figures/protocols_scheme.pdf}
+  \end{center}
+  \caption{Experimental and evaluation pipeline for NS-MAWM}
+\end{figure}
+
+\subsection{Full baselines}
+\label{app:full_baselines}
+
+TODO
+
+\subsection{Experimental protocol}
+\label{app:full_experimental_protocol}
+
+TODO
+
+\subsection{Evaluation protocol}
+\label{app:full_evaluation_protocol}
+
+TODO
+
+\subsection{Full claim assessment}
+\label{app:full_assessment}
+
+TODO
+
 
 \section{Full results}
 \label{app:full-results}
@@ -517,8 +523,9 @@ TODO: figures and tables overviewing all results across environments, methods, a
   If the symbolic model has error $\epsilon_d$ on covered features and the neural residual model has error $\epsilon_u$, then the one-step error is bounded by $\epsilon_d+\epsilon_u$, and under standard Lipschitz rollout assumptions the $H$-step accumulated error scales with the residual component plus symbolic error. For symbolic consistency regularization, decreasing $\mathcal{L}_{\mathrm{symb}}$ decreases the covered-alignment term $\|P_d\hat{\omega}^{pre,j}_{t+1}-\omega^{d,j}_{t+1}\|_2^2$, yielding the analogous soft reduction rather than exact covered cancellation.
 \end{proposition}
 
-\begin{proof}
+\begin{proof}[Proof Sketch][Proof Sketch]
   By disjointness, the squared norm splits into covered and residual coordinates. Projection and residual assembly set the covered coordinates to $\mathcal{T}^j_s(h^j_{t-1},\omega_t^j,a_t^j)$; with correct rules this equals $P_d\omega^j_{t+1}$, so the covered term is zero. With imperfect rules, the covered term is exactly the symbolic error $\epsilon_d$. Regularization does not force equality, but its auxiliary loss is precisely the covered-coordinate discrepancy to the symbolic target; reducing it reduces the covered term in the same decomposition. Iterating the one-step bound through a Lipschitz dynamics model gives the stated long-horizon bound by the usual telescoping rollout argument.
+  \label{app:proofs:c1}
 \end{proof}
 
 \subsection{Proof of C2: Learning Efficiency}
@@ -530,8 +537,9 @@ TODO: figures and tables overviewing all results across environments, methods, a
   Let the full joint-observation contain $n n_f$ agent-feature coordinates and let the symbolic coverage ratio be $\kappa=\|M_d\|_0/(n n_f)$. In residual symbolic dynamics, the neural predictor targets only $(1-\kappa)n n_f$ coordinates. In projection, covered coordinates need not be learned to achieve covered-feature validity in the final rollout. In regularization, the auxiliary symbolic target adds an admissibility-aligned gradient on covered coordinates. For hypothesis classes whose statistical complexity is monotone in effective output dimension or target ambiguity, these mechanisms reduce the effective learning burden relative to a purely neural predictor.
 \end{proposition}
 
-\begin{proof}
+\begin{proof}[Proof Sketch]
   Residual symbolic dynamics replaces the full target space $\Omega^j$ with $\Omega^{u,j}$. Since $M_d$ covers $\kappa n n_f$ coordinates, the residual output dimension is $(1-\kappa)n n_f$. Standard generalization bounds for vector-valued predictors include an output-dimension-dependent capacity term; substituting the residual dimension yields a smaller term whenever $\kappa>0$. Projection leaves the neural training target unchanged but removes covered-coordinate accuracy from the final-rollout validity requirement, so the effective accuracy constraint for covered features is satisfied by $\mathcal{T}^j_s$. Regularization leaves the output dimension unchanged but adds a lower-variance symbolic target on covered coordinates, improving gradient alignment toward admissible transitions. Thus the effective learning burden is reduced by target removal (residual), final-output replacement (projection), or target shaping (regularization), all else equal.
+  \label{app:proofs:c2}
 \end{proof}
 
 \subsection{Proof of C3: Downstream Control}
@@ -541,8 +549,9 @@ TODO: figures and tables overviewing all results across environments, methods, a
   Assume bounded rewards and a planner or policy optimizer whose value error is bounded by a standard simulation-lemma term proportional to world-model rollout error. Then any NS-MAWM integration mode that reduces long-horizon model error also reduces the induced policy-evaluation error under the same planning budget.
 \end{proposition}
 
-\begin{proof}
+\begin{proof}[Proof Sketch]
   For bounded rewards, simulation-lemma arguments bound value error by a constant factor times accumulated model transition error over the planning horizon. By Appendix~\ref{app:proof-c1}, correct covered dynamics remove covered-feature error and leave only residual and symbolic-rule error. Substituting this smaller rollout-error term into the simulation bound gives a tighter policy-evaluation bound, which supports improved downstream planning or policy optimization under matched optimization conditions.
+  \label{app:proofs:c3}
 \end{proof}
 
 \subsection{Proof of C4: Robustness to Environment Variations}
@@ -552,20 +561,28 @@ TODO: figures and tables overviewing all results across environments, methods, a
   Consider two environment variants whose covered transition rules are identical, while residual dynamics may differ. Under correct masks and rules, projection and residual symbolic dynamics are invariant on $\mathcal{F}^d$ across the variants, so prediction shift is confined to $\mathcal{F}^u$.
 \end{proposition}
 
-\begin{proof}
+\begin{proof}[Proof Sketch]
   The symbolic operator $\mathcal{T}^j_s$ depends only on invariant covered transition rules. If these rules are shared across variants, then for the same $(h^j_{t-1},\omega_t^j,a_t^j)$ the covered prediction $\omega^{d,j}_{t+1}$ is identical in both variants. Therefore the covered component contributes no cross-variant discrepancy under correct masks and rules. Any remaining variation enters through $P_u$ and the learned residual dynamics, proving that the shift sensitivity of NS-MAWM is bounded by residual-dynamics shift plus any rule or mask error.
+  \label{app:proofs:c4}
 \end{proof}
+
 
 \section{Algorithmic Details \& Complexity}
 % More details on Algorithm~\autoref{alg:NS-MAWM}, time/space complexity analysis.
+
+TODO
 
 \section{Hyperparameters and Compute Resources}
 % Online update settings, architectures, rollout horizons.
 % Compute: GPU specs, total GPU-hours per experiment.
 
+TODO
+
 \section{Symbolic Rule Specifications}
 % List of atomic symbolic rules used in experiments.
 % E.g. rule for "eat action", "move action", etc., categorized by single-step vs multi-step.
+
+TODO
 
 \section{Implementation and Reproducibility}
 % Code overview, random seed usage, environment setup.
@@ -580,6 +597,8 @@ TODO: figures and tables overviewing all results across environments, methods, a
 % - Include 4+ main figures (env, t-SNE, Pareto, MSE curves) and 2 tables.
 % - Ablations: coverage sweep, strategy variants, rule noise.
 % - Ensure clarity of contributions and limitations.
+
+TODO
 
 \newpage
 \input{checklist.tex}

@@ -1,0 +1,113 @@
+@startuml
+
+skinparam shadowing false
+skinparam activityBorderColor black
+skinparam activityBackgroundColor white
+skinparam packageStyle rectangle
+skinparam defaultFontName Helvetica
+
+title NS-MAWM Experimental and Evaluation Pipeline
+
+start
+
+partition "Baseline Design Space" {
+
+  :Select representative baselines;
+
+  note right
+  B = [D1,D2,D3,D4,D5,D6]
+
+  D1: WM backbone
+  D2: Joint-policy
+  D3: Environment
+  D4: Symbolic coverage κ
+  D5: Integration strategy
+  D6: Training regime
+  end note
+}
+
+partition "Experimental Protocol" {
+
+  :Initialize environment variant;
+
+  repeat
+
+    if (Model-based baseline?) then (yes)
+
+      :Real-environment interactions;
+
+      :Populate replay buffer;
+
+      :Update world model;
+
+      :Generate imagination rollouts;
+
+      :Update joint-policy;
+
+    else (no)
+
+      :Real-environment interactions;
+
+      :Update joint-policy;
+
+    endif
+
+    :Collect training measurements;
+
+  repeat while (Episode budget not reached?)
+
+  fork
+
+    :Evaluate trained world model;
+
+    :Run open-loop rollouts;
+
+    :Recursively feed predicted observations;
+
+    :Measure compounding error;
+
+    note right
+    H ∈ {1,5,10,25,50,100}
+    end note
+
+  fork again
+
+    :Evaluate trained policies;
+
+    :Execute policies in real environment;
+
+    :Collect downstream measurements;
+
+    note right
+    SV: same variant
+
+    KV: known variants
+
+    UV: unseen variants
+    end note
+
+  end fork
+
+  :Store collected measurements;
+}
+
+partition "Evaluation Protocol" {
+
+  :Process collected measurements;
+
+  :Compute claim indicators
+  for C1-C4;
+
+fork
+  :Analyze controlled baseline comparisons;
+fork again
+    :Generate quantitative evidence;
+end fork
+
+    :Generate visual evidence;
+
+}
+
+stop
+
+@enduml
