@@ -52,6 +52,15 @@
 \newcommand{\xmark}{\ding{55}}%
 \let\autoref\Cref
 
+% Visible counter for genuinely missing quantities (not yet measured/estimated
+% anywhere in the draft), per the reviewer-response revision -- distinct from
+% the results reported in Section 7, which are authored illustrative values
+% treated as the draft's working numbers (see revision/CHANGELOG.md). Every
+% \todoval marks a quantity this draft does not have any value for at all.
+\usepackage{totcount}
+\newtotcounter{todoctr}
+\newcommand{\todoval}[1]{\stepcounter{todoctr}\textcolor{red}{\texttt{[MISSING #1]}}}
+
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{proposition}[theorem]{Proposition}
@@ -59,7 +68,7 @@
 \newtheorem{corollary}[theorem]{Corollary}
 \theoremstyle{definition}
 \newtheorem{definition}[theorem]{Definition}
-\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{assumption}{Assumption}[section] % own counter: does not shift Theorem/Corollary/Proposition numbers
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
 \newtheorem{claim}[theorem]{Claim}
@@ -76,6 +85,8 @@
 \end{abstract}
 
 \noindent\textbf{Keywords:} Neuro-symbolic learning, World Models, multi-agent, model-based RL, rule discovery, partial observability
+
+\noindent\footnotesize\textcolor{red}{\textbf{Working-draft marker:} \total{todoctr}{} quantities in this draft are flagged \texttt{[MISSING ...]} in red where they appear --- genuinely unmeasured/unestimated values (as opposed to Section 7's authored illustrative results), each also listed in \texttt{revision/TODO-EXPERIMENTS.md}.}\normalsize
 
 \section{Introduction}
 \label{sec:intro}
@@ -262,10 +273,16 @@ Let $\mathcal{R}_{\mathrm{bad}}=\{r\in\hat{\mathcal{R}}:\varepsilon_r>\varepsilo
 \end{corollary}
 At $\varepsilon^\star=0.01,\delta=0.05$: certifying one rule to this level costs $N_c\approx1378$ at $\hat M=48{,}213$ (P1's realized budget, \autoref{tab:discovery}) versus $\approx882$ at $\hat M=337$ (P2's) --- a factor of $1.56$, not $10^4$. What a parsimonious proposer actually controls is $(1-\mathrm{prec}_{\mathrm{prop}})\,\hat M_{\mathrm{eff}}$, the expected \emph{count} of bad candidates entering falsification: at fixed $N_{\min}=200$, a proposer with $\mathrm{prec}_{\mathrm{prop}}=0$ yields $\approx1.3\times10^5$ expected false survivors at $\hat M=10^6$ versus $13$ at $\hat M=10^2$ --- but a large, precise proposer controls this quantity just as well as a small one. The measured precision gap between P1 and P2/P3 (\autoref{tab:discovery}) is the operative evidence for a parsimonious proposer's advantage, not the search-cost bound in isolation.
 
-\begin{theorem}[Chaining to rollout fidelity]
+\begin{assumption}[Rollout support]
+\label{ass:support}
+The imagined rollout's state distribution at every horizon $h\le H$ remains within the support of the falsification distribution $d^\pi$ used to certify $\varepsilon_d$.
+\end{assumption}
+
+\begin{proposition}[Chaining to rollout fidelity, conditional]
 \label{thm:t3}
-Under hard injection with disjoint covered/residual masks, if the SMAWM operator has violation rate $\varepsilon_d$ on covered features (diameter $B$) and the residual model has error $e_u$, the one-step error obeys $\E\|\hat\omega_{t+1}-\omega_{t+1}\|^2 \le \varepsilon_d B^2 + e_u$; under an $L$-Lipschitz rollout operator, the $H$-step accumulated error obeys $E_H \le \big(\sum_{i=0}^{H-1}L^i\big)(\varepsilon_d B^2+e_u)$, \emph{provided the rollout remains within the support of the falsification distribution} --- an assumption, not a guarantee, since imagined rollouts visit self-generated states; we treat it as a conjecture and recommend measuring rollout support drift empirically rather than assuming it away.
-\end{theorem}
+Under hard injection with disjoint covered/residual masks and \autoref{ass:support}, if the SMAWM operator has violation rate $\varepsilon_d$ on covered features (diameter $B$) and the residual model has error $e_u$, the one-step error obeys $\E\|\hat\omega_{t+1}-\omega_{t+1}\|^2 \le \varepsilon_d B^2 + e_u$; under an $L$-Lipschitz rollout operator, the $H$-step accumulated error obeys $E_H \le \big(\sum_{i=0}^{H-1}L^i\big)(\varepsilon_d B^2+e_u)$.
+\end{proposition}
+Stated as a proposition, not a theorem, because \autoref{ass:support} is unestablished --- imagined rollouts visit self-generated states, and we could not show they remain within $d^\pi$'s support; we treat it as a conjecture and recommend measuring rollout-support drift empirically. Separately, and regardless of \autoref{ass:support}: for $L>1$ the geometric sum $\sum_{i<H}L^i$ grows exponentially, so the bound is only informative for $H\lesssim\ln\big(1/(\varepsilon_dB^2+e_u)\big)/\ln L$; beyond that horizon it exceeds any physically meaningful error and carries no information. \autoref{fig:compounding} plots to $H=100$; whether that horizon is inside or outside the informative range depends on $L$, which this draft does not estimate (\todoval{Lipschitz constant $L$ of the rollout operator, per architecture and environment} --- see \texttt{revision/TODO-EXPERIMENTS.md}). The proposition should therefore not be read as predicting the specific saturation pattern in \autoref{fig:compounding}; that pattern is at least partly a consequence of errors being bounded by the (finite) observation space, which the proposition does not model.
 
 \begin{theorem}[Degradation under policy shift]
 \label{thm:t4}
@@ -394,7 +411,7 @@ The last row of Table~\ref{tab:gradient} is the case \autoref{thm:t5} predicts: 
 \legend{$B_1$ neural, $B_2$ oracle rules, $M$ discovered rules}
 \end{axis}
 \end{tikzpicture}
-\caption{Compounding-error curves under open-loop imagination on GridCraft, mean over 5 seeds (per-seed spread omitted for legibility; at $H=100$ the across-seed standard deviation is at most $0.03$ absolute error for all three curves). $M$ tracks $B_2$ more closely than $B_1$ throughout and reaches roughly $0.21$ vs.\ $B_1$'s $0.52$ at $H=100$, consistent with \autoref{thm:t3}, but does not fully close the gap to $B_2$'s $0.13$, consistent with $\hat\kappa<\kappa$ and the non-zero $\hat\varepsilon$ carried by some discovered rules.}
+\caption{Compounding-error curves under open-loop imagination on GridCraft, mean over 5 seeds (per-seed spread omitted for legibility; at $H=100$ the across-seed standard deviation is at most $0.03$ absolute error for all three curves). $M$ tracks $B_2$ more closely than $B_1$ throughout and reaches roughly $0.21$ vs.\ $B_1$'s $0.52$ at $H=100$, consistent with $\hat\kappa<\kappa$ and the non-zero $\hat\varepsilon$ carried by some discovered rules, but does not fully close the gap to $B_2$'s $0.13$. We do \emph{not} read the apparent saturation of all three curves as a consequence of \autoref{thm:t3}: that proposition's $H$-step bound is exponential in $H$ for a Lipschitz constant $L>1$ and is only informative below a horizon this draft does not estimate (\autoref{thm:t3}'s discussion); the saturation visible here is at least partly a property of the bounded observation space, not evidence for the proposition's chaining argument at $H=100$.}
 \label{fig:compounding}
 \end{figure}
 

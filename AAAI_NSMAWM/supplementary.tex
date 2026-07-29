@@ -30,7 +30,7 @@
 \newtheorem{corollary}[theorem]{Corollary}
 \theoremstyle{definition}
 \newtheorem{definition}[theorem]{Definition}
-\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{assumption}{Assumption}[section] % own counter: does not shift Theorem/Corollary/Proposition numbers
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
 
@@ -178,13 +178,19 @@ Linearity of expectation over survival indicators for $r\in\mathcal{R}_{\mathrm{
 \end{proof}
 These two readings are consistent, not opposed: the first bounds \emph{per-rule} certification cost and is cheap in $\hat M_{\mathrm{eff}}$; the second bounds the \emph{total count} of bad survivors at fixed cost and is expensive in $\hat M_{\mathrm{eff}}$ \emph{unless} the proposer's precision is high. Concretely, at $N_{\min}=200,\varepsilon^\star=0.01$: a proposer with $\mathrm{prec}_{\mathrm{prop}}=0$ (worst case) gives $\approx1.3\times10^5$ expected false survivors at $\hat M_{\mathrm{eff}}=10^6$ versus $13$ at $\hat M_{\mathrm{eff}}=10^2$; but a proposer with $\hat M_{\mathrm{eff}}=10^6$ and $\mathrm{prec}_{\mathrm{prop}}=0.9999$ controls this quantity just as well as the small, imprecise one. What justifies a parsimonious proposer is therefore the \emph{measured precision} of its proposals (Table 2 in the main paper), not the raw candidate count $\hat M_{\mathrm{eff}}$ taken alone --- and both quantities, $\hat M_{\mathrm{eff}}$ and $\mathrm{prec}_{\mathrm{prop}}$, are directly measurable in the P1/P2/P3 ablation (\autoref{app:protocol}).
 
-\begin{theorem}[Chaining to rollout fidelity]
+\begin{assumption}[Rollout support (H)]
+\label{ass:support-full}
+The imagined rollout's state distribution at every horizon $h\le H$ remains within the support of $d^\pi$.
+\end{assumption}
+
+\begin{proposition}[Chaining to rollout fidelity, conditional]
 \label{thm:t3-full}
-Under hard injection (projection or residual), disjoint masks, and assumption (H) that the rollout stays within the support of $d^\pi$: the one-step squared prediction error satisfies $\E\|\hat\omega_{t+1}-\omega_{t+1}\|^2 \le \varepsilon_d B^2+e_u$, and under an $L$-Lipschitz rollout operator, $E_H\le\big(\sum_{i=0}^{H-1}L^i\big)(\varepsilon_d B^2+e_u)$.
-\end{theorem}
+Under hard injection (projection or residual), disjoint masks, and \autoref{ass:support-full}: the one-step squared prediction error satisfies $\E\|\hat\omega_{t+1}-\omega_{t+1}\|^2 \le \varepsilon_d B^2+e_u$, and under an $L$-Lipschitz rollout operator, $E_H\le\big(\sum_{i=0}^{H-1}L^i\big)(\varepsilon_d B^2+e_u)$.
+\end{proposition}
 \begin{proof}
 Orthogonal decomposition: $\|\hat\omega-\omega\|^2=\|P_d(\hat\omega-\omega)\|^2+\|P_u(\hat\omega-\omega)\|^2$. Under hard injection, the covered term is zero except on a violation event of probability $\le\varepsilon_d$, on which the error is bounded by $B^2$; hence $\E\|P_d(\cdot)\|^2\le\varepsilon_d B^2$. The residual term is $e_u$ by definition. Standard Lipschitz telescoping gives the $H$-step form.
 \end{proof}
+This is stated as a proposition rather than a theorem for the same reason as in the main paper: \autoref{ass:support-full} is a conjecture, not an established fact, and separately the bound is vacuous for $H\gtrsim\ln\big(1/(\varepsilon_dB^2+e_u)\big)/\ln L$ whenever $L>1$, since the right-hand side then grows without bound while the true error cannot exceed $B^2$ (bounded observation space). Neither issue is fixed by tightening the constants above; both require either establishing \autoref{ass:support-full} (we could not) or working with a horizon-dependent, empirically-measured error curve directly (as Figure 2 of the main paper does), rather than this closed-form bound, once $H$ leaves the informative range.
 \textbf{Assumption (H) is false in general.} In open-loop rollout the model visits states it generated itself, outside $d^\pi$'s support. One can argue that hard projection keeps the rollout near the manifold of valid states, hence near the support --- but this argument is partially circular, and we state it as a conjecture, not a theorem. We recommend measuring rollout-support drift empirically (e.g., estimated density of visited states relative to $d^\pi$) rather than assuming (H).
 
 \begin{theorem}[Degradation under policy shift]
