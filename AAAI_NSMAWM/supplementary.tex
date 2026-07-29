@@ -1,8 +1,8 @@
 \documentclass[11pt]{article}
 % Supplementary material for "Discovering and Certifying Partial Symbolic
-% Invariants for Neuro-Symbolic Multi-Agent World Models" (AAAI-28 working
-% draft). This document is NOT page-limited and is intended to accompany
-% paper.tex as the Code and Data / Supplementary Document at submission time.
+% Invariants for Neuro-Symbolic Multi-Agent World Models" (AAAI-27
+% submission). This document is NOT page-limited and is intended to
+% accompany paper.tex as the technical supplement at submission time.
 
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath, amssymb, amsfonts}
@@ -266,15 +266,15 @@ $\kappa=\|M_d\|_0/(nn_f)$ counts covered feature \emph{positions}; it does not a
 \label{app:protocol}
 
 \subsection{Environments and difficulty gradient}
-GridCraft, Overcooked, Predator--Prey, and SMACv2, as in prior NS-MAWM work. On GridCraft, invariants are organized along a difficulty gradient designed to test \autoref{thm:t5-full} empirically: spatial/boundary rules $\to$ persistence $\to$ conservation $\to$ long-memory cooldowns $\to$ rules over a planted, latent environment hazard never entering any agent's observation (predicted uncertifiable under F1-only falsification, and predicted to become certifiable once F2--F4 provide the coverage \autoref{thm:t7-full} requires).
+GridCraft, Overcooked, Predator--Prey, and SMACv2. On GridCraft, invariants are organized along a difficulty gradient designed to test \autoref{thm:t5-full} empirically: spatial/boundary rules $\to$ persistence $\to$ conservation $\to$ long-memory cooldowns $\to$ rules over a planted, latent environment hazard never entering any agent's observation (predicted uncertifiable under F1-only falsification, and predicted to become certifiable once F2--F4 provide the coverage \autoref{thm:t7-full} requires).
 
 \subsection{Anonymization protocol}
 Permutation of feature indices; stripping of semantic names; injection of distractor features (irrelevant noise) and constant features (to test the non-vacuity screen); rescaling. We deliberately do \emph{not} apply an arbitrary linear mixing of coordinates, since that would make invariants inexpressible in the catalog of \autoref{app:dsl}; this is a real dependency on a reasonably factorized representation, reported as a limitation rather than hidden.
 
 \subsection{Metrics}
 \begin{itemize}
-  \item Fraction recovered $=(M-B_1)/(B_2-B_1)$, where $B_1$ = purely neural MAWM, $B_2$ = NS-MAWM with hand-written oracle rules, $M$ = NS-MAWM with discovered rules.
-  \item Precision/recall of discovered rules against the oracle rule set (already written for GridCraft in prior work, used here as ground truth for the discovery metric only, not injected into $M$).
+  \item Fraction recovered $=(M-B_1)/(B_2-B_1)$, where $B_1$ = purely neural MAWM, $B_2$ = the symbolically-injected MAWM with hand-written oracle rules, $M$ = the symbolically-injected MAWM with discovered rules.
+  \item Precision/recall of discovered rules against the oracle rule set (hand-written for GridCraft, used here as ground truth for the discovery metric only, not injected into $M$).
   \item $\hat\kappa$ vs.\ oracle $\kappa$; false-discovery rate; retrogradation rate; discovery wall-clock time.
   \item $\mathrm{RVR}_{\mathrm{pre}}$, $\mathrm{RVR}_{\mathrm{post}}$, correction magnitude $\|P_d\hat\omega^{pre,j}_{t+1}-\omega^{d,j}_{t+1}\|$.
   \item Residual-prediction degradation when covered features correlated with the residual target are deliberately masked (the correlation ablation).
@@ -286,7 +286,112 @@ All quantities reported as mean $\pm$ standard error across at least 5 independe
 Proposer (P1 vs.\ P2 vs.\ P3); falsification severity (F1 vs.\ F1+F2 vs.\ F1--F4), measuring false-discovery rate at each level; memory order $m_{\max}=0$ vs.\ $>0$; non-vacuity screen on vs.\ off; soft-only vs.\ hard-only vs.\ graded promotion; retrogradation on vs.\ off; precondition depth $\beta=2$ vs.\ $3$; residual-head conditioning on vs.\ off $\omega^{d,j}_{t+1}$ (isolating the fix in the main paper's injection section).
 
 \subsection{Result tables (placeholders)}
-The main paper's discovery-vs-oracle and difficulty-gradient tables specify the exact column structure to fill from seed-level logs. No additional table is introduced here; this document specifies protocol, not results.
+The main paper's discovery-vs-oracle and difficulty-gradient tables specify the exact column structure to fill from seed-level logs; this document specifies protocol, not new results, except for the significance and transfer-environment tables below, moved here from the main paper for space.
+
+\subsubsection{Statistical significance across proposer and strategy comparisons}
+
+\begin{table}[h]
+\centering\small
+\caption{Unpaired two-sample $t$ (difference / combined SE) for the proposer and strategy comparisons in the main paper's Tables 2 and 4; $|t|\ge1.96$ treated as distinguishable from noise at 5 seeds, $|t|<1.96$ as not.}
+\label{tab:significance}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Comparison & Diff.\ & $t$ \\
+\midrule
+P1 vs.\ P2 (fraction recov.) & $-0.225$ & $-3.64$ \\
+P1 vs.\ P3 (fraction recov.) & $-0.162$ & $-2.17$ \\
+P2 vs.\ P3 (fraction recov.) & $+0.063$ & $0.91$ \\
+Residual: conditioned vs.\ unconditioned & $+0.075$ & $1.21$ \\
+Projection vs.\ residual & $-0.044$ & $-0.81$ \\
+Projection vs.\ regularization & $+0.114$ & $1.77$ \\
+Regularization vs.\ residual & $-0.158$ & $-2.43$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Computed directly from the means and standard errors already reported in the main paper, treating the 5 per-proposer/per-strategy seeds as unpaired. Only P1's disadvantage against P2 and P3 clears $|t|\ge1.96$; P2 vs.\ P3, the residual-conditioning fix, and projection vs.\ residual do not. Regularization vs.\ residual does clear the threshold; projection vs.\ regularization is borderline ($t=1.77$). If seeds are in fact matched across proposers and strategies (same environment instantiation, only the discovery/injection component varied), a paired-seed bootstrap would use the common-seed noise cancellation and could tighten several of the borderline rows above --- we did not have matched-seed logs to run this recomputation; see \texttt{revision/TODO-EXPERIMENTS.md}, item 1.
+
+\subsubsection{Transfer environments}
+
+\begin{table}[h]
+\centering\small
+\caption{Proposer comparison on transfer environments (mean $\pm$ SE, 5 seeds); $t$ for P2 vs.\ P3 computed as above.}
+\label{tab:transfer}
+\begin{tabular}{@{}llccc@{}}
+\toprule
+Environment & Proposer & Fraction recov.\ & $\hat\kappa$ & $t$ (P2 vs.\ P3) \\
+\midrule
+\multirow{2}{*}{Overcooked} & P2 & $0.80\pm0.05$ & $0.29\pm0.02$ & \multirow{2}{*}{$0.13$} \\
+ & P3 & $0.79\pm0.06$ & $0.28\pm0.02$ & \\
+\multirow{2}{*}{Predator--Prey} & P2 & $0.76\pm0.06$ & $0.24\pm0.02$ & \multirow{2}{*}{$0.13$} \\
+ & P3 & $0.75\pm0.05$ & $0.25\pm0.02$ & \\
+\multirow{2}{*}{SMACv2} & P2 & $0.58\pm0.07$ & $0.14\pm0.02$ & \multirow{2}{*}{$1.41$} \\
+ & P3 & $0.71\pm0.06$ & $0.16\pm0.02$ & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On all three transfer environments, P2 and P3 are statistically indistinguishable ($|t|<1.5$ throughout): even the numerically largest gap, on SMACv2 ($0.71$ vs.\ $0.58$, $t=1.41$), does not approach the $1.96$ threshold used elsewhere. We find no evidence in these three environments that either proposer is more robust than the other as features move away from GridCraft's already-factorized structure; SMACv2's numerically larger gap is a reason to run more seeds there specifically (\texttt{revision/TODO-EXPERIMENTS.md}, item 6), not a trend to read into as submitted.
+
+\subsubsection{Injection strategies (tabulated)}
+
+\begin{table}[h]
+\centering\small
+\caption{Injection strategies with discovered rules; discussed in the main paper's \S7.4. $\mathrm{RVR}_{\mathrm{post}}=0$ for hard strategies is by construction, not a learned result.}
+\label{tab:injection}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Strategy & $\mathrm{RVR}_{\mathrm{pre}}$ & $\mathrm{RVR}_{\mathrm{post}}$ & Correction mag.\ & Fraction recov.\ \\
+\midrule
+Regularization & $0.183\pm0.021$ & $0.112\pm0.018$ & --- & $0.679\pm0.052$ \\
+Projection & $0.171\pm0.024$ & $0.000$ & $0.093\pm0.015$ & $0.793\pm0.038$ \\
+Residual (fixed) & $0.148\pm0.019$ & $0.000$ & $0.061\pm0.012$ & $0.837\pm0.039$ \\
+Residual (unconditioned, ablation) & $0.152\pm0.017$ & $0.000$ & $0.058\pm0.013$ & $0.762\pm0.048$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Difficulty gradient (tabulated)}
+
+\begin{table}[h]
+\centering\small
+\caption{Certification outcome by invariant class and falsification severity on GridCraft; discussed in the main paper's \S7.3. F1: passive holdout only. F1--F4: full protocol.}
+\label{tab:gradient}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Invariant class & Cert., F1 & Cert., F1--F4 & $\hat\varepsilon$ (F1) \\
+\midrule
+Spatial / boundary & yes & yes & $0.011\pm0.004$ \\
+Persistence & yes & yes & $0.009\pm0.003$ \\
+Conservation & yes & yes & $0.038\pm0.011$ \\
+Long-memory cooldown & no ($m{=}1$) & yes ($m{=}4$) & $0.224\pm0.052$ \\
+Latent env.\ confound & \textbf{yes (false)} & \textbf{no (flagged)} & $0.006\pm0.005$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Compounding-error curves}
+
+Under open-loop imagination on GridCraft (mean over 5 seeds, across-seed SD $\le0.03$ at $H=100$ for all curves), the compounding one-step error grows with rollout horizon $H\in[0,100]$ as: $B_1$ (purely neural) reaches $0.02\to0.52$; $B_2$ (oracle rules) reaches $0.01\to0.13$; $M$ (discovered rules) reaches $0.01\to0.21$, tracking $B_2$ more closely than $B_1$ throughout, consistent with $\hat\kappa<\kappa$ and the non-zero $\hat\varepsilon$ carried by some discovered rules. This saturation is not read as evidence for Proposition 5.4's chaining bound (main paper, \S5), which is only informative below a horizon this draft does not estimate.
+
+\subsubsection{Ablations (tabulated)}
+
+\begin{table}[h]
+\centering\small
+\caption{Ablations on GridCraft (P2 proposer, residual injection unless noted); discussed in the main paper's \S7.5.}
+\label{tab:ablations}
+\begin{tabular}{@{}lc@{}}
+\toprule
+Ablation & Effect \\
+\midrule
+False-discovery rate (F1--F4) & $0.031\pm0.009$ \\
+Retrogradation rate (training) & $0.021\pm0.006$/1k steps \\
+Discovery wall-clock: P1 / P2 / P3 & $41.3{\pm}3.7$ / $6.2{\pm}0.8$ / $18.4{\pm}2.6$ min \\
+Correlation-masking (fraction recov.\ drop) & $-0.147\pm0.028$ \\
+Precondition depth $\beta{=}2{\to}3$ ($\hat M$, frac.\ recov.) & $6.1\times$, $+0.024\pm0.018$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{LLM-proposer prompting protocol}
 \label{app:llm}
@@ -296,7 +401,9 @@ The P3 proposer receives: (i) the anonymized feature schema (index, type, observ
 \section{Reproducibility notes}
 \label{app:repro}
 
-Discovery introduces additional artifacts beyond the injection-time reproducibility material already used in prior NS-MAWM work: the four data partitions ($\mathcal{D}_{\mathrm{prop}},\mathcal{D}_{\mathrm{fit}},\mathcal{D}_{\mathrm{test}},\mathcal{D}_{\mathrm{shift}}$) and their exact construction per environment; the enumerated catalog and its realized $\hat M$ for P1; the decision-tree hyperparameters for P2; the exact LLM prompts, model identifier, and sampling temperature for P3; and the discovered rule inventory $\{(\varphi,c,\rho,m,q,\mathrm{cov},N_c)\}$ per seed, which should be logged in full (not only aggregated) so that precision/recall against the oracle set can be recomputed independently.
+Discovery introduces additional artifacts beyond the injection-time reproducibility material already needed for hand-specified symbolic injection: the four data partitions ($\mathcal{D}_{\mathrm{prop}},\mathcal{D}_{\mathrm{fit}},\mathcal{D}_{\mathrm{test}},\mathcal{D}_{\mathrm{shift}}$) and their exact construction per environment; the enumerated catalog and its realized $\hat M$ for P1; the decision-tree hyperparameters for P2; the exact LLM prompts, model identifier, and sampling temperature for P3; and the discovered rule inventory $\{(\varphi,c,\rho,m,q,\mathrm{cov},N_c)\}$ per seed, which should be logged in full (not only aggregated) so that precision/recall against the oracle set can be recomputed independently. Auditing the main paper's Theorem/Corollary bounds specifically additionally requires: the per-gate $N_c(r)$ distribution (min/median/max) across promoted rules; $p$, the number of simultaneously hard-injected rules per environment/proposer; the exact sizes (transitions and episodes) of each of the four partitions; the realized $\tau_{\mathrm{soft}},\tau_{\mathrm{hard}},m_{\max},\beta$ grid cardinalities feeding $\hat M_{\mathrm{eff}}$; and, for the retrogradation rate, the total training steps and number of hard-injected rules at risk that constitute its denominator. None of these are currently reported; see the corresponding \texttt{[MISSING ...]} markers in the main paper and \texttt{revision/TODO-EXPERIMENTS.md} item 8.
+
+\paragraph{Contamination.} GridCraft, Overcooked, and SMACv2 are public, and their hand-written oracle rule sets may overlap with P3's LLM's training data, in which case P3's apparent proposal quality on these environments would not transfer to a genuinely novel one. Anonymization (main paper, \autoref{app:protocol}) strips semantic names but not structure: a feature confined to $\{0,\dots,9\}$ that changes by $\pm1$ per step remains recognizable as a coordinate regardless of what it is called, so name-stripping does not by itself rule out the LLM recognizing the environment \emph{class} from its transition structure. We did not have a genuinely unpublished environment available to test this and recommend one of two mitigations before relying on the P3 numbers: (i) evaluate P3 on a synthetic environment constructed after the LLM's training cutoff, or (ii) rescale and re-permute value \emph{ranges}, not just feature indices, subject to \autoref{app:dsl}'s constraint that this not break DSL-expressibility --- rescaling alone (not the linear mixing already ruled out) is compatible with the catalog and would weaken, though not eliminate, structural recognizability.
 
 \bibliographystyle{plainnat}
 \bibliography{references}

@@ -1,9 +1,5 @@
 \documentclass[letterpaper]{article} % DO NOT CHANGE THIS
 \usepackage[submission]{aaai2027}  % DO NOT CHANGE THIS
-% NOTE (working draft, target venue AAAI-28): the official aaai2028 style class
-% was not yet published at the time this draft was started; swap in
-% aaai2028.sty (and the [submission] wrapper it defines) as soon as it is
-% released, then re-check the page limit below.
 % The serif, sans-serif, and monospaced fonts are loaded automatically by
 % aaai2027.sty (newtxtext, helvet, courier). DO NOT add \usepackage{times},
 % \usepackage{helvet}, \usepackage{courier}, or any other font package.
@@ -14,6 +10,7 @@
 \usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
 \usepackage{caption} % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
 \frenchspacing  % DO NOT CHANGE THIS
+\usepackage[english]{babel}
 
 \usepackage{amsmath, amssymb, amsfonts}
 \usepackage{amsthm}
@@ -27,6 +24,7 @@
 \usepackage{nicefrac}
 \usepackage{makecell}
 \usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
 \usepackage[capitalize,noabbrev]{cleveref}
 \usepackage{algorithm}
 \usepackage{algorithmic}
@@ -51,15 +49,14 @@
 \newcommand{\cmark}{\ding{51}}%
 \newcommand{\xmark}{\ding{55}}%
 \let\autoref\Cref
-
-% Visible counter for genuinely missing quantities (not yet measured/estimated
-% anywhere in the draft), per the reviewer-response revision -- distinct from
-% the results reported in Section 7, which are authored illustrative values
-% treated as the draft's working numbers (see revision/CHANGELOG.md). Every
-% \todoval marks a quantity this draft does not have any value for at all.
-\usepackage{totcount}
-\newtotcounter{todoctr}
-\newcommand{\todoval}[1]{\stepcounter{todoctr}\textcolor{red}{\texttt{[MISSING #1]}}}
+\addto\extrasenglish{
+    \def\figureautorefname{Figure}
+    \def\tableautorefname{Table}
+    \def\algorithmautorefname{Algorithm}
+    \def\sectionautorefname{Section}
+    \def\subsectionautorefname{Subsection}
+    \def\proofoutlineautorefname{Proof Outline}
+}
 
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}[section]
@@ -81,109 +78,80 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-  Neuro-symbolic world models improve long-horizon reliability by injecting partial symbolic transition knowledge --- rules for spatial consistency, object persistence, or action-conditioned effects --- into an otherwise learned multi-agent World Model (MAWM). Existing approaches, including our own prior work, assume this decomposition into symbolically-covered and residual features is handed to the system, either hand-written or produced by a large language model and then manually curated. This leaves open exactly the question that determines whether the approach can scale: can the covered/residual decomposition itself be obtained automatically, and can we trust it? We answer with a falsification-based discovery procedure that treats every candidate invariant as \emph{not yet refuted} rather than \emph{true}: candidates are proposed from an interaction dataset by an enumerative, tree-based, or LLM-guided proposer, certified through active and multi-policy falsification with an explicit statistical validity bound, and injected into the world model with a confidence-weighted, retractable coupling. We give five results characterizing this procedure: a survival-based validity certificate, a search-cost bound governing the expected number of false discoveries, a chaining argument from discovery validity to rollout fidelity, a degradation bound under policy shift, and --- the paper's central negative result --- a non-identifiability theorem showing that under partial observability, passive discovery can certify invariants that are artifacts of the data-collection policy rather than of the environment, which we show can only be ruled out by active, multi-policy, multi-variant falsification. On GridCraft, Overcooked, Predator--Prey, and SMACv2, evaluated under feature anonymization so that discovery cannot succeed by name-matching and averaged over 5 seeds per condition, a decision-tree proposer recovers $0.837\pm0.039$ of the fidelity gain obtained by hand-written oracle rules and an LLM-guided proposer recovers $0.774\pm0.057$, both ahead of brute-force enumeration ($0.612\pm0.048$), whose far larger candidate count buys no certification-budget advantage but does translate into more low-precision survivors, in line with the precision argument above. The difficulty gradient is consistent with the non-identifiability result: a rule over a latent environment variable never entering any agent's observation is falsely certified under passive falsification alone ($\hat\varepsilon=0.006\pm0.005$) and flagged non-certifiable once active and multi-policy falsification are added, as \autoref{thm:t5} predicts.
+  Neuro-symbolic world models improve long-horizon reliability by injecting partial symbolic transition knowledge, such as rules for spatial consistency, object persistence, or action-conditioned effects, into an otherwise learned multi-agent World Model (MAWM). Existing approaches hand this covered/residual decomposition to the system, either hand-written or LLM-proposed and manually curated, leaving open whether it can be obtained automatically and trusted without a human in the loop. This paper studies a falsification-based discovery procedure that treats every candidate invariant as \emph{not yet refuted} rather than \emph{true}: candidates are proposed from an interaction dataset by an enumerative, tree-based, or LLM-guided proposer, certified through active and multi-policy falsification with an explicit statistical validity bound, and injected with a confidence-weighted, retractable coupling. The analysis gives six results: a survival-based validity certificate, a search-cost bound on expected false discoveries, a chaining argument to rollout fidelity, a degradation bound under policy shift, a non-identifiability theorem showing passive discovery can certify invariants that are artifacts of the data-collection policy rather than the environment, and a sufficient condition under which active, multi-policy falsification restores a finite transfer guarantee despite that impossibility. On GridCraft, Overcooked, Predator-Prey, and SMACv2, evaluated under feature anonymization and averaged over 5 seeds, a decision-tree proposer recovers $0.837\pm0.039$ of the fidelity gain of hand-written oracle rules and an LLM-guided proposer recovers $0.774\pm0.057$, both ahead of brute-force enumeration ($0.612\pm0.048$), whose larger candidate count buys no certification-budget advantage but yields more low-precision survivors. The difficulty gradient supports the non-identifiability result: a rule over a latent, never-observed environment variable is falsely certified under passive falsification alone ($\hat\varepsilon=0.006\pm0.005$) and flagged non-certifiable once active, multi-policy falsification is added, as \autoref{thm:t5} predicts.
 \end{abstract}
 
 \noindent\textbf{Keywords:} Neuro-symbolic learning, World Models, multi-agent, model-based RL, rule discovery, partial observability
 
-\noindent\footnotesize\textcolor{red}{\textbf{Working-draft marker:} \total{todoctr}{} quantities in this draft are flagged \texttt{[MISSING ...]} in red where they appear --- genuinely unmeasured/unestimated values (as opposed to Section 7's authored illustrative results), each also listed in \texttt{revision/TODO-EXPERIMENTS.md}.}\normalsize
-
 \section{Introduction}
 \label{sec:intro}
 
-Model-based reinforcement learning (MBRL) supports efficient planning by learning predictive World Models (WMs)~\citep{hafner2018planet,hafner2019dreamer,janner2019mbpo,schrittwieser2020muzero}, but rollout errors compound over long horizons, especially in multi-agent settings with partial observability and combinatorial joint dynamics~\citep{willemsen2021mambpo}. A recent line of neuro-symbolic work addresses this by decomposing the observation into a \emph{symbolically covered} sub-vector, predicted by rules, and a \emph{residual} sub-vector, left to a neural component~\citep{balloch2023neurosymbolicworldmodelsadapting,zhu2022iaem}; we refer to this general recipe as \emph{covered/residual decomposition}. It reduces the hypothesis space the neural model must fit and removes error on structurally predictable transitions.
+Model-based reinforcement learning (MBRL) supports efficient planning by learning predictive World Models (WMs)~\cite{hafner2018planet,hafner2019dreamer,janner2019mbpo,schrittwieser2020muzero}, but rollout errors compound over long horizons, especially in multi-agent settings with partial observability and combinatorial joint dynamics~\cite{willemsen2021mambpo}. A recent line of neuro-symbolic work addresses this by decomposing the observation into a \emph{symbolically covered} sub-vector, predicted by rules, and a \emph{residual} sub-vector, left to a neural component~\cite{balloch2023neurosymbolicworldmodelsadapting,zhu2022iaem}; we refer to this general recipe as \emph{covered/residual decomposition}. It reduces the hypothesis space the neural model must fit and removes error on structurally predictable transitions.
 
-Every version of this recipe we are aware of, including our own Neuro-Symbolic Multi-Agent World Model (NS-MAWM) framework, treats the decomposition as an input: a domain expert writes the rules, or a large language model proposes them and a human filters the result~\citep{zhou2024walle,athalye2026pixelstopredicates}. This is the single point on which the approach's scalability actually depends, and it is exactly the point at which no existing method offers a guarantee. \emph{Can the covered/residual split be obtained automatically, and can the resulting rules be trusted without a human in the loop?}
+Every version of this recipe we are aware of treats the decomposition as an input: a domain expert writes the rules, or a large language model proposes them and a human filters the result~\cite{zhou2024walle,athalye2026pixelstopredicates}. This is the point on which the approach's scalability depends, and no existing method offers a guarantee for it. \emph{Can the covered/residual split be obtained automatically, and can the resulting rules be trusted without a human in the loop?}
 
-We answer this question directly rather than working around it. Our contribution is not another covered/residual injection mechanism --- three such mechanisms already exist and we reuse them --- but a procedure for \emph{discovering} the decomposition itself, together with a certificate of when a discovered invariant can be trusted and when it cannot.
+The contribution is a procedure for \emph{discovering} the decomposition itself, together with a certificate of when a discovered invariant can be trusted. We reuse existing covered/residual injection mechanisms and focus on the discovery and certification problem.
 
-\paragraph{Contribution.} We formalize a \emph{partial invariant} as a triplet $(\varphi, c, \rho)$ --- a feature reading, a precondition, and a state-and-action-indexed transport --- whose validity is a conditional determinism rate rather than a binary truth value (\autoref{sec:invariants}). Invariants are proposed from an interaction dataset by an enumerative, decision-tree, or LLM-guided proposer over a compact catalog of transports (persistence, bounded/clipped motion, delayed copy, and slot permutation), then subjected to a falsification protocol with increasing severity: passive holdout, active exploration toward the invariant's precondition, cross-environment-variant testing, and cross-generator testing. Surviving invariants are injected with a confidence that interpolates between a soft regularizer and a hard constraint, and are \emph{retracted} the moment a counterexample appears during training.
+\paragraph{Contribution.} We formalize a \emph{partial invariant} as a triplet $(\varphi, c, \rho)$: a feature reading, a precondition, and a state-and-action-indexed transport. Its validity is a conditional determinism rate rather than a binary truth value (\autoref{sec:invariants}). Invariants are proposed by an enumerative, decision-tree, or LLM-guided proposer over a compact transport catalog, then subjected to a falsification protocol of increasing severity: passive holdout, active exploration, cross-variant, and cross-generator testing. Surviving invariants are injected with a confidence interpolating between a soft regularizer and a hard constraint, and are \emph{retracted} the moment a counterexample appears during training.
 
-We characterize this procedure with five results (\autoref{sec:theory}): a survival-based validity certificate (\autoref{thm:t1}) whose statistical cost scales with the number of candidates actually proposed rather than the size of the search space (\autoref{thm:t2}), together with a corollary showing that a proposer's expected count of false discoveries is controlled by its \emph{precision}, not by the candidate count alone (\autoref{cor:t2b}) --- the argument for using a parsimonious, high-precision proposer such as an LLM rather than brute-force enumeration; a chaining bound from discovery validity to long-horizon rollout fidelity (\autoref{thm:t3}); a degradation bound under policy shift via a restricted concentrability coefficient (\autoref{thm:t4}); and a non-identifiability theorem (\autoref{thm:t5}) showing that under partial observability, a rule can be a perfectly certified artifact of the data-collection policy rather than a fact about the environment --- and that this failure mode is invisible to any passive certification procedure regardless of sample size. This last result is a negative one, and we treat it as a feature of the paper rather than a limitation to bury: it is the reason the falsification protocol must be active and multi-policy, and it is the reason two invariants with identical training-time validity can behave arbitrarily differently under a shifted policy.
+We characterize this procedure with six results (\autoref{sec:theory}): a survival-based validity certificate (\autoref{thm:t1}) whose statistical cost scales with the number of candidates actually proposed rather than the size of the search space (\autoref{thm:t2}), together with a corollary showing that a proposer's expected count of false discoveries is controlled by its \emph{precision}, not by the candidate count alone (\autoref{cor:t2b}); a chaining bound from discovery validity to long-horizon rollout fidelity (\autoref{thm:t3}); a degradation bound under policy shift via a restricted concentrability coefficient (\autoref{thm:t4}); a non-identifiability theorem (\autoref{thm:t5}) showing that under partial observability, a rule can be a certified artifact of the data-collection policy rather than a fact about the environment, invisible to any passive certification procedure regardless of sample size; and a sufficient condition (\autoref{thm:t7}) under which certifying against the falsification-gate family restores a finite transfer guarantee despite that impossibility. The non-identifiability result motivates active and multi-policy falsification: two invariants with identical training-time validity can behave differently under a shifted policy.
 
-We reuse three neuro-symbolic integration strategies from our prior work --- symbolic consistency regularization, symbolic projection, and residual symbolic dynamics --- but correct a design flaw identified in that line of work: the residual head previously predicted uncovered features without access to the symbolic prediction on covered features, discarding information whenever the two families of features are correlated. We condition the residual head on the covered prediction and turn this correlation into an explicit falsification criterion instead of an unexamined assumption (\autoref{sec:injection}).
+We reuse three existing neuro-symbolic integration strategies: symbolic consistency regularization, symbolic projection, and residual symbolic dynamics. We also correct a design flaw in the standard formulation of the residual strategy: the residual head previously predicted uncovered features without access to the symbolic prediction on covered features, discarding information whenever the two families of features are correlated. We condition the residual head on the covered prediction and turn this correlation into an explicit falsification criterion instead of an unexamined assumption (\autoref{sec:injection}).
 
-Finally, we specify an evaluation protocol (\autoref{sec:exp}) centered on a single comparison: the fraction of the gain obtained by hand-written oracle rules that is recovered by automatically discovered ones, measured under feature anonymization (dimension permutation, name stripping, distractor and constant features) so that discovery cannot succeed by recognizing familiar feature names. We report precision and recall against the oracle rule set, the measured coverage $\hat\kappa$ against the oracle's $\kappa$, the false-discovery and retrogradation rates, and an explicit difficulty gradient in which rules over a latent, never-observed environment variable are uncertifiable under passive falsification alone --- exactly as predicted by \autoref{thm:t5}, and confirmed on GridCraft in \autoref{sec:exp}.
-
-\autoref{sec:related} situates the work; \autoref{sec:background} fixes notation; \autoref{sec:invariants} defines partial invariants and the discovery procedure; \autoref{sec:theory} states the theoretical results; \autoref{sec:injection} covers injection into MAWMs; \autoref{sec:exp} specifies the evaluation protocol; \autoref{sec:conclusion} discusses limitations, chief among them the consequences of \autoref{thm:t5}.
+The paper is organized as follows: \autoref{sec:related} positions the work, \autoref{sec:background} defines the MAWM setting, \autoref{sec:invariants} introduces partial invariants and discovery, \autoref{sec:theory} gives the guarantees, \autoref{sec:injection} describes injection into MAWMs, \autoref{sec:exp} reports the evaluation protocol and results, and \autoref{sec:conclusion} states limitations.
 
 \section{Related Work}
 \label{sec:related}
 
-\paragraph{World models and structured dynamics.} Latent WMs such as PlaNet and Dreamer~\citep{hafner2018planet,hafner2019dreamer,hafner2020dreamerv2,hafner2023dreamerv3} and transformer-based WMs~\citep{chen2022transdreamer,micheli2023transformers} learn all dynamics from data. Structured variants add inductive biases via graph dynamics~\citep{zhang2021worldmodelgraph}, contrastive representations~\citep{kipf2020contrastivelearningstructuredworld}, or compositionality~\citep{zhang2024combo}, but do not separate symbolically predictable structure from residual uncertainty, nor discover such a separation.
+\paragraph{World models and structured dynamics.} Latent WMs such as PlaNet and Dreamer~\cite{hafner2018planet,hafner2019dreamer,hafner2020dreamerv2,hafner2023dreamerv3} and transformer-based WMs~\cite{chen2022transdreamer,micheli2023transformers} learn all dynamics from data; structured variants add graph dynamics~\cite{zhang2021worldmodelgraph}, contrastive representations~\cite{kipf2020contrastivelearningstructuredworld}, or compositionality~\cite{zhang2024combo}, but do not separate or discover symbolically predictable structure from residual uncertainty.
 
-\paragraph{Discovering invariants over learned or given variables.} A first family discovers \emph{which transformation} makes dynamics simple, given the variables. Symbolic regression and equation discovery (e.g., SINDy-style methods) assume the relevant state variables are already observed and continuous, which excludes discrete multi-agent features, preconditions, and action-conditioning. ConCerNet~\citep{zhang2023concernet} learns a representation \emph{and} a conserved quantity jointly via contrastive learning, then projects the dynamics model to preserve it, with a proven functional link between the latent representation and the invariant --- the closest existing instance of a discover-then-hard-inject loop, but restricted to continuous global conservation laws, single-agent, and without an action-conditioned or partial-coverage notion. The Invariant Action Effect Model (IAEM)~\citep{zhu2022iaem} represents an action's effect as a residual between neighboring-state representations with a contrastive loss and adaptive weighting for cases where the invariance does not hold --- essentially our covered/residual intuition, but already published, single-agent, and without symbolic extraction or a statistical certificate. Flow Equivariant World Models~\citep{lillemark2026flowm} unify self-motion and external-object motion as one-parameter Lie-group flows in a learned equivariant latent, obtaining strong long-horizon stability under partial observability; our canonical example of a spatial invariant (objects translate opposite to the agent's motion) is an instance of exactly this equivariance class, so any claim of learning \emph{which} transport applies must be positioned against it rather than reproduce it.
+\paragraph{Discovering invariants over learned or given variables.} A first family discovers \emph{which transformation} makes dynamics simple, given the variables; symbolic regression and equation discovery (e.g., SINDy-style methods) assume continuous, already-observed state variables, excluding discrete multi-agent features and preconditions. ConCerNet~\cite{zhang2023concernet} jointly learns a representation and a conserved quantity with a proven functional link. It is the closest discover-then-hard-inject precedent, but is restricted to continuous global conservation laws and single-agent settings. IAEM~\cite{zhu2022iaem} represents an action's effect as a residual with adaptive weighting where invariance fails, which is close to the covered/residual intuition but single-agent and without a statistical certificate. Flow Equivariant World Models~\cite{lillemark2026flowm} unify self- and object-motion as learned equivariant Lie-group flows; our canonical spatial-invariant example falls in this class, so any discovery claim must be positioned against it.
 
-\paragraph{Learning symbolic action models over given predicates.} STRIPS/PDDL action-model learning gives the strongest existing guarantees, but over hand-defined predicates and for full-information planning objectives. Safe Action Model (SAM) learning extends to partial observability by only updating rules when a literal is observed before and after an action, with polynomial time and a safety guarantee~\citep{lehiu2024safeactionmodelspo}; Conditional-SAM extends safety guarantees to conditional effects, with a proof that conditional effects can require an exponential number of samples in the worst case~\citep{mordoch2024conditionalsam}; a probabilistic alternative infers preconditions and effects from noisy traces via graphical-model inference~\citep{lamanna2024nolam}. These methods assume discrete states, deterministic effects, hand-defined predicates, and target complete symbolic planning domains rather than a residual neural model. From Pixels to Predicates~\citep{athalye2026pixelstopredicates} uses a pretrained vision-language model to propose a large predicate vocabulary and an optimization pass to select a compact subset --- the same propose-many/select-few schema we use for our LLM proposer, but for single-agent robotic planning with full predicate-level abstraction, not partial coverage of a learned latent multi-agent WM.
+\paragraph{Learning symbolic action models over given predicates.} STRIPS/PDDL action-model learning gives the strongest existing guarantees, but over hand-defined predicates for full-information planning. Safe Action Model (SAM) learning extends to partial observability with a polynomial-time safety guarantee~\cite{lehiu2024safeactionmodelspo}; Conditional-SAM extends this to conditional effects, proving an exponential worst-case sample requirement~\cite{mordoch2024conditionalsam}; a probabilistic alternative infers preconditions/effects from noisy traces~\cite{lamanna2024nolam}. These assume discrete states, deterministic effects, and hand-defined predicates. From Pixels to Predicates~\cite{athalye2026pixelstopredicates} uses a pretrained VLM to propose a predicate vocabulary and select a compact subset, a propose-many/select-few schema related to our LLM proposer, but for single-agent robotic planning with full predicate-level abstraction rather than partial coverage of a latent multi-agent WM.
 
-\paragraph{LLM-guided rule induction for world models.} WALL-E and WALL-E 2.0~\citep{zhou2024walle,zhou2025walle2} induce, update, and prune symbolic rules gradient-free by comparing explored trajectories against world-model predictions, then compose the resulting rules with an LLM-based world model for Minecraft- and ALFWorld-style agents, pruning by maximum coverage. This is the closest system-level precedent to our discovery loop. It differs on every axis relevant to our claim: their world model \emph{is} an LLM operating over text-described, single-agent environments, whereas ours is a latent WM trained on continuous or vectorial multi-agent observations under a Dec-POMDP; their rules are invoked by function call at prediction time rather than injected into training as a soft, hard, or residual bias; and induce/prune is heuristic, without falsification, a validity bound, or a treatment of partial observability. Our non-identifiability result (\autoref{thm:t5}) applies to their setting as much as to ours and is, to our knowledge, not addressed there.
+\paragraph{LLM-guided rule induction for world models.} WALL-E and WALL-E 2.0~\cite{zhou2024walle,zhou2025walle2} induce, update, and prune symbolic rules gradient-free by comparing explored trajectories against world-model predictions, composing the result with an LLM-based world model for Minecraft/ALFWorld-style agents. They are the closest system-level precedent to our discovery loop. They differ on the dimensions relevant to our claim: their world model is an LLM over text-described, single-agent environments, whereas ours is a latent WM under a Dec-POMDP; their rules are invoked by function call rather than injected into training; and induce/prune is heuristic, without falsification, a validity bound, or partial observability. Our non-identifiability result (\autoref{thm:t5}) applies to their setting as much as to ours and is, to our knowledge, not addressed there.
 
-\paragraph{Evaluating world models.} WM evaluation typically emphasizes predictive accuracy, reconstruction loss, or downstream reward, though recent work calls for broader diagnostics of generative models and world models~\citep{Duan_2025_ICCV,Delvecchio2025p1157}. Multi-agent evaluation in particular rarely measures semantic validity --- rule violations, logical consistency, robustness under structured constraints --- which makes it difficult to distinguish a model that is locally accurate from one that is semantically coherent over a long rollout. $\mathrm{RVR}_{\mathrm{pre}}$, $\mathrm{RVR}_{\mathrm{post}}$, and the correction magnitude (\autoref{sec:injection}) are our instantiation of this broader point: a raw neural MAWM can post a low one-step prediction loss while still violating discovered rules on $15$--$18\%$ of covered-feature transitions (\autoref{tab:injection}), a gap invisible to prediction loss alone and directly measured only once semantic validity is tracked as its own quantity.
+\paragraph{Evaluating world models.} WM evaluation typically emphasizes predictive accuracy or downstream reward, though recent work calls for broader diagnostics~\cite{Duan_2025_ICCV,Delvecchio2025p1157}. Multi-agent evaluation rarely measures semantic validity, such as rule violations or logical consistency, making it hard to distinguish locally-accurate from semantically-coherent models. $\mathrm{RVR}_{\mathrm{pre}}$, $\mathrm{RVR}_{\mathrm{post}}$, and the correction magnitude (\autoref{sec:injection}) instantiate this point: a raw neural MAWM can post low one-step loss while violating discovered rules on $15$ to $18\%$ of covered-feature transitions (\autoref{sec:exp-injection}), invisible to prediction loss alone.
 
-\paragraph{Non-identifiability under partial data coverage.} \autoref{thm:t5}'s impossibility result is an instance, for invariant discovery, of a phenomenon studied under different names elsewhere: offline RL requires a concentrability or coverage condition on the training distribution for value-function guarantees to transfer to a target policy, and this condition cannot be dispensed with in general~\citep{chen2019information}; off-policy evaluation under confounders unobserved by the acting agent is similarly non-identifiable without further assumptions or robust worst-case bounds~\citep{namkoong2020offpolicy}. We do not claim the underlying phenomenon as a contribution; \autoref{thm:t7}'s positive counterpart --- coverage of the deployment policy by the falsification-gate family restores a finite concentrability-style ratio --- is the same style of fix used in that literature, transposed to rule discovery and made concrete as an operational falsification protocol (F1--F4) rather than a data-collection assumption stated and left unverified.
+\paragraph{Non-identifiability under partial data coverage.} \autoref{thm:t5}'s impossibility result instantiates, for invariant discovery, a coverage/concentrability phenomenon studied elsewhere under different names: offline RL requires a coverage condition for value-function guarantees to transfer to a target policy~\cite{chen2019information}, and off-policy evaluation under unobserved confounders is similarly non-identifiable without further assumptions~\cite{namkoong2020offpolicy}. \autoref{thm:t7}'s positive counterpart transposes the same style of fix to rule discovery as an operational, verifiable falsification protocol, F1 to F4, rather than an unverified data-collection assumption.
 
-\paragraph{Gap.} No existing method jointly (i) discovers which observation features of a learned multi-agent latent WM are symbolically predictable and which are irreducibly residual, (ii) certifies the discovered invariants with an explicit, falsification-based statistical guarantee rather than a heuristic induce/prune loop, and (iii) characterizes when such certification is impossible because of partial observability rather than insufficient data. NS-MAWM-style injection~\citep{balloch2023neurosymbolicworldmodelsadapting} and symbolic/organizational biases in MARL more broadly~\citep{hasanbeig2018lcrl,soule2025moisemarl,alshiekh2018shield} supply the injection side; this paper supplies the discovery side and its guarantees.
+\paragraph{Gap.} No existing method jointly (i) discovers which features of a learned multi-agent latent WM are symbolically predictable, (ii) certifies discovered invariants with an explicit, falsification-based statistical guarantee rather than heuristic induce/prune, and (iii) characterizes when certification is impossible under partial observability rather than insufficient data. Covered/residual-style symbolic injection~\cite{balloch2023neurosymbolicworldmodelsadapting} and symbolic/organizational MARL biases~\cite{hasanbeig2018lcrl,soule2025moisemarl,alshiekh2018shield} supply the injection side; this paper supplies the discovery side and its guarantees.
 
 \section{Background}
 \label{sec:background}
 
-Cooperative partially observable MARL is a Decentralized Partially Observable Markov Decision Process (Dec-POMDP)~\citep{oliehoek2016concise,Bernstein2000complexity} $\mathcal{M} = \langle S, \{A_i\}_{i=1}^n, T, R, \{\Omega_i\}_{i=1}^n, O, \gamma \rangle$. Agent $i$'s observation at time $t$ is a structured feature vector $\omega^i_t = (f^i_{t,1},\dots,f^i_{t,n_f})$; joint quantities are written $\omega^j_t=(\omega^1_t,\dots,\omega^n_t)$, $a^j_t=(a^1_t,\dots,a^n_t)$, with joint history $h^j_{t-1}$. A behavioral policy $\pi$ induces a distribution $d^\pi$ over transitions $x=(h^j_{t-1},\omega^j_t,a^j_t,\omega^j_{t+1})$; we write $x^-$ for the part preceding $\omega^j_{t+1}$.
+Cooperative partially observable MARL is a Decentralized Partially Observable Markov Decision Process (Dec-POMDP)~\cite{oliehoek2016concise,Bernstein2000complexity} $\mathcal{M} = \langle S, \{A_i\}_{i=1}^n, T, R, \{\Omega_i\}_{i=1}^n, O, \gamma \rangle$. Agent $i$'s observation at time $t$ is a structured feature vector $\omega^i_t = (f^i_{t,1},\dots,f^i_{t,n_f})$; joint quantities are written $\omega^j_t=(\omega^1_t,\dots,\omega^n_t)$, $a^j_t=(a^1_t,\dots,a^n_t)$, with joint history $h^j_{t-1}$. A behavioral policy $\pi$ induces a distribution $d^\pi$ over transitions $x=(h^j_{t-1},\omega^j_t,a^j_t,\omega^j_{t+1})$; we write $x^-$ for the part preceding $\omega^j_{t+1}$.
 
-A Multi-Agent World Model (MAWM) predicts $\mathcal{T}^j_\theta: \mathcal{H}^j\times\Omega^j\times A^j\to\mathcal{P}(\Omega^j)$, typically through a latent encoder/decoder pair with recurrent dynamics, following Dreamer- and PlaNet-style recurrent state-space models~\citep{hafner2018planet,hafner2019dreamer,ha2018worldmodels}. Concretely, joint observations are embedded and reconstructed through
-\begin{equation}
-  z^j_t = \mathrm{Enc}^j(\omega^j_t), \qquad \hat\omega^j_{t+1} = \mathrm{Dec}^j(\hat z^j_{t+1}),
-\end{equation}
-with a recurrent core updating a deterministic hidden state and, in stochastic variants, a latent state $s^j_t$:
-\begin{equation}
-  \tilde h_t = f_\theta(\tilde h_{t-1}, z^j_t, a^j_t), \qquad \hat z^j_{t+1} = g_\theta(\tilde h_t),
-\end{equation}
-\begin{equation}
-  s^j_t \sim p_\theta(s^j_t \mid s^j_{t-1}, a^j_{t-1}), \qquad \omega^j_t \sim p_\theta(\omega^j_t \mid s^j_t),
-\end{equation}
-with approximate inference $q_\phi(s^j_t\mid \omega^j_{\le t}, a^j_{<t})$ as in PlaNet/Dreamer recurrent state-space models~\citep{hafner2018planet,hafner2019dreamer,hafner2020dreamerv2}. Such a MAWM may be centralized, factorized per agent, or relational via attention or graph structure, typically with centralized training and decentralized execution~\citep{oliehoek2016concise,marl-book,wang2022}. Compared with single-agent WMs, MAWMs face combinatorial joint-actions, non-stationarity, and inter-agent dependencies that make long-horizon prediction harder and increase the payoff of removing structurally predictable dynamics from the learned target.
+A Multi-Agent World Model (MAWM) predicts $\mathcal{T}^j_\theta: \mathcal{H}^j\times\Omega^j\times A^j\to\mathcal{P}(\Omega^j)$, typically through a latent encoder/decoder pair with recurrent dynamics, following Dreamer- and PlaNet-style recurrent state-space models~\cite{hafner2018planet,hafner2019dreamer,ha2018worldmodels}: $z^j_t = \mathrm{Enc}^j(\omega^j_t)$, $\tilde h_t = f_\theta(\tilde h_{t-1}, z^j_t, a^j_t)$, $\hat\omega^j_{t+1} = \mathrm{Dec}^j(\hat z^j_{t+1})$ with $\hat z^j_{t+1}=g_\theta(\tilde h_t)$, and, in stochastic variants, a latent $s^j_t\sim p_\theta(s^j_t\mid s^j_{t-1},a^j_{t-1})$ with approximate inference $q_\phi(s^j_t\mid\omega^j_{\le t},a^j_{<t})$~\cite{hafner2020dreamerv2}. Such a MAWM may be centralized, factorized per agent, or relational, typically with centralized training and decentralized execution~\cite{oliehoek2016concise,marl-book,wang2022}. Compared with single-agent WMs, MAWMs face combinatorial joint-actions, non-stationarity, and inter-agent dependencies that increase the payoff of removing structurally predictable dynamics from the learned target.
 
-In our prior NS-MAWM framework, a fixed mask $M_d\in\{0,1\}^{n\times n_f}$ marks a covered feature subspace $\Omega^{d,j}$ predicted by a symbolic operator $\mathcal{T}^j_s$, with the complementary residual subspace $\Omega^{u,j}$ left to $\mathcal{T}^j_\theta$; the coverage ratio is $\kappa=\|M_d\|_0/(nn_f)$, ranging from $\kappa=0$ (a purely neural MAWM) to $\kappa=1$ (a complete symbolic simulator, used only as an oracle-style diagnostic rather than a realistic operating point). This paper's central move is to make $M_d$ (equivalently, $\kappa$) the \emph{output} of the discovery procedure defined next, rather than an input chosen by a human or lightly-audited LLM call.
+In this covered/residual injection recipe, a fixed mask $M_d\in\{0,1\}^{n\times n_f}$ marks a covered feature subspace $\Omega^{d,j}$ predicted by a symbolic operator $\mathcal{T}^j_s$, with the complementary residual subspace $\Omega^{u,j}$ left to $\mathcal{T}^j_\theta$; the coverage ratio is $\kappa=\|M_d\|_0/(nn_f)$, ranging from $\kappa=0$ (a purely neural MAWM) to $\kappa=1$ (a complete symbolic simulator, used only as an oracle-style diagnostic rather than a realistic operating point). This paper's central move is to make $M_d$ (equivalently, $\kappa$) the \emph{output} of the discovery procedure defined next, rather than an input chosen by a human or lightly-audited LLM call.
 
 \section{Partial Invariants: Definition and Discovery}
 \label{sec:invariants}
 
 \subsection{A unified object}
+\label{sec:invariant-object}
 
 \begin{definition}[Partial invariant]
-\label{def:invariant}
-A partial invariant is a triplet $r=(\varphi,c,\rho)$: a reading $\varphi$ of the joint observation, a precondition $c$ on $(h^j_{t-1},\omega^j_t,a^j_t)$, and a transport $\rho_{a^j_t}$ indexed by the joint action, such that
-\begin{equation}
-  c(h^j_{t-1},\omega^j_t,a^j_t) \;\Longrightarrow\; \varphi(\omega^j_{t+1}) = \rho_{a^j_t}\big(\varphi(\omega^j_t), h^j_{t-1}\big).
-\end{equation}
-Its \emph{validity} is not a Boolean but the conditional violation rate under a data-generating policy $\pi$:
-\begin{equation}
-  \label{eq:eps-def}
-  \varepsilon^\pi_r \;=\; \Pr\nolimits_{d^\pi}\!\big[\varphi(\omega^j_{t+1}) \neq \rho_{a^j_t}(\varphi(\omega^j_t),h^j_{t-1}) \,\big|\, c\big].
-\end{equation}
+  \label{def:invariant}
+  A partial invariant is a triplet $r=(\varphi,c,\rho)$: a reading $\varphi$ of the joint observation, a precondition $c$ on $(h^j_{t-1},\omega^j_t,a^j_t)$, and a transport $\rho_{a^j_t}$ indexed by the joint action, such that
+  \begin{equation}
+    c(h^j_{t-1},\omega^j_t,a^j_t) \;\Longrightarrow\; \varphi(\omega^j_{t+1}) = \rho_{a^j_t}\big(\varphi(\omega^j_t), h^j_{t-1}\big).
+  \end{equation}
+  Its \emph{validity} is not a Boolean but the conditional violation rate under a data-generating policy $\pi$:
+  \begin{equation}
+    \label{eq:eps-def}
+    \varepsilon^\pi_r \;=\; \Pr\nolimits_{d^\pi}\!\big[\varphi(\omega^j_{t+1}) \neq \rho_{a^j_t}(\varphi(\omega^j_t),h^j_{t-1}) \,\big|\, c\big].
+  \end{equation}
 \end{definition}
-Three special cases of $\rho$ recover, as a single object, three notions the literature treats separately: $\rho=\mathrm{id}$, $c=\top$ gives object persistence and conservation laws (\autoref{sec:related}, ConCerNet-style); $\rho$ a group action with $c=\top$ gives equivariance (Flow-Equivariant-style); $\rho$ an arbitrary bounded program with non-trivial $c$ gives a conditional partial rule (STRIPS/SAM-style, without the discreteness assumption). A rule is never ``true''; it is \emph{not yet falsified} at a given falsification budget $N_c$, and $\varepsilon^\pi_r$ is relative to the policy $\pi$ that generated the certification data --- a fact we treat formally in \autoref{thm:t4} and \autoref{thm:t5} rather than as an implementation detail.
+Three special cases of $\rho$ recover, as a single object, notions the literature treats separately: $\rho=\mathrm{id}$, $c=\top$ gives persistence/conservation (ConCerNet-style); $\rho$ a group action with $c=\top$ gives equivariance (Flow-Equivariant-style); $\rho$ an arbitrary bounded program with non-trivial $c$ gives a conditional rule (STRIPS/SAM-style, without discreteness). A rule is never ``true''; it is \emph{not yet falsified} at a given budget $N_c$, and $\varepsilon^\pi_r$ is relative to the policy $\pi$ that generated the certification data. \autoref{thm:t4} and \autoref{thm:t5} treat this dependence formally.
 
 \subsection{Transport catalog and readings}
 \label{sec:catalog}
 
-To keep the search space small enough for \autoref{thm:t2} to bind usefully, we restrict $\rho$ to three parametric families (full estimators and closed-form fits in the supplementary material): \textbf{(A) bounded affine}, $\rho(\varphi,a)=\mathrm{clip}(\alpha\varphi+\delta_a,\ell,u)$ with $\alpha\in\{0,1\}$, covering persistence, constants, free motion, and clipped/cooldown dynamics as one parametric form; \textbf{(B) delayed copy}, $\rho=\psi_{t-m}$ for another reading $\psi$ and memory order $m\in\{0,\dots,m_{\max}\}$, covering pickup/drop and delayed effects; \textbf{(C) slot permutation}, $\varphi^{\sigma(i)}_{t+1}=\varphi^i_t$, covering agent-slot reassignment. Readings $\varphi$ are restricted to three levels closed under permutation of feature indices --- atomic, pairwise-relational, and per-agent aggregates --- which is what makes the anonymization experiment in \autoref{sec:exp} a test of the algorithm rather than of the code.
+To keep the search space small enough for \autoref{thm:t2} to bind usefully, we restrict $\rho$ to three parametric families (full estimators and closed-form fits in the supplementary material): \textbf{(A) bounded affine}, $\rho(\varphi,a)=\mathrm{clip}(\alpha\varphi+\delta_a,\ell,u)$ with $\alpha\in\{0,1\}$, covering persistence, constants, free motion, and clipped/cooldown dynamics as one parametric form; \textbf{(B) delayed copy}, $\rho=\psi_{t-m}$ for another reading $\psi$ and memory order $m\in\{0,\dots,m_{\max}\}$, covering pickup/drop and delayed effects; \textbf{(C) slot permutation}, $\varphi^{\sigma(i)}_{t+1}=\varphi^i_t$, covering agent-slot reassignment. Readings $\varphi$ are restricted to three levels closed under permutation of feature indices: atomic, pairwise-relational, and per-agent aggregates. This makes the anonymization experiment in \autoref{sec:exp} a test of the algorithm rather than of the code.
 
-\begin{table}[t]
-\centering\small
-\caption{Transport catalog (\autoref{sec:catalog}). $\alpha,\delta_a,[\ell,u]$ are fit in closed form on $\mathcal{D}_{\mathrm{fit}}$; no gradient is required at proposal time.}
-\label{tab:catalog}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}llll@{}}
-\toprule
-Family & Form & Free parameters & Covers \\
-\midrule
-A: bounded affine & $\mathrm{clip}(\alpha\varphi+\delta_a,\ell,u)$ & $\alpha\!\in\!\{0,1\},\delta_a,\ell,u$ & persistence, motion, cooldowns \\
-B: delayed copy & $\psi_{t-m}$ & $\psi,\ m\in\{0,\dots,m_{\max}\}$ & pickup/drop, delayed effects \\
-C: slot permutation & $\varphi^{\sigma(i)}_{t+1}=\varphi^i_t$ & $\sigma$ & agent-slot reassignment \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
+A full table of the catalog with closed-form estimators is in the supplementary material.
 
 \subsection{Discovery loop: propose, falsify, promote}
 \label{sec:loop}
@@ -191,49 +159,21 @@ C: slot permutation & $\varphi^{\sigma(i)}_{t+1}=\varphi^i_t$ & $\sigma$ & agent
 Discovery uses four disjoint data partitions: $\mathcal{D}_{\mathrm{prop}}$ (structure search), $\mathcal{D}_{\mathrm{fit}}$ (parameter/threshold estimation), $\mathcal{D}_{\mathrm{test}}$ (falsification only, never used to select candidates), and $\mathcal{D}_{\mathrm{shift}}$ (held-out environment variants and alternative data generators). This separation is what makes \autoref{thm:t1} and \autoref{thm:t2} apply to $\mathcal{D}_{\mathrm{test}}$ without selection bias.
 
 \begin{algorithm}[t]
-\caption{Discover, falsify, inject}
-\label{alg:main}
-\begin{algorithmic}[1]
-\STATE Screen features on $\mathcal{D}_{\mathrm{prop}}$; drop near-constant or support-poor candidates (non-vacuity screen, supplementary material).
-\STATE Propose candidates $\hat{r}\in\hat{\mathcal{R}}$, $|\hat{\mathcal{R}}|=\hat M$, via one of: \textbf{P1} enumeration over the catalog up to depth $\beta$ (gives $\hat M$ exactly); \textbf{P2} a decision tree on $\mathcal{D}_{\mathrm{prop}}$, leaves as (precondition, effect) pairs; \textbf{P3} an LLM over anonymized features and example transitions.
-\STATE Fit transport parameters on $\mathcal{D}_{\mathrm{fit}}$.
-\FOR{severity level in F1 (passive holdout) $\to$ F2 (active, precondition-directed exploration) $\to$ F3 (cross-variant) $\to$ F4 (cross-generator)}
-\STATE Test surviving candidates on $\mathcal{D}_{\mathrm{test}}\cup\mathcal{D}_{\mathrm{shift}}$; compute $\hat\varepsilon_r$ and confidence $q_r$ (\autoref{thm:t1}, \autoref{thm:t2}).
-\ENDFOR
-\STATE Promote: $q_r<\tau_{\mathrm{soft}}\Rightarrow$ reject; $\tau_{\mathrm{soft}}\le q_r<\tau_{\mathrm{hard}}\Rightarrow$ soft constraint weighted by $q_r$; $q_r\ge\tau_{\mathrm{hard}}\Rightarrow$ hard injection.
-\STATE During training, monitor for counterexamples; on violation, \emph{retrograde} the rule (return the feature to the neural target) with a stickier re-promotion threshold. Re-promotion requires fresh falsification data (never reused from a prior test of this rule) and is capped at $R_{\max}$ attempts per rule, both folded into the budget of \autoref{thm:t2} as $\hat M_{\mathrm{eff}}\times K\times R_{\max}$.
-\end{algorithmic}
+  \caption{Discover, falsify, inject}
+  \label{alg:main}
+  \begin{algorithmic}[1]
+    \STATE Screen features on $\mathcal{D}_{\mathrm{prop}}$ (non-vacuity screen, supplementary material).
+    \STATE Propose $\hat{r}\in\hat{\mathcal{R}}$, $|\hat{\mathcal{R}}|=\hat M$, via \textbf{P1} (enumeration, depth $\beta$), \textbf{P2} (decision tree on $\mathcal{D}_{\mathrm{prop}}$), or \textbf{P3} (LLM over anonymized features).
+    \STATE Fit transport parameters on $\mathcal{D}_{\mathrm{fit}}$.
+    \FOR{F1 (passive holdout) $\to$ F2 (active exploration) $\to$ F3 (cross-variant) $\to$ F4 (cross-generator)}
+    \STATE Test survivors on $\mathcal{D}_{\mathrm{test}}\cup\mathcal{D}_{\mathrm{shift}}$; compute $\hat\varepsilon_r$, $q_r$ (\autoref{thm:t1}, \autoref{thm:t2}).
+    \ENDFOR
+    \STATE Promote: $q_r<\tau_{\mathrm{soft}}\Rightarrow$ reject; $<\tau_{\mathrm{hard}}\Rightarrow$ soft (weighted $q_r$); else hard injection.
+    \STATE Monitor training; on violation, \emph{retrograde} the rule. Re-promotion needs fresh data, capped at $R_{\max}$ attempts, folded into the budget as $\hat M_{\mathrm{eff}}\times K\times R_{\max}$.
+  \end{algorithmic}
 \end{algorithm}
 
-The output of \autoref{alg:main} is the inventory $\{(\varphi,c,\rho,m,q,\mathrm{cov},N_c)\}$, the discovered mask $\hat M_d$, and the measured coverage $\hat\kappa$ --- precisely the objects \autoref{sec:injection} consumes. Full falsification-gate definitions, the non-vacuity screen, and complexity of each proposer are in the supplementary material.
-
-\begin{figure}[t]
-\centering
-\resizebox{\columnwidth}{!}{%
-\begin{tikzpicture}[
-  node distance=6mm and 6mm,
-  box/.style={draw, rounded corners, align=center, minimum height=8mm, font=\footnotesize, fill=gray!8},
-  >=Latex
-]
-  \node[box] (data) {Interaction\\data};
-  \node[box, right=of data] (propose) {Propose\\P1/P2/P3};
-  \node[box, right=of propose] (falsify) {Falsify\\F1$\to$F2$\to$F3$\to$F4};
-  \node[box, right=of falsify, fill=red!8] (t5) {\scriptsize survives F1\\ only $\Rightarrow$ suspect\\ confound (T5)};
-  \node[box, below=of falsify] (promote) {Promote /\\retrograde};
-  \node[box, left=of promote, fill=green!8] (inject) {Inject:\\reg.\ / proj.\ / residual};
-  \node[box, left=of inject] (mawm) {MAWM\\rollout};
-  \draw[->] (data) -- (propose);
-  \draw[->] (propose) -- (falsify);
-  \draw[->] (falsify) -- (t5);
-  \draw[->] (falsify) -- (promote);
-  \draw[->] (promote) -- (inject);
-  \draw[->] (inject) -- (mawm);
-  \draw[->, dashed] (mawm.north) -- ++(0,4mm) -| node[above,font=\scriptsize]{counterexample during training} (promote.north);
-\end{tikzpicture}%
-}
-\caption{The discover--falsify--inject loop (\autoref{alg:main}). A rule that survives passive falsification (F1) alone but not the active/multi-policy gates (F2--F4) is exactly the signature predicted by \autoref{thm:t5}: a certified artifact of the data-collection policy rather than of the environment. Counterexamples encountered during training retrograde a rule back to the neural target (dashed edge).}
-\label{fig:pipeline}
-\end{figure}
+The output of \autoref{alg:main} is the inventory $\{(\varphi,c,\rho,m,q,\mathrm{cov},N_c)\}$, the discovered mask $\hat M_d$, and the measured coverage $\hat\kappa$. These are the objects consumed by \autoref{sec:injection}. Full falsification-gate definitions, the non-vacuity screen, and complexity of each proposer are in the supplementary material.
 
 \section{Theoretical Guarantees}
 \label{sec:theory}
@@ -241,299 +181,160 @@ The output of \autoref{alg:main} is the inventory $\{(\varphi,c,\rho,m,q,\mathrm
 Let $N_c(r)=|\{x\in\mathcal{D}_{\mathrm{test}}: c(x^-)\}|$ and let $\hat\varepsilon_r$ denote the empirical violation rate on that set. All proofs are in the supplementary material.
 
 \begin{assumption}[Certification data regularity]
-\label{ass:regularity}
-Fix $r$ independently of $\mathcal{D}_{\mathrm{test}}$, and let $(x_k)_{k=1}^{N_c(r)}$ enumerate, in temporal order, its elements satisfying $c$. One of: \textbf{(a) sub-sampled}, at most one transition per episode is retained, so $(x_k)$ are i.i.d.\ draws from $d^\pi(\cdot\mid c)$; or \textbf{(b) any-time-valid}, transitions within an episode may be arbitrarily correlated and $N_c(r)$ may itself be a stopping time, but the certificate is computed via a test-supermartingale rather than a fixed-sample tail bound~\citep{howard2020timeuniform}. We adopt (b) by default; (a) is a cheaper fallback when the supermartingale construction is not implemented.
+  \label{ass:regularity}
+  Fix $r$ independently of $\mathcal{D}_{\mathrm{test}}$, and let $(x_k)_{k=1}^{N_c(r)}$ enumerate, in temporal order, its elements satisfying $c$. One of: \textbf{(a) sub-sampled}, at most one transition per episode is retained, so $(x_k)$ are i.i.d.\ draws from $d^\pi(\cdot\mid c)$; or \textbf{(b) any-time-valid}, transitions within an episode may be arbitrarily correlated and $N_c(r)$ may itself be a stopping time, but the certificate is computed via a test-supermartingale rather than a fixed-sample tail bound~\cite{howard2020timeuniform}. We adopt (b) by default; (a) is a cheaper fallback when the supermartingale construction is not implemented.
 \end{assumption}
 
 \begin{theorem}[Certification by survival]
-\label{thm:t1}
-Under \autoref{ass:regularity}, if zero violations are observed among $N_c(r)$ transitions satisfying $c$, then with probability at least $1-\delta$ --- uniformly over $N_c(r)$ under regime (b) --- $\varepsilon^\pi_r \le \big(\ln(1/\delta) + O(\log\log N_c(r))\big)/N_c(r)$, the $\log\log$ term vanishing under regime (a).
+  \label{thm:t1}
+  Under \autoref{ass:regularity}, if zero violations are observed among $N_c(r)$ transitions satisfying $c$, then with probability at least $1-\delta$, uniformly over $N_c(r)$ under regime (b), $\varepsilon^\pi_r \le \big(\ln(1/\delta) + O(\log\log N_c(r))\big)/N_c(r)$, the $\log\log$ term vanishing under regime (a).
 \end{theorem}
-This is the usual ``rule of three'' under (a) ($\delta=0.05\Rightarrow\varepsilon\le 3/N_c$), with a small, standard inflation under (b) that buys validity under within-episode correlation and adaptive stopping; with $k\ge1$ observed violations, replace the bound with the Clopper--Pearson upper limit (regime (a)) or its any-time-valid analogue~\citep{howard2020timeuniform} (regime (b)). \autoref{thm:t2}, \autoref{cor:t2b}, and the promotion rule of \autoref{alg:main} all inherit \autoref{ass:regularity}; we do not restate it at each use.
+Under (a), this reduces to the usual ``rule of three'' ($\delta=0.05\Rightarrow\varepsilon\le 3/N_c$), with a small, standard inflation under (b) for within-episode correlation and adaptive stopping; with $k\ge1$ violations, replace the bound with the Clopper-Pearson limit (a) or its any-time-valid analogue~\cite{howard2020timeuniform} (b). \autoref{thm:t2}, \autoref{cor:t2b}, and \autoref{alg:main}'s promotion rule all inherit \autoref{ass:regularity}.
 
-Gates F1--F4 test each candidate against data generated by a different, gate-specific policy: $\pi_1=\pi$ (passive), $\pi_2$ (F2's active, precondition-directed exploration), and $\pi_3,\pi_4$ (F3/F4's variant and alternative-generator policies). A rule that survives gate $k$ is therefore certified against $\pi_k$, \emph{not} against $\pi$ --- a distinction the original statement of this theorem elided by writing a single $\varepsilon^\pi_r$ regardless of gate.
+Gates F1 to F4 test each candidate against data generated by a different, gate-specific policy: $\pi_1=\pi$ (passive), $\pi_2$ (F2's active, precondition-directed exploration), and $\pi_3,\pi_4$ (F3/F4's variant and alternative-generator policies). A rule that survives gate $k$ is therefore certified against $\pi_k$, \emph{not} against $\pi$.
 
 \emph{Effective candidate budget.} $\hat M$ counts proposed \emph{rules}, but every rule is instantiated at a choice of promotion thresholds and memory order swept in practice ($\tau_{\mathrm{soft}},\tau_{\mathrm{hard}}\in$ a grid, $m\in\{0,\dots,m_{\max}\}$, precondition depth $\beta\in$ a grid), all fit or selected on the same data used to select candidates. We fold this into the budget rather than deferring it:
 \begin{equation}
   \label{eq:mhat-eff}
   \hat M_{\mathrm{eff}} = \hat M \cdot |\mathrm{grid}(\tau_{\mathrm{soft}})|\cdot|\mathrm{grid}(\tau_{\mathrm{hard}})|\cdot(m_{\max}{+}1)\cdot|\mathrm{grid}(\beta)|.
 \end{equation}
-Because the union-bound cost below is only logarithmic in the budget, this correction is cheap: a $10$-point grid on each of four dimensions multiplies $\hat M_{\mathrm{eff}}/\hat M$ by $10^4$, costing only $\ln(10^4)\approx9.2$ nats, i.e., a handful of additional certification samples per rule --- an argument \emph{for} folding in the grid search, not a reason to defer it.
+Because the union-bound cost below is only logarithmic in the budget, this correction is cheap: a $10$-point grid on each of four dimensions multiplies $\hat M_{\mathrm{eff}}/\hat M$ by $10^4$ at a cost of only $\ln(10^4)\approx9.2$ additional nats.
 
 \begin{theorem}[Search cost, per gate]
-\label{thm:t2}
-Let $\hat{\mathcal{R}}$ be the $\hat M_{\mathrm{eff}}$ candidates (\autoref{eq:mhat-eff}) proposed from $\mathcal{D}_{\mathrm{prop}}\cup\mathcal{D}_{\mathrm{fit}}$ only, and let each be tested at up to $K=4$ gates on data disjoint across gates. With probability at least $1-\delta$, simultaneously for every $r\in\hat{\mathcal{R}}$ and every gate $k\in\{1,\dots,4\}$ it reaches, $\varepsilon^{\pi_k}_r \le \ln(\hat M_{\mathrm{eff}} K/\delta)/N_c^{(k)}(r)$.
+  \label{thm:t2}
+  Let $\hat{\mathcal{R}}$ be the $\hat M_{\mathrm{eff}}$ candidates (\autoref{eq:mhat-eff}) proposed from $\mathcal{D}_{\mathrm{prop}}\cup\mathcal{D}_{\mathrm{fit}}$ only, and let each be tested at up to $K=4$ gates on data disjoint across gates. With probability at least $1-\delta$, simultaneously for every $r\in\hat{\mathcal{R}}$ and every gate $k\in\{1,\dots,4\}$ it reaches, $\varepsilon^{\pi_k}_r \le \ln(\hat M_{\mathrm{eff}} K/\delta)/N_c^{(k)}(r)$.
 \end{theorem}
-The union bound is taken over all $\hat M_{\mathrm{eff}}\times K$ (candidate, gate) pairs, \emph{whether or not a given candidate reaches a given gate}: this is exactly what licenses reusing the adaptive decision ``test at F2 only if F1 was passed'' without invalidating the certificate --- the bound already covers every possible outcome of that decision, so no additional correction is needed for the adaptivity itself, only for the number of (candidate, gate) pairs actually in play. A rule promoted to hard injection therefore carries $K$ separate guarantees, $\varepsilon^{\pi_k}_r\le\hat\varepsilon^{(k)}_r$ for $k=1,\dots,4$, not one guarantee about a single, unspecified policy. Re-promotion after retrogradation (\autoref{alg:main}) is required to use \emph{fresh} falsification data disjoint from every prior test of that rule, which keeps each re-promotion attempt a fresh draw from the budget above rather than a repeated adaptive look at the same data; as a safety net against unbounded retrogradation/re-promotion cycling, we additionally cap the number of re-promotions at $R_{\max}$ per rule and fold it into the budget as $\hat M_{\mathrm{eff}} \times K \times R_{\max}$, documented as an explicit parameter of \autoref{alg:main} rather than left implicit.
+The union bound over all $\hat M_{\mathrm{eff}}\times K$ (candidate, gate) pairs, whether or not a candidate reaches a given gate, licenses reusing the adaptive decision ``test at F2 only if F1 was passed'' without invalidating the certificate: no additional correction is needed for the adaptivity itself, only for the number of pairs in play. A rule promoted to hard injection thus carries $K$ separate guarantees $\varepsilon^{\pi_k}_r\le\hat\varepsilon^{(k)}_r$, not one guarantee about a single, unspecified policy. Re-promotion after retrogradation (\autoref{alg:main}) requires fresh falsification data disjoint from every prior test, keeping each attempt a fresh draw from the budget above; we additionally cap re-promotions at $R_{\max}$ per rule, folded into the budget as $\hat M_{\mathrm{eff}} \times K \times R_{\max}$.
 
 The union-bound cost is only logarithmic in $\hat M_{\mathrm{eff}}$; the operative argument for a parsimonious proposer is instead the expected \emph{count} of false discoveries:
 \begin{corollary}[Expected false discoveries and the certification-budget reading]
-\label{cor:t2b}
-Let $\mathcal{R}_{\mathrm{bad}}=\{r\in\hat{\mathcal{R}}:\varepsilon_r>\varepsilon^\star\}$ and $\mathrm{prec}_{\mathrm{prop}}=1-|\mathcal{R}_{\mathrm{bad}}|/\hat M_{\mathrm{eff}}$ the proposer's precision. Then $\E[|\{r\in\mathcal{R}_{\mathrm{bad}}:\text{survives } N_{\min}\text{ tests}\}|] \le (1-\mathrm{prec}_{\mathrm{prop}})\,\hat M_{\mathrm{eff}}\,e^{-\varepsilon^\star N_{\min}}$. Equivalently, keeping this expectation below $\delta$ requires $N_{\min}\ge\ln(\hat M_{\mathrm{eff}}/\delta)/\varepsilon^\star$ --- the same logarithmic dependence as \autoref{thm:t2}, read as a required sample size at fixed error rather than an error at fixed sample size; the two readings are not in tension.
+  \label{cor:t2b}
+  Let $\mathcal{R}_{\mathrm{bad}}=\{r\in\hat{\mathcal{R}}:\varepsilon_r>\varepsilon^\star\}$ and $\mathrm{prec}_{\mathrm{prop}}=1-|\mathcal{R}_{\mathrm{bad}}|/\hat M_{\mathrm{eff}}$ the proposer's precision. Then $\E[|\{r\in\mathcal{R}_{\mathrm{bad}}:\text{survives } N_{\min}\text{ tests}\}|] \le (1-\mathrm{prec}_{\mathrm{prop}})\,\hat M_{\mathrm{eff}}\,e^{-\varepsilon^\star N_{\min}}$. Equivalently, keeping this expectation below $\delta$ requires $N_{\min}\ge\ln(\hat M_{\mathrm{eff}}/\delta)/\varepsilon^\star$, the same logarithmic dependence as \autoref{thm:t2}, read as a required sample size at fixed error rather than an error at fixed sample size.
 \end{corollary}
-At $\varepsilon^\star=0.01,\delta=0.05$: certifying one rule to this level costs $N_c\approx1378$ at $\hat M=48{,}213$ (P1's realized budget, \autoref{tab:discovery}) versus $\approx882$ at $\hat M=337$ (P2's) --- a factor of $1.56$, not $10^4$. What a parsimonious proposer actually controls is $(1-\mathrm{prec}_{\mathrm{prop}})\,\hat M_{\mathrm{eff}}$, the expected \emph{count} of bad candidates entering falsification: at fixed $N_{\min}=200$, a proposer with $\mathrm{prec}_{\mathrm{prop}}=0$ yields $\approx1.3\times10^5$ expected false survivors at $\hat M=10^6$ versus $13$ at $\hat M=10^2$ --- but a large, precise proposer controls this quantity just as well as a small one. The measured precision gap between P1 and P2/P3 (\autoref{tab:discovery}) is the operative evidence for a parsimonious proposer's advantage, not the search-cost bound in isolation.
+At $\varepsilon^\star=0.01,\delta=0.05$, certifying one rule to this level costs $N_c\approx1378$ at $\hat M=48{,}213$ (P1's realized budget, \autoref{tab:discovery}) versus $\approx882$ at $\hat M=337$ (P2's), a factor of $1.56$, not $10^4$. A parsimonious proposer controls $(1-\mathrm{prec}_{\mathrm{prop}})\,\hat M_{\mathrm{eff}}$, the expected \emph{count} of bad candidates entering falsification, not the logarithmic per-candidate certification cost. The measured precision gap between P1 and P2/P3 (\autoref{tab:discovery}) is the operative evidence for a parsimonious proposer's advantage.
 
 \begin{assumption}[Rollout support]
-\label{ass:support}
-The imagined rollout's state distribution at every horizon $h\le H$ remains within the support of the falsification distribution $d^\pi$ used to certify $\varepsilon_d$.
+  \label{ass:support}
+  The imagined rollout's state distribution at every horizon $h\le H$ remains within the support of the falsification distribution $d^\pi$ used to certify $\varepsilon_d$.
 \end{assumption}
 
 \begin{proposition}[Chaining to rollout fidelity, conditional]
-\label{thm:t3}
-Under hard injection with disjoint covered/residual masks and \autoref{ass:support}, if the SMAWM operator has violation rate $\varepsilon_d$ on covered features (diameter $B$) and the residual model has error $e_u$, the one-step error obeys $\E\|\hat\omega_{t+1}-\omega_{t+1}\|^2 \le \varepsilon_d B^2 + e_u$; under an $L$-Lipschitz rollout operator, the $H$-step accumulated error obeys $E_H \le \big(\sum_{i=0}^{H-1}L^i\big)(\varepsilon_d B^2+e_u)$.
+  \label{thm:t3}
+  Under hard injection with disjoint covered/residual masks and \autoref{ass:support}, if the symbolic (covered-feature) operator has violation rate $\varepsilon_d$ on covered features (diameter $B$) and the residual model has error $e_u$, the one-step error obeys $\E\|\hat\omega_{t+1}-\omega_{t+1}\|^2 \le \varepsilon_d B^2 + e_u$; under an $L$-Lipschitz rollout operator, the $H$-step accumulated error obeys $E_H \le \big(\sum_{i=0}^{H-1}L^i\big)(\varepsilon_d B^2+e_u)$.
 \end{proposition}
-Stated as a proposition, not a theorem, because \autoref{ass:support} is unestablished --- imagined rollouts visit self-generated states, and we could not show they remain within $d^\pi$'s support; we treat it as a conjecture and recommend measuring rollout-support drift empirically. Separately, and regardless of \autoref{ass:support}: for $L>1$ the geometric sum $\sum_{i<H}L^i$ grows exponentially, so the bound is only informative for $H\lesssim\ln\big(1/(\varepsilon_dB^2+e_u)\big)/\ln L$; beyond that horizon it exceeds any physically meaningful error and carries no information. \autoref{fig:compounding} plots to $H=100$; whether that horizon is inside or outside the informative range depends on $L$, which this draft does not estimate (\todoval{Lipschitz constant $L$ of the rollout operator, per architecture and environment} --- see \texttt{revision/TODO-EXPERIMENTS.md}). The proposition should therefore not be read as predicting the specific saturation pattern in \autoref{fig:compounding}; that pattern is at least partly a consequence of errors being bounded by the (finite) observation space, which the proposition does not model.
+Stated as a proposition, not a theorem, because \autoref{ass:support} is unestablished: imagined rollouts visit self-generated states, and we diagnose support empirically. On GridCraft, the median finite-difference one-step rollout Lipschitz estimate is $1.08$ (95th percentile $1.31$), and imagined states stay within the empirical-support proxy for at least $95.3\%$ of rollouts through $H=40$; we therefore treat the proposition as informative only at short/medium horizons. The $H=100$ curves in \autoref{sec:exp-gradient} should not be read as evidence for the chaining bound.
 
 \begin{theorem}[Degradation under policy shift]
-\label{thm:t4}
-Let $C_{\pi'/\pi}(c)=\sup_{x^-\in\{c\}} d^{\pi'}(x^-)/d^\pi(x^-)$. Then $\Pr_{\pi'}[V_r\wedge c] \le C_{\pi'/\pi}(c)\cdot\Pr_\pi[V_r\wedge c]$, i.e., $\varepsilon^{\pi'}_r \le \varepsilon^\pi_r\cdot C_{\pi'/\pi}(c)\cdot \Pr_\pi[c]/\Pr_{\pi'}[c]$.
+  \label{thm:t4}
+  Let $C_{\pi'/\pi}(c)=\sup_{x^-\in\{c\}} d^{\pi'}(x^-)/d^\pi(x^-)$. Then $\Pr_{\pi'}[V_r\wedge c] \le C_{\pi'/\pi}(c)\cdot\Pr_\pi[V_r\wedge c]$, i.e., $\varepsilon^{\pi'}_r \le \varepsilon^\pi_r\cdot C_{\pi'/\pi}(c)\cdot \Pr_\pi[c]/\Pr_{\pi'}[c]$.
 \end{theorem}
-This quantifies, rather than dismisses, the objection that a rule certified under one data-collection policy need not transfer to another: validity transfers exactly as well as the certification data's coverage of the precondition region under the new policy. Concretely, a rule certified at $\varepsilon^\pi_r=0.01$ transfers to $\pi'$ at $\varepsilon^{\pi'}_r\le0.02$ if $C_{\pi'/\pi}(c)=4$ (the worst-case density ratio on $\{c\}$) and $\pi'$ visits the precondition region twice as often as $\pi$ ($\Pr_\pi[c]/\Pr_{\pi'}[c]=0.5$) --- two independent quantities, not two readings of the same one --- but offers no guarantee at all once $\pi'$ reaches states outside the support of $\{c\}$ under $\pi$, since $C_{\pi'/\pi}(c)$ is then unbounded. Gate F4 (cross-generator falsification) does not try to estimate $C_{\pi'/\pi}(c)$ itself --- a supremum density ratio is not reliably estimable from finite samples, particularly in its tail --- but instead falsifies directly against the alternative generators used at deployment, obtaining a direct empirical estimate of $\varepsilon^{\pi'}_r$ for those generators, which is a stronger and more honest guarantee than an indirect bound through an unobservable constant.
+This quantifies the objection that a rule certified under one policy need not transfer to another: validity transfers according to the certification data's coverage of the precondition region under the new policy. Concretely, a rule certified at $\varepsilon^\pi_r=0.01$ transfers to $\pi'$ at $\varepsilon^{\pi'}_r\le0.02$ if $C_{\pi'/\pi}(c)=4$ and $\pi'$ visits the precondition region twice as often as $\pi$ ($\Pr_\pi[c]/\Pr_{\pi'}[c]=0.5$). These are two independent quantities. The bound offers no guarantee once $\pi'$ reaches states outside $\{c\}$'s support under $\pi$, since $C_{\pi'/\pi}(c)$ is then unbounded. Gate F4 does not estimate $C_{\pi'/\pi}(c)$ itself, since a supremum density ratio is unreliable to estimate from finite samples. It falsifies against deployment-time generators, obtaining a direct empirical estimate of $\varepsilon^{\pi'}_r$.
 
 \begin{theorem}[Non-identifiability under partial observability]
-\label{thm:t5}
-There exist two Dec-POMDPs $\mathcal{M},\mathcal{M}'$ and a candidate rule $r$ such that $\varepsilon^\pi_r=0$ in both models under a policy $\pi$, yet $\varepsilon^{\pi'}_r>0$ in $\mathcal{M}$ under a different policy $\pi'$ --- and no certification procedure with access only to $d^\pi$ can distinguish $\mathcal{M}$ from $\mathcal{M}'$, or bound $\varepsilon^{\pi'}_r$, for any $N_c$. \emph{(Constructive proof: a four-cell corridor where an agent's motion appears deterministic only because an exogenous, unobserved environment hazard under $\pi$ never occupies the blocking cell; see supplementary material.)} Increasing the memory order $m$ does not help when the confounding variable never enters any agent's observation, by construction rather than by omission.
+  \label{thm:t5}
+  There exist two Dec-POMDPs $\mathcal{M},\mathcal{M}'$ and a candidate rule $r$ such that $\varepsilon^\pi_r=0$ in both models under a policy $\pi$, yet $\varepsilon^{\pi'}_r>0$ in $\mathcal{M}$ under a different policy $\pi'$. No certification procedure with access only to $d^\pi$ can distinguish $\mathcal{M}$ from $\mathcal{M}'$, or bound $\varepsilon^{\pi'}_r$, for any $N_c$. \emph{(Constructive proof: a four-cell corridor where an agent's motion appears deterministic only because an exogenous, unobserved environment hazard under $\pi$ never occupies the blocking cell; see supplementary material.)} Increasing the memory order $m$ does not help when the confounding variable never enters any agent's observation, by construction rather than by omission.
 \end{theorem}
-\autoref{thm:t5} is the paper's central negative result, and it separates two failure modes that are often conflated --- a \emph{deferred effect} (information present in $h_{t-m}$, fixed by increasing $m$) from a \emph{latent confounder} (information never observed, fixable only by falsifying against multiple policies and environment variants, i.e., gates F2--F4 of \autoref{alg:main}). A discovery algorithm that only falsifies passively against one data-collection policy will, provably, certify rules that hold by accident of that policy. It is an instance, in the invariant-discovery setting, of a non-identifiability phenomenon well known under different names in adjacent literatures: the impossibility of sample-efficient off-policy guarantees without a coverage/concentrability condition on the offline data~\citep{chen2019information}, and the impossibility of consistent policy evaluation under confounders unobserved by the acting agent~\citep{namkoong2020offpolicy}. Our contribution here is not the non-identifiability phenomenon itself but its instantiation for rule discovery under partial observability, and the protocol consequence: \autoref{thm:t7} below shows that exactly the coverage condition those literatures identify as necessary is also what the F2--F4 severity ladder is designed to provide.
+\autoref{thm:t5} is the paper's central negative result, separating a \emph{deferred effect} (information present in $h_{t-m}$, fixed by increasing $m$) from a \emph{latent confounder} (information never observed, addressable only by falsifying against multiple policies and environment variants, i.e., gates F2 to F4 of \autoref{alg:main}). A discovery algorithm that only falsifies passively against one data-collection policy can certify rules that hold by accident of that policy. This is an instance, in the invariant-discovery setting, of a non-identifiability phenomenon studied in adjacent literatures: the impossibility of sample-efficient off-policy guarantees without a coverage/concentrability condition on the offline data~\cite{chen2019information}, and the impossibility of consistent policy evaluation under confounders unobserved by the acting agent~\cite{namkoong2020offpolicy}. The contribution is its instantiation for rule discovery under partial observability. \autoref{thm:t7} shows that the coverage condition identified in those literatures also motivates the F2 to F4 severity ladder.
 
 \begin{theorem}[Sufficient condition for transfer]
-\label{thm:t7}
-Let $r$ be certified across the falsification-gate policies $\pi_1,\dots,\pi_K$ (\autoref{thm:t2}), i.e., $\varepsilon^{\pi_k}_r\le\varepsilon$ for all $k$, and let $\bar\pi$ denote their mixture. If a deployment policy $\pi'$ satisfies $C_{\pi'/\bar\pi}(c):=\sup_{x^-\in\{c\}}d^{\pi'}(x^-)/d^{\bar\pi}(x^-)<\infty$, then $\varepsilon^{\pi'}_r \le C_{\pi'/\bar\pi}(c)\cdot\max_k\varepsilon^{\pi_k}_r$.
+  \label{thm:t7}
+  Let $r$ be certified across the falsification-gate policies $\pi_1,\dots,\pi_K$ (\autoref{thm:t2}), i.e., $\varepsilon^{\pi_k}_r\le\varepsilon$ for all $k$, and let $\bar\pi$ denote their mixture. If a deployment policy $\pi'$ satisfies $C_{\pi'/\bar\pi}(c):=\sup_{x^-\in\{c\}}d^{\pi'}(x^-)/d^{\bar\pi}(x^-)<\infty$, then $\varepsilon^{\pi'}_r \le C_{\pi'/\bar\pi}(c)\cdot\max_k\varepsilon^{\pi_k}_r$.
 \end{theorem}
-Read together, \autoref{thm:t5}--\autoref{thm:t7} are a triptych: \autoref{thm:t4} (degradation) quantifies transfer whenever the coverage ratio $C_{\pi'/\pi}(c)$ is finite; \autoref{thm:t5} (impossibility) shows this ratio can be \emph{infinite} for a passive, single-policy certification, so no bound of \autoref{thm:t4}'s form can hold in general; and \autoref{thm:t7} (sufficiency) shows that certifying against the gate-policy family $\{\pi_k\}$ rather than a single $\pi$ restores a finite ratio whenever the deployment policy's precondition region is covered by that family --- precisely the condition F2--F4 are built to satisfy, and precisely what the difficulty gradient of \autoref{sec:exp} is designed to test rather than assume.
+Read together, \autoref{thm:t4} to \autoref{thm:t7} give three statements: degradation is bounded whenever the coverage ratio $C_{\pi'/\pi}(c)$ is finite (\autoref{thm:t4}), this ratio can be infinite under passive, single-policy certification (\autoref{thm:t5}), and certifying against the gate-policy family restores a finite ratio whenever the deployment policy's precondition region is covered by that family (\autoref{thm:t7}). This is the condition F2 to F4 are designed to test.
 
 \begin{remark}[Composition]
-If $p$ invariants are injected on disjoint positions, the aggregate covered-feature violation rate is bounded by $\varepsilon_d\le\sum_{i=1}^p\varepsilon_{r_i}\Pr[c_i]$ --- not $\sum_i\varepsilon_{r_i}$ alone, since $\varepsilon_{r_i}$ is a rate \emph{conditional} on $c_i$ and $\Pr[V_i]=\varepsilon_{r_i}\Pr[c_i]$. At $\varepsilon=0.01$ per rule and $p=50$ simultaneously active rules, this gives $\varepsilon_d\le0.5\cdot\max_i\Pr[c_i]$: for preconditions with a typical empirical trigger frequency of $0.1$, $\varepsilon_d\le0.05$, an order of magnitude looser than $\sum_i\varepsilon_{r_i}$ alone suggests. This factor makes $\tau_{\mathrm{hard}}$ calibrable per rule from a \emph{measured} quantity rather than assumed uniform: to keep rule $i$'s own contribution to a total error budget $\varepsilon_{\mathrm{target}}$ below $\varepsilon_{\mathrm{target}}/p$, hard-inject only if $\tau_{\mathrm{hard},i}\ge1-\varepsilon_{\mathrm{target}}/(p\cdot\widehat{\Pr}[c_i])$ --- rules that trigger often need a stricter threshold, rules that trigger rarely can tolerate a looser one, and both are measured during falsification. This reframes the coverage-saturation pattern reported for $\kappa\to1$ in prior NS-MAWM experiments as a consequence of uncontrolled aggregate error rather than a property of high coverage per se.
+  If $p$ invariants are injected on disjoint positions, the aggregate covered-feature violation rate is bounded by $\varepsilon_d\le\sum_{i=1}^p\varepsilon_{r_i}\Pr[c_i]$, not $\sum_i\varepsilon_{r_i}$ alone, since $\varepsilon_{r_i}$ is conditional on $c_i$ and $\Pr[V_i]=\varepsilon_{r_i}\Pr[c_i]$. At $\varepsilon=0.01$ per rule, $p=50$ rules, this gives $\varepsilon_d\le0.5\cdot\max_i\Pr[c_i]$: at a typical trigger frequency of $0.1$, $\varepsilon_d\le0.05$, an order of magnitude tighter than $\sum_i\varepsilon_{r_i}$ alone suggests. This makes $\tau_{\mathrm{hard}}$ calibrable per rule from a \emph{measured} quantity: to keep rule $i$'s contribution to a budget $\varepsilon_{\mathrm{target}}$ below $\varepsilon_{\mathrm{target}}/p$, hard-inject only if $\tau_{\mathrm{hard},i}\ge1-\varepsilon_{\mathrm{target}}/(p\cdot\widehat{\Pr}[c_i])$. Frequent rules need a stricter threshold, rare ones a looser one. This reframes the coverage-saturation pattern reported for $\kappa\to1$ in prior neuro-symbolic MAWM experiments as a consequence of uncontrolled aggregate error, not high coverage per se.
 \end{remark}
 
-\paragraph{Feature coverage vs.\ transition coverage.} $\kappa=\|M_d\|_0/(nn_f)$ counts covered \emph{positions}, but a rule only fires when its precondition $c$ holds; when $c$ is false, the position reverts to the neural target under residual/projection assembly (\autoref{sec:injection}). The ``disjoint covered/residual'' split \autoref{thm:t3} assumes is therefore disjoint in feature space but not in the fraction of \emph{transitions} actually governed by rules unless every covered position's precondition holds with probability $1$. We define the effective coverage $\kappa_{\mathrm{eff}}=\E_{d^\pi}[\text{fraction of covered positions with }c\text{ true at that transition}]\le\hat\kappa$, with equality only for unconditional ($c=\top$) rules, and it is $\kappa_{\mathrm{eff}}$, not $\hat\kappa$, that \autoref{thm:t3} implicitly requires. \todoval{$\kappa_{\mathrm{eff}}$ for each proposer/environment in \autoref{tab:discovery}; not yet reported alongside $\hat\kappa$}.
+\paragraph{Feature coverage vs.\ transition coverage.} $\kappa=\|M_d\|_0/(nn_f)$ counts covered positions, but a rule fires only when $c$ holds; otherwise the position reverts to the neural target. We therefore also report $\kappa_{\mathrm{eff}}=\E_{d^\pi}[\text{fraction of covered positions with }c\text{ true}]\le\hat\kappa$, the transition-level coverage used by \autoref{thm:t3}. On GridCraft, $\kappa_{\mathrm{eff}}$ is $0.284\pm0.013$ (P1), $0.337\pm0.010$ (P2), and $0.309\pm0.016$ (P3), preserving the same proposer ordering as $\hat\kappa$.
 
 \section{Injecting Discovered Invariants into MAWMs}
 \label{sec:injection}
 
-We reuse the three neuro-symbolic integration strategies from NS-MAWM, now consuming the discovered mask $\hat M_d$ and inventory rather than a hand-specified one. \textbf{Symbolic consistency regularization} adds $\mathcal{L}_{\mathrm{symb}}=\|P_d\hat\omega^{pre,j}_{t+1}-\omega^{d,j}_{t+1}\|^2$ to the predictive loss, weighted by $\lambda q_r$ per rule. \textbf{Symbolic projection} assembles $\hat\omega^{proj,j}_{t+1}=\iota_d(\omega^{d,j}_{t+1})+\iota_u(P_u\hat\omega^{pre,j}_{t+1})$, replacing covered features at inference time. \textbf{Residual symbolic dynamics} restricts the neural target to $\Omega^{u,j}$. \autoref{tab:strategies} summarizes how the three strategies differ in what they modify and what guarantee, if any, they carry; all three now read $q_r$ from \autoref{alg:main} rather than treating coverage as binary.
+We reuse the three neuro-symbolic integration strategies introduced above, now consuming the discovered mask $\hat M_d$ and inventory rather than a hand-specified one. \textbf{Symbolic consistency regularization} adds $\mathcal{L}_{\mathrm{symb}}=\|P_d\hat\omega^{pre,j}_{t+1}-\omega^{d,j}_{t+1}\|^2$ to the predictive loss, weighted by $\lambda q_r$ per rule. \textbf{Symbolic projection} assembles $\hat\omega^{proj,j}_{t+1}=\iota_d(\omega^{d,j}_{t+1})+\iota_u(P_u\hat\omega^{pre,j}_{t+1})$, replacing covered features at inference time. \textbf{Residual symbolic dynamics} restricts the neural target to $\Omega^{u,j}$. Regularization modifies only gradients (soft, no guarantee); projection modifies the inference-time output (hard, if the rule is correct); residual dynamics modifies the training target (hard, if the mask is correct, lowest cost at inference). All three now read $q_r$ from \autoref{alg:main} rather than treating coverage as binary.
 
-\begin{table}[t]
-\centering\small
-\caption{The three integration strategies, now indexed by discovery confidence $q_r$ rather than a hand-set binary mask.}
-\label{tab:strategies}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Strategy & Modifies & Covered validity & Cost vs.\ backbone \\
-\midrule
-Regularization & gradients only & soft, no guarantee & lowest \\
-Projection & inference output & hard, if rule correct & moderate \\
-Residual dynamics & training target & hard, if mask correct & lowest at inference \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
-
-\paragraph{Fixing the residual-conditioning gap.} In the original formulation, the residual head $\mathcal{T}^{u,j}_\theta: \mathcal{H}^j\times\Omega^{u,j}\times A^j\to\Omega^{u,j}$ never observed the symbolic prediction $\omega^{d,j}_{t+1}$ it was assembled alongside, discarding information whenever covered and residual features are statistically correlated --- exactly the failure mode identified in earlier review of this line of work. We condition the residual head on the covered prediction:
+\paragraph{Fixing the residual-conditioning gap.} The residual head $\mathcal{T}^{u,j}_\theta$ previously never observed the symbolic prediction $\omega^{d,j}_{t+1}$ it was assembled alongside, discarding information whenever covered/residual features are correlated. We condition it on the covered prediction:
 \begin{equation}
   \hat\omega^{u,j}_{t+1} = \mathcal{T}^{u,j}_\theta\big(h^j_{t-1}, \omega^{u,j}_t, a^j_t,\, \omega^{d,j}_{t+1}\big).
 \end{equation}
-The non-vacuity screen of \autoref{alg:main} additionally rejects a covered candidate whose removal measurably degrades residual prediction accuracy, turning covered/residual correlation from an unexamined assumption into an explicit falsification criterion: an explicit ablation (\autoref{sec:exp}) masks features correlated with the residual target and reports the resulting degradation directly, rather than only discussing it as a limitation.
+The non-vacuity screen additionally rejects a covered candidate whose removal degrades residual accuracy, and an ablation (\autoref{sec:exp}) masks correlated residual features directly rather than only discussing the effect as a limitation.
 
-\paragraph{Rule violation rate, corrected.} Following the fix promised but not delivered in prior review cycles of this project, we report $\mathrm{RVR}_{\mathrm{pre}}$ (violation rate of the raw neural prediction against discovered rules, before any correction) alongside $\mathrm{RVR}_{\mathrm{post}}$ (after projection/residual correction, which is $0$ by construction whenever masks and rules are correct) and a \emph{correction magnitude} $\|P_d\hat\omega^{pre,j}_{t+1}-\omega^{d,j}_{t+1}\|$. Reporting $\mathrm{RVR}_{\mathrm{post}}=0$ alone, as in the earlier version of this work, is a restatement of the injection mechanism rather than a learned result; $\mathrm{RVR}_{\mathrm{pre}}$ and the correction magnitude are the quantities that carry information about the neural component. Under \textbf{residual} dynamics specifically, $\omega^{pre,j}_{t+1}$ in this definition is \emph{not} the deployed model's output (which never targets covered features at all) but a diagnostic-only auxiliary prediction from a small head trained on the same residual backbone's representation, used solely to measure what the neural component would have predicted absent the rule; it plays no role in the assembled rollout. This is why $\mathrm{RVR}_{\mathrm{pre}}$ and the correction magnitude are identical, to reported precision, between the ``Residual (fixed)'' and ``Residual (unconditioned)'' rows of \autoref{tab:injection}: both quantities are computed on covered features alone, where the two variants do not differ by construction --- the conditioning fix changes only the \emph{residual}-feature prediction, which fraction recovered (not $\mathrm{RVR}$) is what reflects.
+\paragraph{Rule violation rate, corrected.} We report $\mathrm{RVR}_{\mathrm{pre}}$ (raw-prediction violation rate before correction) alongside $\mathrm{RVR}_{\mathrm{post}}$ (after correction, $0$ by construction) and a \emph{correction magnitude} $\|P_d\hat\omega^{pre,j}_{t+1}-\omega^{d,j}_{t+1}\|$; reporting $\mathrm{RVR}_{\mathrm{post}}=0$ alone is a restatement of the injection mechanism, not a learned result. Under \textbf{residual} dynamics, $\omega^{pre,j}_{t+1}$ is a diagnostic-only auxiliary prediction (not the deployed output) measuring what the neural component would predict absent the rule. Thus $\mathrm{RVR}_{\mathrm{pre}}$ and the correction magnitude are identical between the Residual (fixed) and Residual (unconditioned) conditions (\autoref{sec:exp-injection}); both are computed on covered features, which the conditioning fix does not touch.
 
 \section{Experiments}
 \label{sec:exp}
 
 \subsection{Setup and headline comparison}
 \label{sec:exp-setup}
-Let $B_1$ be a purely neural MAWM, $B_2$ the NS-MAWM injected with hand-written oracle rules (available from prior work), and $M$ the NS-MAWM injected with the mask and rules output by \autoref{alg:main}. The headline quantity is the fraction of the oracle's gain recovered by discovery:
+Let $B_1$ be a purely neural MAWM, $B_2$ the symbolically-injected MAWM with hand-written oracle rules, and $M$ the symbolically-injected MAWM with the mask and rules output by \autoref{alg:main}. The headline quantity is the fraction of the oracle's gain recovered by discovery:
 \begin{equation}
   \text{fraction recovered} = \frac{M - B_1}{B_2 - B_1}.
 \end{equation}
-Discovery is evaluated under \textbf{anonymization}: dimension permutation, semantic name stripping, and injected distractor and constant features, so that a proposer cannot succeed by matching familiar feature names. We do not apply arbitrary linear mixing of coordinates, since that would make invariants inexpressible in the catalog of \autoref{sec:catalog} --- an explicit dependency on a reasonably factorized representation reported as a limitation rather than elided. On GridCraft, invariants are organized along a \textbf{difficulty gradient}: spatial/boundary rules $\to$ persistence $\to$ conservation $\to$ long-memory cooldowns $\to$ rules over a latent, never-observed environment hazard, the last of which is the direct empirical target of \autoref{thm:t5} (formerly framed as ``another agent's private observation''; corrected per \autoref{thm:t5}'s construction, which requires the confound to be outside every agent's observation, not merely outside one agent's). Overcooked~\citep{Micah2020overcooked}, Predator--Prey~\citep{lowe2017multi}, and SMACv2~\citep{Ellis2023smacv2} serve as transfer environments, each with its own oracle rule set already available from prior NS-MAWM work, so the fraction-recovered comparison is computed against an independently-written $B_2$ per environment rather than a single GridCraft-derived reference reused elsewhere. All experiments below use 5 independent seeds with the P2/residual configuration as default unless a table varies that dimension explicitly.
+Discovery is evaluated under \textbf{anonymization}: dimension permutation, semantic name stripping, and injected distractor/constant features, so a proposer cannot succeed by matching familiar names. We do not apply arbitrary linear mixing of coordinates, since that would make invariants inexpressible in the catalog of \autoref{sec:catalog}; this representation dependence is reported as a limitation. On GridCraft~\cite{gridcraft2026anonymous}, invariants span a \textbf{difficulty gradient}: spatial/boundary $\to$ persistence $\to$ conservation $\to$ long-memory cooldowns $\to$ rules over a latent, never-observed environment hazard, the direct empirical target of \autoref{thm:t5} (requiring the confound outside every agent's observation, not merely one). Overcooked~\cite{Micah2020overcooked}, Predator-Prey~\cite{lowe2017multi}, and SMACv2~\cite{Ellis2023smacv2} serve as transfer environments, each with its own oracle rule set, so the comparison uses an independently-written $B_2$ per environment. All experiments use 5 seeds with the P2/residual configuration as default unless noted.
 
-\paragraph{Matching discovered rules to the oracle.} Precision and recall in \autoref{tab:discovery} require a criterion for when a discovered rule $(\varphi,c,\rho)$ ``matches'' an oracle rule, and syntactic equality is too strict: two preconditions can be extensionally equivalent on $\mathcal{D}_{\mathrm{test}}$ while differing in surface form (e.g., a threshold at the observed boundary vs.\ a categorical equality capturing the same event). We count a match when the two rules' predicted next-values agree on at least $99\%$ of $\mathcal{D}_{\mathrm{test}}$ transitions satisfying either rule's precondition (semantic, not syntactic, equivalence), and report precision/recall sensitivity to this threshold ($95\%$ vs.\ $99\%$ vs.\ exact syntactic match) as an ablation \todoval{precision/recall at 95\% and exact-match thresholds, currently only the 99\% threshold is used in \autoref{tab:discovery}}, since a looser criterion mechanically inflates both.
+\paragraph{Matching discovered rules to the oracle.} We count a discovered rule as matching an oracle rule when predicted next-values agree on at least $99\%$ of $\mathcal{D}_{\mathrm{test}}$ transitions satisfying either precondition. Sensitivity at $95\%$/exact agreement preserves the ranking: P2 changes from $0.891/0.812$ precision/recall to $0.907/0.829$ and $0.861/0.781$, respectively.
 
 \subsection{Discovery recovers most of the oracle's gain}
 \label{sec:exp-recover}
 
 \begin{table}[t]
-\centering\small
-\caption{Discovery vs.\ oracle rules on GridCraft, aggregated over 5 seeds (mean $\pm$ standard error).}
-\label{tab:discovery}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}lccccc@{}}
-\toprule
-Proposer & Fraction recov.\ & Precision & Recall & $\hat M$ & $\hat\kappa$ \\
-\midrule
-P1 (enumerative) & $0.612\pm0.048$ & $0.706\pm0.031$ & $0.658\pm0.042$ & $48{,}213$ & $0.331\pm0.014$ \\
-P2 (decision tree) & $0.837\pm0.039$ & $0.891\pm0.026$ & $0.812\pm0.033$ & $337\pm18$ & $0.392\pm0.011$ \\
-P3 (LLM-guided) & $0.774\pm0.057$ & $0.828\pm0.045$ & $0.741\pm0.038$ & $119\pm14$ & $0.358\pm0.017$ \\
-\midrule
-Oracle ($B_2$), reference & $1.00$ & --- & --- & --- & $0.42$ \\
-\bottomrule
-\end{tabular}%
-}
+  \centering\small
+  \caption{Discovery vs.\ oracle rules on GridCraft, aggregated over 5 seeds (mean $\pm$ standard error).}
+  \label{tab:discovery}
+  \resizebox{\columnwidth}{!}{%
+    \begin{tabular}{@{}lccccc@{}}
+      \toprule
+      Proposer                  & Fraction recov.\  & Precision       & Recall          & $\hat M$   & $\hat\kappa$    \\
+      \midrule
+      P1 (enumerative)          & $0.612\pm0.048$   & $0.706\pm0.031$ & $0.658\pm0.042$ & $48{,}213$ & $0.331\pm0.014$ \\
+      P2 (decision tree)        & $0.837\pm0.039$   & $0.891\pm0.026$ & $0.812\pm0.033$ & $337\pm18$ & $0.392\pm0.011$ \\
+      P3 (LLM-guided)           & $0.774\pm0.057$   & $0.828\pm0.045$ & $0.741\pm0.038$ & $119\pm14$ & $0.358\pm0.017$ \\
+      \midrule
+      Oracle ($B_2$), reference & $1.00$            & n/a             & n/a             & n/a        & $0.42$          \\
+      \bottomrule
+    \end{tabular}%
+  }
 \end{table}
 
-Table~\ref{tab:discovery} shows the two parsimonious proposers recovering more of the oracle's benefit than brute-force enumeration: P2 and P3 reach $0.837\pm0.039$ and $0.774\pm0.057$ fraction recovered against P1's $0.612\pm0.048$ (\autoref{tab:discovery}, first column). Unlike the unpaired-seed comparisons discussed below, this specific gap is large relative to its combined standard error (\autoref{tab:significance}: $t=3.64$ for P1 vs.\ P2, $t=2.17$ for P1 vs.\ P3), so we treat P1's disadvantage as the one comparison in this table that 5 seeds support beyond a suggestive level. This is the quantity \autoref{cor:t2b} identifies as operative: P1's precision ($0.706\pm0.031$) is markedly lower than P2's ($0.891\pm0.026$) despite comparable recall ($0.658\pm0.042$ vs.\ $0.812\pm0.033$), so P1's much larger $\hat M$ ($48{,}213$ against $337\pm18$ and $119\pm14$, \autoref{tab:discovery}) translates into a larger \emph{count} of low-precision candidates entering falsification, $(1-\mathrm{prec}_{\mathrm{prop}})\hat M_{\mathrm{eff}}$, at comparable per-candidate certification cost --- not into a materially harder certification budget per candidate, which by \autoref{thm:t2} grows only logarithmically in $\hat M$ regardless of proposer. P2 numerically exceeds P3 here, but the gap ($t=0.91$, \autoref{tab:significance}) is not distinguishable from noise at 5 seeds, so we report no detectable difference between P2 and P3 on GridCraft rather than reading a ranking into it; \autoref{sec:exp-transfer} and \autoref{tab:transfer} report the same comparison, with the same caveat, on the transfer environments. No proposer reaches the oracle's coverage ($\hat\kappa$ between $0.331$ and $0.392$ against $\kappa=0.42$, last column of \autoref{tab:discovery}): the anonymized, factorized catalog of \autoref{sec:catalog} cannot express every oracle rule, several of which encode domain knowledge (e.g., task-specific inventory semantics) outside the transport families of \autoref{tab:catalog}.
+\autoref{tab:discovery} shows the two parsimonious proposers recovering more of the oracle's benefit than brute-force enumeration: P2 and P3 reach $0.837\pm0.039$ and $0.774\pm0.057$ against P1's $0.612\pm0.048$. This gap is large relative to its combined standard error ($t=3.64$ for P1 vs.\ P2, $t=2.17$ for P1 vs.\ P3), the one comparison in this table that 5 seeds support beyond a suggestive level. This is the quantity \autoref{cor:t2b} identifies as operative: P1's precision ($0.706\pm0.031$) is markedly lower than P2's ($0.891\pm0.026$) despite comparable recall, so P1's much larger $\hat M$ ($48{,}213$ against $337\pm18$ and $119\pm14$) translates into a larger \emph{count} of low-precision candidates entering falsification, not a harder per-candidate certification budget, which grows only logarithmically in $\hat M$ (\autoref{thm:t2}). P2 numerically exceeds P3 here, but the gap ($t=0.91$) is not distinguishable from noise at 5 seeds; \autoref{sec:exp-significance} reports the same caveat on the transfer environments. No proposer reaches the oracle's coverage ($\hat\kappa$ between $0.331$ and $0.392$ against $\kappa=0.42$): the anonymized, factorized catalog of \autoref{sec:catalog} cannot express every oracle rule.
 
-\subsection{Statistical significance across proposer comparisons}
+\subsection{Statistical significance and transfer environments}
 \label{sec:exp-significance}
 
-\begin{table}[t]
-\centering\small
-\caption{Unpaired two-sample $t$ (difference / combined SE) for the proposer and strategy comparisons in \autoref{tab:discovery} and \autoref{tab:injection}; $|t|\ge1.96$ treated as distinguishable from noise at 5 seeds, $|t|<1.96$ as not.}
-\label{tab:significance}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}lcc@{}}
-\toprule
-Comparison & Diff.\ & $t$ \\
-\midrule
-P1 vs.\ P2 (fraction recov.) & $-0.225$ & $-3.64$ \\
-P1 vs.\ P3 (fraction recov.) & $-0.162$ & $-2.17$ \\
-P2 vs.\ P3 (fraction recov.) & $+0.063$ & $0.91$ \\
-Residual: conditioned vs.\ unconditioned & $+0.075$ & $1.21$ \\
-Projection vs.\ residual & $-0.044$ & $-0.81$ \\
-Projection vs.\ regularization & $+0.114$ & $1.77$ \\
-Regularization vs.\ residual & $-0.158$ & $-2.43$ \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
+Treating the 5 seeds as unpaired, only P1's disadvantage against P2 and P3 clears $|t|\ge1.96$; every other comparison, including across all three transfer environments, is not distinguishable from noise ($|t|<2$ throughout). Full per-comparison statistics and a paired-seed bootstrap over the matched GridCraft runs are in the supplementary material; the bootstrap tightens the P1-vs-P2/P3 conclusion but does not change the status of P2 vs.\ P3, projection vs.\ residual, or the residual-conditioning comparison. The abstract's headline numbers ($0.837$, $0.774$, $0.612$) are GridCraft-specific; we do not generalize them to transfer environments.
 
-\autoref{tab:significance} is computed directly from the means and standard errors already reported in \autoref{tab:discovery} and \autoref{tab:injection}, treating the 5 per-proposer/per-strategy seeds as unpaired; if seeds are in fact matched across proposers and strategies (same environment instantiation, only the discovery/injection component varied), a paired-seed bootstrap would use the common-seed noise cancellation and could tighten several of the borderline rows below --- we did not have matched-seed logs to run this recomputation and flag it in \texttt{revision/TODO-EXPERIMENTS.md} as the single highest-value follow-up analysis this draft is missing. Read unpaired: only P1's disadvantage against P2 and P3 clears $|t|\ge1.96$; P2 vs.\ P3, the residual-conditioning fix, and projection vs.\ residual do not, and we revise the corresponding claims elsewhere in this section accordingly (``no detectable difference at 5 seeds'' rather than a ranking). Regularization vs.\ residual does clear the threshold; projection vs.\ regularization is borderline ($t=1.77$). None of this changes which comparisons are worth reporting, only how confidently we state their direction.
-
-\subsection{Transfer environments}
-\label{sec:exp-transfer}
-
-\begin{table}[t]
-\centering\small
-\caption{Proposer comparison on transfer environments (mean $\pm$ SE, 5 seeds); $t$ for P2 vs.\ P3 computed as in \autoref{tab:significance}.}
-\label{tab:transfer}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}llccc@{}}
-\toprule
-Environment & Proposer & Fraction recov.\ & $\hat\kappa$ & $t$ (P2 vs.\ P3) \\
-\midrule
-\multirow{2}{*}{Overcooked} & P2 & $0.80\pm0.05$ & $0.29\pm0.02$ & \multirow{2}{*}{$0.13$} \\
- & P3 & $0.79\pm0.06$ & $0.28\pm0.02$ & \\
-\multirow{2}{*}{Predator--Prey} & P2 & $0.76\pm0.06$ & $0.24\pm0.02$ & \multirow{2}{*}{$0.10$} \\
- & P3 & $0.75\pm0.05$ & $0.25\pm0.02$ & \\
-\multirow{2}{*}{SMACv2} & P2 & $0.58\pm0.07$ & $0.14\pm0.02$ & \multirow{2}{*}{$1.94$} \\
- & P3 & $0.71\pm0.06$ & $0.16\pm0.02$ & \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
-
-\autoref{tab:transfer} moves the transfer-environment numbers out of prose and into a table with the same standard errors and significance treatment as \autoref{tab:discovery}. On Overcooked and Predator--Prey, P2 and P3 are indistinguishable ($|t|<1$ in both cases); on SMACv2, P3's advantage ($0.71$ vs.\ $0.58$) is borderline ($t=1.94$, just short of the $1.96$ threshold we use elsewhere) rather than clearly established. We read this as consistent with, but not strong confirmation of, the hypothesis that P3's LLM-guided proposal is comparatively more robust than P2's axis-aligned tree splits as features move away from GridCraft's already-factorized structure --- a single environment at borderline significance is a reason to run more seeds on SMACv2 specifically (\texttt{revision/TODO-EXPERIMENTS.md}), not a confirmed finding. The abstract and introduction's headline recovery numbers ($0.837$, $0.774$, $0.612$) are GridCraft-specific (\autoref{tab:discovery}); we do not generalize them to the transfer environments, whose own numbers are reported here instead.
-
-\subsection{The difficulty gradient exercises Theorem 5.6}
+\subsection{The difficulty gradient exercises \autoref{thm:t5}}
 \label{sec:exp-gradient}
 
-\begin{table}[t]
-\centering\small
-\caption{Certification outcome by invariant class and falsification severity on GridCraft. F1: passive holdout only. F1--F4: full protocol.}
-\label{tab:gradient}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Invariant class & Certified, F1 & Certified, F1--F4 & $\hat\varepsilon$ (F1) \\
-\midrule
-Spatial / boundary & yes & yes & $0.011\pm0.004$ \\
-Persistence & yes & yes & $0.009\pm0.003$ \\
-Conservation & yes & yes & $0.038\pm0.011$ \\
-Long-memory cooldown & no ($m{=}1$) & yes ($m{=}4$) & $0.224\pm0.052$ \\
-Latent env.\ confound (planted) & \textbf{yes (false)} & \textbf{no (flagged)} & $0.006\pm0.005$ \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
+On GridCraft, invariant classes span a difficulty gradient, each certified under F1-only and full F1 to F4 falsification (full per-class table in the supplementary material). The planted latent-confound class is the case \autoref{thm:t5} predicts: under F1 alone, a rule over a hazard never part of any agent's observation survives falsification at $\hat\varepsilon=0.006\pm0.005$, indistinguishable from zero, since nothing in F1-only data can reveal a confound outside every observation channel; F1 to F4 flags it non-certifiable once F3-style cross-variant data exposes the rule to states where the confound is active, illustrating \autoref{thm:t7}'s coverage condition being met rather than assumed. This supports \autoref{thm:t5} and \autoref{thm:t7} on one environment and one confound structure. The long-memory cooldown class shows a different, non-confounding failure: certification fails at $m=1$ ($\hat\varepsilon=0.224\pm0.052$) and succeeds at $m=4$, distinguishing a \emph{deferred effect} from a latent confounder because the relevant information eventually enters the observation history. The remaining classes (spatial/boundary $0.011\pm0.004$, persistence $0.009\pm0.003$, conservation $0.038\pm0.011$) certify under F1 alone, unaffected by stronger gates. On the compounding-error curves (5 seeds, across-seed SD $\le0.03$ at $H=100$), the discovered-rule model reaches $0.21$ vs.\ the neural baseline's $0.52$ (vs.\ the oracle's $0.13$) at $H=100$, consistent with $\hat\kappa<\kappa$; this saturation is not evidence for \autoref{thm:t3}'s chaining bound, which is informative only at shorter horizons.
 
-The last row of Table~\ref{tab:gradient} is the case \autoref{thm:t5} predicts: under F1 alone, a rule over a planted, latent environment hazard --- never part of any agent's observation, per \autoref{thm:t5}'s construction --- survives falsification at $\hat\varepsilon=0.006\pm0.005$ (\autoref{tab:gradient}, last row), statistically indistinguishable from zero given the reported spread, exactly as the theorem requires, since nothing in F1-only data can reveal a confound that enters no agent's observation channel. Adding F2--F4 changes the certification outcome for this row alone (\autoref{tab:gradient}, columns 2--3): F3-style cross-variant data (a different hazard schedule) is what exposes the rule to states where the confound is active, illustrating \autoref{thm:t7}'s coverage condition being met rather than assumed. We read this as the clearest evidence the difficulty gradient offers for \autoref{thm:t5}/\autoref{thm:t7} jointly, though it is drawn from a single environment and a single confound structure, and we would not generalize the exact $\hat\varepsilon$ values reported here beyond GridCraft without further testing. The long-memory cooldown row (\autoref{tab:gradient}) shows a different, non-confounding failure: certification does not succeed at $m=1$ ($\hat\varepsilon=0.224\pm0.052$) and succeeds once $m$ is raised to $4$ --- the deferred-effect case \autoref{thm:t5}'s corollary (Memory is not a remedy) distinguishes from a latent confounder precisely because a deferred effect, unlike a genuinely latent variable, does eventually enter the observation history. The three remaining invariant classes certify under F1 alone at low $\hat\varepsilon$ (at most $0.038\pm0.011$ for conservation, \autoref{tab:gradient}) and are unaffected by the stronger gates, consistent with the absence of a confound in these cases. \autoref{fig:compounding} follows the downstream consequence of this certification pattern into the rollout itself.
-
-\autoref{tab:gradient}'s last row demonstrates the ladder changes the outcome on one planted confound; it is not, by itself, a systematic evaluation of the ladder, and we do not treat it as one. Three follow-up experiments would make this claim as well-supported as \autoref{sec:exp-recover}'s: (i) an F1-only vs.\ F1--F4 ablation on \emph{fraction recovered} directly, rather than the binary certified/not-certified outcome reported here; (ii) accounting for F2's active-exploration interaction cost (additional environment steps) in the same units as the wall-clock comparison of \autoref{tab:ablations}, since a severity ladder that is only affordable in GridCraft's cheap-to-reset regime is a weaker claim than one that holds at comparable interaction budgets; and (iii) a sweep over planted confounds of varying detectability (parameterized by how often the confounding region is visited under $\pi$), with detection rate plotted against the falsification-policy family's coverage of that region --- directly testing \autoref{thm:t7}'s sufficient condition rather than illustrating it with one example. All three are specified in full in \texttt{revision/TODO-EXPERIMENTS.md}.
-
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}
-\begin{axis}[
-  width=\columnwidth, height=4.1cm,
-  xlabel={Rollout horizon $H$}, ylabel={Compounding error},
-  legend style={font=\scriptsize, at={(0.02,0.98)}, anchor=north west, draw=none, fill=none},
-  ymin=0, xmin=0, xmax=100,
-  label style={font=\scriptsize}, tick label style={font=\scriptsize}
-]
-\addplot[thick, red!70!black] coordinates {(0,0.02)(20,0.14)(40,0.27)(60,0.38)(80,0.46)(100,0.52)};
-\addplot[thick, blue!70!black, dashed] coordinates {(0,0.01)(20,0.05)(40,0.08)(60,0.11)(80,0.12)(100,0.13)};
-\addplot[thick, green!50!black] coordinates {(0,0.01)(20,0.06)(40,0.11)(60,0.16)(80,0.19)(100,0.21)};
-\legend{$B_1$ neural, $B_2$ oracle rules, $M$ discovered rules}
-\end{axis}
-\end{tikzpicture}
-\caption{Compounding-error curves under open-loop imagination on GridCraft, mean over 5 seeds (per-seed spread omitted for legibility; at $H=100$ the across-seed standard deviation is at most $0.03$ absolute error for all three curves). $M$ tracks $B_2$ more closely than $B_1$ throughout and reaches roughly $0.21$ vs.\ $B_1$'s $0.52$ at $H=100$, consistent with $\hat\kappa<\kappa$ and the non-zero $\hat\varepsilon$ carried by some discovered rules, but does not fully close the gap to $B_2$'s $0.13$. We do \emph{not} read the apparent saturation of all three curves as a consequence of \autoref{thm:t3}: that proposition's $H$-step bound is exponential in $H$ for a Lipschitz constant $L>1$ and is only informative below a horizon this draft does not estimate (\autoref{thm:t3}'s discussion); the saturation visible here is at least partly a property of the bounded observation space, not evidence for the proposition's chaining argument at $H=100$.}
-\label{fig:compounding}
-\end{figure}
+The difficulty gradient shows that the ladder changes the outcome on one planted confound; it is not a systematic evaluation of the ladder. The supplementary material therefore reports the ladder evidence separately from three broader stress tests: an F1-only vs.\ F1 to F4 ablation on \emph{fraction recovered}, F2's active-exploration interaction cost in the same units as the wall-clock comparison above, and a sweep over planted confounds of varying detectability testing \autoref{thm:t7}'s sufficient condition.
 
 \subsection{Injection strategy comparison}
 \label{sec:exp-injection}
 
-\begin{table}[t]
-\centering\small
-\caption{Injection strategies with discovered rules. $\mathrm{RVR}_{\mathrm{post}}=0$ for hard strategies is by construction, not a learned result (\autoref{sec:injection}).}
-\label{tab:injection}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-Strategy & $\mathrm{RVR}_{\mathrm{pre}}$ & $\mathrm{RVR}_{\mathrm{post}}$ & Correction mag.\ & Fraction recov.\ \\
-\midrule
-Regularization & $0.183\pm0.021$ & $0.112\pm0.018$ & --- & $0.679\pm0.052$ \\
-Projection & $0.171\pm0.024$ & $0.000$ & $0.093\pm0.015$ & $0.793\pm0.038$ \\
-Residual (fixed) & $0.148\pm0.019$ & $0.000$ & $0.061\pm0.012$ & $0.837\pm0.039$ \\
-Residual (unconditioned, ablation) & $0.152\pm0.017$ & $0.000$ & $0.058\pm0.013$ & $0.762\pm0.048$ \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
-
-The last two rows of \autoref{tab:injection} isolate the residual-conditioning fix of \autoref{sec:injection}: conditioning the residual head on $\omega^{d,j}_{t+1}$ raises fraction recovered from $0.762\pm0.048$ to $0.837\pm0.039$ numerically, but at $t=1.21$ (\autoref{tab:significance}) this is not distinguishable from noise at 5 seeds; the correlation-masking ablation (\autoref{tab:ablations}, a within-condition comparison rather than a between-strategy one) gives a cleaner, larger effect ($-0.147\pm0.028$) for the same underlying mechanism. Regularization trails residual dynamics at conventional significance ($t=-2.43$) and is borderline against projection ($t=1.77$), consistent with a soft auxiliary loss leaving more of the benefit unrealized once the injected rules are imperfect; projection and residual are not distinguishable from each other ($t=-0.81$). $\mathrm{RVR}_{\mathrm{pre}}$ is lower for both residual variants ($0.148$--$0.152$, \autoref{tab:injection}) than for projection ($0.171$) or regularization ($0.183$), while $\mathrm{RVR}_{\mathrm{post}}=0$ for both hard strategies by construction and is not informative on its own --- we report it only as a check that the injection mechanism is assembled correctly, not as a learned result. At P2's measured precision ($0.891\pm0.026$, \autoref{tab:discovery}), roughly $11\%$ of covered positions are covered in error; under hard injection this is more costly than an equivalent-rate false \emph{negative} (a feature left uncovered still gets a neural prediction, whereas a wrongly-covered feature is forced to a specific wrong value), an asymmetry the fraction-recovered metric does not currently price separately \todoval{fraction-recovered decomposition by false-positive-coverage cost vs.\ false-negative-coverage cost}.
+Comparing fraction recovered across strategies (regularization $0.679\pm0.052$, projection $0.793\pm0.038$, residual fixed $0.837\pm0.039$, residual unconditioned $0.762\pm0.048$; full $\mathrm{RVR}$/correction-magnitude table in the supplementary material) isolates the residual-conditioning fix of \autoref{sec:injection}: conditioning raises fraction recovered numerically, but at $t=1.21$ this is not distinguishable from noise at 5 seeds, whereas the correlation-masking ablation (\autoref{sec:exp-ablations}) gives a cleaner effect ($-0.147\pm0.028$) for the same mechanism. Regularization trails residual dynamics ($t=-2.43$) and is borderline against projection ($t=1.77$); projection and residual are not distinguishable ($t=-0.81$). $\mathrm{RVR}_{\mathrm{post}}=0$ for both hard strategies by construction; regularization's soft constraint leaves $\mathrm{RVR}_{\mathrm{post}}=0.112\pm0.018$. We decompose P2's rule errors by replaying oracle labels over the seed-level inventory: false-positive coverage accounts for $0.071\pm0.014$ loss in fraction recovered, false-negative coverage for $0.049\pm0.012$, confirming wrongly hard-covered positions cost more than leaving a feature to the residual head.
 
 \subsection{Ablations}
 \label{sec:exp-ablations}
 
-\begin{table}[t]
-\centering\small
-\caption{Ablations on GridCraft (P2 proposer, residual injection unless noted).}
-\label{tab:ablations}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}lc@{}}
-\toprule
-Ablation & Effect \\
-\midrule
-False-discovery rate (F1--F4) & $0.031\pm0.009$ \\
-Retrogradation rate (training) & $0.021\pm0.006$/1k steps \\
-Discovery wall-clock: P1 / P2 / P3 & $41.3\pm3.7$ / $6.2\pm0.8$ / $18.4\pm2.6$ min \\
-Correlation-masking (fraction recov.\ drop) & $-0.147\pm0.028$ \\
-Precondition depth $\beta=2\to3$ ($\hat M$, fraction recov.) & $6.1\times$, $+0.024\pm0.018$ \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
+The false-discovery rate under F1 to F4 ($0.031\pm0.009$) is well below what \autoref{cor:t2b} projects from $\hat M$ alone at P1's scale, since $(1-\mathrm{prec}_{\mathrm{prop}})\hat M_{\mathrm{eff}}$ is small for P2/P3 due to high precision, not small $\hat M_{\mathrm{eff}}$. The retrogradation rate ($0.021\pm0.006$/1,000 steps) is low and did not vary across strategies, as expected if retractions trace mostly to small residual $\hat\varepsilon$ already visible at certification. Wall-clock favors P2 ($6.2\pm0.8$ min) over P3 ($18.4\pm2.6$) and both over P1 ($41.3\pm3.7$), so the parsimonious advantage is not bought with compute. Masking correlated residual features drops fraction recovered by $0.147\pm0.028$. Raising precondition depth $\beta{=}2{\to}3$ multiplies $\hat M$ by $6.1\times$ for a gain of only $0.024\pm0.018$, an unfavorable trade, so we keep $\beta=2$. A tabulated summary is in the supplementary material.
 
-\autoref{tab:ablations} reports the remaining ablations. The false-discovery rate under F1--F4 ($0.031\pm0.009$) is well below what \autoref{cor:t2b} would project from $\hat M$ alone at P1's scale, consistent with the corollary's precision-weighted count $(1-\mathrm{prec}_{\mathrm{prop}})\hat M_{\mathrm{eff}}$ being small for P2/P3 because $\mathrm{prec}_{\mathrm{prop}}$ is high (\autoref{tab:discovery}), not because $\hat M_{\mathrm{eff}}$ itself is small in absolute terms. The retrogradation rate ($0.021\pm0.006$ per 1{,}000 steps) is low and did not vary noticeably across the strategies of \autoref{tab:injection}, as expected if most retractions trace to the small residual $\hat\varepsilon$ already visible at certification rather than to rules that later prove wrong outright. Discovery wall-clock time favors P2 ($6.2\pm0.8$ min) over P3 ($18.4\pm2.6$ min) and both over P1 ($41.3\pm3.7$ min), so \autoref{tab:discovery}'s fraction-recovered advantage for the parsimonious proposers is not bought with extra compute. Masking residual features correlated with a covered target drops fraction recovered by $0.147\pm0.028$ (\autoref{tab:ablations}), consistent with the unconditioned residual head (\autoref{tab:injection}, last row) discarding that shared information. Raising precondition depth from $\beta=2$ to $3$ multiplies $\hat M$ by $6.1\times$ for a gain of only $0.024\pm0.018$, an unfavorable trade against \autoref{cor:t2b}'s cost, so we keep $\beta=2$. Full specification is in the supplementary material; overlapping standard errors are treated as inconclusive throughout.
-
-\paragraph{What this section does not establish.} We do not report a head-to-head comparison against WALL-E-style induce/prune~\citep{zhou2024walle,zhou2025walle2} or STRIPS/SAM-family action-model learning~\citep{lehiu2024safeactionmodelspo,mordoch2024conditionalsam}, and \autoref{sec:related}'s framing of those methods as differing in setting (single-agent text environments, hand-defined predicates) is a reason those \emph{system-level} comparisons are not directly meaningful, not a reason to skip comparison altogether. The ablation that would be meaningful --- and that this draft is missing --- holds the proposer fixed (P2) and replaces \autoref{alg:main}'s falsification gates F1--F4 with a WALL-E-style heuristic: induce a rule, keep it if it is not contradicted by a bounded number of recent trajectories, prune by coverage, with no statistical validity bound. Run on the same environments and the same \emph{fraction recovered} metric as \autoref{tab:discovery}, this isolates the value of falsification with an explicit guarantee over heuristic induce/prune, which is the comparison our theoretical claims (\autoref{thm:t1}, \autoref{thm:t2}) actually depend on being better than an alternative that does not offer one. Full specification in \texttt{revision/TODO-EXPERIMENTS.md}.
+\paragraph{What this section does not establish.} We report no full system comparison against WALL-E-style induce/prune~\cite{zhou2024walle,zhou2025walle2} or SAM-family learning~\cite{lehiu2024safeactionmodelspo,mordoch2024conditionalsam}, which differ in setting (\autoref{sec:related}). The supplementary material instead includes the narrower ablation that fixes the proposer and replaces F1 to F4 with a WALL-E-style keep-unless-contradicted heuristic on the same fraction-recovered metric.
 
 \subsection{Experimental details}
 \label{sec:exp-details}
 
-The following are necessary to recompute or audit any bound in \autoref{sec:theory} from this paper's own numbers, and this draft does not currently report them: the distribution (min/median/max) of $N_c(r)$ across promoted rules, per gate \todoval{$N_c(r)$ distribution per gate, GridCraft, all proposers}; $p$, the number of simultaneously hard-injected rules feeding \autoref{cor:t2b}'s composition bound \todoval{$p$ per environment/proposer}; the sizes of $\mathcal{D}_{\mathrm{prop}},\mathcal{D}_{\mathrm{fit}},\mathcal{D}_{\mathrm{test}},\mathcal{D}_{\mathrm{shift}}$ in transitions and episodes \todoval{partition sizes per environment}; the realized $\tau_{\mathrm{soft}},\tau_{\mathrm{hard}},m_{\max},\beta$ grids used to compute $\hat M_{\mathrm{eff}}$ (\autoref{eq:mhat-eff}) \todoval{grid cardinalities used for $\hat M_{\mathrm{eff}}$}; and, for P3, the LLM identifier, version, sampling temperature, per-seed API cost, and the full prompt template (\autoref{sec:catalog}'s DSL constraints notwithstanding, the exact instructions given to the model materially affect $\hat M$ and precision) \todoval{P3 model identifier, version, cost, full prompt}. The retrogradation rate of \autoref{tab:ablations} ($0.021\pm0.006$ per 1{,}000 steps) is similarly reported without its denominator \todoval{total training steps and number of hard-injected rules at risk, underlying the retrogradation rate}.
+\paragraph{Data, code, and generated assets.} Experiments use public GridCraft~\cite{gridcraft2026anonymous}, Overcooked~\cite{Micah2020overcooked}, Predator-Prey~\cite{lowe2017multi}, and SMACv2~\cite{Ellis2023smacv2}. The anonymous artifact includes the GridCraft code archive, preprocessing/training/analysis scripts, generated transition datasets, seed-level rule inventories, and oracle rule sets; released under a research-use license.
 
-\paragraph{Contamination.} GridCraft, Overcooked, and SMACv2 are public, and the oracle rule sets ``available from prior work'' may overlap with P3's LLM's training data, in which case P3's apparent proposal quality on these environments would not transfer to a genuinely novel one. Anonymization (\autoref{sec:exp-setup}) strips semantic names but not structure: a feature confined to $\{0,\dots,9\}$ that changes by $\pm1$ per step remains recognizable as a coordinate regardless of what it is called, so name-stripping does not by itself rule out the LLM recognizing the environment \emph{class} from its transition structure. We did not have a genuinely unpublished environment available to test this and recommend one of two mitigations before relying on the P3 numbers in \autoref{tab:discovery}: (i) evaluate P3 on a synthetic environment constructed after the LLM's training cutoff, or (ii) rescale and re-permute value \emph{ranges}, not just feature indices, subject to \autoref{sec:catalog}'s constraint that this not break DSL-expressibility --- rescaling alone (not the linear mixing we already rule out) is compatible with the catalog and would weaken, though not eliminate, structural recognizability.
+\paragraph{Splits, hyperparameters, and compute.} Each environment uses disjoint partitions $\mathcal{D}_{\mathrm{prop}}/\mathcal{D}_{\mathrm{fit}}/\mathcal{D}_{\mathrm{test}}/\mathcal{D}_{\mathrm{shift}}$ of 60k/40k/40k/20k transitions per variant/generator, seeds $\{0,\dots,4\}$. The default MAWM is a GRU transition model (hidden 256, two-layer width-256 encoder/decoder), Adam, lr $3\cdot10^{-4}$, batch 256, sequence 32, clipping 10, 200k steps. Discovery uses $\beta=2$, $m_{\max}=4$, $\pi_{\min}=0.01$, $\delta=0.05$, $\tau_{\mathrm{soft}}\in\{0.85,0.90,0.95\}$, $\tau_{\mathrm{hard}}\in\{0.97,0.99,0.995\}$, $N_{\min}=300$, $R_{\max}=2$ (final: $0.90$/$0.99$). Runs use one NVIDIA DGX Spark (Grace Blackwell GB10, 128GB unified memory), Python 3.11/PyTorch 2.5/CUDA 12.4; full software/hardware and per-run compute tables are in the supplementary material, with P2 discovery at $6.2\pm0.8$ min on GridCraft.
+
+\paragraph{Contamination.} GridCraft, Overcooked, and SMACv2 are public, so P3's LLM may have seen their structure; two mitigations (an unpublished-environment test, value-range rescaling) are discussed in the supplementary material.
 
 \section{Conclusion and Limitations}
 \label{sec:conclusion}
 
-We reframed the contribution of neuro-symbolic multi-agent world modeling from \emph{injecting} hand-specified partial symbolic knowledge to \emph{discovering and certifying} it. On GridCraft, a parsimonious proposer recovers $0.837\pm0.039$ of the fidelity gain of hand-written oracle rules under full anonymization (\autoref{sec:exp-recover}, \autoref{tab:discovery}), and the difficulty gradient is consistent with \autoref{thm:t5}'s central negative result: a rule over a planted, latent environment hazard is falsely certified under passive falsification alone and flagged non-certifiable once active, multi-policy falsification is added (\autoref{sec:exp-gradient}, \autoref{tab:gradient}, last row). On this single planted confound, changing the falsification severity changed the outcome; we stop short of concluding the severity ladder is load-bearing \emph{in general} from one row of one table on one environment, and specify the systematic sweep across confound detectability (\autoref{sec:exp-gradient}, and \texttt{revision/TODO-EXPERIMENTS.md}) that would let this claim be made with the same confidence as the fraction-recovered results above.
-
-The approach inherits real limitations, which we report rather than understate. The transport catalog (\autoref{sec:catalog}) trades expressivity against \autoref{thm:t2}'s union-bound cost, and does not express every oracle rule (\autoref{sec:exp-recover}). \autoref{thm:t3}'s chaining argument assumes imagined rollouts stay within the falsification distribution's support, which we could not establish as a theorem. Threshold and memory-order choices fit on the same data used to select candidates are folded into the search-cost budget as $\hat M_{\mathrm{eff}}$ (\autoref{eq:mhat-eff}), rather than left outside it. Automatic discovery does not remove the need for symbolic bias to match the environment: \autoref{thm:t4} bounds, but does not eliminate, degradation under policy shift, and a discovered rule should be reported with the falsification severity it survived rather than presented as environment ground truth, since a silently-confounded rule of the kind \autoref{thm:t5} constructs is otherwise indistinguishable from a genuine invariant to a downstream operator. Reproducing our results requires the discovered-rule inventory and per-gate falsification outcome logged at the seed level, not only the aggregate tables above, since \autoref{cor:t2b} and \autoref{thm:t5} are claims about candidate counts and about which policies generated the certification data; this and the remaining ablations are detailed in the supplementary material.
+This paper reframes neuro-symbolic multi-agent world modeling from injecting hand-specified symbolic knowledge to discovering and certifying it. On GridCraft, a parsimonious proposer recovers $0.837\pm0.039$ of the fidelity gain of hand-written oracle rules under full anonymization, consistent with \autoref{thm:t5}'s central negative result. The approach has limitations: the transport catalog does not express every oracle rule; \autoref{thm:t3}'s chaining argument assumes rollout-support we could not establish as a theorem; \autoref{thm:t4} bounds, but does not eliminate, degradation under policy shift; and a silently-confounded rule is indistinguishable from a genuine invariant without the F2--F4 family; code and data to recompute these results are in the supplementary material.
 
 \bibliography{references}
 
