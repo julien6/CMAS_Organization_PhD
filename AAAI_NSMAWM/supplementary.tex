@@ -1,0 +1,277 @@
+\documentclass[11pt]{article}
+% Supplementary material for "Discovering and Certifying Partial Symbolic
+% Invariants for Neuro-Symbolic Multi-Agent World Models" (AAAI-28 working
+% draft). This document is NOT page-limited and is intended to accompany
+% paper.tex as the Code and Data / Supplementary Document at submission time.
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{mathtools}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{hyperref}
+\usepackage[capitalize,noabbrev]{cleveref}
+\usepackage{natbib}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ph}{\textcolor{red}{\texttt{[TBD]}}}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{Supplementary Material\\[2pt]\large Discovering and Certifying Partial Symbolic Invariants for Neuro-Symbolic Multi-Agent World Models}
+\author{Anonymous Submission}
+\date{}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\section{Scope of this document}
+
+This supplementary material accompanies the AAAI-28 working draft \texttt{paper.tex}. It contains: the full transport catalog and estimators (\autoref{app:dsl}); the complete discovery algorithm, its data-split discipline, and complexity (\autoref{app:algo}); full proofs of Theorems 5.1--5.5 and the composition remark, including the constructive Dec-POMDP counterexample for the non-identifiability theorem (\autoref{app:proofs}); the extended experimental protocol, baseline design space, and ablation list (\autoref{app:protocol}); the LLM-proposer prompting protocol (\autoref{app:llm}); and reproducibility notes (\autoref{app:repro}). Numbers marked \ph{} are structural placeholders, not measurements.
+
+\section{Transport catalog and precondition language}
+\label{app:dsl}
+
+\subsection{Data partitions}
+Discovery uses four disjoint partitions, never mixed across roles:
+\begin{itemize}
+  \item $\mathcal{D}_{\mathrm{prop}}$: structure search (which $(\varphi,c,\rho)$ to propose). Never used to certify.
+  \item $\mathcal{D}_{\mathrm{fit}}$: parameter/threshold estimation ($\delta_a$, $[\ell,u]$, decision thresholds $\theta$). Never used to certify.
+  \item $\mathcal{D}_{\mathrm{test}}$: falsification only (F1). Never used to select or tune candidates.
+  \item $\mathcal{D}_{\mathrm{shift}}$: held-out environment variants and alternative data generators (F3, F4).
+\end{itemize}
+This separation makes the union bound in \autoref{thm:t2-full} apply to the number of candidates \emph{proposed}, $\hat M = |\hat{\mathcal{R}}|$, rather than to the size of the catalog's search space, and it is what allows $\mathcal{D}_{\mathrm{test}}$ to be treated as i.i.d.\ for \autoref{thm:t1-full}: we recommend sub-sampling one transition per episode when transitions within an episode are not i.i.d.\ (the cheap, conservative option); a block/martingale argument is a looser but more sample-efficient alternative left as a remark, not adopted in the main protocol.
+
+\subsection{Readings $\varphi$}
+Three levels, chosen because they are closed under permutation of feature indices --- the property that makes the anonymization experiment (\autoref{app:protocol}) a test of the algorithm rather than of feature-name leakage:
+\begin{itemize}
+  \item \textbf{Atomic}: $f_{i,k}\mapsto \varphi\in\R$, $|\Phi_1|=d=n\cdot n_f$.
+  \item \textbf{Relational}: $f_{i,k}-f_{j,l}\mapsto\varphi$, $|\Phi_2|=O(d^2)$.
+  \item \textbf{Aggregated}: $\sum_i f_{i,k}$, $\max_i f_{i,k}$, $\#\{i:f_{i,k}=v\}$, restricted to the agent axis only, $O(n_f)$. This restriction keeps $|\Phi|$ dominated by $d^2$ and is exactly the form multi-agent conservation laws take (total resource, count of live units).
+\end{itemize}
+
+\subsection{Transports $\rho$}
+\begin{itemize}
+  \item \textbf{Family A --- bounded affine}: $\rho(\varphi,a)=\mathrm{clip}(\alpha\varphi+\delta_a,\ell,u)$, $\alpha\in\{0,1\}$. Closed-form fit on $\mathcal{D}_{\mathrm{fit}}$: $\delta_a=\mathrm{mode}(\varphi_{t+1}-\varphi_t\mid a)$, $[\ell,u]=[\min,\max]$ observed; no gradient required. $(\alpha,\delta_a,\mathrm{clip})=(1,0,\text{no})$ recovers persistence; $(0,v,\text{no})$ a conditional constant; $(1,\neq0,\text{no})$ free motion/increment; $(1,\neq0,\text{yes})$ cooldowns, health bounds, grid boundaries.
+  \item \textbf{Family B --- delayed copy}: $\rho=\psi_{t-m}$ for another reading $\psi$ and $m\in\{0,\dots,m_{\max}\}$. Covers pickup/drop and transfer effects; type compatibility (cardinality, integrality) is inferred from value domains, never from feature names.
+  \item \textbf{Family C --- slot permutation}: $\varphi^{\sigma(i)}_{t+1}=\varphi^i_t$. Covers agent-slot reassignment; optional in a first implementation pass since it is expensive and rarely decisive relative to Families A/B.
+\end{itemize}
+
+\subsection{Preconditions $c$}
+Conjunctions of at most $\beta$ atoms (we recommend $\beta=2$; $\beta=3$ increases $\hat M$ substantially for a gain that has not been demonstrated and should be tested as an ablation), plus $c=\top$. Admissible atoms: action literal ($a^i=u$), threshold test ($\varphi'\Join\theta$, $\theta$ taken from observed deciles), categorical equality, and relational atom ($\varphi_i'=\varphi_j'$).
+
+\subsection{Non-vacuity screen}
+\label{app:screen}
+Applied on $\mathcal{D}_{\mathrm{prop}}$ before falsification, this is the ``coverage'' side of a precision/coverage trade-off and the easiest step to omit incorrectly:
+\begin{itemize}
+  \item reject if $\varphi$ is near-constant;
+  \item reject if the rate of change is $\approx 0$, i.e., $\Pr[\varphi_{t+1}\neq\varphi_t]\approx0$ under the identity transport --- a persistence rule on a feature that never changes is vacuously true and inflates $\hat\kappa$ without adding information;
+  \item reject if $\Pr[c] < \pi_{\min}$ (insufficient support);
+  \item reject if removing the candidate as a covered feature does not measurably degrade residual prediction accuracy on $\mathcal{D}_{\mathrm{fit}}$ (the correlation criterion referenced in the main paper's injection section).
+\end{itemize}
+Retained candidates lie on the Pareto frontier of $(1-\hat\varepsilon,\ \mathrm{cov})$ where $\mathrm{cov}(r)=\Pr[c]\cdot H(\varphi(\omega_{t+1})\mid c)/H_{\max}$.
+
+\section{Discovery algorithm: full specification}
+\label{app:algo}
+
+\begin{algorithm}[H]
+\caption{Discover, falsify, inject (full)}
+\begin{algorithmic}[1]
+\STATE \textbf{Stage 0 (screening).} For each feature $k$, fit a small predictor of $f_{t+1,k}$ on $\mathcal{D}_{\mathrm{prop}}$ and rank by residual error; this only ranks candidacy for coverage, it does not itself produce a rule.
+\STATE \textbf{Stage 1 (propose).} Compare three proposers in ablation:
+  \begin{itemize}
+    \item \textbf{P1}: enumerate the catalog (\autoref{app:dsl}) up to precondition depth $\beta$. Baseline; gives $\hat M$ in closed form for \autoref{thm:t2-full}.
+    \item \textbf{P2}: fit a decision tree on $f_{t+1,k}$ over $\mathcal{D}_{\mathrm{prop}}$; extract pure leaves as (precondition, effect) pairs. $\hat M=$ number of retained leaves.
+    \item \textbf{P3}: prompt an LLM with anonymized features and example transitions (\autoref{app:llm}); $\hat M=$ number of syntactically valid candidates returned.
+  \end{itemize}
+\STATE \textbf{Stage 2 (falsify)}, four gates of increasing severity, each eliminatory:
+  \begin{itemize}
+    \item \textbf{F1 (passive)}: holdout transitions from $\mathcal{D}_{\mathrm{test}}$.
+    \item \textbf{F2 (active)}: exploration directed at states satisfying $c$ --- direct environment reset in GridCraft; rejection sampling from a diverse behavioral-policy pool in Overcooked/SMACv2. This is what distinguishes the protocol from passive validation (and from WALL-E-style induce/prune).
+    \item \textbf{F3 (cross-variant)}: environment variants, testing the invariance criterion directly.
+    \item \textbf{F4 (cross-generator)}: data from random, scripted, and alternative MARL-trained generators; a direct empirical attack on the policy-shift degradation result (Theorem~5.4 in the main paper; \autoref{thm:t4-full} here).
+  \end{itemize}
+  A rule is certifiable only if $N_c(r)\ge N_{\min}$; rules with rare preconditions are reported as \emph{non-certifiable}, not false.
+\STATE \textbf{Memory-order test.} Each candidate is tested at $m\in\{0,1,2,\dots\}$; report the distribution of the minimal sufficient $m$ --- itself a result under Dec-POMDPs, and the empirical counterpart to the deferred-effect/latent-confounder distinction in \autoref{thm:t5-full}.
+\STATE \textbf{Stage 3 (promote/retrograde).} Confidence $q_r=1-\hat\varepsilon_r$, $\hat\varepsilon_r=\ln(\hat M/\delta)/N_c(r)$ absent violations, Clopper--Pearson otherwise. $q_r<\tau_{\mathrm{soft}}\Rightarrow$ reject; $\tau_{\mathrm{soft}}\le q_r<\tau_{\mathrm{hard}}\Rightarrow$ soft, weighted $\lambda q_r$; $q_r\ge\tau_{\mathrm{hard}}\Rightarrow$ hard (projection or residual). Suggested starting values $\tau_{\mathrm{soft}}=0.9$, $\tau_{\mathrm{hard}}=0.99$, swept in ablation.
+\STATE \textbf{Retrogradation.} An online monitor recomputes the bound with accumulated counters; on a counterexample, the rule is demoted and the feature returns to the neural target. Retrogradation is \emph{sticky}: a retrograded rule requires roughly double the evidence to re-promote, to avoid oscillation.
+\STATE \textbf{Conflicts.} Two certified rules writing the same position: prefer the more specific precondition, then the higher $q$; if both are hard and contradictory, retrograde both and log the conflict as a diagnostic.
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Complexity}
+Let $d=nn_f$, $d_u=(1-\kappa)d$, $|\mathcal{R}|$ atomic rules, $C_\theta(d)$ the cost of one neural update with output dimension $d$, $H$ the rollout horizon. Rule evaluation is $O(|\mathcal{R}|q)$ time, $O(d)$ memory, for rules touching at most $q$ input features (bounded arity in our catalog, not $q=O(d)$). Per training transition: regularization and projection cost $O(C_\theta(d)+|\mathcal{R}|q+d)$; residual dynamics costs $O(C_\theta(d_u)+|\mathcal{R}|q+d)$, reducing the neural output dimension by a factor of $(1-\kappa)$ for architectures whose per-step cost is linear in output width. An $H$-step open-loop rollout multiplies these by $H$, with rollout-storage memory $O(Hd)$ if fully logged or $O(d+h)$ if streamed ($h$ = hidden-state size).
+
+\section{Full proofs}
+\label{app:proofs}
+
+\subsection*{Notation}
+Dec-POMDP $\mathcal{M}$, behavioral policy $\pi$ inducing $d^\pi$ over transitions $x=(h^j_{t-1},\omega^j_t,a^j_t,\omega^j_{t+1})$; $x^-=(h^j_{t-1},\omega^j_t,a^j_t)$. A rule $r=(\varphi,c,\rho)$ has violation indicator $V_r(x)=\mathbb{1}[c(x^-)\wedge \varphi(\omega_{t+1})\neq\rho_{a_t}(\varphi(\omega_t),h_{t-1})]$ and violation rate $\varepsilon^\pi_r=\Pr_{d^\pi}[V_r=1\mid c]$. $B=\mathrm{diam}(\mathcal{Y})$, $N_c(r)=|\{x\in\mathcal{D}_{\mathrm{test}}: c(x^-)\}|$. The fact making everything below licit: $c$ depends only on $x^-$, so conditioning on $N_c$ does not bias the violation indicators, and $\{x: c(x^-)\}$ is i.i.d.\ from the conditional law by construction of $\mathcal{D}_{\mathrm{test}}$.
+
+\begin{assumption}[Certification data regularity, full statement]
+\label{ass:regularity-full}
+Fix $r$ independently of $\mathcal{D}_{\mathrm{test}}$. Let $(x_k)_{k\ge1}$ enumerate, in temporal order, the elements of $\mathcal{D}_{\mathrm{test}}$ satisfying $c$, and let $V_k=V_r(x_k)\in\{0,1\}$. Two regimes:
+\begin{itemize}
+  \item[(a)] \textbf{Sub-sampled.} At most one transition per episode is retained in $\mathcal{D}_{\mathrm{test}}$. Then $(x_k)$ are i.i.d.\ draws from $d^\pi(\cdot\mid c)$, and $(V_k)$ are i.i.d.\ Bernoulli($\varepsilon_r^\pi$); $N_c(r)$ is fixed by the (pre-registered) test set size.
+  \item[(b)] \textbf{Any-time-valid.} Transitions within an episode may be correlated in arbitrary, unmodeled ways, and $N_c(r)$ may itself depend on the data (e.g., falsification stopped early, or pooled adaptively across gates). We only require that $(V_k)$ is a $\{0,1\}$-valued predictable sequence with $\Pr[V_k=1\mid\mathcal{F}_{k-1}]=\varepsilon_r^\pi$ for all $k$, where $\mathcal{F}_k=\sigma(x_1,\dots,x_k)$ is the natural filtration.
+\end{itemize}
+Regime (b) is the default; (a) is a cheaper practical fallback (implemented simply by discarding all but one transition per episode) when the supermartingale construction below is not implemented in the falsification pipeline.
+\end{assumption}
+
+\begin{theorem}[Certification by survival]
+\label{thm:t1-full}
+Under \autoref{ass:regularity-full}, if no violation is observed among $N_c(r)$ transitions satisfying $c$, then with probability at least $1-\delta$: $\varepsilon^\pi_r \le \big(\ln(1/\delta)+O(\log\log N_c(r))\big)/N_c(r)$ under regime (b), uniformly over $N_c(r)$ (including if $N_c(r)$ is a stopping time); under regime (a) the $O(\log\log N_c(r))$ term is exactly zero and the bound is $\ln(1/\delta)/N_c(r)$.
+\end{theorem}
+\begin{proof}
+\textbf{Regime (a).} Conditional on $N_c=n$, the $n$ violation indicators are i.i.d.\ Bernoulli($\varepsilon_r$). The probability of observing zero violations is $(1-\varepsilon_r)^n\le e^{-\varepsilon_r n}$. If $\varepsilon_r>\ln(1/\delta)/n$, this probability is $<\delta$. Hence the event ``survive with $\varepsilon_r$ above the threshold'' has probability $<\delta$ conditional on $N_c$, hence unconditionally (since $n$ is fixed in advance under (a), there is no optional-stopping issue to control).
+
+\textbf{Regime (b).} Fix a null value $\varepsilon$ and define, on the filtration $(\mathcal{F}_k)$ of \autoref{ass:regularity-full}, the sequential likelihood-ratio process
+$$M_k(\varepsilon) = \prod_{j=1}^{k}\left(\frac{1-\varepsilon}{1-p_j}\right)^{\mathbb{1}[V_j=0]}\left(\frac{\varepsilon}{p_j}\right)^{\mathbb{1}[V_j=1]}, \qquad p_j := \Pr[V_j=1\mid\mathcal{F}_{j-1}].$$
+Under the (null) hypothesis $\varepsilon_r^\pi\le\varepsilon$, $M_k(\varepsilon)$ is a nonnegative supermartingale with $M_0=1$ (a test supermartingale in the sense of Ville). By Ville's maximal inequality, $\Pr[\exists k: M_k(\varepsilon)\ge 1/\delta]\le\delta$. If zero violations are observed through $k=N_c(r)$, $M_{N_c(r)}(\varepsilon)=\prod_{j=1}^{N_c(r)}\frac{1-\varepsilon}{1-p_j}$; taking $\varepsilon=\ln(1/\delta)/N_c(r)$ recovers the fixed-sample exponent up to the boundary-crossing correction that any valid always-valid confidence sequence must pay for holding uniformly over $k$ (rather than at one pre-specified $k$), which is $O(\log\log N_c(r))$ for the mixture/Gamma-exponential constructions of \citet{howard2020timeuniform}; we do not re-derive the exact closed-form boundary here and refer to that paper's Theorem 1 and Table 3 for the explicit constant.
+\end{proof}
+For $\delta=0.05$ and regime (a): $\varepsilon_r\le 3/N_c$ (the ``rule of three''). With $k\ge1$ observed violations, replace by the Clopper--Pearson upper bound $\bar\varepsilon(k,N_c,\delta)$ under (a), or its any-time-valid analogue under (b)~\citep{howard2020timeuniform}.
+
+\textbf{Why this matters for the rest of \autoref{app:proofs}.} Every downstream result (\autoref{thm:t2-full}, \autoref{cor:t2b-full}) is a union bound or expectation computed from \autoref{thm:t1-full}'s per-candidate tail probability; both inherit whichever regime of \autoref{ass:regularity-full} is in force without further modification, since the union bound and linearity-of-expectation arguments used below do not depend on which of the two proofs above supplied the per-candidate tail bound.
+
+\begin{theorem}[Search cost]
+\label{thm:t2-full}
+Let $\mathcal{R}$ be the $\hat M$ candidates proposed from $\mathcal{D}_{\mathrm{prop}}\cup\mathcal{D}_{\mathrm{fit}}$ only. With probability at least $1-\delta$, simultaneously for every surviving $r\in\mathcal{R}$: $\varepsilon^\pi_r \le \ln(\hat M/\delta)/N_c(r)$.
+\end{theorem}
+\begin{proof}
+Apply \autoref{thm:t1-full} to each candidate at level $\delta/\hat M$, then a union bound. Independence from $\mathcal{D}_{\mathrm{test}}$ is guaranteed by the partition discipline of \autoref{app:dsl}.
+\end{proof}
+
+A weaker argument sometimes given for why an LLM proposer helps is that it shrinks this bound by reducing $\hat M$: the dependence is only $\ln\hat M$, so going from $10^6$ to $10^2$ candidates only divides the required sample budget by $\ln(10^6)/\ln(10^2)\approx3$. This is not, by itself, a strong argument. The stronger argument is on the \emph{expected count} of false discoveries, which is linear in $\hat M$:
+
+\begin{corollary}[Expected false discoveries]
+\label{cor:t2b-full}
+Let $\mathcal{R}_{\mathrm{bad}}=\{r:\varepsilon_r>\varepsilon^\star\}$. The expected number of members of $\mathcal{R}_{\mathrm{bad}}$ surviving $N_{\min}$ tests satisfies
+$\E[|\{r\in\mathcal{R}_{\mathrm{bad}}:\text{survives}\}|]\le \hat M\, e^{-\varepsilon^\star N_{\min}}$.
+\end{corollary}
+\begin{proof}
+Linearity of expectation over survival indicators, each bounded by $(1-\varepsilon^\star)^{N_{\min}}\le e^{-\varepsilon^\star N_{\min}}$.
+\end{proof}
+At fixed falsification budget $N_{\min}$ (which is fixed in practice, constrained by the environment), the number of false rules injected grows linearly in $\hat M$. Numerically, with $N_{\min}=200$, $\varepsilon^\star=0.01$: $\hat M=10^6$ gives $\approx1.3\times10^5$ expected false survivors, $\hat M=10^2$ gives $13$. This is the quantity that justifies a parsimonious proposer, and it is directly measurable in the P1/P2/P3 ablation (\autoref{app:protocol}).
+
+\begin{theorem}[Chaining to rollout fidelity]
+\label{thm:t3-full}
+Under hard injection (projection or residual), disjoint masks, and assumption (H) that the rollout stays within the support of $d^\pi$: the one-step squared prediction error satisfies $\E\|\hat\omega_{t+1}-\omega_{t+1}\|^2 \le \varepsilon_d B^2+e_u$, and under an $L$-Lipschitz rollout operator, $E_H\le\big(\sum_{i=0}^{H-1}L^i\big)(\varepsilon_d B^2+e_u)$.
+\end{theorem}
+\begin{proof}
+Orthogonal decomposition: $\|\hat\omega-\omega\|^2=\|P_d(\hat\omega-\omega)\|^2+\|P_u(\hat\omega-\omega)\|^2$. Under hard injection, the covered term is zero except on a violation event of probability $\le\varepsilon_d$, on which the error is bounded by $B^2$; hence $\E\|P_d(\cdot)\|^2\le\varepsilon_d B^2$. The residual term is $e_u$ by definition. Standard Lipschitz telescoping gives the $H$-step form.
+\end{proof}
+\textbf{Assumption (H) is false in general.} In open-loop rollout the model visits states it generated itself, outside $d^\pi$'s support. One can argue that hard projection keeps the rollout near the manifold of valid states, hence near the support --- but this argument is partially circular, and we state it as a conjecture, not a theorem. We recommend measuring rollout-support drift empirically (e.g., estimated density of visited states relative to $d^\pi$) rather than assuming (H).
+
+\begin{theorem}[Degradation under policy shift]
+\label{thm:t4-full}
+Let $C_{\pi'/\pi}(c)=\sup_{x^-\in\{c\}}d^{\pi'}(x^-)/d^\pi(x^-)$. Then $\Pr_{\pi'}[V_r=1\wedge c]\le C_{\pi'/\pi}(c)\cdot\Pr_\pi[V_r=1\wedge c]$, and equivalently $\varepsilon^{\pi'}_r\le C_{\pi'/\pi}(c)\cdot\varepsilon^\pi_r\cdot\Pr_\pi[c]/\Pr_{\pi'}[c]$.
+\end{theorem}
+\begin{proof}
+$\Pr_{\pi'}[V\wedge c]=\sum_{x^-\in\{c\}}d^{\pi'}(x^-)\Pr[V\mid x^-]\le C\sum_{x^-\in\{c\}}d^\pi(x^-)\Pr[V\mid x^-]=C\Pr_\pi[V\wedge c]$. The conditional form follows by dividing by $\Pr_{\pi'}[c]$ and rewriting $\Pr_\pi[V\wedge c]=\varepsilon^\pi_r\Pr_\pi[c]$.
+\end{proof}
+We recommend reporting the absolute form in the main text (``the rate of harmful triggers grows by at most a factor $C$''), which is directly interpretable, rather than the conditional form, whose ratio $\Pr_\pi[c]/\Pr_{\pi'}[c]$ is harder to read.
+
+\begin{theorem}[Non-identifiability under partial observability]
+\label{thm:t5-full}
+There exist two Dec-POMDPs $\mathcal{M},\mathcal{M}'$, a policy $\pi$, an alternative policy $\pi'$, and a rule $r$ such that $\varepsilon^\pi_r=0$ in both $\mathcal{M}$ and $\mathcal{M}'$, yet $\varepsilon^{\pi'}_r>0$ in $\mathcal{M}$ and $\varepsilon^{\pi'}_r=0$ in $\mathcal{M}'$. Consequently, no certification procedure with access only to $d^\pi$ can distinguish $\mathcal{M}$ from $\mathcal{M}'$, nor bound $\varepsilon^{\pi'}_r$, for any $N_c$.
+\end{theorem}
+\begin{proof}[Construction and proof]
+Let the state space be a four-cell corridor $\{0,1,2,3\}$ with two agents. Agent 1's observation is only its own position $x^1$; it never observes agent 2's position. Actions: \textsc{Right}, \textsc{Stay}.
+
+Model $\mathcal{M}$: \textsc{Right} moves agent 1 one cell, \emph{unless} the target cell is occupied by agent 2, in which case agent 1 stays. Model $\mathcal{M}'$: \textsc{Right} always moves agent 1 one cell (no blocking).
+
+Data-collection policy $\pi$: agent 2 remains in cell 3; agent 1 moves in $\{0,1,2\}$. Alternative policy $\pi'$: agent 2 sometimes occupies cells in $\{0,1,2\}$.
+
+Candidate rule $r$: $a^1=\textsc{Right}\wedge x^1=k \Rightarrow x^1_{t+1}=k+1$, for $k\in\{0,1\}$.
+
+\emph{Claim (i): the observation trajectories of agent 1 under $\pi$ are identically distributed in $\mathcal{M}$ and $\mathcal{M}'$.} Under $\pi$, agent 2 never occupies a cell in $\{1,2\}$, so the blocking mechanism of $\mathcal{M}$ is never triggered; the two transition kernels coincide on the support of $d^\pi$, and agent 1's observations are therefore identically distributed under both models.
+
+\emph{Claim (ii): $\varepsilon^\pi_r=0$ in both models.} Immediate from (i), since $r$ never sees a violation under $\pi$ in either model.
+
+\emph{Claim (iii): $\varepsilon^{\pi'}_r>0$ in $\mathcal{M}$ and $\varepsilon^{\pi'}_r=0$ in $\mathcal{M}'$.} Under $\pi'$ in $\mathcal{M}$, the event ``agent 2 occupies cell $k+1$'' has non-zero probability and, by the blocking mechanism, produces a violation of $r$; in $\mathcal{M}'$ there is no blocking mechanism, so $\varepsilon^{\pi'}_r=0$ regardless of agent 2's position.
+
+The impossibility claim follows from (i): two models that are indistinguishable in the distribution they induce over any measurable function of $d^\pi$ (in particular, over any certification procedure's output) must yield the same output for both models; since the correct answer to ``is $r$ valid under $\pi'$'' differs between $\mathcal{M}$ and $\mathcal{M}'$, no procedure using only $d^\pi$ can be correct for both.
+\end{proof}
+
+\begin{corollary}[Memory is not a remedy]
+Increasing the memory order $m$ in Family B transports (\autoref{app:dsl}) does not resolve this case: agent 2's position never appears, at any lag, in agent 1's observation history.
+\end{corollary}
+
+This construction separates two failure modes that intuition often conflates:
+\begin{center}
+\begin{tabular}{@{}p{3.1cm}p{3.6cm}p{4.2cm}@{}}
+\toprule
+Nature & Where the information is & Remedy \\
+\midrule
+Deferred effect & In $h_{t-m}$, for some finite $m$ & Increase $m$ (memory-order test) \\
+Latent confounder & Never in the observation history & Falsify against multiple policies/variants (F2--F4) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{proposition}[Positive counterpart]
+If the falsification set includes data from a policy family $\Pi$ such that $C_{\pi'/\Pi}(c)<\infty$ in the sense of \autoref{thm:t4-full} for the target $\pi'$, then certification obtained on $\Pi$ transfers to $\pi'$ with controlled degradation. This is precisely what gates F2, F3, and F4 of the discovery algorithm are designed to produce: the negative result does not invalidate the method, it identifies exactly which part of the protocol (active, multi-policy, multi-variant falsification) is load-bearing.
+\end{proposition}
+
+\begin{remark}[Composition, full derivation]
+If rules $r_1,\dots,r_p$ are injected on disjoint feature positions, the aggregate covered violation rate satisfies $\varepsilon_d\le\sum_{i=1}^p\varepsilon_{r_i}$ by a union bound over the individual violation events. This means coverage is not free: injecting $50$ rules at $\varepsilon=0.01$ each already gives $\varepsilon_d\le0.5$. The hard-injection threshold $\tau_{\mathrm{hard}}$ should therefore be calibrated against a total error budget (e.g., $\tau_{\mathrm{hard}}$ adjusted to a target $1-\varepsilon_{\mathrm{cible}}/p$), not fixed per rule independent of how many rules are simultaneously active.
+\end{remark}
+
+\section{Extended experimental protocol}
+\label{app:protocol}
+
+\subsection{Environments and difficulty gradient}
+GridCraft, Overcooked, Predator--Prey, and SMACv2, as in prior NS-MAWM work. On GridCraft, invariants are organized along a difficulty gradient designed to test \autoref{thm:t5-full} empirically: spatial/boundary rules $\to$ persistence $\to$ conservation $\to$ long-memory cooldowns $\to$ multi-agent rules requiring another agent's private observation (predicted uncertifiable under F1-only falsification, and predicted to become at least partially certifiable once F2--F4 include multi-policy data, per the positive counterpart above).
+
+\subsection{Anonymization protocol}
+Permutation of feature indices; stripping of semantic names; injection of distractor features (irrelevant noise) and constant features (to test the non-vacuity screen); rescaling. We deliberately do \emph{not} apply an arbitrary linear mixing of coordinates, since that would make invariants inexpressible in the catalog of \autoref{app:dsl}; this is a real dependency on a reasonably factorized representation, reported as a limitation rather than hidden.
+
+\subsection{Metrics}
+\begin{itemize}
+  \item Fraction recovered $=(M-B_1)/(B_2-B_1)$, where $B_1$ = purely neural MAWM, $B_2$ = NS-MAWM with hand-written oracle rules, $M$ = NS-MAWM with discovered rules.
+  \item Precision/recall of discovered rules against the oracle rule set (already written for GridCraft in prior work, used here as ground truth for the discovery metric only, not injected into $M$).
+  \item $\hat\kappa$ vs.\ oracle $\kappa$; false-discovery rate; retrogradation rate; discovery wall-clock time.
+  \item $\mathrm{RVR}_{\mathrm{pre}}$, $\mathrm{RVR}_{\mathrm{post}}$, correction magnitude $\|P_d\hat\omega^{pre,j}_{t+1}-\omega^{d,j}_{t+1}\|$.
+  \item Residual-prediction degradation when covered features correlated with the residual target are deliberately masked (the correlation ablation).
+  \item Certification outcome per difficulty-gradient class, reported separately for F1-only vs.\ F1--F4 falsification.
+\end{itemize}
+All quantities reported as mean $\pm$ standard error across at least 5 independent seeds; paired comparisons for close differences; overlapping confidence intervals are not treated as a strict ranking.
+
+\subsection{Ablations}
+Proposer (P1 vs.\ P2 vs.\ P3); falsification severity (F1 vs.\ F1+F2 vs.\ F1--F4), measuring false-discovery rate at each level; memory order $m_{\max}=0$ vs.\ $>0$; non-vacuity screen on vs.\ off; soft-only vs.\ hard-only vs.\ graded promotion; retrogradation on vs.\ off; precondition depth $\beta=2$ vs.\ $3$; residual-head conditioning on vs.\ off $\omega^{d,j}_{t+1}$ (isolating the fix in the main paper's injection section).
+
+\subsection{Result tables (placeholders)}
+The main paper's discovery-vs-oracle and difficulty-gradient tables specify the exact column structure to fill from seed-level logs. No additional table is introduced here; this document specifies protocol, not results.
+
+\section{LLM-proposer prompting protocol}
+\label{app:llm}
+
+The P3 proposer receives: (i) the anonymized feature schema (index, type, observed value range, no semantic name); (ii) the action space; (iii) a sample of example transitions drawn from $\mathcal{D}_{\mathrm{prop}}$; and is asked to return candidates strictly within the DSL of \autoref{app:dsl} (a reading, a precondition of depth $\le\beta$, and a transport from Families A/B/C), in a structured, machine-parseable schema. Candidates that do not parse into the DSL are discarded before falsification and do not count toward $\hat M$; candidates that parse but are semantically invalid (e.g., a transport referencing an undefined reading) are discarded at the same stage. We report the syntactic-validity rate as a diagnostic of the proposer, separate from the falsification results.
+
+\section{Reproducibility notes}
+\label{app:repro}
+
+Discovery introduces additional artifacts beyond the injection-time reproducibility material already used in prior NS-MAWM work: the four data partitions ($\mathcal{D}_{\mathrm{prop}},\mathcal{D}_{\mathrm{fit}},\mathcal{D}_{\mathrm{test}},\mathcal{D}_{\mathrm{shift}}$) and their exact construction per environment; the enumerated catalog and its realized $\hat M$ for P1; the decision-tree hyperparameters for P2; the exact LLM prompts, model identifier, and sampling temperature for P3; and the discovered rule inventory $\{(\varphi,c,\rho,m,q,\mathrm{cov},N_c)\}$ per seed, which should be logged in full (not only aggregated) so that precision/recall against the oracle set can be recomputed independently.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
